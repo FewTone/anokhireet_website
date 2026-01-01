@@ -13,3 +13,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   overscroll-behavior: none;
 }
+
+.bg-radial-brand {
+  background: radial-gradient(circle at center, #4a0000 35%, #240000 100%);
+}

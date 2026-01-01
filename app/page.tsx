@@ -3,32 +3,40 @@
 import { motion } from "framer-motion";
 import { Instagram } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function Home() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden text-brand-beige"
-      style={{
-        background: 'radial-gradient(circle at center, #4a0000 35%, #240000 100%)'
-      }}
+      className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden text-brand-beige bg-radial-brand"
     >
       {/* Side Decorations - Full Height Pattern on each side */}
       <div className="absolute left-0 top-0 h-full w-24 md:w-56 pointer-events-none opacity-100">
-        <Image
-          src="/assets/floral-border.png"
-          alt="Left Decoration"
-          fill
-          className="object-fill object-left"
-        />
+        {isMounted && (
+          <Image
+            src="/assets/floral-border.png"
+            alt="Left Decoration"
+            fill
+            className="object-fill object-left"
+          />
+        )}
       </div>
 
       <div className="absolute right-0 top-0 h-full w-24 md:w-56 pointer-events-none opacity-100">
-        <Image
-          src="/assets/floral-border.png"
-          alt="Right Decoration"
-          fill
-          className="object-fill object-right scale-x-[-1]"
-        />
+        {isMounted && (
+          <Image
+            src="/assets/floral-border.png"
+            alt="Right Decoration"
+            fill
+            className="object-fill object-right scale-x-[-1]"
+          />
+        )}
       </div>
 
 
@@ -53,23 +61,27 @@ export default function Home() {
             transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
             className="absolute inset-0 w-full h-full opacity-60"
           >
-            <Image
-              src="/assets/mandala.png"
-              alt="Mandala Pattern"
-              fill
-              className="object-contain"
-            />
+            {isMounted && (
+              <Image
+                src="/assets/mandala.png"
+                alt="Mandala Pattern"
+                fill
+                className="object-contain"
+              />
+            )}
           </motion.div>
 
           {/* Central Logo - Fixed */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="relative w-40 h-40 md:w-64 md:h-64 pointer-events-none">
-              <Image
-                src="/assets/logo.png"
-                alt="Anokhi Reet Logo"
-                fill
-                className="object-contain drop-shadow-2xl"
-              />
+              {isMounted && (
+                <Image
+                  src="/assets/logo.png"
+                  alt="Anokhi Reet Logo"
+                  fill
+                  className="object-contain drop-shadow-2xl"
+                />
+              )}
             </div>
           </div>
         </div>
