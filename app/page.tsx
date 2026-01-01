@@ -17,7 +17,7 @@ export default function Home() {
       className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden text-brand-beige bg-radial-brand"
     >
       {/* Side Decorations - Full Height Pattern on each side */}
-      <div className="absolute left-0 top-0 h-full w-24 md:w-56 pointer-events-none opacity-100">
+      <div className="hidden md:block absolute left-0 top-0 h-full w-24 md:w-56 pointer-events-none opacity-100">
         {isMounted && (
           <Image
             src="/assets/floral-border.png"
@@ -28,7 +28,7 @@ export default function Home() {
         )}
       </div>
 
-      <div className="absolute right-0 top-0 h-full w-24 md:w-56 pointer-events-none opacity-100">
+      <div className="hidden md:block absolute right-0 top-0 h-full w-24 md:w-56 pointer-events-none opacity-100">
         {isMounted && (
           <Image
             src="/assets/floral-border.png"
