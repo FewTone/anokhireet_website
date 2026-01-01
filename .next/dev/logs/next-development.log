@@ -1,65 +1,9 @@
-[00:00:01.441] Server  LOG     ✓ Ready in 1174ms
-[00:00:10.601] Server  ERROR   ⨯ ./app/favicon.ico
-Processing image failed
-unable to decode image data
-
-Caused by:
-- Format error decoding Ico: ICO image entry has too many color planes or too large hotspot value
-- ICO image entry has too many color planes or too large hotspot value
-
-
-[00:00:11.618] Browser ERROR   uncaughtError: Error: ./app/favicon.ico
-Processing image failed
-unable to decode image data
-
-Caused by:
-- Format error decoding Ico: ICO image entry has too many color planes or too large hotspot value
-- ICO image entry has too many color planes or too large hotspot value
-
-
-[00:00:11.798] Browser ERROR   ./app/favicon.ico
-Processing image failed
-unable to decode image data
-
-Caused by:
-- Format error decoding Ico: ICO image entry has too many color planes or too large hotspot value
-- ICO image entry has too many color planes or too large hotspot value
-[00:00:12.231] Browser ERROR   ./app/favicon.ico
-Processing image failed
-unable to decode image data
-
-Caused by:
-- Format error decoding Ico: ICO image entry has too many color planes or too large hotspot value
-- ICO image entry has too many color planes or too large hotspot value
-[00:00:17.127] Server  ERROR   ⨯ ./app/favicon.ico
-Processing image failed
-unable to decode image data
-
-Caused by:
-- Format error decoding Ico: ICO image entry has too many color planes or too large hotspot value
-- ICO image entry has too many color planes or too large hotspot value
-
-
-[00:00:17.275] Browser ERROR   uncaughtError: Error: ./app/favicon.ico
-Processing image failed
-unable to decode image data
-
-Caused by:
-- Format error decoding Ico: ICO image entry has too many color planes or too large hotspot value
-- ICO image entry has too many color planes or too large hotspot value
-
-
-[00:00:17.416] Browser ERROR   ./app/favicon.ico
-Processing image failed
-unable to decode image data
-
-Caused by:
-- Format error decoding Ico: ICO image entry has too many color planes or too large hotspot value
-- ICO image entry has too many color planes or too large hotspot value
-[00:00:17.416] Browser ERROR   ./app/favicon.ico
-Processing image failed
-unable to decode image data
-
-Caused by:
-- Format error decoding Ico: ICO image entry has too many color planes or too large hotspot value
-- ICO image entry has too many color planes or too large hotspot value
+[00:00:00.713] Server  LOG     ✓ Ready in 517ms
+[00:00:01.302] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:01.513] Browser WARN    Image with src "/assets/floral-border.png" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
+[00:00:01.513] Browser WARN    Image with src "/assets/floral-border.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:01.513] Browser WARN    Image with src "/assets/mandala.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:01.513] Browser WARN    Image with src "/assets/logo.png" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes
+[00:00:01.513] Browser WARN    Image with src "/assets/mandala.png" was detected as the Largest Contentful Paint (LCP). Please add the `loading="eager"` property if this image is above the fold.
+Read more: https://nextjs.org/docs/app/api-reference/components/image#loading
