@@ -63,7 +63,7 @@ export default function Home() {
 
           {/* Central Logo - Fixed */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-48 h-48 md:w-72 md:h-72">
+            <div className="relative w-40 h-40 md:w-64 md:h-64 pointer-events-none">
               <Image
                 src="/assets/logo.png"
                 alt="Anokhi Reet Logo"

@@ -324,6 +324,14 @@ img, video {
   height: 12rem;
 }
 
+.h-4 {
+  height: 1rem;
+}
+
+.h-40 {
+  height: 10rem;
+}
+
 .min-h-screen {
   min-height: 100vh;
 }
@@ -346,6 +354,10 @@ img, video {
 
 .w-48 {
   width: 12rem;
+}
+
+.w-40 {
+  width: 10rem;
 }
 
 .scale-x-\[-1\] {
@@ -509,6 +521,10 @@ body {
     height: 18rem;
   }
 
+  .md\:h-64 {
+    height: 16rem;
+  }
+
   .md\:w-48 {
     width: 12rem;
   }
@@ -523,6 +539,10 @@ body {
 
   .md\:w-72 {
     width: 18rem;
+  }
+
+  .md\:w-64 {
+    width: 16rem;
   }
 
   .md\:text-5xl {
