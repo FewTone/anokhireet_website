@@ -41,7 +41,7 @@ export default function Home() {
       >
         {/* Top Text - "Coming Soon" */}
         <h1 className="text-2xl md:text-5xl font-serif mb-8 tracking-wider text-center text-[#E8E5C3]">
-          Coming Soon
+          We are Launching Soon
         </h1>
 
         {/* Central Mandala / Logo */}

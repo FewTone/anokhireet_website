@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Anokhi Reet - Coming Soon",
+  title: "We are Launching Soon",
   description: "An exclusive fashion platform launching soon.",
 };
 

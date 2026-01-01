@@ -72,7 +72,7 @@ var __TURBOPACK__imported__module__$5b$next$5d2f$internal$2f$font$2f$google$2f$i
 ;
 ;
 const metadata = {
-    title: "Anokhi Reet - Coming Soon",
+    title: "We are Launching Soon",
     description: "An exclusive fashion platform launching soon."
 };
 function RootLayout({ children }) {
