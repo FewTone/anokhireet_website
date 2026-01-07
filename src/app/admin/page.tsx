@@ -238,7 +238,7 @@ export default function AdminPage() {
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured">("dashboard");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminEmail, setAdminEmail] = useState("");
@@ -3332,7 +3332,8 @@ To get these values:
                     <div className="flex-1 min-w-0">
 
                     {/* Categories Tab - Removed: Now using 5 facet types instead */}
-                    {false && activeTab === "categories" && (
+                    {/* Removed categories tab - using facets instead */}
+                    {false && (
                         <div className="space-y-6">
                             <div className="bg-white rounded-lg border border-gray-200 p-6">
                                 <div className="flex items-center justify-between mb-6">
@@ -4529,8 +4530,9 @@ To get these values:
                         );
                     })()}
 
-                    {/* Users Tab */}
-                    {false && activeTab === "facets" && (
+                    {/* Facets Tab - Removed: Now integrated into Featured Categories */}
+                    {/* Removed facets tab - using Featured Categories instead */}
+                    {false && (
                         <div className="space-y-6">
                             {/* Facet Type Tabs */}
                             <div className="bg-white rounded-lg border border-gray-200 p-4">

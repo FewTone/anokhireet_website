@@ -663,24 +663,8 @@ export default function ManageProductsPage() {
                 
                 const newProductId = insertedData[0].id;
                 
-                // Insert multiple categories into product_categories junction table
-                if (selectedCategoryIds.length > 0) {
-                    const categoryAssociations = selectedCategoryIds.map(categoryId => ({
-                        product_id: newProductId,
-                        category_id: categoryId
-                    }));
-                    
-                    const { error: categoryError } = await supabase
-                        .from("product_categories")
-                        .insert(categoryAssociations);
-                    
-                    if (categoryError) {
-                        console.error("Error associating categories:", categoryError);
-                        // Don't fail the whole operation, but log the error
-                    } else {
-                        console.log(`Product associated with ${selectedCategoryIds.length} categories`);
-                    }
-                }
+                // Note: Facet associations (product_types, occasions, colors, materials, cities) 
+                // are handled separately in the product edit modal, not during initial product creation
                 
                 console.log("Product inserted successfully:", insertedData);
                 showPopup("Product added successfully!", "success");

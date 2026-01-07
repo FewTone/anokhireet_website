@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 
 interface HeroSlide {
     image: string;
+    title?: string;
 }
 
 export default function Hero() {
