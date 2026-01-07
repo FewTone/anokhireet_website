@@ -17,6 +17,7 @@ interface UserProduct {
     primary_image_index?: number;
     original_price?: number | string;
     product_id?: string;
+    category?: string | string[];
     created_at: string;
 }
 
@@ -573,7 +574,7 @@ export default function ManageProductsPage() {
                 
                 if (Array.isArray(productData.category) && productData.category.length > 0) {
                     // Convert all category names to IDs
-                    productData.category.forEach(categoryName => {
+                    productData.category.forEach((categoryName: string) => {
                         const categoryMatch = availableCategories.find(cat => cat.name === categoryName);
                         if (categoryMatch) {
                             selectedCategoryIds.push(categoryMatch.id);
@@ -672,7 +673,7 @@ export default function ManageProductsPage() {
                 
                 if (Array.isArray(productData.category) && productData.category.length > 0) {
                     // Convert all category names to IDs
-                    productData.category.forEach(categoryName => {
+                    productData.category.forEach((categoryName: string) => {
                         const categoryMatch = availableCategories.find(cat => cat.name === categoryName);
                         if (categoryMatch) {
                             selectedCategoryIds.push(categoryMatch.id);
@@ -916,18 +917,8 @@ export default function ManageProductsPage() {
     };
 
     const handleOpenAddProductModal = () => {
-        setEditingProduct(null);
-        setProductFormData({ name: "", price: "", image: "", originalPrice: "", category: [] });
-        setProductImages([]);
-        setPrimaryImageIndex(0);
-        setProductImageFiles([]);
-        setProductImagePreviews([]);
-        setImageSizeInfo([]);
-        setNewCategoryName("");
-        setShowAddCategoryInput(false);
-        // Reload categories when opening modal to ensure we have the latest
-        loadCategories();
-        setIsProductModalOpen(true);
+        // Navigate to the dedicated add product page instead of opening modal
+        router.push(`/admin/manage-products/${userId}/add`);
     };
 
     if (loading) {

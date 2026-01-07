@@ -400,7 +400,7 @@ export default function ProductDetailPage() {
                                         <button
                                             key={index}
                                             onClick={() => setSelectedImage(img)}
-                                            className={`relative w-full aspect-square border-2 transition-all overflow-hidden bg-gray-50 ${
+                                            className={`relative w-full aspect-[4/5] border-2 transition-all overflow-hidden bg-gray-50 ${
                                                 selectedImage === img
                                                     ? "border-black"
                                                     : "border-gray-300 hover:border-gray-500"

@@ -29,6 +29,7 @@ interface Product {
     price: string;
     image: string;
     category?: string;
+    created_at?: string;
 }
 
 export default function Home() {
@@ -48,7 +49,13 @@ export default function Home() {
         }, 15000); // 15 second timeout
 
         loadProducts(true); // Initial load
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:51',message:'Calling loadCategories from useEffect',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+        // #endregion
         loadCategories().catch((error) => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:54',message:'loadCategories promise rejected',data:{error:error?.message||String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+            // #endregion
             console.error("Error loading categories:", error);
             setLoading(false);
         }); // Load categories from database
@@ -136,27 +143,54 @@ export default function Home() {
     }, []);
 
     const loadCategories = async () => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:139',message:'loadCategories called',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         try {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:142',message:'Querying categories with is_featured=true',data:{query:'select * from categories where is_featured=true order by display_order'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             const { data, error } = await supabase
                 .from("categories")
                 .select("*")
                 .eq("is_featured", true) // Only load featured/pinned categories
                 .order("display_order", { ascending: true });
 
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:149',message:'Categories query result',data:{hasError:!!error,errorMessage:error?.message,errorCode:error?.code,dataLength:data?.length,data:data?.map(c=>({id:c.id,name:c.name,is_featured:c.is_featured,image_url:c.image_url,display_order:c.display_order}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+
             if (error) {
-                console.error("Error loading categories:", error);
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:152',message:'Categories query error',data:{error:error.message,code:error.code,details:error.details,hint:error.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
+                console.error("❌ Error loading categories:", error);
+                console.error("Error details:", { message: error.message, code: error.code, details: error.details, hint: error.hint });
                 return;
             }
 
             if (data && data.length > 0) {
-                setFeaturedCategories(data.map(cat => ({
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:157',message:'Mapping categories to featuredCategories',data:{mappedCount:data.length,mapped:data.map(cat=>({img:cat.image_url,link_url:cat.link_url||'/shirt-collection'}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
+                console.log('✅ Featured categories found:', data.length, data);
+                const mapped = data.map(cat => ({
                     img: cat.image_url,
                     link_url: cat.link_url || "/shirt-collection"
-                })));
+                }));
+                console.log('✅ Mapped featured categories:', mapped);
+                setFeaturedCategories(mapped);
             } else {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:161',message:'No featured categories found',data:{dataLength:data?.length,dataIsNull:!data},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+                // #endregion
+                console.warn('⚠️ No featured categories found. Data:', data);
                 setFeaturedCategories([]);
             }
         } catch (error) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:164',message:'loadCategories catch error',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+            // #endregion
             console.error("Error loading categories:", error);
         }
     };
@@ -258,27 +292,54 @@ export default function Home() {
                 <Hero />
 
                 {/* Section 2: Featured Categories */}
-                {featuredCategories.length > 0 && (
+                {/* #region agent log */}
+                {(() => {
+                    console.log('🔍 Featured Categories State:', { length: featuredCategories.length, categories: featuredCategories });
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:261',message:'Rendering featured categories section',data:{featuredCategoriesLength:featuredCategories.length,featuredCategories:featuredCategories},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+                    return null;
+                })()}
+                {/* #endregion */}
+                {featuredCategories.length > 0 ? (
                 <div className="mt-12 text-center px-4">
                     <h2 className="text-2xl font-bold mb-4">FEATURED CATEGORIES</h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:flex xl:flex-wrap justify-center gap-4">
-                            {featuredCategories.map((cat, idx) => (
+                            {featuredCategories.map((cat, idx) => {
+                                // #region agent log
+                                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:268',message:'Rendering featured category item',data:{index:idx,img:cat.img,link_url:cat.link_url,hasImg:!!cat.img},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                                // #endregion
+                                return (
                                 <Link href={cat.link_url || "/shirt-collection"} key={idx} className="block hover:scale-105 transition-transform duration-200">
-                                <Image
-                                    src={cat.img}
-                                    alt={`Category ${idx}`}
-                                    width={190}
-                                    height={250}
-                                    className="rounded-lg w-full md:w-[190px] h-auto object-cover"
-                                        unoptimized
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = 'none';
-                                        }}
-                                />
+                                <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100">
+                                    {cat.img && cat.img.trim() !== "" ? (
+                                        <Image
+                                            src={cat.img}
+                                            alt={`Category ${idx}`}
+                                            fill
+                                            className="rounded-lg object-cover"
+                                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                                            unoptimized
+                                            onError={(e) => {
+                                                // #region agent log
+                                                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:277',message:'Image load error',data:{index:idx,img:cat.img},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+                                                // #endregion
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                                            <span className="text-sm">No Image</span>
+                                        </div>
+                                    )}
+                                </div>
                             </Link>
-                        ))}
+                        );
+                            })}
                     </div>
                 </div>
+                ) : (
+                    <div className="mt-12 text-center px-4">
+                        <p className="text-gray-500 text-sm">No featured categories available. Pin categories in the admin panel to display them here.</p>
+                    </div>
                 )}
 
                 {/* Section 3: Shop Your Size */}

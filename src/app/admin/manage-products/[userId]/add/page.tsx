@@ -47,6 +47,7 @@ export default function AddProductPage() {
     const [productImagePreviews, setProductImagePreviews] = useState<string[]>([]);
     const [imageSizeInfo, setImageSizeInfo] = useState<Array<{ original: number; converted: number; name: string }>>([]);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
+    const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
     useEffect(() => {
         if (userId) {
@@ -179,15 +180,18 @@ export default function AddProductPage() {
             try {
                 const converted = await convertToWebPOptimized(file);
                 const convertedSize = converted.size;
+                const convertedBlob = converted.blob;
                 
                 if (convertedSize < originalSize) {
                     const preview = await new Promise<string>((resolve) => {
                         const reader = new FileReader();
                         reader.onload = (e) => resolve(e.target?.result as string);
-                        reader.readAsDataURL(converted);
+                        reader.readAsDataURL(convertedBlob);
                     });
+                    // Convert blob to File for upload
+                    const convertedFile = new File([convertedBlob], file.name.replace(/\.[^/.]+$/, ".webp"), { type: "image/webp" });
                     return {
-                        file: converted,
+                        file: convertedFile,
                         preview,
                         sizeInfo: { original: originalSize, converted: convertedSize, name: file.name },
                     };
@@ -446,9 +450,54 @@ export default function AddProductPage() {
                     </div>
                 </div>
 
+                {/* Step Indicator */}
+                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <div className="flex items-center justify-center">
+                        <div className="flex items-center">
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep >= 1 ? 'bg-black border-black text-white' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
+                                <span className="font-semibold">1</span>
+                            </div>
+                            <div className={`w-24 h-1 mx-2 ${currentStep >= 2 ? 'bg-black' : 'bg-gray-300'}`}></div>
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep >= 2 ? 'bg-black border-black text-white' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
+                                <span className="font-semibold">2</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex justify-center mt-4 gap-16">
+                        <div className="text-center">
+                            <p className={`text-sm font-medium ${currentStep >= 1 ? 'text-black' : 'text-gray-400'}`}>Product Details</p>
+                        </div>
+                        <div className="text-center">
+                            <p className={`text-sm font-medium ${currentStep >= 2 ? 'text-black' : 'text-gray-400'}`}>Category Selection</p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Form */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                    <form onSubmit={handleSaveProduct} className="space-y-6">
+                    {currentStep === 1 ? (
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            // Validate step 1
+                            if (!productFormData.name.trim()) {
+                                showPopup("Please enter a product name", "warning", "Validation Error");
+                                return;
+                            }
+                            if (!productFormData.price.trim()) {
+                                showPopup("Please enter a rental price", "warning", "Validation Error");
+                                return;
+                            }
+                            if (!productFormData.originalPrice.trim()) {
+                                showPopup("Please enter an original price", "warning", "Validation Error");
+                                return;
+                            }
+                            if (productImageFiles.length === 0) {
+                                showPopup("Please upload at least one product image", "warning", "Validation Error");
+                                return;
+                            }
+                            // Move to step 2
+                            setCurrentStep(2);
+                        }} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Product Name *
@@ -480,136 +529,18 @@ export default function AddProductPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Original Price of Outfit (Optional)
+                                Original Price of Outfit *
                             </label>
                             <input
                                 type="number"
                                 step="0.01"
+                                required
                                 value={productFormData.originalPrice}
                                 onChange={(e) => setProductFormData({ ...productFormData, originalPrice: e.target.value })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 placeholder="e.g., 1299"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Original purchase price of the outfit (optional)</p>
-                        </div>
-
-                        <div>
-                            <div className="flex items-center justify-between mb-1">
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Category *
-                                </label>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowAddCategoryInput(!showAddCategoryInput);
-                                        if (showAddCategoryInput) {
-                                            setNewCategoryName("");
-                                        }
-                                    }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    {showAddCategoryInput ? "Cancel" : "Add New Category"}
-                                </button>
-                            </div>
-
-                            {showAddCategoryInput && (
-                                <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={newCategoryName}
-                                            onChange={(e) => setNewCategoryName(e.target.value)}
-                                            onKeyPress={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    handleAddNewCategory();
-                                                }
-                                            }}
-                                            placeholder="Enter new category name"
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleAddNewCategory}
-                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
-                                        >
-                                            Add
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="w-full border border-gray-300 rounded-md min-h-[120px] max-h-[200px] overflow-y-auto p-2 bg-white">
-                                {availableCategories.length === 0 ? (
-                                    <p className="text-sm text-gray-500 text-center py-4">No categories available. Click "Add New Category" above to create one.</p>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {availableCategories.map((cat) => {
-                                            const isSelected = productFormData.category.includes(cat.name);
-                                            return (
-                                                <label
-                                                    key={cat.id}
-                                                    className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                                        isSelected
-                                                            ? "bg-blue-50 border border-blue-200"
-                                                            : "hover:bg-gray-50 border border-transparent"
-                                                    }`}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setProductFormData({
-                                                                    ...productFormData,
-                                                                    category: [...productFormData.category, cat.name],
-                                                                });
-                                                            } else {
-                                                                setProductFormData({
-                                                                    ...productFormData,
-                                                                    category: productFormData.category.filter((c) => c !== cat.name),
-                                                                });
-                                                            }
-                                                        }}
-                                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-sm text-gray-700">{cat.name}</span>
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                            {productFormData.category.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {productFormData.category.map((cat, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded"
-                                        >
-                                            {cat}
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setProductFormData({
-                                                        ...productFormData,
-                                                        category: productFormData.category.filter((c) => c !== cat),
-                                                    });
-                                                }}
-                                                className="text-blue-600 hover:text-blue-800"
-                                            >
-                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                            <p className="text-xs text-gray-500 mt-1">Select one or more categories for this product (required)</p>
+                            <p className="text-xs text-gray-500 mt-1">Original purchase price of the outfit (required)</p>
                         </div>
 
                         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
@@ -733,21 +664,205 @@ export default function AddProductPage() {
 
                         <div className="flex gap-4 pt-4 border-t border-gray-200">
                             <button
-                                type="submit"
-                                disabled={isUploadingImage}
-                                className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isUploadingImage ? "Uploading..." : "Add Product"}
-                            </button>
-                            <button
                                 type="button"
                                 onClick={() => router.push(`/admin/manage-products/${userId}`)}
                                 className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
                             >
                                 Cancel
                             </button>
+                            <button
+                                type="submit"
+                                className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity"
+                            >
+                                Next: Select Categories
+                            </button>
                         </div>
                     </form>
+                    ) : (
+                        <form onSubmit={handleSaveProduct} className="space-y-6">
+                            {/* Step 1 Summary */}
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Product Details Summary</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-xs text-gray-500">Product Name</p>
+                                        <p className="text-sm font-medium text-gray-900">{productFormData.name || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">Rental Price</p>
+                                        <p className="text-sm font-medium text-gray-900">{productFormData.price || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">Original Price</p>
+                                        <p className="text-sm font-medium text-gray-900">{productFormData.originalPrice || "—"}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">Images</p>
+                                        <p className="text-sm font-medium text-gray-900">{productImagePreviews.length} image{productImagePreviews.length !== 1 ? 's' : ''} uploaded</p>
+                                    </div>
+                                </div>
+                                {productImagePreviews.length > 0 && (
+                                    <div className="mt-4">
+                                        <p className="text-xs text-gray-500 mb-2">Preview Images</p>
+                                        <div className="flex gap-2 overflow-x-auto">
+                                            {productImagePreviews.slice(0, 3).map((preview, index) => (
+                                                <div key={index} className="relative w-16 h-16 rounded border border-gray-300 overflow-hidden flex-shrink-0">
+                                                    <Image
+                                                        src={preview}
+                                                        alt={`Preview ${index + 1}`}
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            ))}
+                                            {productImagePreviews.length > 3 && (
+                                                <div className="flex items-center justify-center w-16 h-16 rounded border border-gray-300 bg-gray-100 text-gray-500 text-xs font-medium">
+                                                    +{productImagePreviews.length - 3}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Category *
+                                    </label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowAddCategoryInput(!showAddCategoryInput);
+                                        if (showAddCategoryInput) {
+                                            setNewCategoryName("");
+                                        }
+                                    }}
+                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    {showAddCategoryInput ? "Cancel" : "Add New Category"}
+                                </button>
+                            </div>
+
+                            {showAddCategoryInput && (
+                                <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={newCategoryName}
+                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleAddNewCategory();
+                                                }
+                                            }}
+                                            placeholder="Enter new category name"
+                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddNewCategory}
+                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                        >
+                                            Add
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="w-full border border-gray-300 rounded-md min-h-[120px] max-h-[200px] overflow-y-auto p-2 bg-white">
+                                {availableCategories.length === 0 ? (
+                                    <p className="text-sm text-gray-500 text-center py-4">No categories available. Click "Add New Category" above to create one.</p>
+                                ) : (
+                                    <div className="space-y-2">
+                                        {availableCategories.map((cat) => {
+                                            const isSelected = productFormData.category.includes(cat.name);
+                                            return (
+                                                <label
+                                                    key={cat.id}
+                                                    className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+                                                        isSelected
+                                                            ? "bg-blue-50 border border-blue-200"
+                                                            : "hover:bg-gray-50 border border-transparent"
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setProductFormData({
+                                                                    ...productFormData,
+                                                                    category: [...productFormData.category, cat.name],
+                                                                });
+                                                            } else {
+                                                                setProductFormData({
+                                                                    ...productFormData,
+                                                                    category: productFormData.category.filter((c) => c !== cat.name),
+                                                                });
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                    />
+                                                    <span className="text-sm text-gray-700">{cat.name}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                            {productFormData.category.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {productFormData.category.map((cat, index) => (
+                                        <span
+                                            key={index}
+                                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded"
+                                        >
+                                            {cat}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setProductFormData({
+                                                        ...productFormData,
+                                                        category: productFormData.category.filter((c) => c !== cat),
+                                                    });
+                                                }}
+                                                className="text-blue-600 hover:text-blue-800"
+                                            >
+                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                            <p className="text-xs text-gray-500 mt-1">Select one or more categories for this product (required)</p>
+                        </div>
+
+                            <div className="flex gap-4 pt-4 border-t border-gray-200">
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentStep(1)}
+                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                >
+                                    Back
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isUploadingImage}
+                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isUploadingImage ? "Uploading..." : "Create Product"}
+                                </button>
+                            </div>
+                        </form>
+                    )}
                 </div>
             </div>
 

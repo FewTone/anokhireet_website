@@ -466,9 +466,10 @@ export default function AdminPage() {
                     if (typeof error === 'object') {
                         const errorKeys = Object.keys(error);
                         isEmptyError = errorKeys.length === 0;
-                        hasRealError = !isEmptyError && (error.message || error.code);
+                        hasRealError = !isEmptyError && !!(error.message || error.code);
                     } else if (typeof error === 'string') {
-                        hasRealError = error.length > 0;
+                        const errorStr: string = error;
+                        hasRealError = errorStr.length > 0;
                     } else {
                         hasRealError = !!error;
                     }
@@ -2881,15 +2882,6 @@ To get these values:
                                     </svg>
                                     Facets
                                 </button>
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="9" cy="7" r="4"></circle>
-                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                                    </svg>
-                                    <span>Users</span>
-                                </button>
                             </nav>
                             
                             {/* Logout Button */}
@@ -3483,7 +3475,7 @@ To get these values:
                                             value={filterUserId}
                                             onChange={(e) => setFilterUserId(e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
-                                            disabled={filterType === 'public'}
+                                            disabled={filterType === 'all'}
                                         >
                                             <option value="all">All Users</option>
                                             {users.map(user => (
@@ -4467,7 +4459,7 @@ To get these values:
                                         </button>
                                     </div>
 
-                                    <form onSubmit={editingTestUser ? handleUpdateTestUser : handleCreateTestUser} className="space-y-4">
+                                    <form onSubmit={handleCreateUser} className="space-y-4">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                 Name *

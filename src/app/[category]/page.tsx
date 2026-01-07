@@ -177,7 +177,15 @@ export default function CategoryPage() {
                     ) : (
                         <div className="flex flex-wrap gap-6 justify-center">
                             {products.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                                <ProductCard 
+                                    key={product.id} 
+                                    product={{
+                                        ...product,
+                                        category: Array.isArray(product.category) 
+                                            ? product.category.join(", ") 
+                                            : product.category
+                                    }} 
+                                />
                             ))}
                         </div>
                     )}

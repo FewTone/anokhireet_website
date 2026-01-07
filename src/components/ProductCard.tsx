@@ -5,7 +5,7 @@ import Link from "next/link";
 
 interface ProductProps {
     product: {
-        id: number;
+        id: number | string;
         productId?: string;
         name: string;
         price: string;

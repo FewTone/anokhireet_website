@@ -29,12 +29,22 @@ export default function WebsiteGuard({ children }: WebsiteGuardProps) {
 
         // Check website setting
         const checkWebsiteSetting = async () => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WebsiteGuard.tsx:31',message:'checkWebsiteSetting called',data:{pathname,isAllowedRoute},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
             try {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WebsiteGuard.tsx:33',message:'Before Supabase query',data:{supabaseClient:!!supabase},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
                 const { data, error } = await supabase
                     .from("website_settings")
                     .select("value")
                     .eq("key", "website_enabled")
                     .single();
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WebsiteGuard.tsx:37',message:'After Supabase query',data:{hasData:!!data,hasError:!!error,errorCode:error?.code,errorMessage:error?.message?.substring(0,100)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
 
                 if (error) {
                     if (error.code === 'PGRST116') {
@@ -98,7 +108,10 @@ export default function WebsiteGuard({ children }: WebsiteGuardProps) {
                         router.push("/");
                     }
                 }
-            } catch (error) {
+            } catch (error: any) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WebsiteGuard.tsx:101',message:'Error in checkWebsiteSetting',data:{errorType:error?.constructor?.name,errorMessage:error?.message?.substring(0,200),errorStack:error?.stack?.substring(0,300)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
                 console.error("Error checking website setting:", error);
                 // Default to enabled (show normal website) on error
                 setIsEnabled(true);

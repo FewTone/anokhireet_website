@@ -89,7 +89,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                 <div className="flex flex-1 overflow-hidden">
                     {/* Left Sidebar - Additional Image */}
                     <div className="w-64 bg-gray-50 border-r border-gray-200 p-6 flex flex-col">
-                        <div className="relative w-full aspect-square mb-4">
+                        <div className="relative w-full aspect-[4/5] mb-4">
                             <Image
                                 src={product.image}
                                 alt={product.name}
@@ -168,7 +168,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
 
                     {/* Main Content Area - Product Image */}
                     <div className="flex-1 flex items-center justify-center bg-white p-8">
-                        <div className="relative w-full max-w-2xl aspect-[3/4]">
+                        <div className="relative w-full max-w-2xl aspect-[4/5]">
                             <Image
                                 src={product.image}
                                 alt={product.name}

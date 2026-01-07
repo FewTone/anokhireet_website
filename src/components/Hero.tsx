@@ -103,22 +103,23 @@ export default function Hero() {
 
     return (
         <div
-            className="relative w-full h-[50vh] md:h-[65vh] md:max-h-[600px] overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0"
+            className="hero-container relative w-full overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
             {/* Slider Track */}
             <div
-                className={`flex h-full gap-4 ${isTransitioning ? "transition-transform duration-1000 ease-in-out" : ""}`}
+                className={`flex items-start gap-4 ${isTransitioning ? "transition-transform duration-1000 ease-in-out" : ""}`}
                 onTransitionEnd={handleTransitionEnd}
                 style={{
                     transform: `translateX(calc(-${currentIndex} * (var(--slide-width) + 16px)))`,
+                    height: '100%',
                 } as React.CSSProperties}
             >
                 {slides.map((slide, index) => (
                     <div
                         key={index}
-                        className="hero-slide relative flex-shrink-0 h-full"
+                        className="hero-slide relative flex-shrink-0 aspect-[4/5]"
                     >
                         <div className="relative w-full h-full">
                             <Image
@@ -167,18 +168,33 @@ export default function Hero() {
 
 
             <style jsx>{`
+        .hero-container {
+          height: calc(100vw * 1.25);
+        }
+        @media (min-width: 768px) {
+          .hero-container {
+            height: calc((100vw - 32px) / 3 * 1.25);
+          }
+        }
         .hero-slide {
           width: 100vw;
+          aspect-ratio: 4 / 5;
+          height: auto;
+          flex-shrink: 0;
           user-select: none;
           -webkit-user-drag: none;
         }
         @media (min-width: 768px) {
           .hero-slide {
             width: calc((100vw - 32px) / 3);
+            aspect-ratio: 4 / 5;
+            height: auto;
           }
         }
         div.flex {
             --slide-width: 100vw;
+            align-items: flex-start;
+            height: 100%;
         }
         @media (min-width: 768px) {
             div.flex {
