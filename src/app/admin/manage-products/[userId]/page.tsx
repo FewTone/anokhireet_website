@@ -110,72 +110,6 @@ export default function ManageProductsPage() {
         }
     };
 
-    const loadCategories = async () => {
-        try {
-            const { data, error } = await supabase
-                .from("categories")
-                .select("id, name")
-                .order("name", { ascending: true });
-            
-            if (error) throw error;
-            if (data) {
-                setAvailableCategories(data);
-            }
-        } catch (error) {
-            console.error("Error loading categories:", error);
-        }
-    };
-
-    const handleAddNewCategory = async () => {
-        if (!newCategoryName.trim()) {
-            showPopup("Please enter a category name", "warning", "Validation Error");
-            return;
-        }
-
-        // Check if category already exists
-        if (availableCategories.some(cat => cat.name.toLowerCase() === newCategoryName.trim().toLowerCase())) {
-            showPopup("This category already exists", "warning", "Duplicate Category");
-            return;
-        }
-
-        try {
-            // Get max display_order
-            const maxOrder = availableCategories.length > 0 
-                ? Math.max(...availableCategories.map(c => 0)) 
-                : -1;
-
-            const { data, error } = await supabase
-                .from("categories")
-                .insert([{
-                    name: newCategoryName.trim(),
-                    image_url: "", // Will need to be set later
-                    link_url: `/${newCategoryName.trim().toLowerCase().replace(/\s+/g, '-')}`,
-                    display_order: maxOrder + 1,
-                    is_featured: false
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            // Add to available categories
-            setAvailableCategories([...availableCategories, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
-            
-            // Automatically select the new category
-            setProductFormData({
-                ...productFormData,
-                category: [...productFormData.category, data.name]
-            });
-
-            // Clear input and hide
-            setNewCategoryName("");
-            setShowAddCategoryInput(false);
-            showPopup("Category added and selected!", "success");
-        } catch (error: any) {
-            showPopup(error.message || "Failed to add category", "error", "Error");
-            console.error("Error adding category:", error);
-        }
-    };
 
     // Reload products when window regains focus (after returning from edit modal)
     useEffect(() => {
@@ -216,6 +150,26 @@ export default function ManageProductsPage() {
         } catch (error) {
             console.error("Error loading user:", error);
             showPopup("Failed to load user information", "error", "Error");
+        }
+    };
+
+    const loadFacets = async () => {
+        try {
+            const [productTypesResult, occasionsResult, colorsResult, materialsResult, citiesResult] = await Promise.all([
+                supabase.from("product_types").select("id, name").order("name"),
+                supabase.from("occasions").select("id, name").order("name"),
+                supabase.from("colors").select("id, name").order("name"),
+                supabase.from("materials").select("id, name").order("name"),
+                supabase.from("cities").select("id, name").order("name")
+            ]);
+
+            if (productTypesResult.data) setProductTypes(productTypesResult.data);
+            if (occasionsResult.data) setOccasions(occasionsResult.data);
+            if (colorsResult.data) setColors(colorsResult.data);
+            if (materialsResult.data) setMaterials(materialsResult.data);
+            if (citiesResult.data) setCities(citiesResult.data);
+        } catch (error) {
+            console.error("Error loading facets:", error);
         }
     };
 
@@ -619,37 +573,8 @@ export default function ManageProductsPage() {
                     is_active: true, // Default to active
                 };
                 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:515',message:'Before category mapping - raw category data',data:{category:productData.category,availableCategories:availableCategories},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
-                
-                // Handle categories - support multiple categories
-                // productData.category contains category NAMES (array), need to convert to IDs
-                const selectedCategoryIds: string[] = [];
-                
-                if (Array.isArray(productData.category) && productData.category.length > 0) {
-                    // Convert all category names to IDs
-                    productData.category.forEach((categoryName: string) => {
-                        const categoryMatch = availableCategories.find(cat => cat.name === categoryName);
-                        if (categoryMatch) {
-                            selectedCategoryIds.push(categoryMatch.id);
-                        } else {
-                            console.warn(`Category "${categoryName}" not found in availableCategories`);
-                        }
-                    });
-                    
-                    // Set primary category_id (first one) for backward compatibility
-                    if (selectedCategoryIds.length > 0) {
-                        insertData.category_id = selectedCategoryIds[0];
-                    }
-                } else if (productData.category && !Array.isArray(productData.category)) {
-                    // Single value - also need to look up
-                    const categoryMatch = availableCategories.find(cat => cat.name === productData.category);
-                    if (categoryMatch) {
-                        selectedCategoryIds.push(categoryMatch.id);
-                        insertData.category_id = categoryMatch.id;
-                    }
-                }
+                // Note: Categories are now handled via facets (product_types, occasions, colors, materials, cities)
+                // The category field in productData is now a facets object, not a category name/ID
                 
                 console.log("Inserting product data:", insertData);
                 console.log("Owner user ID (from params):", userId);
@@ -865,10 +790,7 @@ export default function ManageProductsPage() {
         setProductImageFiles([]);
         setProductImagePreviews([]);
         setImageSizeInfo([]);
-        setNewCategoryName("");
-        setShowAddCategoryInput(false);
-        // Reload categories when opening modal to ensure we have the latest
-        loadCategories();
+        // Facets are loaded via loadFacets() which is called in useEffect
         setIsProductModalOpen(true);
     };
 

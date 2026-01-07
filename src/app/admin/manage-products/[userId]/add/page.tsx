@@ -542,7 +542,7 @@ export default function AddProductPage() {
             if (insertError) throw insertError;
             
             // Save facet associations to junction tables
-            const facetPromises: Promise<any>[] = [];
+            const facetPromises: Array<Promise<{ error: any }>> = [];
             
             // Product Types
             if (productFormData.productTypes.length > 0) {
@@ -552,12 +552,12 @@ export default function AddProductPage() {
                 
                 if (productTypeIds.length > 0) {
                     facetPromises.push(
-                        supabase.from("product_product_types").insert(
+                        Promise.resolve(supabase.from("product_product_types").insert(
                             productTypeIds.map(typeId => ({
                                 product_id: insertedProduct.id,
                                 type_id: typeId
                             }))
-                        )
+                        )).then(res => res)
                     );
                 }
             }
@@ -570,12 +570,12 @@ export default function AddProductPage() {
                 
                 if (occasionIds.length > 0) {
                     facetPromises.push(
-                        supabase.from("product_occasions").insert(
+                        Promise.resolve(supabase.from("product_occasions").insert(
                             occasionIds.map(occasionId => ({
                                 product_id: insertedProduct.id,
                                 occasion_id: occasionId
                             }))
-                        )
+                        )).then(res => res)
                     );
                 }
             }
@@ -588,12 +588,12 @@ export default function AddProductPage() {
                 
                 if (colorIds.length > 0) {
                     facetPromises.push(
-                        supabase.from("product_colors").insert(
+                        Promise.resolve(supabase.from("product_colors").insert(
                             colorIds.map(colorId => ({
                                 product_id: insertedProduct.id,
                                 color_id: colorId
                             }))
-                        )
+                        )).then(res => res)
                     );
                 }
             }
@@ -606,12 +606,12 @@ export default function AddProductPage() {
                 
                 if (materialIds.length > 0) {
                     facetPromises.push(
-                        supabase.from("product_materials").insert(
+                        Promise.resolve(supabase.from("product_materials").insert(
                             materialIds.map(materialId => ({
                                 product_id: insertedProduct.id,
                                 material_id: materialId
                             }))
-                        )
+                        )).then(res => res)
                     );
                 }
             }
@@ -624,12 +624,12 @@ export default function AddProductPage() {
                 
                 if (cityIds.length > 0) {
                     facetPromises.push(
-                        supabase.from("product_cities").insert(
+                        Promise.resolve(supabase.from("product_cities").insert(
                             cityIds.map(cityId => ({
                                 product_id: insertedProduct.id,
                                 city_id: cityId
                             }))
-                        )
+                        )).then(res => res)
                     );
                 }
             }
