@@ -166,3 +166,12 @@
 {"location":"WebsiteGuard.tsx:33","message":"Before Supabase query","data":{"supabaseClient":true},"timestamp":1767783439560,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
 {"location":"WebsiteGuard.tsx:37","message":"After Supabase query","data":{"hasData":true,"hasError":false},"timestamp":1767783439662,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
 {"location":"WebsiteGuard.tsx:37","message":"After Supabase query","data":{"hasData":true,"hasError":false},"timestamp":1767783439673,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:31","message":"checkWebsiteSetting called","data":{"pathname":"/admin","isAllowedRoute":true},"timestamp":1767783466745,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:33","message":"Before Supabase query","data":{"supabaseClient":true},"timestamp":1767783466757,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:37","message":"After Supabase query","data":{"hasData":true,"hasError":false},"timestamp":1767783467093,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:31","message":"checkWebsiteSetting called","data":{"pathname":"/admin","isAllowedRoute":true},"timestamp":1767783549567,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:33","message":"Before Supabase query","data":{"supabaseClient":true},"timestamp":1767783549573,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:37","message":"After Supabase query","data":{"hasData":true,"hasError":false},"timestamp":1767783550149,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:31","message":"checkWebsiteSetting called","data":{"pathname":"/admin","isAllowedRoute":true},"timestamp":1767783558950,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:33","message":"Before Supabase query","data":{"supabaseClient":true},"timestamp":1767783558953,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"WebsiteGuard.tsx:37","message":"After Supabase query","data":{"hasData":true,"hasError":false},"timestamp":1767783559042,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
