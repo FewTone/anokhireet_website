@@ -3351,7 +3351,14 @@ To get these values:
                     </aside>
 
                     {/* Main Content Area */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0" ref={(el) => {
+                        // #region agent log
+                        if (el) {
+                            const rect = el.getBoundingClientRect();
+                            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:3354',message:'Main content area dimensions',data:{width:rect.width,height:rect.height,left:rect.left,top:rect.top,activeTab},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                        }
+                        // #endregion
+                    }}>
 
                     {/* Categories Tab - Removed: Now using 5 facet types instead */}
                     {/* Removed categories tab - using facets instead */}
@@ -4549,7 +4556,7 @@ To get these values:
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
+                                </div>
                             </div>
                         </div>
                         );
@@ -6339,9 +6346,9 @@ To get these values:
 
             {/* Featured Categories Tab */}
             {activeTab === "featured" && (
-                <div className="space-y-6 w-full">
+                <div className="space-y-6">
                     <div className="bg-white rounded-lg border border-gray-200 p-6">
-                        <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center justify-between mb-6">
                             <div>
                                 <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
                                 <p className="text-sm text-gray-600 mt-1">Pin items from Product Types, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
