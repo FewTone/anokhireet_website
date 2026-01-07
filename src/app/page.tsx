@@ -175,10 +175,11 @@ export default function Home() {
                 // #endregion
                 console.log('✅ Featured categories found:', data.length, data);
                 const mapped = data.map(cat => ({
-                    img: cat.image_url,
+                    img: cat.image_url || null,
                     link_url: cat.link_url || "/shirt-collection"
                 }));
                 console.log('✅ Mapped featured categories:', mapped);
+                console.log('✅ Setting featured categories state with', mapped.length, 'categories');
                 setFeaturedCategories(mapped);
             } else {
                 // #region agent log
@@ -299,10 +300,10 @@ export default function Home() {
                     return null;
                 })()}
                 {/* #endregion */}
-                {featuredCategories.length > 0 ? (
-                <div className="mt-12 text-center px-4">
-                    <h2 className="text-2xl font-bold mb-4">FEATURED CATEGORIES</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:flex xl:flex-wrap justify-center gap-4">
+                {featuredCategories.length > 0 && (
+                <div className="mt-12 mb-12 text-center px-4">
+                    <h2 className="text-2xl md:text-3xl font-bold mb-6">FEATURED CATEGORIES</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:flex xl:flex-wrap justify-center gap-4 max-w-7xl mx-auto">
                             {featuredCategories.map((cat, idx) => {
                                 // #region agent log
                                 fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:268',message:'Rendering featured category item',data:{index:idx,img:cat.img,link_url:cat.link_url,hasImg:!!cat.img},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
@@ -326,8 +327,13 @@ export default function Home() {
                                             }}
                                         />
                                     ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
-                                            <span className="text-sm">No Image</span>
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 text-gray-400">
+                                            <div className="text-center">
+                                                <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <span className="text-xs font-medium">No Image</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>

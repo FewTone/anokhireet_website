@@ -2,19 +2,83 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
-import { HERO_SLIDES } from "@/data";
+import { supabase } from "@/lib/supabase";
+
+interface HeroSlide {
+    image: string;
+    title: string;
+    subtitle?: string;
+}
 
 export default function Hero() {
-    const originalLength = HERO_SLIDES.length;
+    const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
+    const [loading, setLoading] = useState(true);
+    
     // We need enough clones to fill the desktop view (which shows 3-4 slides)
     // Cloning 4 from each end ensures we never see a "gap" even on wide screens.
     const numClones = 4;
+    
+    const originalLength = heroSlides.length;
+    
+    const slides = originalLength > 0 ? [
+        ...heroSlides.slice(-numClones),
+        ...heroSlides,
+        ...heroSlides.slice(0, numClones),
+    ] : [];
 
-    const slides = [
-        ...HERO_SLIDES.slice(-numClones),
-        ...HERO_SLIDES,
-        ...HERO_SLIDES.slice(0, numClones),
-    ];
+    useEffect(() => {
+        loadHeroSlides();
+        
+        // Set up realtime subscription for hero slides
+        const channel = supabase
+            .channel('hero-slides-changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'hero_slides'
+                },
+                () => {
+                    loadHeroSlides();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
+
+    const loadHeroSlides = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("hero_slides")
+                .select("*")
+                .eq("is_active", true)
+                .order("display_order", { ascending: true });
+
+            if (error) {
+                console.error("Error loading hero slides:", error);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                const mapped = data.map(slide => ({
+                    image: slide.image_url,
+                    title: slide.title,
+                    subtitle: slide.subtitle || ""
+                }));
+                setHeroSlides(mapped);
+            } else {
+                setHeroSlides([]);
+            }
+        } catch (error) {
+            console.error("Error loading hero slides:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const [currentIndex, setCurrentIndex] = useState(numClones);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -101,6 +165,18 @@ export default function Hero() {
     let dotIndex = (currentIndex - numClones) % originalLength;
     if (dotIndex < 0) dotIndex += originalLength;
 
+    if (loading) {
+        return (
+            <div className="hero-container relative w-full overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+            </div>
+        );
+    }
+
+    if (originalLength === 0) {
+        return null;
+    }
+
     return (
         <div
             className="hero-container relative w-full overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0"
@@ -148,22 +224,24 @@ export default function Hero() {
             </div>
 
             {/* Pagination Dots */}
-            <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 z-20">
-                {HERO_SLIDES.map((_, index) => (
-                    <button
-                        key={index}
-                        onClick={() => {
-                            setIsTransitioning(true);
-                            setCurrentIndex(index + numClones);
-                        }}
-                        className={`transition-all duration-300 rounded-full cursor-pointer h-2 ${index === dotIndex
-                            ? "w-10 bg-white opacity-100"
-                            : "w-2 bg-white/50 hover:bg-white"
-                            }`}
-                        aria-label={`Go to slide ${index + 1}`}
-                    />
-                ))}
-            </div>
+            {originalLength > 0 && (
+                <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 z-50 pointer-events-auto">
+                    {heroSlides.map((_, index) => (
+                        <button
+                            key={index}
+                            onClick={() => {
+                                setIsTransitioning(true);
+                                setCurrentIndex(index + numClones);
+                            }}
+                            className={`transition-all duration-300 rounded-full cursor-pointer h-2.5 shadow-lg ${index === dotIndex
+                                ? "w-10 bg-white opacity-100"
+                                : "w-2.5 bg-white/70 hover:bg-white hover:opacity-100"
+                                }`}
+                            aria-label={`Go to slide ${index + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
 
 
 
