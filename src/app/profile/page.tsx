@@ -497,7 +497,7 @@ export default function Profile() {
                                 setVerifyingOtp(false);
                 router.push("/user");
                 return;
-                            }
+            }
                         }
                         
                         setError("Failed to create authentication session. Please try again.");

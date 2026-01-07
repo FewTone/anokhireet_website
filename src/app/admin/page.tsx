@@ -3207,9 +3207,9 @@ To get these values:
             </header>
             
             <main className="pb-6">
-                <div className="flex flex-col lg:flex-row gap-6 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col lg:flex-row gap-6 max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Vertical Sidebar */}
-                    <aside className="w-full lg:w-64 flex-shrink-0">
+                    <aside className="w-full lg:w-56 flex-shrink-0">
                         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-24">
                             {/* Sidebar Header */}
                             <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
@@ -3281,6 +3281,28 @@ To get these values:
                                     </svg>
                                     Users
                         </button>
+                                
+                        <button
+                            onClick={() => {
+                                setActiveTab("featured");
+                                localStorage.setItem("adminActiveTab", "featured");
+                                router.replace("/admin?tab=featured");
+                            }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${
+                                activeTab === "featured"
+                                            ? "bg-black text-white shadow-md"
+                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                    }`}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="3" width="7" height="7"></rect>
+                                        <rect x="14" y="14" width="7" height="7"></rect>
+                                        <rect x="3" y="14" width="7" height="7"></rect>
+                                    </svg>
+                                    <span>Categories</span>
+                        </button>
+                                
                         <button
                             onClick={() => {
                                         setActiveTab("hero");
@@ -3900,6 +3922,255 @@ To get these values:
                         const displayCount = allFilteredProducts.length;
 
                         return (
+                        <div className="space-y-6">
+                            {/* Facet Management Section */}
+                            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                <h2 className="text-xl font-bold text-gray-900 mb-6">Manage Facets</h2>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                                    {/* Product Types Column */}
+                                    <div className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="font-semibold text-gray-900">Types</h3>
+                                            <button
+                                                onClick={() => {
+                                                    setActiveFacetTab("product_types");
+                                                    setEditingFacet(null);
+                                                    setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                    setFacetImageFile(null);
+                                                    setFacetImagePreview("");
+                                                    setIsFacetModalOpen(true);
+                                                }}
+                                                className="px-2 py-1 bg-black text-white font-medium rounded text-xs flex items-center gap-1"
+                                            >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                            {productTypes.length === 0 ? (
+                                                <p className="text-xs text-gray-400 text-center py-4">No items</p>
+                                            ) : (
+                                                productTypes.slice(0, 10).map((pt) => (
+                                                    <div key={pt.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100">
+                                                        <span className="text-xs text-gray-700 truncate flex-1">{pt.name}</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("product_types");
+                                                                setEditingFacet(pt);
+                                                                setFacetFormData({ name: pt.name, hex: "", state: "", country: "", image_url: pt.image_url || "" });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview(pt.image_url || "");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Occasions Column */}
+                                    <div className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="font-semibold text-gray-900">Occasions</h3>
+                                            <button
+                                                onClick={() => {
+                                                    setActiveFacetTab("occasions");
+                                                    setEditingFacet(null);
+                                                    setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                    setFacetImageFile(null);
+                                                    setFacetImagePreview("");
+                                                    setIsFacetModalOpen(true);
+                                                }}
+                                                className="px-2 py-1 bg-black text-white font-medium rounded text-xs flex items-center gap-1"
+                                            >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                            {occasions.length === 0 ? (
+                                                <p className="text-xs text-gray-400 text-center py-4">No items</p>
+                                            ) : (
+                                                occasions.slice(0, 10).map((oc) => (
+                                                    <div key={oc.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100">
+                                                        <span className="text-xs text-gray-700 truncate flex-1">{oc.name}</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("occasions");
+                                                                setEditingFacet(oc);
+                                                                setFacetFormData({ name: oc.name, hex: "", state: "", country: "", image_url: oc.image_url || "" });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview(oc.image_url || "");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Colors Column */}
+                                    <div className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="font-semibold text-gray-900">Colors</h3>
+                                            <button
+                                                onClick={() => {
+                                                    setActiveFacetTab("colors");
+                                                    setEditingFacet(null);
+                                                    setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                    setFacetImageFile(null);
+                                                    setFacetImagePreview("");
+                                                    setIsFacetModalOpen(true);
+                                                }}
+                                                className="px-2 py-1 bg-black text-white font-medium rounded text-xs flex items-center gap-1"
+                                            >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                            {colors.length === 0 ? (
+                                                <p className="text-xs text-gray-400 text-center py-4">No items</p>
+                                            ) : (
+                                                colors.slice(0, 10).map((c) => (
+                                                    <div key={c.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100">
+                                                        <span className="text-xs text-gray-700 truncate flex-1">{c.name}</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("colors");
+                                                                setEditingFacet(c);
+                                                                setFacetFormData({ name: c.name, hex: c.hex || "", state: "", country: "", image_url: "" });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview("");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Materials Column */}
+                                    <div className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="font-semibold text-gray-900">Materials</h3>
+                                            <button
+                                                onClick={() => {
+                                                    setActiveFacetTab("materials");
+                                                    setEditingFacet(null);
+                                                    setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                    setFacetImageFile(null);
+                                                    setFacetImagePreview("");
+                                                    setIsFacetModalOpen(true);
+                                                }}
+                                                className="px-2 py-1 bg-black text-white font-medium rounded text-xs flex items-center gap-1"
+                                            >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                            {materials.length === 0 ? (
+                                                <p className="text-xs text-gray-400 text-center py-4">No items</p>
+                                            ) : (
+                                                materials.slice(0, 10).map((m) => (
+                                                    <div key={m.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100">
+                                                        <span className="text-xs text-gray-700 truncate flex-1">{m.name}</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("materials");
+                                                                setEditingFacet(m);
+                                                                setFacetFormData({ name: m.name, hex: "", state: "", country: "", image_url: "" });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview("");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Cities Column */}
+                                    <div className="border border-gray-200 rounded-lg p-4">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="font-semibold text-gray-900">Cities</h3>
+                                            <button
+                                                onClick={() => {
+                                                    setActiveFacetTab("cities");
+                                                    setEditingFacet(null);
+                                                    setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                    setFacetImageFile(null);
+                                                    setFacetImagePreview("");
+                                                    setIsFacetModalOpen(true);
+                                                }}
+                                                className="px-2 py-1 bg-black text-white font-medium rounded text-xs flex items-center gap-1"
+                                            >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </div>
+                                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                            {cities.length === 0 ? (
+                                                <p className="text-xs text-gray-400 text-center py-4">No items</p>
+                                            ) : (
+                                                cities.slice(0, 10).map((city) => (
+                                                    <div key={city.id} className="flex items-center justify-between p-2 bg-gray-50 rounded hover:bg-gray-100">
+                                                        <span className="text-xs text-gray-700 truncate flex-1">{city.name}</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("cities");
+                                                                setEditingFacet(city);
+                                                                setFacetFormData({ name: city.name, hex: "", state: city.state || "", country: city.country || "", image_url: "" });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview("");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-2 py-0.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* All Products Section */}
                         <div>
                             <div className="flex justify-between items-center mb-6">
                                 <div>
@@ -4525,6 +4796,7 @@ To get these values:
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
                             </div>
                         </div>
                         );
@@ -6323,35 +6595,37 @@ To get these values:
                             </div>
                         </div>
 
-                        {/* 5-Column Layout */}
-                        <div className="grid grid-cols-5 gap-4">
-                            {/* Column 1: Product Types */}
-                            <div className="border border-gray-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-4">
+                        {/* Vertical List Layout */}
+                        <div className="space-y-8">
+                            {/* Section 1: Product Types */}
+                            <div className="border border-gray-200 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-bold text-gray-900">Product Types</h3>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("product_types");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-3 py-1.5 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-xs flex items-center gap-1"
-                                    >
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm text-gray-500">{productTypes.length} items</span>
+                                        <button
+                                            onClick={() => {
+                                                setActiveFacetTab("product_types");
+                                                setEditingFacet(null);
+                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                setFacetImageFile(null);
+                                                setFacetImagePreview("");
+                                                setIsFacetModalOpen(true);
+                                            }}
+                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-500 mb-3">{productTypes.length} items</div>
-                                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                                <div className="space-y-3">
                                     {productTypes.length === 0 ? (
-                                        <div className="text-center py-4 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-xs text-gray-500">No items</p>
+                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                            <p className="text-sm text-gray-500">No items</p>
                                         </div>
                                     ) : (
                                         productTypes.map((pt, index) => {
@@ -6360,38 +6634,19 @@ To get these values:
                                             return (
                                                 <div
                                                     key={pt.id}
-                                                    className="flex flex-col p-3 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
                                                 >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="text-gray-400 font-bold text-xs">{index + 1}</div>
-                                                        <button
-                                                            onClick={async () => {
-                                                                const newFeatured = !pt.is_featured;
-                                                                try {
-                                                                    const { error } = await supabase
-                                                                        .from("product_types")
-                                                                        .update({ is_featured: newFeatured })
-                                                                        .eq("id", pt.id);
-                                                                    if (error) throw error;
-                                                                    loadProductTypes();
-                                                                    showPopup(newFeatured ? "Product type pinned!" : "Product type unpinned!", "success");
-                                                                } catch (error: any) {
-                                                                    showPopup(error.message || "Failed to update", "error");
-                                                                }
-                                                            }}
-                                                            className={`p-1 rounded transition-colors ${
-                                                                pt.is_featured
-                                                                    ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
-                                                                    : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
-                                                            }`}
-                                                            title={pt.is_featured ? "Unpin" : "Pin"}
-                                                        >
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                        <div className="cursor-move">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
                                                             </svg>
-                                                        </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="relative w-full aspect-square bg-gray-200 rounded-lg overflow-hidden mb-2">
+                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                                         {pt.image_url ? (
                                                             <Image
                                                                 src={pt.image_url}
@@ -6410,50 +6665,72 @@ To get these values:
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-1 mb-1">
-                                                            <h4 className="font-semibold text-gray-900 truncate text-xs">{pt.name}</h4>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className="font-semibold text-gray-900">{pt.name}</h4>
                                                             {pt.is_featured && (
-                                                                <span className="px-1 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded flex-shrink-0">
-                                                                    ★
+                                                                <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                    ★ Featured
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline truncate"
+                                                        <p className="text-xs text-gray-600 mb-1">/products?product_type={pt.id}</p>
+                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
                                                                 router.push(`/admin?tab=products&product_type=${pt.id}`);
                                                             }}
                                                         >
-                                                            View {productCount} →
+                                                            View {productCount} products →
                                                         </p>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setActiveFacetTab("product_types");
-                                                                    setEditingFacet(pt);
-                                                                    setFacetFormData({ 
-                                                                        name: pt.name, 
-                                                                        hex: "", 
-                                                                        state: "", 
-                                                                        country: "", 
-                                                                        image_url: pt.image_url || "" 
-                                                                    });
-                                                                    setFacetImageFile(null);
-                                                                    setFacetImagePreview(pt.image_url || "");
-                                                                    setIsFacetModalOpen(true);
-                                                                }}
-                                                                className="flex-1 px-2 py-1 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-xs"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteProductType(pt.id, pt.name)}
-                                                                className="px-2 py-1 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-xs"
-                                                            >
-                                                                Del
-                                                            </button>
-                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        <button
+                                                            onClick={async () => {
+                                                                const newFeatured = !pt.is_featured;
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from("product_types")
+                                                                        .update({ is_featured: newFeatured })
+                                                                        .eq("id", pt.id);
+                                                                    if (error) throw error;
+                                                                    loadProductTypes();
+                                                                    showPopup(newFeatured ? "Product type pinned!" : "Product type unpinned!", "success");
+                                                                } catch (error: any) {
+                                                                    showPopup(error.message || "Failed to update", "error");
+                                                                }
+                                                            }}
+                                                            className={`p-2 rounded transition-colors ${
+                                                                pt.is_featured
+                                                                    ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                                    : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                            }`}
+                                                            title={pt.is_featured ? "Unpin" : "Pin"}
+                                                        >
+                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                            </svg>
+                                                        </button>
+                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("product_types");
+                                                                setEditingFacet(pt);
+                                                                setFacetFormData({ 
+                                                                    name: pt.name, 
+                                                                    hex: "", 
+                                                                    state: "", 
+                                                                    country: "", 
+                                                                    image_url: pt.image_url || "" 
+                                                                });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview(pt.image_url || "");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                        >
+                                                            Edit
+                                                        </button>
                                                     </div>
         </div>
     );
@@ -6462,33 +6739,35 @@ To get these values:
                                 </div>
                             </div>
 
-                            {/* Column 2: Occasions */}
-                            <div className="border border-gray-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-4">
+                            {/* Section 2: Occasions */}
+                            <div className="border border-gray-200 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-bold text-gray-900">Occasions</h3>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("occasions");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-3 py-1.5 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-xs flex items-center gap-1"
-                                    >
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm text-gray-500">{occasions.length} items</span>
+                                        <button
+                                            onClick={() => {
+                                                setActiveFacetTab("occasions");
+                                                setEditingFacet(null);
+                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                setFacetImageFile(null);
+                                                setFacetImagePreview("");
+                                                setIsFacetModalOpen(true);
+                                            }}
+                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-500 mb-3">{occasions.length} items</div>
-                                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                                <div className="space-y-3">
                                     {occasions.length === 0 ? (
-                                        <div className="text-center py-4 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-xs text-gray-500">No items</p>
+                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                            <p className="text-sm text-gray-500">No items</p>
                                         </div>
                                     ) : (
                                         occasions.map((oc, index) => {
@@ -6497,38 +6776,19 @@ To get these values:
                                             return (
                                                 <div
                                                     key={oc.id}
-                                                    className="flex flex-col p-3 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
                                                 >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="text-gray-400 font-bold text-xs">{index + 1}</div>
-                                                        <button
-                                                            onClick={async () => {
-                                                                const newFeatured = !oc.is_featured;
-                                                                try {
-                                                                    const { error } = await supabase
-                                                                        .from("occasions")
-                                                                        .update({ is_featured: newFeatured })
-                                                                        .eq("id", oc.id);
-                                                                    if (error) throw error;
-                                                                    loadOccasions();
-                                                                    showPopup(newFeatured ? "Occasion pinned!" : "Occasion unpinned!", "success");
-                                                                } catch (error: any) {
-                                                                    showPopup(error.message || "Failed to update", "error");
-                                                                }
-                                                            }}
-                                                            className={`p-1 rounded transition-colors ${
-                                                                oc.is_featured
-                                                                    ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
-                                                                    : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
-                                                            }`}
-                                                            title={oc.is_featured ? "Unpin" : "Pin"}
-                                                        >
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                        <div className="cursor-move">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
                                                             </svg>
-                                                        </button>
+                                                        </div>
                                                     </div>
-                                                    <div className="relative w-full aspect-square bg-gray-200 rounded-lg overflow-hidden mb-2">
+                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                                                         {oc.image_url ? (
                                                             <Image
                                                                 src={oc.image_url}
@@ -6547,50 +6807,72 @@ To get these values:
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-1 mb-1">
-                                                            <h4 className="font-semibold text-gray-900 truncate text-xs">{oc.name}</h4>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className="font-semibold text-gray-900">{oc.name}</h4>
                                                             {oc.is_featured && (
-                                                                <span className="px-1 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded flex-shrink-0">
-                                                                    ★
+                                                                <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                    ★ Featured
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline truncate"
+                                                        <p className="text-xs text-gray-600 mb-1">/products?occasion={oc.id}</p>
+                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
                                                                 router.push(`/admin?tab=products&occasion=${oc.id}`);
                                                             }}
                                                         >
-                                                            View {productCount} →
+                                                            View {productCount} products →
                                                         </p>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setActiveFacetTab("occasions");
-                                                                    setEditingFacet(oc);
-                                                                    setFacetFormData({ 
-                                                                        name: oc.name, 
-                                                                        hex: "", 
-                                                                        state: "", 
-                                                                        country: "", 
-                                                                        image_url: oc.image_url || "" 
-                                                                    });
-                                                                    setFacetImageFile(null);
-                                                                    setFacetImagePreview(oc.image_url || "");
-                                                                    setIsFacetModalOpen(true);
-                                                                }}
-                                                                className="flex-1 px-2 py-1 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-xs"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteOccasion(oc.id, oc.name)}
-                                                                className="px-2 py-1 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-xs"
-                                                            >
-                                                                Del
-                                                            </button>
-                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        <button
+                                                            onClick={async () => {
+                                                                const newFeatured = !oc.is_featured;
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from("occasions")
+                                                                        .update({ is_featured: newFeatured })
+                                                                        .eq("id", oc.id);
+                                                                    if (error) throw error;
+                                                                    loadOccasions();
+                                                                    showPopup(newFeatured ? "Occasion pinned!" : "Occasion unpinned!", "success");
+                                                                } catch (error: any) {
+                                                                    showPopup(error.message || "Failed to update", "error");
+                                                                }
+                                                            }}
+                                                            className={`p-2 rounded transition-colors ${
+                                                                oc.is_featured
+                                                                    ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                                    : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                            }`}
+                                                            title={oc.is_featured ? "Unpin" : "Pin"}
+                                                        >
+                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                            </svg>
+                                                        </button>
+                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("occasions");
+                                                                setEditingFacet(oc);
+                                                                setFacetFormData({ 
+                                                                    name: oc.name, 
+                                                                    hex: "", 
+                                                                    state: "", 
+                                                                    country: "", 
+                                                                    image_url: oc.image_url || "" 
+                                                                });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview(oc.image_url || "");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                        >
+                                                            Edit
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -6599,33 +6881,35 @@ To get these values:
                                 </div>
                             </div>
 
-                            {/* Column 3: Colors */}
-                            <div className="border border-gray-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-4">
+                            {/* Section 3: Colors */}
+                            <div className="border border-gray-200 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-bold text-gray-900">Colors</h3>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("colors");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-3 py-1.5 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-xs flex items-center gap-1"
-                                    >
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm text-gray-500">{colors.length} items</span>
+                                        <button
+                                            onClick={() => {
+                                                setActiveFacetTab("colors");
+                                                setEditingFacet(null);
+                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                setFacetImageFile(null);
+                                                setFacetImagePreview("");
+                                                setIsFacetModalOpen(true);
+                                            }}
+                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-500 mb-3">{colors.length} items</div>
-                                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                                <div className="space-y-3">
                                     {colors.length === 0 ? (
-                                        <div className="text-center py-4 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-xs text-gray-500">No items</p>
+                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                            <p className="text-sm text-gray-500">No items</p>
                                         </div>
                                     ) : (
                                         colors.map((c, index) => {
@@ -6634,12 +6918,19 @@ To get these values:
                                             return (
                                                 <div
                                                     key={c.id}
-                                                    className="flex flex-col p-3 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
                                                 >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="text-gray-400 font-bold text-xs">{index + 1}</div>
+                                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                        <div className="cursor-move">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                            </svg>
+                                                        </div>
                                                     </div>
-                                                    <div className="relative w-full aspect-square bg-gray-200 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
+                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                         {c.hex ? (
                                                             <div className="w-full h-full rounded-lg border border-gray-300" style={{ backgroundColor: c.hex }}></div>
                                                         ) : (
@@ -6649,43 +6940,39 @@ To get these values:
                                                         )}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <h4 className="font-semibold text-gray-900 truncate text-xs mb-1">{c.name}</h4>
-                                                        <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline truncate"
+                                                        <h4 className="font-semibold text-gray-900 mb-1">{c.name}</h4>
+                                                        <p className="text-xs text-gray-600 mb-1">/products?color={c.id}</p>
+                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
                                                                 router.push(`/admin?tab=products&color=${c.id}`);
                                                             }}
                                                         >
-                                                            View {productCount} →
+                                                            View {productCount} products →
                                                         </p>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setActiveFacetTab("colors");
-                                                                    setEditingFacet(c);
-                                                                    setFacetFormData({ 
-                                                                        name: c.name, 
-                                                                        hex: c.hex || "", 
-                                                                        state: "", 
-                                                                        country: "", 
-                                                                        image_url: "" 
-                                                                    });
-                                                                    setFacetImageFile(null);
-                                                                    setFacetImagePreview("");
-                                                                    setIsFacetModalOpen(true);
-                                                                }}
-                                                                className="flex-1 px-2 py-1 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-xs"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteColor(c.id, c.name)}
-                                                                className="px-2 py-1 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-xs"
-                                                            >
-                                                                Del
-                                                            </button>
-                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("colors");
+                                                                setEditingFacet(c);
+                                                                setFacetFormData({ 
+                                                                    name: c.name, 
+                                                                    hex: c.hex || "", 
+                                                                    state: "", 
+                                                                    country: "", 
+                                                                    image_url: "" 
+                                                                });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview("");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                        >
+                                                            Edit
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -6694,33 +6981,35 @@ To get these values:
                                 </div>
                             </div>
 
-                            {/* Column 4: Materials */}
-                            <div className="border border-gray-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-4">
+                            {/* Section 4: Materials */}
+                            <div className="border border-gray-200 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-bold text-gray-900">Materials</h3>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("materials");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-3 py-1.5 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-xs flex items-center gap-1"
-                                    >
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm text-gray-500">{materials.length} items</span>
+                                        <button
+                                            onClick={() => {
+                                                setActiveFacetTab("materials");
+                                                setEditingFacet(null);
+                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                setFacetImageFile(null);
+                                                setFacetImagePreview("");
+                                                setIsFacetModalOpen(true);
+                                            }}
+                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-500 mb-3">{materials.length} items</div>
-                                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                                <div className="space-y-3">
                                     {materials.length === 0 ? (
-                                        <div className="text-center py-4 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-xs text-gray-500">No items</p>
+                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                            <p className="text-sm text-gray-500">No items</p>
                                         </div>
                                     ) : (
                                         materials.map((m, index) => {
@@ -6729,54 +7018,57 @@ To get these values:
                                             return (
                                                 <div
                                                     key={m.id}
-                                                    className="flex flex-col p-3 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
                                                 >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="text-gray-400 font-bold text-xs">{index + 1}</div>
+                                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                        <div className="cursor-move">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                            </svg>
+                                                        </div>
                                                     </div>
-                                                    <div className="relative w-full aspect-square bg-gray-200 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
+                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                         <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
                                                             No Image
                                                         </div>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <h4 className="font-semibold text-gray-900 truncate text-xs mb-1">{m.name}</h4>
-                                                        <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline truncate"
+                                                        <h4 className="font-semibold text-gray-900 mb-1">{m.name}</h4>
+                                                        <p className="text-xs text-gray-600 mb-1">/products?material={m.id}</p>
+                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
                                                                 router.push(`/admin?tab=products&material=${m.id}`);
                                                             }}
                                                         >
-                                                            View {productCount} →
+                                                            View {productCount} products →
                                                         </p>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setActiveFacetTab("materials");
-                                                                    setEditingFacet(m);
-                                                                    setFacetFormData({ 
-                                                                        name: m.name, 
-                                                                        hex: "", 
-                                                                        state: "", 
-                                                                        country: "", 
-                                                                        image_url: "" 
-                                                                    });
-                                                                    setFacetImageFile(null);
-                                                                    setFacetImagePreview("");
-                                                                    setIsFacetModalOpen(true);
-                                                                }}
-                                                                className="flex-1 px-2 py-1 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-xs"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteMaterial(m.id, m.name)}
-                                                                className="px-2 py-1 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-xs"
-                                                            >
-                                                                Del
-                                                            </button>
-                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("materials");
+                                                                setEditingFacet(m);
+                                                                setFacetFormData({ 
+                                                                    name: m.name, 
+                                                                    hex: "", 
+                                                                    state: "", 
+                                                                    country: "", 
+                                                                    image_url: "" 
+                                                                });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview("");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                        >
+                                                            Edit
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -6785,33 +7077,35 @@ To get these values:
                                 </div>
                             </div>
 
-                            {/* Column 5: Cities */}
-                            <div className="border border-gray-200 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-4">
+                            {/* Section 5: Cities */}
+                            <div className="border border-gray-200 rounded-lg p-6">
+                                <div className="flex items-center justify-between mb-6">
                                     <h3 className="text-lg font-bold text-gray-900">Cities</h3>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("cities");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-3 py-1.5 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-xs flex items-center gap-1"
-                                    >
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-sm text-gray-500">{cities.length} items</span>
+                                        <button
+                                            onClick={() => {
+                                                setActiveFacetTab("cities");
+                                                setEditingFacet(null);
+                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                setFacetImageFile(null);
+                                                setFacetImagePreview("");
+                                                setIsFacetModalOpen(true);
+                                            }}
+                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            </svg>
+                                            Add
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="text-xs text-gray-500 mb-3">{cities.length} items</div>
-                                <div className="space-y-3 max-h-[calc(100vh-300px)] overflow-y-auto">
+                                <div className="space-y-3">
                                     {cities.length === 0 ? (
-                                        <div className="text-center py-4 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-xs text-gray-500">No items</p>
+                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                            <p className="text-sm text-gray-500">No items</p>
                                         </div>
                                     ) : (
                                         cities.map((city, index) => {
@@ -6820,57 +7114,60 @@ To get these values:
                                             return (
                                                 <div
                                                     key={city.id}
-                                                    className="flex flex-col p-3 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
                                                 >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="text-gray-400 font-bold text-xs">{index + 1}</div>
+                                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                        <div className="cursor-move">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                            </svg>
+                                                        </div>
                                                     </div>
-                                                    <div className="relative w-full aspect-square bg-gray-200 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
+                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                         <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
                                                             No Image
                                                         </div>
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <h4 className="font-semibold text-gray-900 truncate text-xs mb-1">{city.name}</h4>
+                                                        <h4 className="font-semibold text-gray-900 mb-1">{city.name}</h4>
                                                         {city.state && (
-                                                            <p className="text-xs text-gray-600 truncate mb-1">{city.state}</p>
+                                                            <p className="text-xs text-gray-600 mb-1">{city.state}</p>
                                                         )}
-                                                        <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline truncate"
+                                                        <p className="text-xs text-gray-600 mb-1">/products?city={city.id}</p>
+                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
                                                                 router.push(`/admin?tab=products&city=${city.id}`);
                                                             }}
                                                         >
-                                                            View {productCount} →
+                                                            View {productCount} products →
                                                         </p>
-                                                        <div className="flex gap-1">
-                                                            <button
-                                                                onClick={() => {
-                                                                    setActiveFacetTab("cities");
-                                                                    setEditingFacet(city);
-                                                                    setFacetFormData({ 
-                                                                        name: city.name, 
-                                                                        hex: "", 
-                                                                        state: city.state || "", 
-                                                                        country: city.country || "", 
-                                                                        image_url: "" 
-                                                                    });
-                                                                    setFacetImageFile(null);
-                                                                    setFacetImagePreview("");
-                                                                    setIsFacetModalOpen(true);
-                                                                }}
-                                                                className="flex-1 px-2 py-1 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-xs"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleDeleteCity(city.id, city.name)}
-                                                                className="px-2 py-1 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-xs"
-                                                            >
-                                                                Del
-                                                            </button>
-                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("cities");
+                                                                setEditingFacet(city);
+                                                                setFacetFormData({ 
+                                                                    name: city.name, 
+                                                                    hex: "", 
+                                                                    state: city.state || "", 
+                                                                    country: city.country || "", 
+                                                                    image_url: "" 
+                                                                });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview("");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                        >
+                                                            Edit
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );

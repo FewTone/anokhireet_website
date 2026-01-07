@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
@@ -12,18 +12,6 @@ interface HeroSlide {
 export default function Hero() {
     const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
     const [loading, setLoading] = useState(true);
-    
-    // We need enough clones to fill the desktop view (which shows 3-4 slides)
-    // Cloning 4 from each end ensures we never see a "gap" even on wide screens.
-    const numClones = 4;
-    
-    const originalLength = heroSlides.length;
-    
-    const slides = originalLength > 0 ? [
-        ...heroSlides.slice(-numClones),
-        ...heroSlides,
-        ...heroSlides.slice(0, numClones),
-    ] : [];
 
     useEffect(() => {
         loadHeroSlides();
@@ -64,7 +52,8 @@ export default function Hero() {
 
             if (data && data.length > 0) {
                 const mapped = data.map(slide => ({
-                    image: slide.image_url
+                    image: slide.image_url,
+                    title: slide.title
                 }));
                 setHeroSlides(mapped);
             } else {
@@ -77,91 +66,6 @@ export default function Hero() {
         }
     };
 
-    const [currentIndex, setCurrentIndex] = useState(numClones);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-    const [isPaused, setIsPaused] = useState(false);
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const currentIndexRef = useRef(currentIndex);
-    const isResettingRef = useRef(false);
-
-    // Keep ref in sync with state
-    useEffect(() => {
-        currentIndexRef.current = currentIndex;
-    }, [currentIndex]);
-
-    const handleNext = useCallback(() => {
-        setCurrentIndex((prev) => {
-            const nextIndex = prev + 1;
-            // If we're about to go past the end clones, we'll handle it in transitionEnd
-            return nextIndex;
-        });
-        setIsTransitioning(true);
-    }, []);
-
-    const handleTransitionEnd = useCallback(() => {
-        const index = currentIndexRef.current;
-        
-        // Prevent multiple resets
-        if (isResettingRef.current) return;
-        
-        setIsTransitioning(false);
-        
-        // If we reach the end clones, snap back to the start of original slides
-        if (index >= originalLength + numClones) {
-            isResettingRef.current = true;
-            // Use requestAnimationFrame for smooth reset
-            requestAnimationFrame(() => {
-                setCurrentIndex(numClones);
-                requestAnimationFrame(() => {
-                    isResettingRef.current = false;
-                });
-            });
-        }
-        // If we reach the beginning clones (for prev navigation), snap to the end of original slides
-        else if (index < numClones) {
-            isResettingRef.current = true;
-            requestAnimationFrame(() => {
-                setCurrentIndex(originalLength + numClones - 1);
-                requestAnimationFrame(() => {
-                    isResettingRef.current = false;
-                });
-            });
-        }
-    }, [originalLength, numClones]);
-
-    useEffect(() => {
-        if (isPaused) {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-            }
-            return;
-        }
-
-        // Start the carousel after initial delay
-        const initialTimeout = setTimeout(() => {
-            handleNext();
-        }, 4000);
-
-        // Then continue with interval
-        timerRef.current = setInterval(() => {
-            handleNext();
-        }, 4000);
-
-        return () => {
-            clearTimeout(initialTimeout);
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-                timerRef.current = null;
-            }
-        };
-    }, [isPaused, handleNext]);
-
-
-    // Calculate dot index for the pagination indicators
-    let dotIndex = (currentIndex - numClones) % originalLength;
-    if (dotIndex < 0) dotIndex += originalLength;
-
     if (loading) {
         return (
             <div className="hero-container relative w-full overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0 flex items-center justify-center">
@@ -170,26 +74,32 @@ export default function Hero() {
         );
     }
 
-    if (originalLength === 0) {
+    if (heroSlides.length === 0) {
         return null;
     }
 
+    // Duplicate slides multiple times for seamless infinite scroll
+    // We need enough duplicates to ensure smooth continuous scrolling
+    const duplicateCount = 5; // Creates 5 copies of the slides for seamless loop
+    const duplicatedSlides = Array(duplicateCount).fill(heroSlides).flat();
+    
+    // Calculate animation duration based on number of slides
+    // Each slide takes 8 seconds to scroll by (adjustable for speed)
+    const slideDuration = 8;
+    const animationDuration = heroSlides.length * slideDuration;
+
     return (
-        <div
-            className="hero-container relative w-full overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0"
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-        >
-            {/* Slider Track */}
-            <div
-                className={`flex items-start gap-4 ${isTransitioning ? "transition-transform duration-1000 ease-in-out" : ""}`}
-                onTransitionEnd={handleTransitionEnd}
+        <div className="hero-container relative w-full overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0">
+            {/* Continuous Scrolling Track */}
+            <div 
+                className="hero-scroll-track flex items-start gap-4"
                 style={{
-                    transform: `translateX(calc(-${currentIndex} * (var(--slide-width) + 16px)))`,
-                    height: '100%',
+                    animationDuration: `${animationDuration}s`,
+                    animationIterationCount: 'infinite',
+                    animationTimingFunction: 'linear'
                 } as React.CSSProperties}
             >
-                {slides.map((slide, index) => (
+                {duplicatedSlides.map((slide, index) => (
                     <div
                         key={index}
                         className="hero-slide relative flex-shrink-0 aspect-[4/5]"
@@ -201,74 +111,73 @@ export default function Hero() {
                                 fill
                                 className="object-cover"
                                 draggable={false}
-                                priority={index >= numClones && index < numClones + originalLength}
+                                priority={index < heroSlides.length}
                             />
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Pagination Dots */}
-            {originalLength > 0 && (
-                <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 z-[100] pointer-events-auto">
-                    {heroSlides.map((_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => {
-                                setIsTransitioning(true);
-                                setCurrentIndex(index + numClones);
-                            }}
-                            className={`transition-all duration-300 rounded-full cursor-pointer h-3 ${index === dotIndex
-                                ? "w-10 bg-white opacity-100"
-                                : "w-3 bg-white/80 hover:bg-white hover:opacity-100"
-                                }`}
-                            aria-label={`Go to slide ${index + 1}`}
-                            style={{
-                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
-                                minWidth: index === dotIndex ? '2.5rem' : '0.75rem'
-                            }}
-                        />
-                    ))}
-                </div>
-            )}
-
-
-
-            <style jsx>{`
-        .hero-container {
-          height: calc(100vw * 1.25);
-        }
-        @media (min-width: 768px) {
-          .hero-container {
-            height: calc((100vw - 32px) / 3 * 1.25);
-          }
-        }
-        .hero-slide {
-          width: 100vw;
-          aspect-ratio: 4 / 5;
-          height: auto;
-          flex-shrink: 0;
-          user-select: none;
-          -webkit-user-drag: none;
-        }
-        @media (min-width: 768px) {
-          .hero-slide {
-            width: calc((100vw - 32px) / 3);
-            aspect-ratio: 4 / 5;
-            height: auto;
-          }
-        }
-        div.flex {
-            --slide-width: 100vw;
-            align-items: flex-start;
-            height: 100%;
-        }
-        @media (min-width: 768px) {
-            div.flex {
-                --slide-width: calc((100vw - 32px) / 3);
-            }
-        }
-      `}</style>
+            <style jsx global>{`
+                .hero-container {
+                    height: calc(100vw * 1.25);
+                }
+                @media (min-width: 768px) {
+                    .hero-container {
+                        height: calc((100vw - 32px) / 3 * 1.25);
+                    }
+                }
+                .hero-slide {
+                    width: 100vw;
+                    aspect-ratio: 4 / 5;
+                    height: auto;
+                    flex-shrink: 0;
+                    user-select: none;
+                    -webkit-user-drag: none;
+                }
+                @media (min-width: 768px) {
+                    .hero-slide {
+                        width: calc((100vw - 32px) / 3);
+                        aspect-ratio: 4 / 5;
+                        height: auto;
+                    }
+                }
+                .hero-scroll-track {
+                    --slide-width-mobile: 100vw;
+                    --slide-width-desktop: calc((100vw - 32px) / 3);
+                    --gap: 16px;
+                    --scroll-distance-mobile: calc((var(--slide-width-mobile) + var(--gap)) * ${heroSlides.length});
+                    --scroll-distance-desktop: calc((var(--slide-width-desktop) + var(--gap)) * ${heroSlides.length});
+                    display: flex;
+                    align-items: flex-start;
+                    height: 100%;
+                    will-change: transform;
+                }
+                @keyframes hero-scroll-infinite-mobile {
+                    0% {
+                        transform: translateX(0);
+                    }
+                    100% {
+                        transform: translateX(calc(-1 * var(--scroll-distance-mobile)));
+                    }
+                }
+                @keyframes hero-scroll-infinite-desktop {
+                    0% {
+                        transform: translateX(0);
+                    }
+                    100% {
+                        transform: translateX(calc(-1 * var(--scroll-distance-desktop)));
+                    }
+                }
+                .hero-scroll-track {
+                    animation-name: hero-scroll-infinite-mobile;
+                }
+                @media (min-width: 768px) {
+                    .hero-scroll-track {
+                        animation-name: hero-scroll-infinite-desktop;
+                    }
+                }
+            `}</style>
         </div>
     );
 }

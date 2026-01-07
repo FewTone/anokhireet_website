@@ -981,7 +981,19 @@ export default function ManageProductsPage() {
                                                 Product Details
                                             </th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Facets
+                                                Types
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                Occasions
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                Colors
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                Materials
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                Cities
                                             </th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                                 Pricing
@@ -1009,9 +1021,6 @@ export default function ManageProductsPage() {
                                                     minute: '2-digit'
                                                 })
                                                 : 'N/A';
-                                            
-                                            const hasFacets = facets.productTypes.length > 0 || facets.occasions.length > 0 || 
-                                                             facets.colors.length > 0 || facets.materials.length > 0 || facets.cities.length > 0;
                                             
                                             return (
                                                 <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
@@ -1053,73 +1062,80 @@ export default function ManageProductsPage() {
                                                             )}
                                                         </div>
                                                     </td>
+                                                    
+                                                    {/* Types Column */}
                                                     <td className="px-6 py-4">
-                                                        {hasFacets ? (
-                                                            <div className="space-y-1 max-w-xs">
-                                                                {facets.productTypes.length > 0 && (
-                                                                    <div>
-                                                                        <span className="text-xs font-semibold text-gray-600">Types: </span>
-                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
-                                                                            {facets.productTypes.map((pt, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                                                                    {pt}
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.productTypes.length > 0 ? (
+                                                                facets.productTypes.map((pt, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                                        {pt}
                                                                     </span>
-                                                                ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {facets.occasions.length > 0 && (
-                                                                    <div>
-                                                                        <span className="text-xs font-semibold text-gray-600">Occasions: </span>
-                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
-                                                                            {facets.occasions.map((oc, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
-                                                                                    {oc}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {facets.colors.length > 0 && (
-                                                                    <div>
-                                                                        <span className="text-xs font-semibold text-gray-600">Colors: </span>
-                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
-                                                                            {facets.colors.map((c, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                                                                    {c}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {facets.materials.length > 0 && (
-                                                                    <div>
-                                                                        <span className="text-xs font-semibold text-gray-600">Materials: </span>
-                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
-                                                                            {facets.materials.map((m, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                                                    {m}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {facets.cities.length > 0 && (
-                                                                    <div>
-                                                                        <span className="text-xs font-semibold text-gray-600">Cities: </span>
-                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
-                                                                            {facets.cities.map((city, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                                                    {city}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-xs text-gray-400 italic">No facets</span>
-                                                        )}
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {/* Occasions Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.occasions.length > 0 ? (
+                                                                facets.occasions.map((oc, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
+                                                                        {oc}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {/* Colors Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.colors.length > 0 ? (
+                                                                facets.colors.map((c, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                                        {c}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {/* Materials Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.materials.length > 0 ? (
+                                                                facets.materials.map((m, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                        {m}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {/* Cities Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.cities.length > 0 ? (
+                                                                facets.cities.map((city, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                        {city}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="space-y-1">
