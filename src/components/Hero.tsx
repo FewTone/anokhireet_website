@@ -6,8 +6,6 @@ import { supabase } from "@/lib/supabase";
 
 interface HeroSlide {
     image: string;
-    title: string;
-    subtitle?: string;
 }
 
 export default function Hero() {
@@ -65,9 +63,7 @@ export default function Hero() {
 
             if (data && data.length > 0) {
                 const mapped = data.map(slide => ({
-                    image: slide.image_url,
-                    title: slide.title,
-                    subtitle: slide.subtitle || ""
+                    image: slide.image_url
                 }));
                 setHeroSlides(mapped);
             } else {
@@ -200,24 +196,12 @@ export default function Hero() {
                         <div className="relative w-full h-full">
                             <Image
                                 src={slide.image}
-                                alt={slide.title}
+                                alt={slide.title || "Hero slide"}
                                 fill
                                 className="object-cover"
                                 draggable={false}
                                 priority={index >= numClones && index < numClones + originalLength}
                             />
-                            {/* Gradient Overlay for better text readability */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 pointer-events-none" />
-
-
-                            <div className="absolute bottom-6 md:bottom-8 left-0 w-full px-6 md:px-8 text-white z-10 pointer-events-none">
-                                <h2 className="text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-[-0.05em] mb-2 md:mb-3 leading-[0.9] drop-shadow-2xl">
-                                    {slide.title}
-                                </h2>
-                                <p className="text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] opacity-90 drop-shadow-lg">
-                                    {slide.subtitle}
-                                </p>
-                            </div>
                         </div>
                     </div>
                 ))}

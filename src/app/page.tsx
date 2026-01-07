@@ -300,7 +300,7 @@ export default function Home() {
                     return null;
                 })()}
                 {/* #endregion */}
-                {featuredCategories.length > 0 && (
+                {featuredCategories.length > 0 ? (
                 <div className="mt-12 mb-12 text-center px-4">
                     <h2 className="text-2xl md:text-3xl font-bold mb-6">FEATURED CATEGORIES</h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:flex xl:flex-wrap justify-center gap-4 max-w-7xl mx-auto">

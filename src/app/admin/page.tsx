@@ -198,6 +198,17 @@ export default function AdminPage() {
     const [materials, setMaterials] = useState<Array<{ id: string; name: string; display_order: number }>>([]);
     const [cities, setCities] = useState<Array<{ id: string; name: string; state: string | null; country: string | null; display_order: number }>>([]);
     
+    // Hero slides management states
+    const [heroSlides, setHeroSlides] = useState<Array<{ id: string; image_url: string; title: string; subtitle: string | null; display_order: number; is_active: boolean }>>([]);
+    const [isHeroModalOpen, setIsHeroModalOpen] = useState(false);
+    const [editingHeroSlide, setEditingHeroSlide] = useState<{ id: string; image_url: string; title: string; subtitle: string | null; display_order: number; is_active: boolean } | null>(null);
+    const [heroFormData, setHeroFormData] = useState({ title: "", subtitle: "", image_url: "" });
+    const [heroImageFile, setHeroImageFile] = useState<File | null>(null);
+    const [heroImagePreview, setHeroImagePreview] = useState<string>("");
+    const [isUploadingHeroImage, setIsUploadingHeroImage] = useState(false);
+    const [draggedHeroId, setDraggedHeroId] = useState<string | null>(null);
+    const [dragOverHeroId, setDragOverHeroId] = useState<string | null>(null);
+    
     // Facet modal states
     const [isFacetModalOpen, setIsFacetModalOpen] = useState(false);
     const [editingFacet, setEditingFacet] = useState<any>(null);
@@ -222,7 +233,7 @@ export default function AdminPage() {
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "categories" | "users" | "facets">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "categories" | "users" | "facets" | "hero">("dashboard");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminEmail, setAdminEmail] = useState("");
@@ -334,7 +345,8 @@ export default function AdminPage() {
                 loadCategories(),
                 loadTotalViews(),
                 loadWebsiteSetting(),
-                loadAllFacets()
+                loadAllFacets(),
+                loadHeroSlides()
             ]).catch((error) => {
                 console.error("Error loading admin data:", error);
             });
@@ -345,8 +357,8 @@ export default function AdminPage() {
     useEffect(() => {
         if (isAuthenticated) {
             const savedTab = localStorage.getItem("adminActiveTab");
-            if (savedTab && (savedTab === "dashboard" || savedTab === "products" || savedTab === "categories" || savedTab === "users")) {
-                setActiveTab(savedTab as "dashboard" | "products" | "categories" | "users");
+            if (savedTab && (savedTab === "dashboard" || savedTab === "products" || savedTab === "categories" || savedTab === "users" || savedTab === "facets" || savedTab === "hero")) {
+                setActiveTab(savedTab as "dashboard" | "products" | "categories" | "users" | "facets" | "hero");
                 router.replace(`/admin?tab=${savedTab}`);
             }
         }
@@ -363,8 +375,8 @@ export default function AdminPage() {
         }
         
         const tabParam = searchParams.get("tab");
-        if (tabParam === "users" || tabParam === "products" || tabParam === "categories" || tabParam === "dashboard" || tabParam === "facets") {
-            setActiveTab(tabParam as "dashboard" | "products" | "categories" | "users" | "facets");
+        if (tabParam === "users" || tabParam === "products" || tabParam === "categories" || tabParam === "dashboard" || tabParam === "facets" || tabParam === "hero") {
+            setActiveTab(tabParam as "dashboard" | "products" | "categories" | "users" | "facets" | "hero");
             localStorage.setItem("adminActiveTab", tabParam);
         }
     }, [searchParams, isAuthenticated]);
@@ -828,6 +840,30 @@ To get these values:
         } catch (error) {
             console.error("Error loading categories:", error);
             setCategories([]);
+        }
+    };
+
+    const loadHeroSlides = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("hero_slides")
+                .select("*")
+                .order("display_order", { ascending: true });
+            
+            if (error) {
+                console.error("Error loading hero slides:", error);
+                setHeroSlides([]);
+                return;
+            }
+            
+            if (data) {
+                setHeroSlides(data);
+            } else {
+                setHeroSlides([]);
+            }
+        } catch (error) {
+            console.error("Error loading hero slides:", error);
+            setHeroSlides([]);
         }
     };
 
@@ -1444,6 +1480,223 @@ To get these values:
         } catch (error: any) {
             showPopup(error.message || "Failed to reorder category", "error", "Error");
             console.error("Error moving category:", error);
+        }
+    };
+
+    // Hero Slides Functions
+    const handleHeroImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            showPopup("Please select an image file", "error", "Invalid File");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showPopup("Image size must be less than 5MB", "error", "File Too Large");
+            return;
+        }
+
+        setHeroImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setHeroImagePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const uploadHeroImageToSupabase = async (file: File): Promise<string> => {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+        const filePath = `hero-slides/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from("product-images")
+            .upload(filePath, file, {
+                cacheControl: "3600",
+                upsert: false,
+            });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+            .from("product-images")
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    };
+
+    const handleSaveHeroSlide = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            let imageUrl = heroFormData.image_url;
+            
+            if (heroImageFile) {
+                setIsUploadingHeroImage(true);
+                try {
+                    imageUrl = await uploadHeroImageToSupabase(heroImageFile);
+                } catch (uploadError: any) {
+                    setIsUploadingHeroImage(false);
+                    showPopup(uploadError.message || "Failed to upload image", "error", "Upload Error");
+                    return;
+                }
+                setIsUploadingHeroImage(false);
+            } else if (!editingHeroSlide && !imageUrl) {
+                showPopup("Please select an image", "warning", "Validation Error");
+                return;
+            }
+
+            if (editingHeroSlide) {
+                const { error } = await supabase
+                    .from("hero_slides")
+                    .update({
+                        image_url: imageUrl,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq("id", editingHeroSlide.id);
+
+                if (error) throw error;
+                showPopup("Hero slide updated successfully!", "success");
+            } else {
+                const maxOrder = heroSlides.length > 0 
+                    ? Math.max(...heroSlides.map(s => s.display_order)) 
+                    : -1;
+                
+                const { error } = await supabase
+                    .from("hero_slides")
+                    .insert([{
+                        image_url: imageUrl,
+                        title: "",
+                        subtitle: null,
+                        display_order: maxOrder + 1,
+                        is_active: true
+                    }]);
+
+                if (error) throw error;
+                showPopup("Hero slide added successfully!", "success");
+            }
+
+            setIsHeroModalOpen(false);
+            setEditingHeroSlide(null);
+            setHeroFormData({ title: "", subtitle: "", image_url: "" });
+            setHeroImageFile(null);
+            setHeroImagePreview("");
+            loadHeroSlides();
+        } catch (error: any) {
+            setIsUploadingHeroImage(false);
+            showPopup(error.message || "Failed to save hero slide", "error", "Error");
+            console.error("Error saving hero slide:", error);
+        }
+    };
+
+    const handleEditHeroSlide = (slide: { id: string; image_url: string; title: string; subtitle: string | null; display_order: number; is_active: boolean }) => {
+        setEditingHeroSlide(slide);
+        setHeroFormData({
+            title: "",
+            subtitle: "",
+            image_url: slide.image_url
+        });
+        setHeroImagePreview(slide.image_url);
+        setHeroImageFile(null);
+        setIsHeroModalOpen(true);
+    };
+
+    const handleDeleteHeroSlide = async (id: string, title: string) => {
+        if (!confirm(`Are you sure you want to delete this hero slide?`)) return;
+
+        try {
+            const { error } = await supabase
+                .from("hero_slides")
+                .delete()
+                .eq("id", id);
+
+            if (error) throw error;
+            showPopup("Hero slide deleted successfully!", "success");
+            loadHeroSlides();
+        } catch (error: any) {
+            showPopup(error.message || "Failed to delete hero slide", "error", "Error");
+            console.error("Error deleting hero slide:", error);
+        }
+    };
+
+    const toggleHeroSlideActive = async (id: string, currentStatus: boolean) => {
+        try {
+            const { error } = await supabase
+                .from("hero_slides")
+                .update({ is_active: !currentStatus, updated_at: new Date().toISOString() })
+                .eq("id", id);
+
+            if (error) throw error;
+            showPopup(
+                !currentStatus 
+                    ? "Hero slide activated! It will now appear in the hero section." 
+                    : "Hero slide deactivated. It will no longer appear in the hero section.",
+                "success"
+            );
+            loadHeroSlides();
+        } catch (error: any) {
+            showPopup(error.message || "Failed to toggle hero slide status", "error", "Error");
+            console.error("Error toggling hero slide status:", error);
+        }
+    };
+
+    const handleHeroDragStart = (e: React.DragEvent, id: string) => {
+        setDraggedHeroId(id);
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleHeroDragOver = (e: React.DragEvent, id: string) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+        setDragOverHeroId(id);
+    };
+
+    const handleHeroDragEnd = () => {
+        setDraggedHeroId(null);
+        setDragOverHeroId(null);
+    };
+
+    const handleHeroDrop = async (e: React.DragEvent, targetId: string) => {
+        e.preventDefault();
+        if (!draggedHeroId || draggedHeroId === targetId) {
+            setDraggedHeroId(null);
+            setDragOverHeroId(null);
+            return;
+        }
+
+        try {
+            const draggedIndex = heroSlides.findIndex(s => s.id === draggedHeroId);
+            const targetIndex = heroSlides.findIndex(s => s.id === targetId);
+
+            if (draggedIndex === -1 || targetIndex === -1) return;
+
+            const draggedSlide = heroSlides[draggedIndex];
+            const targetSlide = heroSlides[targetIndex];
+
+            // Swap display_order values
+            const tempOrder = draggedSlide.display_order;
+            const newDraggedOrder = targetSlide.display_order;
+            const newTargetOrder = tempOrder;
+
+            await Promise.all([
+                supabase
+                    .from("hero_slides")
+                    .update({ display_order: newDraggedOrder, updated_at: new Date().toISOString() })
+                    .eq("id", draggedSlide.id),
+                supabase
+                    .from("hero_slides")
+                    .update({ display_order: newTargetOrder, updated_at: new Date().toISOString() })
+                    .eq("id", targetSlide.id)
+            ]);
+
+            loadHeroSlides();
+        } catch (error: any) {
+            showPopup(error.message || "Failed to reorder hero slide", "error", "Error");
+            console.error("Error reordering hero slide:", error);
+        } finally {
+            setDraggedHeroId(null);
+            setDragOverHeroId(null);
         }
     };
 
@@ -2881,6 +3134,25 @@ To get these values:
                                         <rect x="3" y="14" width="7" height="7"></rect>
                                     </svg>
                                     Facets
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("hero");
+                                        localStorage.setItem("adminActiveTab", "hero");
+                                        router.replace("/admin?tab=hero");
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${
+                                activeTab === "hero"
+                                            ? "bg-black text-white shadow-md"
+                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                    }`}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                                    </svg>
+                                    Hero Section
                                 </button>
                             </nav>
                             
@@ -5154,6 +5426,140 @@ To get these values:
                             </div>
                         </div>
                     )}
+
+                    {/* Hero Section Tab */}
+                    {activeTab === "hero" && (
+                        <div className="space-y-6">
+                            <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900">Hero Section Slides</h2>
+                                        <p className="text-sm text-gray-600 mt-1">Manage hero section images and content. Drag to reorder slides.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setEditingHeroSlide(null);
+                                            setHeroFormData({ title: "", subtitle: "", image_url: "" });
+                                            setHeroImageFile(null);
+                                            setHeroImagePreview("");
+                                            setIsHeroModalOpen(true);
+                                        }}
+                                        className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add Slide
+                                    </button>
+                                </div>
+
+                                {heroSlides.length === 0 ? (
+                                    <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                                        <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <p className="text-gray-500 text-lg font-medium mb-2">No hero slides yet</p>
+                                        <p className="text-gray-400 text-sm">Click "Add Slide" to create your first hero slide</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {heroSlides.map((slide, index) => (
+                                            <div
+                                                key={slide.id}
+                                                draggable
+                                                onDragStart={(e) => handleHeroDragStart(e, slide.id)}
+                                                onDragOver={(e) => handleHeroDragOver(e, slide.id)}
+                                                onDragEnd={handleHeroDragEnd}
+                                                onDrop={(e) => handleHeroDrop(e, slide.id)}
+                                                className={`flex items-center gap-4 p-4 border-2 rounded-lg transition-all ${
+                                                    draggedHeroId === slide.id
+                                                        ? "border-blue-500 bg-blue-50 opacity-50"
+                                                        : dragOverHeroId === slide.id
+                                                        ? "border-green-500 bg-green-50"
+                                                        : "border-gray-200 hover:border-gray-300 bg-white"
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="text-gray-400 text-sm font-medium w-8 text-center">
+                                                        {index + 1}
+                                                    </div>
+                                                    <div className="w-6 h-6 text-gray-400 cursor-move">
+                                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+
+                                                <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                                    {slide.image_url ? (
+                                                        <Image
+                                                            src={slide.image_url}
+                                                            alt="Hero slide"
+                                                            fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                            No Image
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h3 className="text-lg font-semibold text-gray-900">Hero Slide #{index + 1}</h3>
+                                                        {!slide.is_active && (
+                                                            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                                                                Inactive
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <button
+                                                        onClick={() => toggleHeroSlideActive(slide.id, slide.is_active)}
+                                                        className={`p-2 rounded-lg transition-colors ${
+                                                            slide.is_active
+                                                                ? "text-green-600 hover:bg-green-50 bg-green-50"
+                                                                : "text-gray-400 hover:text-green-600 hover:bg-gray-100"
+                                                        }`}
+                                                        title={slide.is_active ? "Deactivate slide" : "Activate slide"}
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill={slide.is_active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEditHeroSlide(slide)}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit slide"
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                                        </svg>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteHeroSlide(slide.id, slide.title)}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete slide"
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     </div>
                 </div>
             </main>
@@ -5457,6 +5863,107 @@ To get these values:
                                     Delete User
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Hero Slide Add/Edit Modal */}
+            {isHeroModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-2xl font-bold">
+                                    {editingHeroSlide ? "Edit Hero Slide" : "Add Hero Slide"}
+                                </h2>
+                                <button
+                                    onClick={() => {
+                                        setIsHeroModalOpen(false);
+                                        setEditingHeroSlide(null);
+                                        setHeroFormData({ title: "", subtitle: "", image_url: "" });
+                                        setHeroImageFile(null);
+                                        setHeroImagePreview("");
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleSaveHeroSlide} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Image *
+                                    </label>
+                                    <div className="space-y-3">
+                                        <label
+                                            htmlFor="hero-image-input"
+                                            className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:border-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                                        >
+                                            {heroImagePreview ? (
+                                                <div className="relative w-full h-full">
+                                                    <Image
+                                                        src={heroImagePreview}
+                                                        alt="Hero slide preview"
+                                                        fill
+                                                        className="object-cover rounded-lg"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <p className="mb-2 text-sm text-gray-500">
+                                                        <span className="font-semibold">Click to upload</span> or drag and drop
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
+                                                </div>
+                                            )}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleHeroImageChange}
+                                                className="hidden"
+                                                id="hero-image-input"
+                                            />
+                                        </label>
+                                        {heroImageFile && (
+                                            <p className="text-xs text-gray-500 text-center">
+                                                Selected: {heroImageFile.name} ({(heroImageFile.size / 1024 / 1024).toFixed(2)} MB)
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-4 border-t border-gray-200">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsHeroModalOpen(false);
+                                            setEditingHeroSlide(null);
+                                            setHeroFormData({ title: "", subtitle: "", image_url: "" });
+                                            setHeroImageFile(null);
+                                            setHeroImagePreview("");
+                                        }}
+                                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isUploadingHeroImage}
+                                        className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isUploadingHeroImage ? "Uploading..." : editingHeroSlide ? "Update Slide" : "Add Slide"}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>

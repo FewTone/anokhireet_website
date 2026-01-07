@@ -36,11 +36,17 @@ export default function AddProductPage() {
         name: "",
         price: "",
         originalPrice: "",
-        category: [] as string[],
+        productTypes: [] as string[],
+        occasions: [] as string[],
+        colors: [] as string[],
+        materials: [] as string[],
+        cities: [] as string[],
     });
-    const [availableCategories, setAvailableCategories] = useState<Array<{ id: string; name: string }>>([]);
-    const [newCategoryName, setNewCategoryName] = useState("");
-    const [showAddCategoryInput, setShowAddCategoryInput] = useState(false);
+    const [availableProductTypes, setAvailableProductTypes] = useState<Array<{ id: string; name: string }>>([]);
+    const [availableOccasions, setAvailableOccasions] = useState<Array<{ id: string; name: string }>>([]);
+    const [availableColors, setAvailableColors] = useState<Array<{ id: string; name: string }>>([]);
+    const [availableMaterials, setAvailableMaterials] = useState<Array<{ id: string; name: string }>>([]);
+    const [availableCities, setAvailableCities] = useState<Array<{ id: string; name: string }>>([]);
     const [productImages, setProductImages] = useState<string[]>([]);
     const [primaryImageIndex, setPrimaryImageIndex] = useState<number>(0);
     const [productImageFiles, setProductImageFiles] = useState<File[]>([]);
@@ -52,7 +58,7 @@ export default function AddProductPage() {
     useEffect(() => {
         if (userId) {
             loadUser();
-            loadCategories();
+            loadAllFacets();
         }
     }, [userId]);
 
@@ -74,19 +80,23 @@ export default function AddProductPage() {
         }
     };
 
-    const loadCategories = async () => {
+    const loadAllFacets = async () => {
         try {
-            const { data, error } = await supabase
-                .from("categories")
-                .select("id, name")
-                .order("name", { ascending: true });
-            
-            if (error) throw error;
-            if (data) {
-                setAvailableCategories(data);
-            }
+            const [productTypesRes, occasionsRes, colorsRes, materialsRes, citiesRes] = await Promise.all([
+                supabase.from("product_types").select("id, name").order("name", { ascending: true }),
+                supabase.from("occasions").select("id, name").order("name", { ascending: true }),
+                supabase.from("colors").select("id, name").order("name", { ascending: true }),
+                supabase.from("materials").select("id, name").order("name", { ascending: true }),
+                supabase.from("cities").select("id, name").order("name", { ascending: true })
+            ]);
+
+            if (productTypesRes.data) setAvailableProductTypes(productTypesRes.data);
+            if (occasionsRes.data) setAvailableOccasions(occasionsRes.data);
+            if (colorsRes.data) setAvailableColors(colorsRes.data);
+            if (materialsRes.data) setAvailableMaterials(materialsRes.data);
+            if (citiesRes.data) setAvailableCities(citiesRes.data);
         } catch (error) {
-            console.error("Error loading categories:", error);
+            console.error("Error loading facets:", error);
         }
     };
 
@@ -96,52 +106,6 @@ export default function AddProductPage() {
 
     const closePopup = () => {
         setPopup({ ...popup, isOpen: false });
-    };
-
-    const handleAddNewCategory = async () => {
-        if (!newCategoryName.trim()) {
-            showPopup("Please enter a category name", "warning", "Validation Error");
-            return;
-        }
-
-        if (availableCategories.some(cat => cat.name.toLowerCase() === newCategoryName.trim().toLowerCase())) {
-            showPopup("This category already exists", "warning", "Duplicate Category");
-            return;
-        }
-
-        try {
-            const maxOrder = availableCategories.length > 0 
-                ? Math.max(...availableCategories.map(c => 0)) 
-                : -1;
-
-            const { data, error } = await supabase
-                .from("categories")
-                .insert([{
-                    name: newCategoryName.trim(),
-                    image_url: "",
-                    link_url: `/${newCategoryName.trim().toLowerCase().replace(/\s+/g, '-')}`,
-                    display_order: maxOrder + 1,
-                    is_featured: false
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            setAvailableCategories([...availableCategories, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
-            
-            setProductFormData({
-                ...productFormData,
-                category: [...productFormData.category, data.name]
-            });
-
-            setNewCategoryName("");
-            setShowAddCategoryInput(false);
-            showPopup("Category added and selected!", "success");
-        } catch (error: any) {
-            showPopup(error.message || "Failed to add category", "error", "Error");
-            console.error("Error adding category:", error);
-        }
     };
 
     const formatFileSize = (bytes: number): string => {
@@ -284,8 +248,16 @@ export default function AddProductPage() {
     const handleSaveProduct = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (!productFormData.category || productFormData.category.length === 0) {
-            showPopup("Please select at least one category", "warning", "Validation Error");
+        // At least one facet must be selected (across all types)
+        const totalFacetsSelected = 
+            productFormData.productTypes.length +
+            productFormData.occasions.length +
+            productFormData.colors.length +
+            productFormData.materials.length +
+            productFormData.cities.length;
+        
+        if (totalFacetsSelected === 0) {
+            showPopup("Please select at least one facet (product type, occasion, color, material, or city)", "warning", "Validation Error");
             return;
         }
         
@@ -327,7 +299,6 @@ export default function AddProductPage() {
                 images: uploadedImageUrls,
                 primary_image_index: validPrimaryIndex,
                 product_id: productId,
-                category: productFormData.category,
                 image: uploadedImageUrls[validPrimaryIndex],
             };
 
@@ -365,21 +336,6 @@ export default function AddProductPage() {
                 is_active: true,
             };
             
-            const selectedCategoryIds: string[] = [];
-            
-            if (Array.isArray(productData.category) && productData.category.length > 0) {
-                productData.category.forEach((categoryName: string) => {
-                    const categoryMatch = availableCategories.find(cat => cat.name === categoryName);
-                    if (categoryMatch) {
-                        selectedCategoryIds.push(categoryMatch.id);
-                    }
-                });
-                
-                if (selectedCategoryIds.length > 0) {
-                    insertData.category_id = selectedCategoryIds[0];
-                }
-            }
-            
             const { data: insertedProduct, error: insertError } = await supabase
                 .from("products")
                 .insert(insertData)
@@ -388,19 +344,104 @@ export default function AddProductPage() {
 
             if (insertError) throw insertError;
             
-            if (selectedCategoryIds.length > 0) {
-                const categoryAssociations = selectedCategoryIds.map(categoryId => ({
-                    product_id: insertedProduct.id,
-                    category_id: categoryId
-                }));
+            // Save facet associations to junction tables
+            const facetPromises: Promise<any>[] = [];
+            
+            // Product Types
+            if (productFormData.productTypes.length > 0) {
+                const productTypeIds = productFormData.productTypes
+                    .map(name => availableProductTypes.find(pt => pt.name === name)?.id)
+                    .filter((id): id is string => id !== undefined);
                 
-                const { error: categoryError } = await supabase
-                    .from("product_categories")
-                    .insert(categoryAssociations);
-                
-                if (categoryError) {
-                    console.error("Error associating categories:", categoryError);
+                if (productTypeIds.length > 0) {
+                    facetPromises.push(
+                        supabase.from("product_product_types").insert(
+                            productTypeIds.map(typeId => ({
+                                product_id: insertedProduct.id,
+                                type_id: typeId
+                            }))
+                        )
+                    );
                 }
+            }
+            
+            // Occasions
+            if (productFormData.occasions.length > 0) {
+                const occasionIds = productFormData.occasions
+                    .map(name => availableOccasions.find(oc => oc.name === name)?.id)
+                    .filter((id): id is string => id !== undefined);
+                
+                if (occasionIds.length > 0) {
+                    facetPromises.push(
+                        supabase.from("product_occasions").insert(
+                            occasionIds.map(occasionId => ({
+                                product_id: insertedProduct.id,
+                                occasion_id: occasionId
+                            }))
+                        )
+                    );
+                }
+            }
+            
+            // Colors
+            if (productFormData.colors.length > 0) {
+                const colorIds = productFormData.colors
+                    .map(name => availableColors.find(c => c.name === name)?.id)
+                    .filter((id): id is string => id !== undefined);
+                
+                if (colorIds.length > 0) {
+                    facetPromises.push(
+                        supabase.from("product_colors").insert(
+                            colorIds.map(colorId => ({
+                                product_id: insertedProduct.id,
+                                color_id: colorId
+                            }))
+                        )
+                    );
+                }
+            }
+            
+            // Materials
+            if (productFormData.materials.length > 0) {
+                const materialIds = productFormData.materials
+                    .map(name => availableMaterials.find(m => m.name === name)?.id)
+                    .filter((id): id is string => id !== undefined);
+                
+                if (materialIds.length > 0) {
+                    facetPromises.push(
+                        supabase.from("product_materials").insert(
+                            materialIds.map(materialId => ({
+                                product_id: insertedProduct.id,
+                                material_id: materialId
+                            }))
+                        )
+                    );
+                }
+            }
+            
+            // Cities
+            if (productFormData.cities.length > 0) {
+                const cityIds = productFormData.cities
+                    .map(name => availableCities.find(c => c.name === name)?.id)
+                    .filter((id): id is string => id !== undefined);
+                
+                if (cityIds.length > 0) {
+                    facetPromises.push(
+                        supabase.from("product_cities").insert(
+                            cityIds.map(cityId => ({
+                                product_id: insertedProduct.id,
+                                city_id: cityId
+                            }))
+                        )
+                    );
+                }
+            }
+            
+            // Execute all facet insertions
+            const facetResults = await Promise.all(facetPromises);
+            const facetErrors = facetResults.filter(r => r.error).map(r => r.error);
+            if (facetErrors.length > 0) {
+                console.error("Some facet associations failed:", facetErrors);
             }
             
             showPopup("Product added successfully!", "success");
@@ -468,7 +509,7 @@ export default function AddProductPage() {
                             <p className={`text-sm font-medium ${currentStep >= 1 ? 'text-black' : 'text-gray-400'}`}>Product Details</p>
                         </div>
                         <div className="text-center">
-                            <p className={`text-sm font-medium ${currentStep >= 2 ? 'text-black' : 'text-gray-400'}`}>Category Selection</p>
+                            <p className={`text-sm font-medium ${currentStep >= 2 ? 'text-black' : 'text-gray-400'}`}>Facet Selection</p>
                         </div>
                     </div>
                 </div>
@@ -674,7 +715,7 @@ export default function AddProductPage() {
                                 type="submit"
                                 className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity"
                             >
-                                Next: Select Categories
+                                Next: Select Facets
                             </button>
                         </div>
                     </form>
@@ -726,123 +767,249 @@ export default function AddProductPage() {
                                 )}
                             </div>
 
-                            <div>
-                                <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Category *
+                            {/* Facet Selection Sections */}
+                            <div className="space-y-6">
+                                {/* Product Types */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Product Type
                                     </label>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowAddCategoryInput(!showAddCategoryInput);
-                                        if (showAddCategoryInput) {
-                                            setNewCategoryName("");
-                                        }
-                                    }}
-                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    {showAddCategoryInput ? "Cancel" : "Add New Category"}
-                                </button>
-                            </div>
-
-                            {showAddCategoryInput && (
-                                <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={newCategoryName}
-                                            onChange={(e) => setNewCategoryName(e.target.value)}
-                                            onKeyPress={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    e.preventDefault();
-                                                    handleAddNewCategory();
-                                                }
-                                            }}
-                                            placeholder="Enter new category name"
-                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleAddNewCategory}
-                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
-                                        >
-                                            Add
-                                        </button>
+                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                        {availableProductTypes.length === 0 ? (
+                                            <p className="text-sm text-gray-500 text-center py-4">No product types available. Add them from the admin panel.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {availableProductTypes.map((pt) => {
+                                                    const isSelected = productFormData.productTypes.includes(pt.name);
+                                                    return (
+                                                        <label
+                                                            key={pt.id}
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+                                                                isSelected
+                                                                    ? "bg-blue-50 border border-blue-200"
+                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            productTypes: [...productFormData.productTypes, pt.name],
+                                                                        });
+                                                                    } else {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            productTypes: productFormData.productTypes.filter((t) => t !== pt.name),
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                            />
+                                                            <span className="text-sm text-gray-700">{pt.name}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
-                            )}
 
-                            <div className="w-full border border-gray-300 rounded-md min-h-[120px] max-h-[200px] overflow-y-auto p-2 bg-white">
-                                {availableCategories.length === 0 ? (
-                                    <p className="text-sm text-gray-500 text-center py-4">No categories available. Click "Add New Category" above to create one.</p>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {availableCategories.map((cat) => {
-                                            const isSelected = productFormData.category.includes(cat.name);
-                                            return (
-                                                <label
-                                                    key={cat.id}
-                                                    className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                                        isSelected
-                                                            ? "bg-blue-50 border border-blue-200"
-                                                            : "hover:bg-gray-50 border border-transparent"
-                                                    }`}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) {
-                                                                setProductFormData({
-                                                                    ...productFormData,
-                                                                    category: [...productFormData.category, cat.name],
-                                                                });
-                                                            } else {
-                                                                setProductFormData({
-                                                                    ...productFormData,
-                                                                    category: productFormData.category.filter((c) => c !== cat.name),
-                                                                });
-                                                            }
-                                                        }}
-                                                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                    />
-                                                    <span className="text-sm text-gray-700">{cat.name}</span>
-                                                </label>
-                                            );
-                                        })}
+                                {/* Occasions */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Occasion
+                                    </label>
+                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                        {availableOccasions.length === 0 ? (
+                                            <p className="text-sm text-gray-500 text-center py-4">No occasions available. Add them from the admin panel.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {availableOccasions.map((oc) => {
+                                                    const isSelected = productFormData.occasions.includes(oc.name);
+                                                    return (
+                                                        <label
+                                                            key={oc.id}
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+                                                                isSelected
+                                                                    ? "bg-blue-50 border border-blue-200"
+                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            occasions: [...productFormData.occasions, oc.name],
+                                                                        });
+                                                                    } else {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            occasions: productFormData.occasions.filter((o) => o !== oc.name),
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                            />
+                                                            <span className="text-sm text-gray-700">{oc.name}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                            </div>
-                            {productFormData.category.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {productFormData.category.map((cat, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded"
-                                        >
-                                            {cat}
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setProductFormData({
-                                                        ...productFormData,
-                                                        category: productFormData.category.filter((c) => c !== cat),
-                                                    });
-                                                }}
-                                                className="text-blue-600 hover:text-blue-800"
-                                            >
-                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    ))}
                                 </div>
-                            )}
-                            <p className="text-xs text-gray-500 mt-1">Select one or more categories for this product (required)</p>
+
+                                {/* Colors */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Color
+                                    </label>
+                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                        {availableColors.length === 0 ? (
+                                            <p className="text-sm text-gray-500 text-center py-4">No colors available. Add them from the admin panel.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {availableColors.map((c) => {
+                                                    const isSelected = productFormData.colors.includes(c.name);
+                                                    return (
+                                                        <label
+                                                            key={c.id}
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+                                                                isSelected
+                                                                    ? "bg-blue-50 border border-blue-200"
+                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            colors: [...productFormData.colors, c.name],
+                                                                        });
+                                                                    } else {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            colors: productFormData.colors.filter((col) => col !== c.name),
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                            />
+                                                            <span className="text-sm text-gray-700">{c.name}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Materials */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Material
+                                    </label>
+                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                        {availableMaterials.length === 0 ? (
+                                            <p className="text-sm text-gray-500 text-center py-4">No materials available. Add them from the admin panel.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {availableMaterials.map((m) => {
+                                                    const isSelected = productFormData.materials.includes(m.name);
+                                                    return (
+                                                        <label
+                                                            key={m.id}
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+                                                                isSelected
+                                                                    ? "bg-blue-50 border border-blue-200"
+                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            materials: [...productFormData.materials, m.name],
+                                                                        });
+                                                                    } else {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            materials: productFormData.materials.filter((mat) => mat !== m.name),
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                            />
+                                                            <span className="text-sm text-gray-700">{m.name}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Cities */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        City
+                                    </label>
+                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                        {availableCities.length === 0 ? (
+                                            <p className="text-sm text-gray-500 text-center py-4">No cities available. Add them from the admin panel.</p>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {availableCities.map((city) => {
+                                                    const isSelected = productFormData.cities.includes(city.name);
+                                                    return (
+                                                        <label
+                                                            key={city.id}
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
+                                                                isSelected
+                                                                    ? "bg-blue-50 border border-blue-200"
+                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            cities: [...productFormData.cities, city.name],
+                                                                        });
+                                                                    } else {
+                                                                        setProductFormData({
+                                                                            ...productFormData,
+                                                                            cities: productFormData.cities.filter((ci) => ci !== city.name),
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                            />
+                                                            <span className="text-sm text-gray-700">{city.name}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">Select facets for this product. At least one facet must be selected.</p>
                         </div>
 
                             <div className="flex gap-4 pt-4 border-t border-gray-200">
