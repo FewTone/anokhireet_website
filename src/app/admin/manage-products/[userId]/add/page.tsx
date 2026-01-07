@@ -47,6 +47,18 @@ export default function AddProductPage() {
     const [availableColors, setAvailableColors] = useState<Array<{ id: string; name: string }>>([]);
     const [availableMaterials, setAvailableMaterials] = useState<Array<{ id: string; name: string }>>([]);
     const [availableCities, setAvailableCities] = useState<Array<{ id: string; name: string }>>([]);
+    
+    // Add new item states
+    const [showAddProductType, setShowAddProductType] = useState(false);
+    const [newProductTypeName, setNewProductTypeName] = useState("");
+    const [showAddOccasion, setShowAddOccasion] = useState(false);
+    const [newOccasionName, setNewOccasionName] = useState("");
+    const [showAddColor, setShowAddColor] = useState(false);
+    const [newColorName, setNewColorName] = useState("");
+    const [showAddMaterial, setShowAddMaterial] = useState(false);
+    const [newMaterialName, setNewMaterialName] = useState("");
+    const [showAddCity, setShowAddCity] = useState(false);
+    const [newCityName, setNewCityName] = useState("");
     const [productImages, setProductImages] = useState<string[]>([]);
     const [primaryImageIndex, setPrimaryImageIndex] = useState<number>(0);
     const [productImageFiles, setProductImageFiles] = useState<File[]>([]);
@@ -106,6 +118,191 @@ export default function AddProductPage() {
 
     const closePopup = () => {
         setPopup({ ...popup, isOpen: false });
+    };
+
+    const handleAddNewProductType = async () => {
+        if (!newProductTypeName.trim()) {
+            showPopup("Please enter a product type name", "warning", "Validation Error");
+            return;
+        }
+
+        if (availableProductTypes.some(pt => pt.name.toLowerCase() === newProductTypeName.trim().toLowerCase())) {
+            showPopup("This product type already exists", "warning", "Duplicate");
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from("product_types")
+                .insert([{
+                    name: newProductTypeName.trim(),
+                    display_order: availableProductTypes.length
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            setAvailableProductTypes([...availableProductTypes, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+            setProductFormData({
+                ...productFormData,
+                productTypes: [...productFormData.productTypes, data.name]
+            });
+            setNewProductTypeName("");
+            setShowAddProductType(false);
+            showPopup("Product type added and selected!", "success");
+        } catch (error: any) {
+            showPopup(error.message || "Failed to add product type", "error", "Error");
+            console.error("Error adding product type:", error);
+        }
+    };
+
+    const handleAddNewOccasion = async () => {
+        if (!newOccasionName.trim()) {
+            showPopup("Please enter an occasion name", "warning", "Validation Error");
+            return;
+        }
+
+        if (availableOccasions.some(oc => oc.name.toLowerCase() === newOccasionName.trim().toLowerCase())) {
+            showPopup("This occasion already exists", "warning", "Duplicate");
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from("occasions")
+                .insert([{
+                    name: newOccasionName.trim(),
+                    display_order: availableOccasions.length
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            setAvailableOccasions([...availableOccasions, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+            setProductFormData({
+                ...productFormData,
+                occasions: [...productFormData.occasions, data.name]
+            });
+            setNewOccasionName("");
+            setShowAddOccasion(false);
+            showPopup("Occasion added and selected!", "success");
+        } catch (error: any) {
+            showPopup(error.message || "Failed to add occasion", "error", "Error");
+            console.error("Error adding occasion:", error);
+        }
+    };
+
+    const handleAddNewColor = async () => {
+        if (!newColorName.trim()) {
+            showPopup("Please enter a color name", "warning", "Validation Error");
+            return;
+        }
+
+        if (availableColors.some(c => c.name.toLowerCase() === newColorName.trim().toLowerCase())) {
+            showPopup("This color already exists", "warning", "Duplicate");
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from("colors")
+                .insert([{
+                    name: newColorName.trim(),
+                    display_order: availableColors.length
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            setAvailableColors([...availableColors, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+            setProductFormData({
+                ...productFormData,
+                colors: [...productFormData.colors, data.name]
+            });
+            setNewColorName("");
+            setShowAddColor(false);
+            showPopup("Color added and selected!", "success");
+        } catch (error: any) {
+            showPopup(error.message || "Failed to add color", "error", "Error");
+            console.error("Error adding color:", error);
+        }
+    };
+
+    const handleAddNewMaterial = async () => {
+        if (!newMaterialName.trim()) {
+            showPopup("Please enter a material name", "warning", "Validation Error");
+            return;
+        }
+
+        if (availableMaterials.some(m => m.name.toLowerCase() === newMaterialName.trim().toLowerCase())) {
+            showPopup("This material already exists", "warning", "Duplicate");
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from("materials")
+                .insert([{
+                    name: newMaterialName.trim(),
+                    display_order: availableMaterials.length
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            setAvailableMaterials([...availableMaterials, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+            setProductFormData({
+                ...productFormData,
+                materials: [...productFormData.materials, data.name]
+            });
+            setNewMaterialName("");
+            setShowAddMaterial(false);
+            showPopup("Material added and selected!", "success");
+        } catch (error: any) {
+            showPopup(error.message || "Failed to add material", "error", "Error");
+            console.error("Error adding material:", error);
+        }
+    };
+
+    const handleAddNewCity = async () => {
+        if (!newCityName.trim()) {
+            showPopup("Please enter a city name", "warning", "Validation Error");
+            return;
+        }
+
+        if (availableCities.some(c => c.name.toLowerCase() === newCityName.trim().toLowerCase())) {
+            showPopup("This city already exists", "warning", "Duplicate");
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from("cities")
+                .insert([{
+                    name: newCityName.trim(),
+                    display_order: availableCities.length
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            setAvailableCities([...availableCities, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
+            setProductFormData({
+                ...productFormData,
+                cities: [...productFormData.cities, data.name]
+            });
+            setNewCityName("");
+            setShowAddCity(false);
+            showPopup("City added and selected!", "success");
+        } catch (error: any) {
+            showPopup(error.message || "Failed to add city", "error", "Error");
+            console.error("Error adding city:", error);
+        }
     };
 
     const formatFileSize = (bytes: number): string => {
@@ -509,7 +706,7 @@ export default function AddProductPage() {
                             <p className={`text-sm font-medium ${currentStep >= 1 ? 'text-black' : 'text-gray-400'}`}>Product Details</p>
                         </div>
                         <div className="text-center">
-                            <p className={`text-sm font-medium ${currentStep >= 2 ? 'text-black' : 'text-gray-400'}`}>Facet Selection</p>
+                            <p className={`text-sm font-medium ${currentStep >= 2 ? 'text-black' : 'text-gray-400'}`}>Category Section</p>
                         </div>
                     </div>
                 </div>
@@ -767,13 +964,58 @@ export default function AddProductPage() {
                                 )}
                             </div>
 
-                            {/* Facet Selection Sections */}
+                            {/* Category Selection Sections */}
                             <div className="space-y-6">
                                 {/* Product Types */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Product Type
-                                    </label>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Product Type
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAddProductType(!showAddProductType);
+                                                if (showAddProductType) {
+                                                    setNewProductTypeName("");
+                                                }
+                                            }}
+                                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            {showAddProductType ? "Cancel" : "Add New"}
+                                        </button>
+                                    </div>
+
+                                    {showAddProductType && (
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newProductTypeName}
+                                                    onChange={(e) => setNewProductTypeName(e.target.value)}
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddNewProductType();
+                                                        }
+                                                    }}
+                                                    placeholder="Enter new product type"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddNewProductType}
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableProductTypes.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No product types available. Add them from the admin panel.</p>
@@ -819,9 +1061,54 @@ export default function AddProductPage() {
 
                                 {/* Occasions */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Occasion
-                                    </label>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Occasion
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAddOccasion(!showAddOccasion);
+                                                if (showAddOccasion) {
+                                                    setNewOccasionName("");
+                                                }
+                                            }}
+                                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            {showAddOccasion ? "Cancel" : "Add New"}
+                                        </button>
+                                    </div>
+
+                                    {showAddOccasion && (
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newOccasionName}
+                                                    onChange={(e) => setNewOccasionName(e.target.value)}
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddNewOccasion();
+                                                        }
+                                                    }}
+                                                    placeholder="Enter new occasion"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddNewOccasion}
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableOccasions.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No occasions available. Add them from the admin panel.</p>
@@ -867,9 +1154,54 @@ export default function AddProductPage() {
 
                                 {/* Colors */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Color
-                                    </label>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Color
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAddColor(!showAddColor);
+                                                if (showAddColor) {
+                                                    setNewColorName("");
+                                                }
+                                            }}
+                                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            {showAddColor ? "Cancel" : "Add New"}
+                                        </button>
+                                    </div>
+
+                                    {showAddColor && (
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newColorName}
+                                                    onChange={(e) => setNewColorName(e.target.value)}
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddNewColor();
+                                                        }
+                                                    }}
+                                                    placeholder="Enter new color"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddNewColor}
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableColors.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No colors available. Add them from the admin panel.</p>
@@ -915,9 +1247,54 @@ export default function AddProductPage() {
 
                                 {/* Materials */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Material
-                                    </label>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Material
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAddMaterial(!showAddMaterial);
+                                                if (showAddMaterial) {
+                                                    setNewMaterialName("");
+                                                }
+                                            }}
+                                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            {showAddMaterial ? "Cancel" : "Add New"}
+                                        </button>
+                                    </div>
+
+                                    {showAddMaterial && (
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newMaterialName}
+                                                    onChange={(e) => setNewMaterialName(e.target.value)}
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddNewMaterial();
+                                                        }
+                                                    }}
+                                                    placeholder="Enter new material"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddNewMaterial}
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableMaterials.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No materials available. Add them from the admin panel.</p>
@@ -963,9 +1340,54 @@ export default function AddProductPage() {
 
                                 {/* Cities */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        City
-                                    </label>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            City
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowAddCity(!showAddCity);
+                                                if (showAddCity) {
+                                                    setNewCityName("");
+                                                }
+                                            }}
+                                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            {showAddCity ? "Cancel" : "Add New"}
+                                        </button>
+                                    </div>
+
+                                    {showAddCity && (
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newCityName}
+                                                    onChange={(e) => setNewCityName(e.target.value)}
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddNewCity();
+                                                        }
+                                                    }}
+                                                    placeholder="Enter new city"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddNewCity}
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableCities.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No cities available. Add them from the admin panel.</p>

@@ -209,7 +209,7 @@ export default function Hero() {
 
             {/* Pagination Dots */}
             {originalLength > 0 && (
-                <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 z-50 pointer-events-auto">
+                <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center justify-center gap-1.5 z-[100] pointer-events-auto">
                     {heroSlides.map((_, index) => (
                         <button
                             key={index}
@@ -217,11 +217,15 @@ export default function Hero() {
                                 setIsTransitioning(true);
                                 setCurrentIndex(index + numClones);
                             }}
-                            className={`transition-all duration-300 rounded-full cursor-pointer h-2.5 shadow-lg ${index === dotIndex
+                            className={`transition-all duration-300 rounded-full cursor-pointer h-3 ${index === dotIndex
                                 ? "w-10 bg-white opacity-100"
-                                : "w-2.5 bg-white/70 hover:bg-white hover:opacity-100"
+                                : "w-3 bg-white/80 hover:bg-white hover:opacity-100"
                                 }`}
                             aria-label={`Go to slide ${index + 1}`}
+                            style={{
+                                boxShadow: '0 2px 10px rgba(0, 0, 0, 0.5)',
+                                minWidth: index === dotIndex ? '2.5rem' : '0.75rem'
+                            }}
                         />
                     ))}
                 </div>

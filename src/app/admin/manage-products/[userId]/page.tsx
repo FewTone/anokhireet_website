@@ -57,9 +57,12 @@ export default function ManageProductsPage() {
         originalPrice: "",
         category: [] as string[],
     });
-    const [availableCategories, setAvailableCategories] = useState<Array<{ id: string; name: string }>>([]);
-    const [newCategoryName, setNewCategoryName] = useState("");
-    const [showAddCategoryInput, setShowAddCategoryInput] = useState(false);
+    // Facet data for display
+    const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string }>>([]);
+    const [occasions, setOccasions] = useState<Array<{ id: string; name: string }>>([]);
+    const [colors, setColors] = useState<Array<{ id: string; name: string }>>([]);
+    const [materials, setMaterials] = useState<Array<{ id: string; name: string }>>([]);
+    const [cities, setCities] = useState<Array<{ id: string; name: string }>>([]);
     const [productImages, setProductImages] = useState<string[]>([]);
     const [primaryImageIndex, setPrimaryImageIndex] = useState<number>(0);
     const [productImageFiles, setProductImageFiles] = useState<File[]>([]);
@@ -71,7 +74,7 @@ export default function ManageProductsPage() {
         if (userId) {
             loadUser();
             loadUserProducts();
-            loadCategories();
+            loadFacets();
             testSupabaseConnection();
         }
     }, [userId]);
@@ -227,46 +230,52 @@ export default function ManageProductsPage() {
 
             if (error) throw error;
             if (data) {
-                // Load all category associations for these products
+                // Load all facet associations for these products
                 const productIds = data.map(p => p.id);
-                const { data: categoryAssociations, error: catError } = await supabase
-                    .from("product_categories")
-                    .select("product_id, category_id, categories(id, name)")
-                    .in("product_id", productIds);
+                const [productTypesResult, occasionsResult, colorsResult, materialsResult, citiesResult] = await Promise.all([
+                    supabase.from("product_product_types").select("product_id, type_id, product_types(name)").in("product_id", productIds),
+                    supabase.from("product_occasions").select("product_id, occasion_id, occasions(name)").in("product_id", productIds),
+                    supabase.from("product_colors").select("product_id, color_id, colors(name)").in("product_id", productIds),
+                    supabase.from("product_materials").select("product_id, material_id, materials(name)").in("product_id", productIds),
+                    supabase.from("product_cities").select("product_id, city_id, cities(name)").in("product_id", productIds)
+                ]);
+
+                // Create maps for each facet type
+                const productTypesMap = new Map<string, string[]>();
+                const occasionsMap = new Map<string, string[]>();
+                const colorsMap = new Map<string, string[]>();
+                const materialsMap = new Map<string, string[]>();
+                const citiesMap = new Map<string, string[]>();
+
+                productTypesResult.data?.forEach((assoc: any) => {
+                    if (!productTypesMap.has(assoc.product_id)) productTypesMap.set(assoc.product_id, []);
+                    if (assoc.product_types?.name) productTypesMap.get(assoc.product_id)?.push(assoc.product_types.name);
+                });
+                occasionsResult.data?.forEach((assoc: any) => {
+                    if (!occasionsMap.has(assoc.product_id)) occasionsMap.set(assoc.product_id, []);
+                    if (assoc.occasions?.name) occasionsMap.get(assoc.product_id)?.push(assoc.occasions.name);
+                });
+                colorsResult.data?.forEach((assoc: any) => {
+                    if (!colorsMap.has(assoc.product_id)) colorsMap.set(assoc.product_id, []);
+                    if (assoc.colors?.name) colorsMap.get(assoc.product_id)?.push(assoc.colors.name);
+                });
+                materialsResult.data?.forEach((assoc: any) => {
+                    if (!materialsMap.has(assoc.product_id)) materialsMap.set(assoc.product_id, []);
+                    if (assoc.materials?.name) materialsMap.get(assoc.product_id)?.push(assoc.materials.name);
+                });
+                citiesResult.data?.forEach((assoc: any) => {
+                    if (!citiesMap.has(assoc.product_id)) citiesMap.set(assoc.product_id, []);
+                    if (assoc.cities?.name) citiesMap.get(assoc.product_id)?.push(assoc.cities.name);
+                });
                 
-                if (catError) {
-                    console.error("Error loading category associations:", catError);
-                }
-                
-                // Create a map of product_id -> array of category names
-                const productCategoriesMap = new Map<string, string[]>();
-                if (categoryAssociations) {
-                    categoryAssociations.forEach((assoc: any) => {
-                        if (!productCategoriesMap.has(assoc.product_id)) {
-                            productCategoriesMap.set(assoc.product_id, []);
-                        }
-                        if (assoc.categories?.name) {
-                            productCategoriesMap.get(assoc.product_id)?.push(assoc.categories.name);
-                        }
-                    });
-                }
-                
-                const mapped = await Promise.all(data.map(async (p: any) => {
-                    // Get categories for this product
-                    let productCategories: string[] = [];
-                    
-                    // First try from product_categories table
-                    if (productCategoriesMap.has(p.id)) {
-                        productCategories = productCategoriesMap.get(p.id) || [];
-                    }
-                    
-                    // Fallback to legacy category_id field (for backward compatibility)
-                    if (productCategories.length === 0 && p.category_id) {
-                        const categoryMatch = availableCategories.find(cat => cat.id === p.category_id);
-                        if (categoryMatch) {
-                            productCategories = [categoryMatch.name];
-                        }
-                    }
+                const mapped = data.map((p: any) => {
+                    const facets = {
+                        productTypes: productTypesMap.get(p.id) || [],
+                        occasions: occasionsMap.get(p.id) || [],
+                        colors: colorsMap.get(p.id) || [],
+                        materials: materialsMap.get(p.id) || [],
+                        cities: citiesMap.get(p.id) || []
+                    };
                     
                     return {
                         id: p.id,
@@ -278,10 +287,10 @@ export default function ManageProductsPage() {
                         primary_image_index: p.primary_image_index ?? undefined,
                         original_price: p.original_price ?? undefined,
                         product_id: p.product_id ?? undefined,
-                        category: productCategories.length > 0 ? productCategories : (p.category_id ? [p.category_id] : []),
+                        category: facets, // Store facets instead of categories
                         created_at: p.created_at,
-                    } as UserProduct;
-                }));
+                    } as UserProduct & { category: typeof facets };
+                });
                 
                 setUserProducts(mapped);
             }
@@ -491,12 +500,6 @@ export default function ManageProductsPage() {
     const handleSaveProduct = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Validate category is selected
-        if (!productFormData.category || productFormData.category.length === 0) {
-            showPopup("Please select at least one category", "warning", "Validation Error");
-            return;
-        }
-        
         if (!editingProduct && productImageFiles.length === 0 && productImages.length === 0) {
             showPopup("Please select at least one image file", "warning", "Validation Error");
             return;
@@ -569,60 +572,13 @@ export default function ManageProductsPage() {
                     image: productData.image,
                 };
                 
-                // Handle multiple categories for update
-                const selectedCategoryIds: string[] = [];
-                
-                if (Array.isArray(productData.category) && productData.category.length > 0) {
-                    // Convert all category names to IDs
-                    productData.category.forEach((categoryName: string) => {
-                        const categoryMatch = availableCategories.find(cat => cat.name === categoryName);
-                        if (categoryMatch) {
-                            selectedCategoryIds.push(categoryMatch.id);
-                        } else {
-                            console.warn(`Category "${categoryName}" not found in availableCategories`);
-                        }
-                    });
-                    
-                    // Set primary category_id (first one) for backward compatibility
-                    if (selectedCategoryIds.length > 0) {
-                        updateData.category_id = selectedCategoryIds[0];
-                    }
-                }
+                // Note: Facets are managed on the add product page, not in the edit modal
                 const { error } = await supabase
                     .from("products")
                     .update(updateData)
                     .eq("id", editingProduct.id);
 
                 if (error) throw error;
-                
-                // Update product_categories associations
-                // First, delete all existing associations for this product
-                const { error: deleteError } = await supabase
-                    .from("product_categories")
-                    .delete()
-                    .eq("product_id", editingProduct.id);
-                
-                if (deleteError) {
-                    console.error("Error deleting old category associations:", deleteError);
-                }
-                
-                // Then, insert new associations
-                if (selectedCategoryIds.length > 0) {
-                    const categoryAssociations = selectedCategoryIds.map(categoryId => ({
-                        product_id: editingProduct.id,
-                        category_id: categoryId
-                    }));
-                    
-                    const { error: categoryError } = await supabase
-                        .from("product_categories")
-                        .insert(categoryAssociations);
-                    
-                    if (categoryError) {
-                        console.error("Error associating categories:", categoryError);
-                    } else {
-                        console.log(`Product updated with ${selectedCategoryIds.length} categories`);
-                    }
-                }
                 
                 showPopup("Product updated successfully!", "success");
             } else {
@@ -1119,7 +1075,7 @@ export default function ManageProductsPage() {
                                                 Product Details
                                             </th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                Category
+                                                Facets
                                             </th>
                                             <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                                 Pricing
@@ -1135,9 +1091,9 @@ export default function ManageProductsPage() {
                                     <tbody className="bg-white divide-y divide-gray-200">
                                         {userProducts.map((product) => {
                                             const images = product.images && Array.isArray(product.images) ? product.images : (product.image ? [product.image] : []);
-                                            const categories = product.category 
-                                                ? (Array.isArray(product.category) ? product.category : [product.category])
-                                                : [];
+                                            const facets = (product.category && typeof product.category === 'object' && !Array.isArray(product.category))
+                                                ? product.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
+                                                : { productTypes: [], occasions: [], colors: [], materials: [], cities: [] };
                                             const createdDate = product.created_at 
                                                 ? new Date(product.created_at).toLocaleDateString('en-US', { 
                                                     year: 'numeric', 
@@ -1147,6 +1103,9 @@ export default function ManageProductsPage() {
                                                     minute: '2-digit'
                                                 })
                                                 : 'N/A';
+                                            
+                                            const hasFacets = facets.productTypes.length > 0 || facets.occasions.length > 0 || 
+                                                             facets.colors.length > 0 || facets.materials.length > 0 || facets.cities.length > 0;
                                             
                                             return (
                                                 <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
@@ -1189,19 +1148,71 @@ export default function ManageProductsPage() {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        {categories.length > 0 ? (
-                                                            <div className="flex flex-wrap gap-1">
-                                                                {categories.map((cat, idx) => (
-                                                                    <span
-                                                                        key={idx}
-                                                                        className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800"
-                                                                    >
-                                                                        {cat}
+                                                        {hasFacets ? (
+                                                            <div className="space-y-1 max-w-xs">
+                                                                {facets.productTypes.length > 0 && (
+                                                                    <div>
+                                                                        <span className="text-xs font-semibold text-gray-600">Types: </span>
+                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
+                                                                            {facets.productTypes.map((pt, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                                                    {pt}
                                                                     </span>
                                                                 ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                {facets.occasions.length > 0 && (
+                                                                    <div>
+                                                                        <span className="text-xs font-semibold text-gray-600">Occasions: </span>
+                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
+                                                                            {facets.occasions.map((oc, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
+                                                                                    {oc}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                {facets.colors.length > 0 && (
+                                                                    <div>
+                                                                        <span className="text-xs font-semibold text-gray-600">Colors: </span>
+                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
+                                                                            {facets.colors.map((c, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                                                    {c}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                {facets.materials.length > 0 && (
+                                                                    <div>
+                                                                        <span className="text-xs font-semibold text-gray-600">Materials: </span>
+                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
+                                                                            {facets.materials.map((m, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                                    {m}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                {facets.cities.length > 0 && (
+                                                                    <div>
+                                                                        <span className="text-xs font-semibold text-gray-600">Cities: </span>
+                                                                        <div className="flex flex-wrap gap-1 mt-0.5">
+                                                                            {facets.cities.map((city, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                                    {city}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         ) : (
-                                                            <span className="text-xs text-gray-400 italic">No category</span>
+                                                            <span className="text-xs text-gray-400 italic">No facets</span>
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4">
@@ -1336,123 +1347,11 @@ export default function ManageProductsPage() {
                                     <p className="text-xs text-gray-500 mt-1">Original purchase price of the outfit (optional)</p>
                                 </div>
 
-                                <div>
-                                    <div className="flex items-center justify-between mb-1">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Category *
-                                        </label>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setShowAddCategoryInput(!showAddCategoryInput);
-                                                if (showAddCategoryInput) {
-                                                    setNewCategoryName("");
-                                                }
-                                            }}
-                                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
-                                        >
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            {showAddCategoryInput ? "Cancel" : "Add New Category"}
-                                        </button>
-                                    </div>
-
-                                    {showAddCategoryInput && (
-                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={newCategoryName}
-                                                    onChange={(e) => setNewCategoryName(e.target.value)}
-                                                    onKeyPress={(e) => {
-                                                        if (e.key === 'Enter') {
-                                                            e.preventDefault();
-                                                            handleAddNewCategory();
-                                                        }
-                                                    }}
-                                                    placeholder="Enter new category name"
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={handleAddNewCategory}
-                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
-                                                >
-                                                    Add
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="w-full border border-gray-300 rounded-md min-h-[120px] max-h-[200px] overflow-y-auto p-2 bg-white">
-                                        {availableCategories.length === 0 ? (
-                                            <p className="text-sm text-gray-500 text-center py-4">No categories available. Click "Add New Category" above to create one.</p>
-                                        ) : (
-                                            <div className="space-y-2">
-                                                {availableCategories.map((cat) => {
-                                                    const isSelected = productFormData.category.includes(cat.name);
-                                                    return (
-                                                        <label
-                                                            key={cat.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                                                isSelected
-                                                                    ? "bg-blue-50 border border-blue-200"
-                                                                    : "hover:bg-gray-50 border border-transparent"
-                                                            }`}
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isSelected}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setProductFormData({
-                                                                            ...productFormData,
-                                                                            category: [...productFormData.category, cat.name],
-                                                                        });
-                                                                    } else {
-                                                                        setProductFormData({
-                                                                            ...productFormData,
-                                                                            category: productFormData.category.filter((c) => c !== cat.name),
-                                                                        });
-                                                                    }
-                                                                }}
-                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                            />
-                                                            <span className="text-sm text-gray-700">{cat.name}</span>
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </div>
-                                    {productFormData.category.length > 0 && (
-                                        <div className="mt-2 flex flex-wrap gap-2">
-                                            {productFormData.category.map((cat, index) => (
-                                                <span
-                                                    key={index}
-                                                    className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded"
-                                                >
-                                                    {cat}
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setProductFormData({
-                                                                ...productFormData,
-                                                                category: productFormData.category.filter((c) => c !== cat),
-                                                            });
-                                                        }}
-                                                        className="text-blue-600 hover:text-blue-800"
-                                                    >
-                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                        </svg>
-                                                    </button>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <p className="text-xs text-gray-500 mt-1">Select one or more categories for this product (required)</p>
+                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                                    <p className="text-sm text-blue-800">
+                                        <strong>Note:</strong> Product facets (Product Types, Occasions, Colors, Materials, Cities) are managed when creating a new product. 
+                                        To modify facets, please delete and recreate the product with the desired facets.
+                                    </p>
                                 </div>
 
                                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

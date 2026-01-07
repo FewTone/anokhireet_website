@@ -197,6 +197,8 @@ export default function AdminPage() {
     const [colors, setColors] = useState<Array<{ id: string; name: string; hex: string | null; display_order: number }>>([]);
     const [materials, setMaterials] = useState<Array<{ id: string; name: string; display_order: number }>>([]);
     const [cities, setCities] = useState<Array<{ id: string; name: string; state: string | null; country: string | null; display_order: number }>>([]);
+    // Product counts for facets (key: "facetType_id", value: count)
+    const [facetProductCounts, setFacetProductCounts] = useState<Map<string, number>>(new Map());
     
     // Hero slides management states
     const [heroSlides, setHeroSlides] = useState<Array<{ id: string; image_url: string; title: string; subtitle: string | null; display_order: number; is_active: boolean }>>([]);
@@ -213,6 +215,9 @@ export default function AdminPage() {
     const [isFacetModalOpen, setIsFacetModalOpen] = useState(false);
     const [editingFacet, setEditingFacet] = useState<any>(null);
     const [facetFormData, setFacetFormData] = useState({ name: "", hex: "", state: "", country: "", image_url: "" });
+    const [facetImageFile, setFacetImageFile] = useState<File | null>(null);
+    const [facetImagePreview, setFacetImagePreview] = useState<string>("");
+    const [isUploadingFacetImage, setIsUploadingFacetImage] = useState(false);
     // Filter states
     const [filterType, setFilterType] = useState<"all" | "user">("all");
     const [filterUserId, setFilterUserId] = useState<string>("all");
@@ -233,7 +238,7 @@ export default function AdminPage() {
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "categories" | "users" | "facets" | "hero">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "facets" | "hero" | "featured">("dashboard");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminEmail, setAdminEmail] = useState("");
@@ -357,8 +362,8 @@ export default function AdminPage() {
     useEffect(() => {
         if (isAuthenticated) {
             const savedTab = localStorage.getItem("adminActiveTab");
-            if (savedTab && (savedTab === "dashboard" || savedTab === "products" || savedTab === "categories" || savedTab === "users" || savedTab === "facets" || savedTab === "hero")) {
-                setActiveTab(savedTab as "dashboard" | "products" | "categories" | "users" | "facets" | "hero");
+            if (savedTab && (savedTab === "dashboard" || savedTab === "products" || savedTab === "users" || savedTab === "facets" || savedTab === "hero")) {
+                setActiveTab(savedTab as "dashboard" | "products" | "users" | "facets" | "hero");
                 router.replace(`/admin?tab=${savedTab}`);
             }
         }
@@ -375,8 +380,8 @@ export default function AdminPage() {
         }
         
         const tabParam = searchParams.get("tab");
-        if (tabParam === "users" || tabParam === "products" || tabParam === "categories" || tabParam === "dashboard" || tabParam === "facets" || tabParam === "hero") {
-            setActiveTab(tabParam as "dashboard" | "products" | "categories" | "users" | "facets" | "hero");
+        if (tabParam === "users" || tabParam === "products" || tabParam === "dashboard" || tabParam === "facets" || tabParam === "hero" || tabParam === "featured") {
+            setActiveTab(tabParam as "dashboard" | "products" | "users" | "facets" | "hero" | "featured");
             localStorage.setItem("adminActiveTab", tabParam);
         }
     }, [searchParams, isAuthenticated]);
@@ -723,71 +728,63 @@ To get these values:
             if (data) {
                 console.log("Loaded products:", data.length);
                 
-                // Load all category associations for these products
+                // Load all facet associations for these products
                 const productIds = data.map(p => p.id);
-                const { data: categoryAssociations } = await supabase
-                    .from("product_categories")
-                    .select("product_id, category_id, categories(id, name)")
-                    .in("product_id", productIds);
+                const [productTypesResult, occasionsResult, colorsResult, materialsResult, citiesResult] = await Promise.all([
+                    supabase.from("product_product_types").select("product_id, type_id, product_types(name)").in("product_id", productIds),
+                    supabase.from("product_occasions").select("product_id, occasion_id, occasions(name)").in("product_id", productIds),
+                    supabase.from("product_colors").select("product_id, color_id, colors(name)").in("product_id", productIds),
+                    supabase.from("product_materials").select("product_id, material_id, materials(name)").in("product_id", productIds),
+                    supabase.from("product_cities").select("product_id, city_id, cities(name)").in("product_id", productIds)
+                ]);
+
+                // Create maps for each facet type
+                const productTypesMap = new Map<string, string[]>();
+                const occasionsMap = new Map<string, string[]>();
+                const colorsMap = new Map<string, string[]>();
+                const materialsMap = new Map<string, string[]>();
+                const citiesMap = new Map<string, string[]>();
+
+                productTypesResult.data?.forEach((assoc: any) => {
+                    if (!productTypesMap.has(assoc.product_id)) productTypesMap.set(assoc.product_id, []);
+                    if (assoc.product_types?.name) productTypesMap.get(assoc.product_id)?.push(assoc.product_types.name);
+                });
+                occasionsResult.data?.forEach((assoc: any) => {
+                    if (!occasionsMap.has(assoc.product_id)) occasionsMap.set(assoc.product_id, []);
+                    if (assoc.occasions?.name) occasionsMap.get(assoc.product_id)?.push(assoc.occasions.name);
+                });
+                colorsResult.data?.forEach((assoc: any) => {
+                    if (!colorsMap.has(assoc.product_id)) colorsMap.set(assoc.product_id, []);
+                    if (assoc.colors?.name) colorsMap.get(assoc.product_id)?.push(assoc.colors.name);
+                });
+                materialsResult.data?.forEach((assoc: any) => {
+                    if (!materialsMap.has(assoc.product_id)) materialsMap.set(assoc.product_id, []);
+                    if (assoc.materials?.name) materialsMap.get(assoc.product_id)?.push(assoc.materials.name);
+                });
+                citiesResult.data?.forEach((assoc: any) => {
+                    if (!citiesMap.has(assoc.product_id)) citiesMap.set(assoc.product_id, []);
+                    if (assoc.cities?.name) citiesMap.get(assoc.product_id)?.push(assoc.cities.name);
+                });
                 
-                // Create a map of product_id -> array of category names
-                const productCategoriesMap = new Map<string, string[]>();
-                if (categoryAssociations) {
-                    categoryAssociations.forEach((assoc: any) => {
-                        if (!productCategoriesMap.has(assoc.product_id)) {
-                            productCategoriesMap.set(assoc.product_id, []);
-                        }
-                        if (assoc.categories?.name) {
-                            productCategoriesMap.get(assoc.product_id)?.push(assoc.categories.name);
-                        }
-                    });
-                }
-                
-                // Map products to match UserProduct interface (make async to handle category lookup)
-                const mappedProducts = await Promise.all(data.map(async (p: any) => {
-                    // Get all categories for this product from product_categories table
-                    let productCategories: string[] = productCategoriesMap.get(p.id) || [];
+                // Map products to match UserProduct interface
+                const mappedProducts = data.map((p: any) => {
+                    const facets = {
+                        productTypes: productTypesMap.get(p.id) || [],
+                        occasions: occasionsMap.get(p.id) || [],
+                        colors: colorsMap.get(p.id) || [],
+                        materials: materialsMap.get(p.id) || [],
+                        cities: citiesMap.get(p.id) || []
+                    };
                     
-                    // Fallback to legacy category_id field (for backward compatibility)
-                    if (productCategories.length === 0 && p.category_id) {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:619',message:'Fallback to legacy category_id',data:{productId:p.id,categoryId:p.category_id,categoriesLoaded:categories.length,hasCategories:categories.length>0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                        // #endregion
-                        
-                        if (categories.length > 0) {
-                            const categoryMatch = categories.find(cat => cat.id === p.category_id);
-                            if (categoryMatch) {
-                                productCategories = [categoryMatch.name];
-                                // #region agent log
-                                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:626',message:'Category name found from legacy category_id',data:{productId:p.id,categoryId:p.category_id,categoryName:categoryMatch.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                                // #endregion
-                            } else {
-                                // #region agent log
-                                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:631',message:'Category not found - will show UUID',data:{productId:p.id,categoryId:p.category_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                                // #endregion
-                            }
-                        } else {
-                            // Categories not loaded yet - reload them and try again
-                            // #region agent log
-                            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:636',message:'Categories not loaded yet - will reload',data:{productId:p.id,categoryId:p.category_id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                            // #endregion
-                            // Try to find category directly from database if not in state
-                            const { data: catData } = await supabase
-                                .from("categories")
-                                .select("name")
-                                .eq("id", p.category_id)
-                                .single();
-                            
-                            if (catData?.name) {
-                                productCategories = [catData.name];
-                            }
-                        }
-                    }
+                    // Create a display string for facets
+                    const facetParts: string[] = [];
+                    if (facets.productTypes.length > 0) facetParts.push(`Types: ${facets.productTypes.join(", ")}`);
+                    if (facets.occasions.length > 0) facetParts.push(`Occasions: ${facets.occasions.join(", ")}`);
+                    if (facets.colors.length > 0) facetParts.push(`Colors: ${facets.colors.join(", ")}`);
+                    if (facets.materials.length > 0) facetParts.push(`Materials: ${facets.materials.join(", ")}`);
+                    if (facets.cities.length > 0) facetParts.push(`Cities: ${facets.cities.join(", ")}`);
                     
-                    // For display, use first category name (or join all if multiple)
-                    const categoryDisplay = productCategories.length > 0 
-                        ? (productCategories.length === 1 ? productCategories[0] : productCategories.join(", "))
-                        : (p.category_id || "");
+                    const facetsDisplay = facetParts.length > 0 ? facetParts.join(" | ") : "No facets";
                     
                     return {
                         id: p.id,
@@ -795,15 +792,14 @@ To get these values:
                         name: p.title || p.name,
                         price: p.price || p.price_per_day?.toString() || "",
                         image: p.image || "",
+                        images: p.images || undefined,
+                        primary_image_index: p.primary_image_index ?? undefined,
+                        original_price: p.original_price ?? undefined,
                         product_id: p.product_id,
-                        category: categoryDisplay, // Display all categories joined
-                        category_ids: productCategoriesMap.get(p.id)?.map(catName => {
-                            const cat = categories.find(c => c.name === catName);
-                            return cat?.id;
-                        }).filter(Boolean) || (p.category_id ? [p.category_id] : []), // Store category IDs for filtering
+                        category: facets, // Store facets object instead of category string
                         created_at: p.created_at,
-                    };
-                }));
+                    } as UserProduct & { category: typeof facets };
+                });
                 setUserProducts(mappedProducts);
             } else {
                 console.log("No products data returned");
@@ -867,6 +863,66 @@ To get these values:
         }
     };
 
+    // Load product counts for all facets
+    const loadFacetProductCounts = async () => {
+        const countsMap = new Map<string, number>();
+        
+        try {
+            // Load all junction table data to count products per facet
+            const [productTypesData, occasionsData, colorsData, materialsData, citiesData] = await Promise.all([
+                supabase.from("product_product_types").select("type_id"),
+                supabase.from("product_occasions").select("occasion_id"),
+                supabase.from("product_colors").select("color_id"),
+                supabase.from("product_materials").select("material_id"),
+                supabase.from("product_cities").select("city_id")
+            ]);
+
+            // Count products per product type
+            if (productTypesData.data) {
+                productTypesData.data.forEach((item: any) => {
+                    const key = `product_type_${item.type_id}`;
+                    countsMap.set(key, (countsMap.get(key) || 0) + 1);
+                });
+            }
+
+            // Count products per occasion
+            if (occasionsData.data) {
+                occasionsData.data.forEach((item: any) => {
+                    const key = `occasion_${item.occasion_id}`;
+                    countsMap.set(key, (countsMap.get(key) || 0) + 1);
+                });
+            }
+
+            // Count products per color
+            if (colorsData.data) {
+                colorsData.data.forEach((item: any) => {
+                    const key = `color_${item.color_id}`;
+                    countsMap.set(key, (countsMap.get(key) || 0) + 1);
+                });
+            }
+
+            // Count products per material
+            if (materialsData.data) {
+                materialsData.data.forEach((item: any) => {
+                    const key = `material_${item.material_id}`;
+                    countsMap.set(key, (countsMap.get(key) || 0) + 1);
+                });
+            }
+
+            // Count products per city
+            if (citiesData.data) {
+                citiesData.data.forEach((item: any) => {
+                    const key = `city_${item.city_id}`;
+                    countsMap.set(key, (countsMap.get(key) || 0) + 1);
+                });
+            }
+
+            setFacetProductCounts(countsMap);
+        } catch (error) {
+            console.error("Error loading facet product counts:", error);
+        }
+    };
+
     // Load all facet types
     const loadAllFacets = async () => {
         await Promise.all([
@@ -876,6 +932,8 @@ To get these values:
             loadMaterials(),
             loadCities()
         ]);
+        // Load product counts after facets are loaded
+        await loadFacetProductCounts();
     };
 
     const loadProductTypes = async () => {
@@ -948,6 +1006,50 @@ To get these values:
         }
     };
 
+    // Facet image upload functions
+    const handleFacetImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            showPopup("Please select an image file", "error", "Invalid File");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            showPopup("Image size must be less than 5MB", "error", "File Too Large");
+            return;
+        }
+
+        setFacetImageFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setFacetImagePreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const uploadFacetImageToSupabase = async (file: File): Promise<string> => {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+        const filePath = `facets/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from("product-images")
+            .upload(filePath, file, {
+                cacheControl: "3600",
+                upsert: false,
+            });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+            .from("product-images")
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    };
+
     // CRUD functions for Product Types
     const handleSaveProductType = async () => {
         if (!facetFormData.name.trim()) {
@@ -956,12 +1058,26 @@ To get these values:
         }
 
         try {
+            let imageUrl = facetFormData.image_url;
+            
+            if (facetImageFile) {
+                setIsUploadingFacetImage(true);
+                try {
+                    imageUrl = await uploadFacetImageToSupabase(facetImageFile);
+                } catch (uploadError: any) {
+                    setIsUploadingFacetImage(false);
+                    showPopup(uploadError.message || "Failed to upload image", "error", "Upload Error");
+                    return;
+                }
+                setIsUploadingFacetImage(false);
+            }
+
             if (editingFacet) {
                 const { error } = await supabase
                     .from("product_types")
                     .update({
                         name: facetFormData.name.trim(),
-                        image_url: facetFormData.image_url || null,
+                        image_url: imageUrl || null,
                         updated_at: new Date().toISOString()
                     })
                     .eq("id", editingFacet.id);
@@ -973,7 +1089,7 @@ To get these values:
                     .from("product_types")
                     .insert([{
                         name: facetFormData.name.trim(),
-                        image_url: facetFormData.image_url || null,
+                        image_url: imageUrl || null,
                         display_order: productTypes.length
                     }]);
 
@@ -983,6 +1099,8 @@ To get these values:
             setIsFacetModalOpen(false);
             setEditingFacet(null);
             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+            setFacetImageFile(null);
+            setFacetImagePreview("");
             loadProductTypes();
         } catch (error: any) {
             showPopup(error.message || "Failed to save product type", "error", "Error");
@@ -1016,12 +1134,26 @@ To get these values:
         }
 
         try {
+            let imageUrl = facetFormData.image_url;
+            
+            if (facetImageFile) {
+                setIsUploadingFacetImage(true);
+                try {
+                    imageUrl = await uploadFacetImageToSupabase(facetImageFile);
+                } catch (uploadError: any) {
+                    setIsUploadingFacetImage(false);
+                    showPopup(uploadError.message || "Failed to upload image", "error", "Upload Error");
+                    return;
+                }
+                setIsUploadingFacetImage(false);
+            }
+
             if (editingFacet) {
                 const { error } = await supabase
                     .from("occasions")
                     .update({
                         name: facetFormData.name.trim(),
-                        image_url: facetFormData.image_url || null,
+                        image_url: imageUrl || null,
                         updated_at: new Date().toISOString()
                     })
                     .eq("id", editingFacet.id);
@@ -1033,7 +1165,7 @@ To get these values:
                     .from("occasions")
                     .insert([{
                         name: facetFormData.name.trim(),
-                        image_url: facetFormData.image_url || null,
+                        image_url: imageUrl || null,
                         display_order: occasions.length
                     }]);
 
@@ -1043,6 +1175,8 @@ To get these values:
             setIsFacetModalOpen(false);
             setEditingFacet(null);
             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+            setFacetImageFile(null);
+            setFacetImagePreview("");
             loadOccasions();
         } catch (error: any) {
             showPopup(error.message || "Failed to save occasion", "error", "Error");
@@ -1434,15 +1568,67 @@ To get these values:
         if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
         try {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1433',message:'handleDeleteCategory called',data:{categoryId:id,categoryName:name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+
+            // Check if any products reference this category
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1440',message:'Checking products referencing category',data:{categoryId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
+            const { data: productsWithCategory, error: checkError } = await supabase
+                .from("products")
+                .select("id, title, name")
+                .eq("category_id", id);
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1445',message:'Products referencing category found',data:{count:productsWithCategory?.length || 0,products:productsWithCategory},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
+
+            if (checkError) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1450',message:'Error checking products',data:{error:checkError.message,code:checkError.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
+                throw checkError;
+            }
+
+            // If products reference this category, set their category_id to NULL first
+            if (productsWithCategory && productsWithCategory.length > 0) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1455',message:'Setting category_id to NULL for products',data:{productCount:productsWithCategory.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
+                const { error: updateError } = await supabase
+                    .from("products")
+                    .update({ category_id: null })
+                    .eq("category_id", id);
+
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1460',message:'Update products result',data:{updateError:updateError?.message || null,success:!updateError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
+
+                if (updateError) throw updateError;
+            }
+
+            // Now delete the category
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1467',message:'Attempting category deletion',data:{categoryId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             const { error } = await supabase
                 .from("categories")
                 .delete()
                 .eq("id", id);
 
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1472',message:'Category deletion result',data:{error:error?.message || null,code:error?.code || null,success:!error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
+
             if (error) throw error;
             showPopup("Category deleted successfully!", "success");
             loadCategories();
         } catch (error: any) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1478',message:'Category deletion error caught',data:{error:error?.message || String(error),code:error?.code || null,constraint:error?.message?.includes('foreign key') || false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             showPopup(error.message || "Failed to delete category", "error", "Error");
             console.error("Error deleting category:", error);
         }
@@ -3074,26 +3260,6 @@ To get these values:
                                     <span>Products</span>
                         </button>
                                 
-                        <button
-                            onClick={() => {
-                                setActiveTab("categories");
-                                localStorage.setItem("adminActiveTab", "categories");
-                                router.replace("/admin?tab=categories");
-                            }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${
-                                activeTab === "categories"
-                                            ? "bg-black text-white shadow-md"
-                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
-                                    }`}
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="3" y="3" width="7" height="7"></rect>
-                                        <rect x="14" y="3" width="7" height="7"></rect>
-                                        <rect x="14" y="14" width="7" height="7"></rect>
-                                        <rect x="3" y="14" width="7" height="7"></rect>
-                                    </svg>
-                                    <span>Categories</span>
-                        </button>
                                 
                         <button
                             onClick={() => {
@@ -3134,13 +3300,13 @@ To get these values:
                                         <rect x="3" y="14" width="7" height="7"></rect>
                                     </svg>
                                     Facets
-                                </button>
-                                <button
-                                    onClick={() => {
+                        </button>
+                        <button
+                            onClick={() => {
                                         setActiveTab("hero");
                                         localStorage.setItem("adminActiveTab", "hero");
                                         router.replace("/admin?tab=hero");
-                                    }}
+                            }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${
                                 activeTab === "hero"
                                             ? "bg-black text-white shadow-md"
@@ -3153,6 +3319,23 @@ To get these values:
                                         <line x1="9" y1="21" x2="9" y2="9"></line>
                                     </svg>
                                     Hero Section
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab("featured");
+                                        localStorage.setItem("adminActiveTab", "featured");
+                                        router.replace("/admin?tab=featured");
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${
+                                activeTab === "featured"
+                                            ? "bg-black text-white shadow-md"
+                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                    }`}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                    Featured Categories
                                 </button>
                             </nav>
                             
@@ -3185,8 +3368,8 @@ To get these values:
                     {/* Main Content Area */}
                     <div className="flex-1 min-w-0">
 
-                    {/* Categories Tab */}
-                    {activeTab === "categories" && (
+                    {/* Categories Tab - Removed: Now using 5 facet types instead */}
+                    {false && activeTab === "categories" && (
                         <div className="space-y-6">
                             <div className="bg-white rounded-lg border border-gray-200 p-6">
                                 <div className="flex items-center justify-between mb-6">
@@ -3625,13 +3808,21 @@ To get these values:
                         // Apply search query
                         if (searchQuery.trim()) {
                             const query = searchQuery.toLowerCase();
-                            filteredUserProducts = filteredUserProducts.filter(p => 
-                                p.name.toLowerCase().includes(query) ||
+                            filteredUserProducts = filteredUserProducts.filter(p => {
+                                const facets = (p.category && typeof p.category === 'object' && !Array.isArray(p.category))
+                                    ? p.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
+                                    : null;
+                                
+                                const facetText = facets 
+                                    ? `${facets.productTypes.join(" ")} ${facets.occasions.join(" ")} ${facets.colors.join(" ")} ${facets.materials.join(" ")} ${facets.cities.join(" ")}`.toLowerCase()
+                                    : "";
+                                
+                                return p.name.toLowerCase().includes(query) ||
                                 (p.product_id && p.product_id.toLowerCase().includes(query)) ||
-                                (p.category && p.category.toLowerCase().includes(query)) ||
+                                    facetText.includes(query) ||
                                 users.find(u => u.id === p.user_id)?.name.toLowerCase().includes(query) ||
-                                users.find(u => u.id === p.user_id)?.phone.includes(query)
-                            );
+                                    users.find(u => u.id === p.user_id)?.phone.includes(query);
+                            });
                         }
 
                         // Apply column-specific filters
@@ -3652,7 +3843,23 @@ To get these values:
                             });
                         }
                         if (columnFilters.category) {
-                            filteredUserProducts = filteredUserProducts.filter(p => p.category === columnFilters.category);
+                            filteredUserProducts = filteredUserProducts.filter(p => {
+                                const facets = (p.category && typeof p.category === 'object' && !Array.isArray(p.category))
+                                    ? p.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
+                                    : null;
+                                
+                                if (!facets) return false;
+                                
+                                const allFacetNames = [
+                                    ...facets.productTypes,
+                                    ...facets.occasions,
+                                    ...facets.colors,
+                                    ...facets.materials,
+                                    ...facets.cities
+                                ];
+                                
+                                return allFacetNames.some(name => name.toLowerCase().includes(columnFilters.category!.toLowerCase()));
+                            });
                         }
                         if (columnFilters.productId) {
                             const query = columnFilters.productId.toLowerCase();
@@ -3685,8 +3892,23 @@ To get these values:
                                         bVal = b.type || '';
                                         break;
                                     case 'category':
-                                        aVal = a.category || '';
-                                        bVal = b.category || '';
+                                    // Sort by facets - use first facet name found
+                                    const aFacets = (a.category && typeof a.category === 'object' && !Array.isArray(a.category))
+                                        ? a.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
+                                        : null;
+                                    const bFacets = (b.category && typeof b.category === 'object' && !Array.isArray(b.category))
+                                        ? b.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
+                                        : null;
+                                    
+                                    const aFacetText = aFacets 
+                                        ? `${aFacets.productTypes.join(" ")} ${aFacets.occasions.join(" ")} ${aFacets.colors.join(" ")} ${aFacets.materials.join(" ")} ${aFacets.cities.join(" ")}`.toLowerCase()
+                                        : '';
+                                    const bFacetText = bFacets
+                                        ? `${bFacets.productTypes.join(" ")} ${bFacets.occasions.join(" ")} ${bFacets.colors.join(" ")} ${bFacets.materials.join(" ")} ${bFacets.cities.join(" ")}`.toLowerCase()
+                                        : '';
+                                    
+                                    aVal = aFacetText;
+                                    bVal = bFacetText;
                                         break;
                                     case 'productId':
                                         aVal = ('productId' in a ? a.productId : 'product_id' in a ? a.product_id : a.id)?.toString() || '';
@@ -3756,18 +3978,40 @@ To get these values:
                                         </select>
                                     </div>
 
-                                    {/* Category Filter */}
+                                    {/* Facet Filter - Note: This is a simplified filter, full facet filtering should be done via dedicated filter UI */}
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
+                                        <label className="block text-xs font-medium text-gray-700 mb-1">Filter by Facet</label>
                                         <select
                                             value={filterCategory}
                                             onChange={(e) => setFilterCategory(e.target.value)}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
                                         >
-                                            <option value="all">All Categories</option>
-                                            {categories.map(cat => (
-                                                <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                            ))}
+                                            <option value="all">All Facets</option>
+                                            <optgroup label="Product Types">
+                                                {productTypes.map(pt => (
+                                                    <option key={pt.id} value={pt.id}>{pt.name}</option>
+                                                ))}
+                                            </optgroup>
+                                            <optgroup label="Occasions">
+                                                {occasions.map(oc => (
+                                                    <option key={oc.id} value={oc.id}>{oc.name}</option>
+                                                ))}
+                                            </optgroup>
+                                            <optgroup label="Colors">
+                                                {colors.map(c => (
+                                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                                ))}
+                                            </optgroup>
+                                            <optgroup label="Materials">
+                                                {materials.map(m => (
+                                                    <option key={m.id} value={m.id}>{m.name}</option>
+                                                ))}
+                                            </optgroup>
+                                            <optgroup label="Cities">
+                                                {cities.map(city => (
+                                                    <option key={city.id} value={city.id}>{city.name}</option>
+                                                ))}
+                                            </optgroup>
                                         </select>
                                     </div>
                                 </div>
@@ -3913,7 +4157,7 @@ To get these values:
                                                             }}
                                                             className="flex items-center gap-1 hover:text-gray-900 transition-colors"
                                                         >
-                                                            Category
+                                                            Facets
                                                             {sortColumn === 'category' && (
                                                                 <svg className={`w-3 h-3 ${sortDirection === 'asc' ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -3933,17 +4177,39 @@ To get these values:
                                                         </button>
                                                     </div>
                                                     {openFilterColumn === 'category' && (
-                                                        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 min-w-[180px] filter-dropdown-container">
+                                                        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 min-w-[200px] filter-dropdown-container max-h-[300px] overflow-y-auto">
                                                             <select
                                                                 value={columnFilters.category || ''}
                                                                 onChange={(e) => setColumnFilters({ ...columnFilters, category: e.target.value || undefined })}
                                                                 className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
                                                                 autoFocus
                                                             >
-                                                                <option value="">All Categories</option>
-                                                                {allCategories.map(cat => (
-                                                                    <option key={cat} value={cat}>{cat}</option>
-                                                                ))}
+                                                                <option value="">All Facets</option>
+                                                                <optgroup label="Product Types">
+                                                                    {productTypes.map(pt => (
+                                                                        <option key={pt.id} value={pt.name}>{pt.name}</option>
+                                                                    ))}
+                                                                </optgroup>
+                                                                <optgroup label="Occasions">
+                                                                    {occasions.map(oc => (
+                                                                        <option key={oc.id} value={oc.name}>{oc.name}</option>
+                                                                    ))}
+                                                                </optgroup>
+                                                                <optgroup label="Colors">
+                                                                    {colors.map(c => (
+                                                                        <option key={c.id} value={c.name}>{c.name}</option>
+                                                                    ))}
+                                                                </optgroup>
+                                                                <optgroup label="Materials">
+                                                                    {materials.map(m => (
+                                                                        <option key={m.id} value={m.name}>{m.name}</option>
+                                                                    ))}
+                                                                </optgroup>
+                                                                <optgroup label="Cities">
+                                                                    {cities.map(city => (
+                                                                        <option key={city.id} value={city.name}>{city.name}</option>
+                                                                    ))}
+                                                                </optgroup>
                                                             </select>
                                                             <div className="flex justify-end gap-2 mt-2">
                                                                 <button
@@ -4162,10 +4428,74 @@ To get these values:
                                                                 )}
                                                             </>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="text-sm text-gray-500">
-                                                                {product.category || '-'}
+                                                    <td className="px-6 py-4">
+                                                        {(() => {
+                                                            const facets = (product.category && typeof product.category === 'object' && !Array.isArray(product.category))
+                                                                ? product.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
+                                                                : { productTypes: [], occasions: [], colors: [], materials: [], cities: [] };
+                                                            
+                                                            const hasFacets = facets.productTypes.length > 0 || facets.occasions.length > 0 || 
+                                                                             facets.colors.length > 0 || facets.materials.length > 0 || facets.cities.length > 0;
+                                                            
+                                                            if (!hasFacets) {
+                                                                return <div className="text-sm text-gray-400 italic">No facets</div>;
+                                                            }
+                                                            
+                                                            return (
+                                                                <div className="space-y-1 max-w-xs">
+                                                                    {facets.productTypes.length > 0 && (
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            <span className="text-xs font-semibold text-gray-600">Types:</span>
+                                                                            {facets.productTypes.map((pt, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                                                    {pt}
+                                                                                </span>
+                                                                            ))}
                                                             </div>
+                                                                    )}
+                                                                    {facets.occasions.length > 0 && (
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            <span className="text-xs font-semibold text-gray-600">Occasions:</span>
+                                                                            {facets.occasions.map((oc, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
+                                                                                    {oc}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {facets.colors.length > 0 && (
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            <span className="text-xs font-semibold text-gray-600">Colors:</span>
+                                                                            {facets.colors.map((c, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                                                    {c}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {facets.materials.length > 0 && (
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            <span className="text-xs font-semibold text-gray-600">Materials:</span>
+                                                                            {facets.materials.map((m, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                                    {m}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                    {facets.cities.length > 0 && (
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            <span className="text-xs font-semibold text-gray-600">Cities:</span>
+                                                                            {facets.cities.map((city, idx) => (
+                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                                    {city}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })()}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm text-gray-500">
@@ -4303,6 +4633,8 @@ To get these values:
                                         onAdd={() => {
                                             setEditingFacet(null);
                                             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
                                             setIsFacetModalOpen(true);
                                         }}
                                         onEdit={(item) => {
@@ -4314,6 +4646,8 @@ To get these values:
                                                 country: "", 
                                                 image_url: item.image_url || "" 
                                             });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview(item.image_url || "");
                                             setIsFacetModalOpen(true);
                                         }}
                                         onDelete={handleDeleteProductType}
@@ -4329,6 +4663,8 @@ To get these values:
                                         onAdd={() => {
                                             setEditingFacet(null);
                                             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
                                             setIsFacetModalOpen(true);
                                         }}
                                         onEdit={(item) => {
@@ -4340,6 +4676,8 @@ To get these values:
                                                 country: "", 
                                                 image_url: item.image_url || "" 
                                             });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview(item.image_url || "");
                                             setIsFacetModalOpen(true);
                                         }}
                                         onDelete={handleDeleteOccasion}
@@ -4355,6 +4693,8 @@ To get these values:
                                         onAdd={() => {
                                             setEditingFacet(null);
                                             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
                                             setIsFacetModalOpen(true);
                                         }}
                                         onEdit={(item) => {
@@ -4382,6 +4722,8 @@ To get these values:
                                         onAdd={() => {
                                             setEditingFacet(null);
                                             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
                                             setIsFacetModalOpen(true);
                                         }}
                                         onEdit={(item) => {
@@ -4408,6 +4750,8 @@ To get these values:
                                         onAdd={() => {
                                             setEditingFacet(null);
                                             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
                                             setIsFacetModalOpen(true);
                                         }}
                                         onEdit={(item) => {
@@ -5672,24 +6016,56 @@ To get these values:
                                 {(activeFacetTab === "product_types" || activeFacetTab === "occasions") && (
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Image URL (optional)
+                                            Image (optional)
                                         </label>
-                                        <input
-                                            type="url"
-                                            value={facetFormData.image_url}
-                                            onChange={(e) => setFacetFormData({ ...facetFormData, image_url: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                            placeholder="https://example.com/image.jpg"
-                                        />
+                                        <label
+                                            htmlFor="facet-image-input"
+                                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                                        >
+                                            {facetImagePreview || (editingFacet && editingFacet.image_url) ? (
+                                                <div className="relative w-full h-full">
+                                                    <Image
+                                                        src={facetImagePreview || editingFacet.image_url}
+                                                        alt="Facet image preview"
+                                                        fill
+                                                        className="object-cover rounded-lg"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                    <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <p className="mb-2 text-sm text-gray-500">
+                                                        <span className="font-semibold">Click to upload</span> or drag and drop
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
+                                                </div>
+                                            )}
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFacetImageChange}
+                                                className="hidden"
+                                                id="facet-image-input"
+                                            />
+                                        </label>
+                                        {facetImageFile && (
+                                            <p className="text-xs text-gray-500 text-center mt-2">
+                                                Selected: {facetImageFile.name} ({(facetImageFile.size / 1024 / 1024).toFixed(2)} MB)
+                                            </p>
+                                        )}
                                     </div>
                                 )}
 
                                 <div className="flex gap-4 pt-4">
                                     <button
                                         type="submit"
-                                        className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity"
+                                        disabled={isUploadingFacetImage}
+                                        className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {editingFacet ? "Update" : "Add"}
+                                        {isUploadingFacetImage ? "Uploading..." : editingFacet ? "Update" : "Add"}
                                     </button>
                                     <button
                                         type="button"
@@ -5697,6 +6073,8 @@ To get these values:
                                             setIsFacetModalOpen(false);
                                             setEditingFacet(null);
                                             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
                                         }}
                                         className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
                                     >
@@ -5964,6 +6342,418 @@ To get these values:
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Featured Categories Tab */}
+            {activeTab === "featured" && (
+                <div className="space-y-6 w-full">
+                    <div className="bg-white rounded-lg border border-gray-200 p-6">
+                        <div className="flex items-center justify-between mb-8">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
+                                <p className="text-sm text-gray-600 mt-1">Pin items from Product Types, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
+                            </div>
+                        </div>
+
+                        {/* Product Types Section */}
+                        <div className="mb-8 border-b border-gray-200 pb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">Product Types</h3>
+                                <span className="text-sm text-gray-500">{productTypes.length} items</span>
+                            </div>
+                            {productTypes.length === 0 ? (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                    <p className="text-sm text-gray-500">No product types available. Add them from the Facets tab.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-5 gap-4">
+                                    {productTypes.map((pt, index) => {
+                                        const productCount = facetProductCounts.get(`product_type_${pt.id}`) || 0;
+                                        
+                                        return (
+                                            <div
+                                                key={pt.id}
+                                                className="flex flex-col p-4 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="text-gray-400 font-bold text-sm">{index + 1}</div>
+                                                    <button
+                                                        onClick={async () => {
+                                                            const newFeatured = !pt.is_featured;
+                                                            try {
+                                                                const { error } = await supabase
+                                                                    .from("product_types")
+                                                                    .update({ is_featured: newFeatured })
+                                                                    .eq("id", pt.id);
+                                                                if (error) throw error;
+                                                                loadProductTypes();
+                                                                showPopup(newFeatured ? "Product type pinned!" : "Product type unpinned!", "success");
+                                                            } catch (error: any) {
+                                                                showPopup(error.message || "Failed to update", "error");
+                                                            }
+                                                        }}
+                                                        className={`p-1.5 rounded-lg transition-colors ${
+                                                            pt.is_featured
+                                                                ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                                : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                        }`}
+                                                        title={pt.is_featured ? "Unpin from Featured Categories" : "Pin to Featured Categories"}
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div className="relative w-full aspect-[4/5] bg-gray-200 rounded-lg overflow-hidden mb-3">
+                                                    {pt.image_url ? (
+                                                        <Image
+                                                            src={pt.image_url}
+                                                            alt={pt.name}
+                                                            fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                            No Image
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h3 className="font-semibold text-gray-900 truncate text-sm">{pt.name}</h3>
+                                                        {pt.is_featured && (
+                                                            <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex items-center gap-0.5 flex-shrink-0">
+                                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                                </svg>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-gray-600 truncate mb-2">/products?product_type={pt.id}</p>
+                                                    <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push(`/admin?tab=products&product_type=${pt.id}`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveTab("facets");
+                                                            setActiveFacetTab("product_types");
+                                                            localStorage.setItem("adminActiveTab", "facets");
+                                                            router.push("/admin?tab=facets&facet=product_types");
+                                                        }}
+                                                        className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Occasions Section */}
+                        <div className="mb-8 border-b border-gray-200 pb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">Occasions</h3>
+                                <span className="text-sm text-gray-500">{occasions.length} items</span>
+                            </div>
+                            {occasions.length === 0 ? (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                    <p className="text-sm text-gray-500">No occasions available. Add them from the Facets tab.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-5 gap-4">
+                                    {occasions.map((oc, index) => {
+                                        const productCount = facetProductCounts.get(`occasion_${oc.id}`) || 0;
+                                        
+                                        return (
+                                            <div
+                                                key={oc.id}
+                                                className="flex flex-col p-4 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="text-gray-400 font-bold text-sm">{index + 1}</div>
+                                                    <button
+                                                        onClick={async () => {
+                                                            const newFeatured = !oc.is_featured;
+                                                            try {
+                                                                const { error } = await supabase
+                                                                    .from("occasions")
+                                                                    .update({ is_featured: newFeatured })
+                                                                    .eq("id", oc.id);
+                                                                if (error) throw error;
+                                                                loadOccasions();
+                                                                showPopup(newFeatured ? "Occasion pinned!" : "Occasion unpinned!", "success");
+                                                            } catch (error: any) {
+                                                                showPopup(error.message || "Failed to update", "error");
+                                                            }
+                                                        }}
+                                                        className={`p-1.5 rounded-lg transition-colors ${
+                                                            oc.is_featured
+                                                                ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                                : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                        }`}
+                                                        title={oc.is_featured ? "Unpin from Featured Categories" : "Pin to Featured Categories"}
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                                <div className="relative w-full aspect-[4/5] bg-gray-200 rounded-lg overflow-hidden mb-3">
+                                                    {oc.image_url ? (
+                                                        <Image
+                                                            src={oc.image_url}
+                                                            alt={oc.name}
+                                                            fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                            No Image
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h3 className="font-semibold text-gray-900 truncate text-sm">{oc.name}</h3>
+                                                        {oc.is_featured && (
+                                                            <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex items-center gap-0.5 flex-shrink-0">
+                                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                                                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                                </svg>
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-gray-600 truncate mb-2">/products?occasion={oc.id}</p>
+                                                    <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push(`/admin?tab=products&occasion=${oc.id}`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveTab("facets");
+                                                            setActiveFacetTab("occasions");
+                                                            localStorage.setItem("adminActiveTab", "facets");
+                                                            router.push("/admin?tab=facets&facet=occasions");
+                                                        }}
+                                                        className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Colors Section */}
+                        <div className="mb-8 border-b border-gray-200 pb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">Colors</h3>
+                                <span className="text-sm text-gray-500">{colors.length} items</span>
+                            </div>
+                            {colors.length === 0 ? (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                    <p className="text-sm text-gray-500">No colors available. Add them from the Facets tab.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-5 gap-4">
+                                    {colors.map((c, index) => {
+                                        const productCount = facetProductCounts.get(`color_${c.id}`) || 0;
+                                        
+                                        return (
+                                            <div
+                                                key={c.id}
+                                                className="flex flex-col p-4 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="text-gray-400 font-bold text-sm">{index + 1}</div>
+                                                </div>
+                                                <div className="relative w-full aspect-[4/5] bg-gray-200 rounded-lg overflow-hidden mb-3 flex items-center justify-center">
+                                                    {c.hex ? (
+                                                        <div className="w-full h-full rounded-lg border border-gray-300" style={{ backgroundColor: c.hex }}></div>
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs rounded-lg">
+                                                            No Color
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-semibold text-gray-900 truncate text-sm mb-1">{c.name}</h3>
+                                                    <p className="text-xs text-gray-600 truncate mb-2">/products?color={c.id}</p>
+                                                    <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push(`/admin?tab=products&color=${c.id}`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveTab("facets");
+                                                            setActiveFacetTab("colors");
+                                                            localStorage.setItem("adminActiveTab", "facets");
+                                                            router.push("/admin?tab=facets&facet=colors");
+                                                        }}
+                                                        className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Materials Section */}
+                        <div className="mb-8 border-b border-gray-200 pb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">Materials</h3>
+                                <span className="text-sm text-gray-500">{materials.length} items</span>
+                            </div>
+                            {materials.length === 0 ? (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                    <p className="text-sm text-gray-500">No materials available. Add them from the Facets tab.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-5 gap-4">
+                                    {materials.map((m, index) => {
+                                        const productCount = facetProductCounts.get(`material_${m.id}`) || 0;
+                                        
+                                        return (
+                                            <div
+                                                key={m.id}
+                                                className="flex flex-col p-4 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="text-gray-400 font-bold text-sm">{index + 1}</div>
+                                                </div>
+                                                <div className="relative w-full aspect-[4/5] bg-gray-200 rounded-lg overflow-hidden mb-3 flex items-center justify-center">
+                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                        No Image
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-semibold text-gray-900 truncate text-sm mb-1">{m.name}</h3>
+                                                    <p className="text-xs text-gray-600 truncate mb-2">/products?material={m.id}</p>
+                                                    <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push(`/admin?tab=products&material=${m.id}`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveTab("facets");
+                                                            setActiveFacetTab("materials");
+                                                            localStorage.setItem("adminActiveTab", "facets");
+                                                            router.push("/admin?tab=facets&facet=materials");
+                                                        }}
+                                                        className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Cities Section */}
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">Cities</h3>
+                                <span className="text-sm text-gray-500">{cities.length} items</span>
+                            </div>
+                            {cities.length === 0 ? (
+                                <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                    <p className="text-sm text-gray-500">No cities available. Add them from the Facets tab.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-5 gap-4">
+                                    {cities.map((city, index) => {
+                                        const productCount = facetProductCounts.get(`city_${city.id}`) || 0;
+                                        
+                                        return (
+                                            <div
+                                                key={city.id}
+                                                className="flex flex-col p-4 rounded-lg border transition-all relative bg-gray-50 border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="text-gray-400 font-bold text-sm">{index + 1}</div>
+                                                </div>
+                                                <div className="relative w-full aspect-[4/5] bg-gray-200 rounded-lg overflow-hidden mb-3 flex items-center justify-center">
+                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                        No Image
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-semibold text-gray-900 truncate text-sm mb-1">{city.name}</h3>
+                                                    {city.state && (
+                                                        <p className="text-xs text-gray-600 truncate mb-1">{city.state}</p>
+                                                    )}
+                                                    <p className="text-xs text-gray-600 truncate mb-2">/products?city={city.id}</p>
+                                                    <p className="text-xs text-blue-600 mb-2 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push(`/admin?tab=products&city=${city.id}`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveTab("facets");
+                                                            setActiveFacetTab("cities");
+                                                            localStorage.setItem("adminActiveTab", "facets");
+                                                            router.push("/admin?tab=facets&facet=cities");
+                                                        }}
+                                                        className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
