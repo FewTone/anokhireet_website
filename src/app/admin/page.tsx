@@ -238,7 +238,7 @@ export default function AdminPage() {
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero">("dashboard");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminEmail, setAdminEmail] = useState("");
@@ -363,7 +363,7 @@ export default function AdminPage() {
         if (isAuthenticated) {
             const savedTab = localStorage.getItem("adminActiveTab");
             if (savedTab && (savedTab === "dashboard" || savedTab === "products" || savedTab === "users" || savedTab === "facets" || savedTab === "hero")) {
-                setActiveTab(savedTab as "dashboard" | "products" | "users" | "hero" | "featured");
+                setActiveTab(savedTab as "dashboard" | "products" | "users" | "hero");
                 router.replace(`/admin?tab=${savedTab}`);
             }
         }
@@ -381,7 +381,7 @@ export default function AdminPage() {
         
         const tabParam = searchParams.get("tab");
         if (tabParam === "users" || tabParam === "products" || tabParam === "dashboard" || tabParam === "facets" || tabParam === "hero" || tabParam === "featured") {
-            setActiveTab(tabParam as "dashboard" | "products" | "users" | "hero" | "featured");
+            setActiveTab(tabParam as "dashboard" | "products" | "users" | "hero");
             localStorage.setItem("adminActiveTab", tabParam);
         }
     }, [searchParams, isAuthenticated]);
@@ -3299,23 +3299,6 @@ To get these values:
                                         <line x1="9" y1="21" x2="9" y2="9"></line>
                                     </svg>
                                     Hero Section
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab("featured");
-                                        localStorage.setItem("adminActiveTab", "featured");
-                                        router.replace("/admin?tab=featured");
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${
-                                activeTab === "featured"
-                                            ? "bg-black text-white shadow-md"
-                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
-                                    }`}
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                                    </svg>
-                                    Featured Categories
                                 </button>
                             </nav>
                             
@@ -6365,7 +6348,7 @@ To get these values:
                             </div>
                             {productTypes.length === 0 ? (
                                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                    <p className="text-sm text-gray-500">No product types available. Add them from the Facets tab.</p>
+                                    <p className="text-sm text-gray-500">No product types available. Click "Add New" above to create one.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-5 gap-4">
@@ -6507,7 +6490,7 @@ To get these values:
                             </div>
                             {occasions.length === 0 ? (
                                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                    <p className="text-sm text-gray-500">No occasions available. Add them from the Facets tab.</p>
+                                    <p className="text-sm text-gray-500">No occasions available. Click "Add New" above to create one.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-5 gap-4">
@@ -6649,7 +6632,7 @@ To get these values:
                             </div>
                             {colors.length === 0 ? (
                                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                    <p className="text-sm text-gray-500">No colors available. Add them from the Facets tab.</p>
+                                    <p className="text-sm text-gray-500">No colors available. Click "Add New" above to create one.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-5 gap-4">
@@ -6724,11 +6707,30 @@ To get these values:
                         <div className="mb-8 border-b border-gray-200 pb-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-bold text-gray-900">Materials</h3>
-                                <span className="text-sm text-gray-500">{materials.length} items</span>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm text-gray-500">{materials.length} items</span>
+                                    <button
+                                        onClick={() => {
+                                            setActiveFacetTab("materials");
+                                            setEditingFacet(null);
+                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
+                                            setIsFacetModalOpen(true);
+                                        }}
+                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add New
+                                    </button>
+                                </div>
                             </div>
                             {materials.length === 0 ? (
                                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                    <p className="text-sm text-gray-500">No materials available. Add them from the Facets tab.</p>
+                                    <p className="text-sm text-gray-500">No materials available. Click "Add New" above to create one.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-5 gap-4">
@@ -6760,21 +6762,33 @@ To get these values:
                                                     >
                                                         View {productCount} products →
                                                     </p>
-                                                    <button
-                                                        onClick={() => {
-                                                            setActiveTab("products");
-                                                            setActiveFacetTab("materials");
-                                                            localStorage.setItem("adminActiveTab", "products");
-                                                            router.push("/admin?tab=products");
-                                                            setTimeout(() => {
-                                                                const element = document.querySelector('[data-facet-section]');
-                                                                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                                            }, 100);
-                                                        }}
-                                                        className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
-                                                    >
-                                                        Edit
-                                                    </button>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("materials");
+                                                                setEditingFacet(m);
+                                                                setFacetFormData({ 
+                                                                    name: m.name, 
+                                                                    hex: "", 
+                                                                    state: "", 
+                                                                    country: "", 
+                                                                    image_url: "" 
+                                                                });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview("");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="flex-1 px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteMaterial(m.id, m.name)}
+                                                            className="px-3 py-1.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors text-xs"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
@@ -6787,11 +6801,30 @@ To get these values:
                         <div>
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-lg font-bold text-gray-900">Cities</h3>
-                                <span className="text-sm text-gray-500">{cities.length} items</span>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm text-gray-500">{cities.length} items</span>
+                                    <button
+                                        onClick={() => {
+                                            setActiveFacetTab("cities");
+                                            setEditingFacet(null);
+                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
+                                            setIsFacetModalOpen(true);
+                                        }}
+                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add New
+                                    </button>
+                                </div>
                             </div>
                             {cities.length === 0 ? (
                                 <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                                    <p className="text-sm text-gray-500">No cities available. Add them from the Facets tab.</p>
+                                    <p className="text-sm text-gray-500">No cities available. Click "Add New" above to create one.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-5 gap-4">
@@ -6826,21 +6859,33 @@ To get these values:
                                                     >
                                                         View {productCount} products →
                                                     </p>
-                                                    <button
-                                                        onClick={() => {
-                                                            setActiveTab("products");
-                                                            setActiveFacetTab("cities");
-                                                            localStorage.setItem("adminActiveTab", "products");
-                                                            router.push("/admin?tab=products");
-                                                            setTimeout(() => {
-                                                                const element = document.querySelector('[data-facet-section]');
-                                                                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                                            }, 100);
-                                                        }}
-                                                        className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
-                                                    >
-                                                        Edit
-                                                    </button>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => {
+                                                                setActiveFacetTab("cities");
+                                                                setEditingFacet(city);
+                                                                setFacetFormData({ 
+                                                                    name: city.name, 
+                                                                    hex: "", 
+                                                                    state: city.state || "", 
+                                                                    country: city.country || "", 
+                                                                    image_url: "" 
+                                                                });
+                                                                setFacetImageFile(null);
+                                                                setFacetImagePreview("");
+                                                                setIsFacetModalOpen(true);
+                                                            }}
+                                                            className="flex-1 px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteCity(city.id, city.name)}
+                                                            className="px-3 py-1.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors text-xs"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
