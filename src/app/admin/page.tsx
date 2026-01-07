@@ -238,7 +238,7 @@ export default function AdminPage() {
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "facets" | "hero" | "featured">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured">("dashboard");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminEmail, setAdminEmail] = useState("");
@@ -363,7 +363,7 @@ export default function AdminPage() {
         if (isAuthenticated) {
             const savedTab = localStorage.getItem("adminActiveTab");
             if (savedTab && (savedTab === "dashboard" || savedTab === "products" || savedTab === "users" || savedTab === "facets" || savedTab === "hero")) {
-                setActiveTab(savedTab as "dashboard" | "products" | "users" | "facets" | "hero");
+                setActiveTab(savedTab as "dashboard" | "products" | "users" | "hero" | "featured");
                 router.replace(`/admin?tab=${savedTab}`);
             }
         }
@@ -381,7 +381,7 @@ export default function AdminPage() {
         
         const tabParam = searchParams.get("tab");
         if (tabParam === "users" || tabParam === "products" || tabParam === "dashboard" || tabParam === "facets" || tabParam === "hero" || tabParam === "featured") {
-            setActiveTab(tabParam as "dashboard" | "products" | "users" | "facets" | "hero" | "featured");
+            setActiveTab(tabParam as "dashboard" | "products" | "users" | "hero" | "featured");
             localStorage.setItem("adminActiveTab", tabParam);
         }
     }, [searchParams, isAuthenticated]);
@@ -3280,26 +3280,6 @@ To get these values:
                                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                                     </svg>
                                     Users
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab("facets");
-                                        localStorage.setItem("adminActiveTab", "facets");
-                                        router.replace("/admin?tab=facets");
-                                    }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${
-                                activeTab === "facets"
-                                            ? "bg-black text-white shadow-md"
-                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
-                                    }`}
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <rect x="3" y="3" width="7" height="7"></rect>
-                                        <rect x="14" y="3" width="7" height="7"></rect>
-                                        <rect x="14" y="14" width="7" height="7"></rect>
-                                        <rect x="3" y="14" width="7" height="7"></rect>
-                                    </svg>
-                                    Facets
                         </button>
                         <button
                             onClick={() => {
@@ -4567,7 +4547,7 @@ To get these values:
                     })()}
 
                     {/* Users Tab */}
-                    {activeTab === "facets" && (
+                    {false && activeTab === "facets" && (
                         <div className="space-y-6">
                             {/* Facet Type Tabs */}
                             <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -6448,18 +6428,23 @@ To get these values:
                                                     </p>
                                                     <button
                                                         onClick={() => {
-                                                            setActiveTab("facets");
+                                                            setActiveTab("products");
                                                             setActiveFacetTab("product_types");
-                                                            localStorage.setItem("adminActiveTab", "facets");
-                                                            router.push("/admin?tab=facets&facet=product_types");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push("/admin?tab=products");
+                                                            // Scroll to facet management section
+                                                            setTimeout(() => {
+                                                                const element = document.querySelector('[data-facet-section]');
+                                                                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                            }, 100);
                                                         }}
                                                         className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
                                                     >
                                                         Edit
                                                     </button>
                                                 </div>
-                                            </div>
-                                        );
+        </div>
+    );
                                     })}
                                 </div>
                             )}
@@ -6555,10 +6540,14 @@ To get these values:
                                                     </p>
                                                     <button
                                                         onClick={() => {
-                                                            setActiveTab("facets");
+                                                            setActiveTab("products");
                                                             setActiveFacetTab("occasions");
-                                                            localStorage.setItem("adminActiveTab", "facets");
-                                                            router.push("/admin?tab=facets&facet=occasions");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push("/admin?tab=products");
+                                                            setTimeout(() => {
+                                                                const element = document.querySelector('[data-facet-section]');
+                                                                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                            }, 100);
                                                         }}
                                                         className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
                                                     >
@@ -6618,10 +6607,14 @@ To get these values:
                                                     </p>
                                                     <button
                                                         onClick={() => {
-                                                            setActiveTab("facets");
+                                                            setActiveTab("products");
                                                             setActiveFacetTab("colors");
-                                                            localStorage.setItem("adminActiveTab", "facets");
-                                                            router.push("/admin?tab=facets&facet=colors");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push("/admin?tab=products");
+                                                            setTimeout(() => {
+                                                                const element = document.querySelector('[data-facet-section]');
+                                                                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                            }, 100);
                                                         }}
                                                         className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
                                                     >
@@ -6677,10 +6670,14 @@ To get these values:
                                                     </p>
                                                     <button
                                                         onClick={() => {
-                                                            setActiveTab("facets");
+                                                            setActiveTab("products");
                                                             setActiveFacetTab("materials");
-                                                            localStorage.setItem("adminActiveTab", "facets");
-                                                            router.push("/admin?tab=facets&facet=materials");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push("/admin?tab=products");
+                                                            setTimeout(() => {
+                                                                const element = document.querySelector('[data-facet-section]');
+                                                                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                            }, 100);
                                                         }}
                                                         className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
                                                     >
@@ -6739,10 +6736,14 @@ To get these values:
                                                     </p>
                                                     <button
                                                         onClick={() => {
-                                                            setActiveTab("facets");
+                                                            setActiveTab("products");
                                                             setActiveFacetTab("cities");
-                                                            localStorage.setItem("adminActiveTab", "facets");
-                                                            router.push("/admin?tab=facets&facet=cities");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            router.push("/admin?tab=products");
+                                                            setTimeout(() => {
+                                                                const element = document.querySelector('[data-facet-section]');
+                                                                if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                            }, 100);
                                                         }}
                                                         className="w-full px-3 py-1.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-xs"
                                                     >
