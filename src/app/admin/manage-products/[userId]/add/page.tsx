@@ -1010,7 +1010,6 @@ export default function AddProductPage() {
                                 </div>
                             </div>
                             <p className="text-xs text-gray-500 mt-2">Select facets for this product. At least one facet must be selected.</p>
-                        </div>
 
                             <div className="flex gap-4 pt-4 border-t border-gray-200">
                                 <button
