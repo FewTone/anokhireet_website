@@ -16,6 +16,7 @@ interface Product {
     price: string;
     image: string;
     category?: string;
+    original_price?: number | string;
     created_at?: string; // Add created_at to preserve sorting
 }
 
@@ -303,6 +304,7 @@ export default function ProductsPage() {
                         price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
                         image: primaryImage,
                         category: p.category || p.category_id,
+                        original_price: p.original_price || undefined,
                         created_at: p.created_at, // Preserve created_at for sorting
                     } as Product & { created_at?: string };
                 });

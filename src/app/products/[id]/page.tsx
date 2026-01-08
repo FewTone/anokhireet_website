@@ -423,21 +423,21 @@ export default function ProductDetailPage() {
                                         <h2 className="text-2xl font-bold mb-4">{product.name}</h2>
                                         
                                         {/* Pricing Information */}
-                                        <div className="mb-6">
-                                            <div className="flex items-baseline gap-3 mb-2">
-                                                <span className="text-3xl font-bold text-gray-900">{product.price}</span>
-                                                {product.original_price && (
-                                                    <span className="text-lg text-gray-500 line-through">
-                                                        ₹{typeof product.original_price === 'number' ? product.original_price : product.original_price}
-                                                    </span>
-                                                )}
+                                        <div className="mb-6 space-y-2">
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-sm text-gray-500">Rental Price</span>
+                                                <span className="text-3xl font-bold text-gray-900">
+                                                    {product.price && !product.price.startsWith('₹') ? `₹${product.price.replace(/[₹,]/g, '')}` : product.price}
+                                                </span>
                                             </div>
                                             {product.original_price && (
-                                                <p className="text-sm text-gray-600">
-                                                    Original Price: ₹{typeof product.original_price === 'number' ? product.original_price : product.original_price}
-                                                </p>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-sm text-gray-500">Original Price</span>
+                                                    <span className="text-xl text-gray-600">
+                                                        ₹{typeof product.original_price === 'number' ? product.original_price.toLocaleString() : parseFloat(String(product.original_price)).toLocaleString()}
+                                                    </span>
+                                                </div>
                                             )}
-                                            <p className="text-sm text-gray-500 mt-1">Rental Price</p>
                                         </div>
 
                                         {/* Product Details */}

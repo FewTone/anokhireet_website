@@ -29,6 +29,7 @@ interface Product {
     price: string;
     image: string;
     category?: string;
+    original_price?: number | string;
     created_at?: string;
 }
 
@@ -269,6 +270,7 @@ export default function Home() {
                         price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
                         image: primaryImage, // Use primary image for home page
                         category: p.category || p.category_id,
+                        original_price: p.original_price || undefined,
                         created_at: p.created_at, // Store for sorting
                     } as any);
                 });

@@ -4517,7 +4517,7 @@ To get these values:
                                                             {product.price}
                                                         </div>
                                                             {(product as any).original_price && (
-                                                                <div className="text-xs text-gray-400 line-through">
+                                                                <div className="text-xs text-gray-400">
                                                                     {typeof (product as any).original_price === 'number' 
                                                                         ? `₹${(product as any).original_price}` 
                                                                         : (product as any).original_price}

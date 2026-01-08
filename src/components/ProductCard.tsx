@@ -11,10 +11,21 @@ interface ProductProps {
         price: string;
         image: string;
         category?: string;
+        original_price?: number | string;
     };
 }
 
 export default function ProductCard({ product }: ProductProps) {
+    // Format price to ensure it has ₹ symbol
+    const formatPrice = (price: string): string => {
+        if (!price || price.trim() === "") return "";
+        // Remove existing ₹ symbol and any commas, then add ₹ prefix
+        const cleanPrice = price.replace(/[₹,]/g, '').trim();
+        if (!cleanPrice) return "";
+        // Add ₹ symbol if not already present
+        return `₹${cleanPrice}`;
+    };
+
     return (
         <Link href={`/products/${product.productId || product.id}`} className="block bg-white group">
             <div className="relative w-full aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
@@ -48,9 +59,18 @@ export default function ProductCard({ product }: ProductProps) {
                             #{product.productId || product.id}
                         </p>
                     </div>
-                    <p className="text-sm md:text-base font-normal text-neutral-900 whitespace-nowrap">
-                        {product.price}
-                    </p>
+                    <div className="text-right">
+                        <p className="text-sm md:text-base font-normal text-neutral-900 whitespace-nowrap">
+                            {formatPrice(product.price)}
+                        </p>
+                        {product.original_price && (
+                            <p className="text-xs text-neutral-500 mt-0.5">
+                                ₹{typeof product.original_price === 'number' 
+                                    ? product.original_price.toLocaleString() 
+                                    : parseFloat(String(product.original_price)).toLocaleString()}
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
         </Link>

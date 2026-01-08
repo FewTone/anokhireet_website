@@ -588,7 +588,7 @@ export default function ManageProductsPage() {
                                                                 {product.price}
                                                             </div>
                                                             {product.original_price && (
-                                                                <div className="text-xs text-gray-500 line-through">
+                                                                <div className="text-xs text-gray-500">
                                                                     ₹{typeof product.original_price === 'number' 
                                                                         ? product.original_price.toLocaleString() 
                                                                         : parseFloat(product.original_price).toLocaleString()}
