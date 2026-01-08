@@ -148,9 +148,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
     };
 
     const loadProductForEdit = async (productId: string) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:101',message:'loadProductForEdit called',data:{productId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
         try {
             // Load product data
             const { data: product, error: productError } = await supabase
@@ -159,22 +156,11 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 .eq("id", productId)
                 .single();
 
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:108',message:'Product query result',data:{productId,hasProduct:!!product,hasError:!!productError,errorMessage:productError?.message,productName:product?.name||product?.title},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
-
             if (productError || !product) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:111',message:'Product load failed',data:{productId,error:productError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
                 showPopup("Failed to load product for editing", "error", "Error");
                 router.push(`/admin/manage-products/${userId}`);
                 return;
             }
-
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:185',message:'Setting editingProduct',data:{productId:product.id,productIdType:typeof product.id,productName:product.name||product.title,hasImages:!!product.images,imagesIsArray:Array.isArray(product.images),imagesLength:product.images?.length,hasImage:!!product.image},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-            // #endregion
 
             setEditingProduct(product);
 
@@ -183,10 +169,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 ? product.images
                 : (product.image ? [product.image] : []);
             setProductImages(images);
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:195',message:'Images loaded for edit',data:{productId:product.id,imagesCount:images.length,imagesArray:JSON.stringify(images)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-            // #endregion
             
             const validPrimaryIndex = product.primary_image_index !== undefined && product.primary_image_index >= 0 && product.primary_image_index < images.length
                 ? product.primary_image_index
@@ -208,10 +190,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
             const materials = materialsRes.data?.map((m: any) => m.materials?.name).filter(Boolean) || [];
             const cities = citiesRes.data?.map((c: any) => c.cities?.name).filter(Boolean) || [];
 
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:142',message:'Facets loaded for edit',data:{productTypesCount:productTypes.length,occasionsCount:occasions.length,colorsCount:colors.length,materialsCount:materials.length,citiesCount:cities.length,productName:product.name||product.title,productPrice:product.price,hasOriginalPrice:!!product.original_price,imagesCount:images.length,imagesArray:images},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
-
             setProductFormData({
                 name: product.name || product.title || "",
                 price: product.price || "",
@@ -225,14 +203,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
             
             // Set step to 2 when editing (since we already have product data)
             setCurrentStep(2);
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:159',message:'Product form data set, step set to 2',data:{formDataName:product.name||product.title||"",formDataPrice:product.price||"",formDataProductTypes:productTypes.length,formDataOccasions:occasions.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
         } catch (error) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:163',message:'loadProductForEdit error caught',data:{productId,error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
             console.error("Error loading product for edit:", error);
             showPopup("Failed to load product for editing", "error", "Error");
             router.push(`/admin/manage-products/${userId}`);
@@ -592,10 +563,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
     const handleSaveProduct = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:598',message:'handleSaveProduct called',data:{isEditing:!!editingProduct,editingProductId:editingProduct?.id,editingProductIdType:typeof editingProduct?.id,editingProductFull:JSON.stringify(editingProduct),formDataName:productFormData.name,formDataPrice:productFormData.price,productTypesCount:productFormData.productTypes.length,occasionsCount:productFormData.occasions.length,colorsCount:productFormData.colors.length,materialsCount:productFormData.materials.length,citiesCount:productFormData.cities.length,existingImagesCount:productImages.length,newImagesCount:productImageFiles.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-        // #endregion
-        
         // Pre-check: Verify required columns exist by attempting a simple query
         try {
             const { error: schemaCheckError } = await supabase
@@ -609,10 +576,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 schemaCheckError.message?.includes('does not exist') ||
                 schemaCheckError.message?.includes('column') && schemaCheckError.message?.includes('products')
             )) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:530',message:'Schema check failed - columns missing',data:{error:schemaCheckError.message,errorCode:schemaCheckError.code,errorDetails:schemaCheckError.details},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                // #endregion
-                
                 const sqlToRun = `ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT[];
 ALTER TABLE products ADD COLUMN IF NOT EXISTS primary_image_index INTEGER DEFAULT 0;
 ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC;
@@ -724,9 +687,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
             let productToUpdate: any;
             
             if (editingProduct) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:595',message:'Updating existing product',data:{editingProductId:editingProduct.id,updateDataName:productData.name,updateDataPrice:productData.price,updateDataImagesCount:productData.images.length,primaryImageIndex:productData.primary_image_index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
                 // Update existing product
                 const updateData: any = {
                     title: productData.name || "Untitled Product",
@@ -745,14 +705,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     }
                 }
 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:656',message:'Attempting product update',data:{editingProductId:editingProduct.id,updateDataKeys:Object.keys(updateData),hasImages:!!updateData.images,imagesCount:updateData.images?.length,hasPrimaryIndex:updateData.primary_image_index!==undefined,primaryIndexValue:updateData.primary_image_index,hasOriginalPrice:!!updateData.original_price},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
-
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:754',message:'About to execute UPDATE query',data:{editingProductId:editingProduct.id,editingProductIdType:typeof editingProduct.id,updateDataKeys:Object.keys(updateData),updateDataValues:JSON.stringify(updateData)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                // #endregion
-
                 const { data: updatedProduct, error: updateError } = await supabase
                     .from("products")
                     .update(updateData)
@@ -760,15 +712,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     .select()
                     .single();
 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:763',message:'Product update result',data:{editingProductId:editingProduct.id,hasUpdatedProduct:!!updatedProduct,updatedProductId:updatedProduct?.id,hasError:!!updateError,errorMessage:updateError?.message,errorCode:updateError?.code,errorDetails:updateError?.details,errorHint:updateError?.hint,updateDataSent:JSON.stringify(updateData)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                // #endregion
-
                 if (updateError) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:777',message:'Update error details',data:{errorMessage:updateError.message,errorCode:updateError.code,fullError:JSON.stringify(updateError),isSchemaCacheError:updateError.message?.includes('schema cache')||updateError.message?.includes('images')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-                    // #endregion
-                    
                     // If it's a schema cache error, provide helpful message
                     if (updateError.message?.includes('schema cache') || updateError.message?.includes('images')) {
                         throw new Error(
@@ -782,15 +726,8 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 }
                 
                 if (!updatedProduct) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:797',message:'UPDATE returned no product',data:{editingProductId:editingProduct.id,updateDataKeys:Object.keys(updateData)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-                    // #endregion
                     throw new Error(`Failed to update product: No product found with ID ${editingProduct.id}. The product may have been deleted.`);
                 }
-                
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:802',message:'UPDATE successful, setting productToUpdate',data:{editingProductId:editingProduct.id,updatedProductId:updatedProduct.id,idsMatch:updatedProduct.id===editingProduct.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-                // #endregion
                 
                 productToUpdate = updatedProduct;
 
@@ -826,26 +763,14 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                         insertData.original_price = originalPriceNum;
                     }
                 }
-                
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:722',message:'Attempting product insert',data:{insertDataKeys:Object.keys(insertData),hasImages:!!insertData.images,imagesCount:insertData.images?.length,hasPrimaryIndex:insertData.primary_image_index!==undefined,primaryIndexValue:insertData.primary_image_index,hasOriginalPrice:!!insertData.original_price},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
             
             const { data: insertedProduct, error: insertError } = await supabase
                 .from("products")
                 .insert(insertData)
-                .select()
-                .single();
-
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:729',message:'Product insert result',data:{hasInsertedProduct:!!insertedProduct,hasError:!!insertError,errorMessage:insertError?.message,errorCode:insertError?.code,errorDetails:insertError?.details,errorHint:insertError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
+                    .select()
+                    .single();
 
                 if (insertError) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:735',message:'Insert error details',data:{errorMessage:insertError.message,errorCode:insertError.code,fullError:JSON.stringify(insertError),isSchemaCacheError:insertError.message?.includes('schema cache')||insertError.message?.includes('images')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                    // #endregion
-                    
                     // If it's a schema cache error, provide helpful message
                     if (insertError.message?.includes('schema cache') || insertError.message?.includes('images')) {
                         throw new Error(
