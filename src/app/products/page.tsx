@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,6 +16,7 @@ interface Product {
     price: string;
     image: string;
     category?: string;
+    created_at?: string; // Add created_at to preserve sorting
 }
 
 interface FilterSection {
@@ -33,13 +34,26 @@ export default function ProductsPage() {
     const [categoryName, setCategoryName] = useState<string>("");
     const [sortBy, setSortBy] = useState<string>("newest");
 
-    // Filter states
-    const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
-    const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
-    const [selectedColors, setSelectedColors] = useState<string[]>([]);
-    const [selectedMaterials, setSelectedMaterials] = useState<string[]>([]);
-    const [selectedCities, setSelectedCities] = useState<string[]>([]);
-    const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+    // Pending filter states (what user selects but hasn't applied yet)
+    const [pendingProductTypes, setPendingProductTypes] = useState<string[]>([]);
+    const [pendingOccasions, setPendingOccasions] = useState<string[]>([]);
+    const [pendingColors, setPendingColors] = useState<string[]>([]);
+    const [pendingMaterials, setPendingMaterials] = useState<string[]>([]);
+    const [pendingCities, setPendingCities] = useState<string[]>([]);
+    const [pendingPriceRange, setPendingPriceRange] = useState<[number, number]>([0, 5000]);
+    
+    // Applied filter states (actually used for filtering)
+    const [appliedProductTypes, setAppliedProductTypes] = useState<string[]>([]);
+    const [appliedOccasions, setAppliedOccasions] = useState<string[]>([]);
+    const [appliedColors, setAppliedColors] = useState<string[]>([]);
+    const [appliedMaterials, setAppliedMaterials] = useState<string[]>([]);
+    const [appliedCities, setAppliedCities] = useState<string[]>([]);
+    const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000]);
+    
+    // Removed aliases - use applied states directly throughout the code
+    
+    const [maxPrice, setMaxPrice] = useState<number>(5000); // Dynamic max price from products
+    const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent URL updates
 
     // Filter options data
     const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string }>>([]);
@@ -69,60 +83,177 @@ export default function ProductsPage() {
         loadProducts();
     }, []);
 
+    // Update URL params when applied filters change
+    const updateURLParams = useCallback(() => {
+        const params = new URLSearchParams();
+        if (appliedProductTypes.length > 0) {
+            params.set("product_type", appliedProductTypes[0]); // Single product type for URL
+        }
+        if (appliedOccasions.length > 0) {
+            params.set("occasion", appliedOccasions[0]); // Single occasion for URL
+        }
+        if (appliedColors.length > 0) {
+            params.set("colors", appliedColors.join(","));
+        }
+        if (appliedMaterials.length > 0) {
+            params.set("materials", appliedMaterials.join(","));
+        }
+        if (appliedCities.length > 0) {
+            params.set("cities", appliedCities.join(","));
+        }
+        // Only include price in URL if it's not the default range
+        const defaultMax = maxPrice || 5000;
+        if (appliedPriceRange[0] > 0 || appliedPriceRange[1] < defaultMax) {
+            params.set("price_min", appliedPriceRange[0].toString());
+            params.set("price_max", appliedPriceRange[1].toString());
+        }
+        if (sortBy !== "newest") {
+            params.set("sort", sortBy);
+        }
+        const newUrl = params.toString() ? `/products?${params.toString()}` : '/products';
+        router.replace(newUrl);
+    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, maxPrice, router]);
+
     // Check URL params for auto-filtering (runs after filter options are loaded)
     useEffect(() => {
         const productTypeParam = searchParams.get("product_type");
         const occasionParam = searchParams.get("occasion");
+        const colorsParam = searchParams.get("colors");
+        const materialsParam = searchParams.get("materials");
+        const citiesParam = searchParams.get("cities");
+        const priceMinParam = searchParams.get("price_min");
+        const priceMaxParam = searchParams.get("price_max");
+        const sortParam = searchParams.get("sort");
+
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:73',message:'URL params check',data:{productTypeParam,occasionParam,productTypesLength:productTypes.length,occasionsLength:occasions.length,currentSelectedTypes:appliedProductTypes,currentSelectedOccasions:appliedOccasions},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
 
         if (productTypeParam && productTypes.length > 0) {
             const type = productTypes.find(pt => pt.id === productTypeParam);
-            if (type && !selectedProductTypes.includes(productTypeParam)) {
-                setSelectedProductTypes([productTypeParam]);
-                setCategoryName(type.name.toUpperCase());
+            if (type && !appliedProductTypes.includes(productTypeParam)) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:79',message:'Setting product type from URL',data:{productTypeParam,typeName:type.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
+                setPendingProductTypes([productTypeParam]);
+                setAppliedProductTypes([productTypeParam]);
+                // Don't set categoryName - always show "PRODUCTS"
             }
-        } else if (productTypeParam && selectedProductTypes.length === 0) {
+        } else if (productTypeParam && appliedProductTypes.length === 0) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:84',message:'Fetching product type from DB',data:{productTypeParam},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             // Wait for product types to load
             supabase
                 .from("product_types")
                 .select("id, name")
                 .eq("id", productTypeParam)
                 .single()
-                .then(({ data }) => {
+                .then(({ data, error }) => {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:91',message:'Product type fetch result',data:{productTypeParam,found:!!data,typeName:data?.name,error:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                    // #endregion
                     if (data) {
-                        setSelectedProductTypes([data.id]);
-                        setCategoryName(data.name.toUpperCase());
+                        setPendingProductTypes([data.id]);
+                        setAppliedProductTypes([data.id]);
+                        // Don't set categoryName - always show "PRODUCTS"
                     }
                 });
         }
 
         if (occasionParam && occasions.length > 0) {
             const occasion = occasions.find(oc => oc.id === occasionParam);
-            if (occasion && !selectedOccasions.includes(occasionParam)) {
-                setSelectedOccasions([occasionParam]);
-                setCategoryName(occasion.name.toUpperCase());
+            if (occasion && !appliedOccasions.includes(occasionParam)) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:100',message:'Setting occasion from URL',data:{occasionParam,occasionName:occasion.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
+                setPendingOccasions([occasionParam]);
+                setAppliedOccasions([occasionParam]);
+                // Don't set categoryName - always show "PRODUCTS"
             }
-        } else if (occasionParam && selectedOccasions.length === 0) {
+        } else if (occasionParam && appliedOccasions.length === 0) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:105',message:'Fetching occasion from DB',data:{occasionParam},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
             // Wait for occasions to load
             supabase
                 .from("occasions")
                 .select("id, name")
                 .eq("id", occasionParam)
                 .single()
-                .then(({ data }) => {
+                .then(({ data, error }) => {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:113',message:'Occasion fetch result',data:{occasionParam,found:!!data,occasionName:data?.name,error:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                    // #endregion
                     if (data) {
-                        setSelectedOccasions([data.id]);
-                        setCategoryName(data.name.toUpperCase());
+                        setPendingOccasions([data.id]);
+                        setAppliedOccasions([data.id]);
+                        // Don't set categoryName - always show "PRODUCTS"
                     }
                 });
         }
-    }, [searchParams, productTypes, occasions]);
 
-    // Filter products when filters or products change
+        // Read colors from URL
+        if (colorsParam) {
+            const colorIds = colorsParam.split(',').filter(id => id);
+            if (colorIds.length > 0) {
+                setPendingColors(colorIds);
+                setAppliedColors(colorIds);
+            }
+        }
+
+        // Read materials from URL
+        if (materialsParam) {
+            const materialIds = materialsParam.split(',').filter(id => id);
+            if (materialIds.length > 0) {
+                setPendingMaterials(materialIds);
+                setAppliedMaterials(materialIds);
+            }
+        }
+
+        // Read cities from URL
+        if (citiesParam) {
+            const cityIds = citiesParam.split(',').filter(id => id);
+            if (cityIds.length > 0) {
+                setPendingCities(cityIds);
+                setAppliedCities(cityIds);
+            }
+        }
+
+        // Read price range from URL (only on initial load, before maxPrice is calculated)
+        if ((priceMinParam || priceMaxParam) && appliedPriceRange[1] === 5000 && maxPrice === 5000) {
+            const minPriceVal = priceMinParam ? parseInt(priceMinParam, 10) : 0;
+            const maxPriceVal = priceMaxParam ? parseInt(priceMaxParam, 10) : undefined;
+            if (!isNaN(minPriceVal) && (maxPriceVal === undefined || !isNaN(maxPriceVal))) {
+                // If maxPrice is provided, use it; otherwise wait for maxPrice to be calculated
+                if (maxPriceVal !== undefined) {
+                    setPendingPriceRange([minPriceVal, maxPriceVal]);
+                    setAppliedPriceRange([minPriceVal, maxPriceVal]);
+                } else {
+                    setPendingPriceRange([minPriceVal, appliedPriceRange[1]]);
+                    setAppliedPriceRange([minPriceVal, appliedPriceRange[1]]);
+                }
+            }
+        }
+
+        // Read sort from URL
+        if (sortParam && ['newest', 'oldest', 'price_low', 'price_high'].includes(sortParam)) {
+            setSortBy(sortParam);
+        }
+    }, [searchParams, productTypes, occasions, maxPrice]);
+
+    // Filter products when applied filters, products, or sort change
     useEffect(() => {
         if (!loading && products.length >= 0) {
             applyFilters();
+            // Only update URL after initial load to prevent loops
+            if (!isInitialLoad) {
+                updateURLParams(); // Update URL when filters change
+            } else {
+                setIsInitialLoad(false); // Mark initial load complete
+            }
         }
-    }, [products, selectedProductTypes, selectedOccasions, selectedColors, selectedMaterials, selectedCities, priceRange, sortBy, loading]);
+    }, [products, appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, loading, maxPrice, isInitialLoad, updateURLParams]);
 
     const loadFilterOptions = async () => {
         try {
@@ -147,11 +278,18 @@ export default function ProductsPage() {
     const loadProducts = async () => {
         try {
             setLoading(true);
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:147',message:'loadProducts called',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             const { data: productsData, error } = await supabase
                 .from("products")
                 .select("*")
                 .eq("is_active", true)
                 .order("created_at", { ascending: false });
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:154',message:'Products query result',data:{count:productsData?.length||0,error:error?.message,firstProductCreatedAt:productsData?.[0]?.created_at,lastProductCreatedAt:productsData?.[productsData?.length-1]?.created_at,firstProductId:productsData?.[0]?.id,lastProductId:productsData?.[productsData?.length-1]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
 
             if (error) throw error;
 
@@ -172,14 +310,46 @@ export default function ProductsPage() {
                         price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
                         image: primaryImage,
                         category: p.category || p.category_id,
-                    };
+                        created_at: p.created_at, // Preserve created_at for sorting
+                    } as Product & { created_at?: string };
                 });
+
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:177',message:'Formatted products before setProducts',data:{count:formattedProducts.length,firstProductCreatedAt:formattedProducts[0]?.created_at,lastProductCreatedAt:formattedProducts[formattedProducts.length-1]?.created_at,firstProductId:formattedProducts[0]?.id,lastProductId:formattedProducts[formattedProducts.length-1]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+                // #endregion
+
+                // Calculate max price from products and update priceRange if not set from URL
+                const prices = formattedProducts
+                    .map(p => parseFloat(p.price.replace(/[₹,]/g, '')) || 0)
+                    .filter(p => p > 0);
+                if (prices.length > 0) {
+                    const calculatedMaxPrice = Math.max(...prices);
+                    // Round up to nearest 1000 for a nice round number
+                    let roundedMax = Math.ceil(calculatedMaxPrice / 1000) * 1000;
+                    // If all products are under 5000, keep default at 5000
+                    // If any product is above 5000, use the calculated max (minimum 5000)
+                    const finalMaxPrice = Math.max(roundedMax, 5000);
+                    setMaxPrice(finalMaxPrice);
+                    
+                    const currentMaxPrice = appliedPriceRange[1];
+                    // Only update priceRange if current max is default (5000) or if max product price is higher
+                    if (currentMaxPrice === 5000 || finalMaxPrice > currentMaxPrice) {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:203',message:'Updating price range',data:{calculatedMaxPrice,roundedMax,finalMaxPrice,currentMaxPrice,newPriceRange:[0,finalMaxPrice],allProductsUnder5000:calculatedMaxPrice <= 5000},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
+                        // #endregion
+                        setPendingPriceRange([0, finalMaxPrice]);
+                        setAppliedPriceRange([0, finalMaxPrice]);
+                    }
+                }
 
                 setProducts(formattedProducts);
             } else {
                 setProducts([]);
             }
         } catch (error) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:182',message:'loadProducts error',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+            // #endregion
             console.error("Error loading products:", error);
             setProducts([]);
         } finally {
@@ -187,7 +357,21 @@ export default function ProductsPage() {
         }
     };
 
+    // Copy pending filters to applied and trigger filtering
+    const handleApplyFilters = () => {
+        setAppliedProductTypes([...pendingProductTypes]);
+        setAppliedOccasions([...pendingOccasions]);
+        setAppliedColors([...pendingColors]);
+        setAppliedMaterials([...pendingMaterials]);
+        setAppliedCities([...pendingCities]);
+        setAppliedPriceRange([...pendingPriceRange]);
+        // Filtering will happen automatically via useEffect
+    };
+
     const applyFilters = async () => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:190',message:'applyFilters called',data:{productsCount:products.length,selectedProductTypes:appliedProductTypes,selectedOccasions:appliedOccasions,selectedColors:appliedColors.length,selectedMaterials:appliedMaterials.length,selectedCities:appliedCities.length,priceRange:appliedPriceRange,sortBy},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        // #endregion
         if (products.length === 0) {
             setFilteredProducts([]);
             return;
@@ -197,27 +381,37 @@ export default function ProductsPage() {
             let filteredProductIds: Set<string> | null = null;
 
             // Filter by Product Types
-            if (selectedProductTypes.length > 0) {
-                const { data: typeProducts } = await supabase
+            if (appliedProductTypes.length > 0) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:200',message:'Querying product_product_types',data:{selectedProductTypes:appliedProductTypes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
+                const { data: typeProducts, error: typeError } = await supabase
                     .from("product_product_types")
                     .select("product_id")
-                    .in("type_id", selectedProductTypes);
+                    .in("type_id", appliedProductTypes);
+
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:206',message:'Product types query result',data:{selectedProductTypes:appliedProductTypes,typeProductsCount:typeProducts?.length||0,productIds:typeProducts?.map((tp:any)=>String(tp.product_id)).slice(0,5),error:typeError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
 
                 if (typeProducts && typeProducts.length > 0) {
                     const ids = new Set(typeProducts.map((tp: any) => String(tp.product_id)));
                     filteredProductIds = ids;
                 } else {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:210',message:'No products found for selected types',data:{selectedProductTypes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                    // #endregion
                     setFilteredProducts([]);
                     return;
                 }
             }
 
             // Filter by Occasions (intersect with existing)
-            if (selectedOccasions.length > 0) {
+            if (appliedOccasions.length > 0) {
                 const { data: occasionProducts } = await supabase
                     .from("product_occasions")
                     .select("product_id")
-                    .in("occasion_id", selectedOccasions);
+                    .in("occasion_id", appliedOccasions);
 
                 if (occasionProducts && occasionProducts.length > 0) {
                     const ids = new Set(occasionProducts.map((op: any) => String(op.product_id)));
@@ -237,11 +431,11 @@ export default function ProductsPage() {
             }
 
             // Filter by Colors (intersect with existing)
-            if (selectedColors.length > 0) {
+            if (appliedColors.length > 0) {
                 const { data: colorProducts } = await supabase
                     .from("product_colors")
                     .select("product_id")
-                    .in("color_id", selectedColors);
+                    .in("color_id", appliedColors);
 
                 if (colorProducts && colorProducts.length > 0) {
                     const ids = new Set(colorProducts.map((cp: any) => String(cp.product_id)));
@@ -261,11 +455,11 @@ export default function ProductsPage() {
             }
 
             // Filter by Materials (intersect with existing)
-            if (selectedMaterials.length > 0) {
+            if (appliedMaterials.length > 0) {
                 const { data: materialProducts } = await supabase
                     .from("product_materials")
                     .select("product_id")
-                    .in("material_id", selectedMaterials);
+                    .in("material_id", appliedMaterials);
 
                 if (materialProducts && materialProducts.length > 0) {
                     const ids = new Set(materialProducts.map((mp: any) => String(mp.product_id)));
@@ -285,11 +479,11 @@ export default function ProductsPage() {
             }
 
             // Filter by Cities (intersect with existing)
-            if (selectedCities.length > 0) {
+            if (appliedCities.length > 0) {
                 const { data: cityProducts } = await supabase
                     .from("product_cities")
                     .select("product_id")
-                    .in("city_id", selectedCities);
+                    .in("city_id", appliedCities);
 
                 if (cityProducts && cityProducts.length > 0) {
                     const ids = new Set(cityProducts.map((cp: any) => String(cp.product_id)));
@@ -310,20 +504,50 @@ export default function ProductsPage() {
 
             // Apply filters to products
             let filtered = products;
+            // #region agent log
+            const beforeIdFilter = filtered.length;
+            const idFilterBefore = filtered.map(p => String(p.id));
+            // #endregion
 
             // If we have filtered IDs, use them
             if (filteredProductIds && filteredProductIds.size > 0) {
+                const beforeCount = filtered.length;
                 filtered = filtered.filter(p => filteredProductIds!.has(String(p.id)));
+                // #region agent log
+                const filteredOutIds = idFilterBefore.filter(id => !filteredProductIds!.has(id));
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:311',message:'ID filter results',data:{beforeCount,afterCount:filtered.length,filteredIds:Array.from(filteredProductIds),filteredOutIds:filteredOutIds.slice(0,5),allProductIds:idFilterBefore.slice(0,6)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
             }
 
             // Filter by price range
+            // #region agent log
+            const priceFilterBefore = filtered.length;
+            const priceFilteredOut: any[] = [];
+            // #endregion
             filtered = filtered.filter(p => {
                 const price = parseFloat(p.price.replace(/[₹,]/g, '')) || 0;
-                return price >= priceRange[0] && price <= priceRange[1];
+                const passes = price >= appliedPriceRange[0] && price <= appliedPriceRange[1];
+                // #region agent log
+                if (!passes) {
+                    priceFilteredOut.push({ id: p.id, name: p.name, price: p.price, parsedPrice: price, priceRange: appliedPriceRange });
+                }
+                // #endregion
+                return passes;
             });
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:319',message:'Price filter results',data:{beforeCount:priceFilterBefore,afterCount:filtered.length,filteredOut:priceFilteredOut.slice(0,3),priceRange:appliedPriceRange},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:325',message:'Before sorting',data:{filteredCount:filtered.length,filteredIds:filtered.slice(0,3).map(p=>p.id),sortBy,firstProductCreatedAt:(filtered[0] as any)?.created_at,lastProductCreatedAt:(filtered[filtered.length-1] as any)?.created_at},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
 
             // Apply sorting
             filtered = sortProducts(filtered, sortBy);
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:332',message:'After sorting',data:{filteredCount:filtered.length,filteredIds:filtered.slice(0,3).map(p=>p.id),sortBy,firstProductCreatedAt:(filtered[0] as any)?.created_at,lastProductCreatedAt:(filtered[filtered.length-1] as any)?.created_at},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+            // #endregion
 
             setFilteredProducts(filtered);
         } catch (error) {
@@ -334,13 +558,24 @@ export default function ProductsPage() {
 
     const sortProducts = (productsToSort: Product[], sortOption: string): Product[] => {
         const sorted = [...productsToSort];
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:335',message:'sortProducts called',data:{productsCount:sorted.length,sortOption,firstProductCreatedAt:(sorted[0] as any)?.created_at,lastProductCreatedAt:(sorted[sorted.length-1] as any)?.created_at},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         switch (sortOption) {
             case "newest":
-                // Products are loaded newest first (ascending: false), so return as-is
-                return sorted;
+                // Products are loaded newest first (ascending: false), but after filtering we need to re-sort by created_at
+                return sorted.sort((a, b) => {
+                    const dateA = (a as any).created_at ? new Date((a as any).created_at).getTime() : 0;
+                    const dateB = (b as any).created_at ? new Date((b as any).created_at).getTime() : 0;
+                    return dateB - dateA; // Newest first
+                });
             case "oldest":
-                // Products are loaded newest first, so reverse to get oldest first
-                return sorted.reverse();
+                // Sort by created_at ascending for oldest first
+                return sorted.sort((a, b) => {
+                    const dateA = (a as any).created_at ? new Date((a as any).created_at).getTime() : 0;
+                    const dateB = (b as any).created_at ? new Date((b as any).created_at).getTime() : 0;
+                    return dateA - dateB; // Oldest first
+                });
             case "price_low":
                 return sorted.sort((a, b) => {
                     const priceA = parseFloat(a.price.replace(/[₹,]/g, '')) || 0;
@@ -369,27 +604,27 @@ export default function ProductsPage() {
     const toggleFilter = (filterType: 'productType' | 'occasion' | 'color' | 'material' | 'city', id: string) => {
         switch (filterType) {
             case 'productType':
-                setSelectedProductTypes(prev =>
+                setPendingProductTypes(prev =>
                     prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
                 );
                 break;
             case 'occasion':
-                setSelectedOccasions(prev =>
+                setPendingOccasions(prev =>
                     prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
                 );
                 break;
             case 'color':
-                setSelectedColors(prev =>
+                setPendingColors(prev =>
                     prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
                 );
                 break;
             case 'material':
-                setSelectedMaterials(prev =>
+                setPendingMaterials(prev =>
                     prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
                 );
                 break;
             case 'city':
-                setSelectedCities(prev =>
+                setPendingCities(prev =>
                     prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
                 );
                 break;
@@ -397,23 +632,30 @@ export default function ProductsPage() {
     };
 
     const clearAllFilters = () => {
-        setSelectedProductTypes([]);
-        setSelectedOccasions([]);
-        setSelectedColors([]);
-        setSelectedMaterials([]);
-        setSelectedCities([]);
-        setPriceRange([0, 5000]);
+        setPendingProductTypes([]);
+        setPendingOccasions([]);
+        setPendingColors([]);
+        setPendingMaterials([]);
+        setPendingCities([]);
+        setPendingPriceRange([0, maxPrice]);
+        setAppliedProductTypes([]);
+        setAppliedOccasions([]);
+        setAppliedColors([]);
+        setAppliedMaterials([]);
+        setAppliedCities([]);
+        setAppliedPriceRange([0, maxPrice]);
+        setSortBy('newest');
         setActiveTag("ALL");
         router.push('/products');
     };
 
     const getFilterCount = () => {
         let count = 0;
-        if (selectedProductTypes.length > 0) count += selectedProductTypes.length;
-        if (selectedOccasions.length > 0) count += selectedOccasions.length;
-        if (selectedColors.length > 0) count += selectedColors.length;
-        if (selectedMaterials.length > 0) count += selectedMaterials.length;
-        if (selectedCities.length > 0) count += selectedCities.length;
+        if (appliedProductTypes.length > 0) count += appliedProductTypes.length;
+        if (appliedOccasions.length > 0) count += appliedOccasions.length;
+        if (appliedColors.length > 0) count += appliedColors.length;
+        if (appliedMaterials.length > 0) count += appliedMaterials.length;
+        if (appliedCities.length > 0) count += appliedCities.length;
         return count;
     };
 
@@ -490,7 +732,7 @@ export default function ProductsPage() {
                                                 <label key={type.id} className="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedProductTypes.includes(type.id)}
+                                                        checked={pendingProductTypes.includes(type.id)}
                                                         onChange={() => toggleFilter('productType', type.id)}
                                                         className="w-4 h-4 border-gray-300 rounded"
                                                     />
@@ -516,7 +758,7 @@ export default function ProductsPage() {
                                                 <label key={occasion.id} className="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedOccasions.includes(occasion.id)}
+                                                        checked={pendingOccasions.includes(occasion.id)}
                                                         onChange={() => toggleFilter('occasion', occasion.id)}
                                                         className="w-4 h-4 border-gray-300 rounded"
                                                     />
@@ -542,7 +784,7 @@ export default function ProductsPage() {
                                                 <label key={color.id} className="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedColors.includes(color.id)}
+                                                        checked={pendingColors.includes(color.id)}
                                                         onChange={() => toggleFilter('color', color.id)}
                                                         className="w-4 h-4 border-gray-300 rounded"
                                                     />
@@ -576,7 +818,7 @@ export default function ProductsPage() {
                                                 <label key={material.id} className="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedMaterials.includes(material.id)}
+                                                        checked={pendingMaterials.includes(material.id)}
                                                         onChange={() => toggleFilter('material', material.id)}
                                                         className="w-4 h-4 border-gray-300 rounded"
                                                     />
@@ -602,7 +844,7 @@ export default function ProductsPage() {
                                                 <label key={city.id} className="flex items-center gap-2 cursor-pointer">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedCities.includes(city.id)}
+                                                        checked={pendingCities.includes(city.id)}
                                                         onChange={() => toggleFilter('city', city.id)}
                                                         className="w-4 h-4 border-gray-300 rounded"
                                                     />
@@ -633,8 +875,8 @@ export default function ProductsPage() {
                                                 <div
                                                     className="absolute top-1/2 h-2 bg-black rounded transform -translate-y-1/2"
                                                     style={{
-                                                        left: `${(priceRange[0] / 5000) * 100}%`,
-                                                        width: `${((priceRange[1] - priceRange[0]) / 5000) * 100}%`
+                                                        left: `${(pendingPriceRange[0] / maxPrice) * 100}%`,
+                                                        width: `${((pendingPriceRange[1] - pendingPriceRange[0]) / maxPrice) * 100}%`
                                                     }}
                                                 ></div>
                                                 
@@ -642,12 +884,12 @@ export default function ProductsPage() {
                                                 <input
                                                     type="range"
                                                     min="0"
-                                                    max="5000"
-                                                    step="50"
-                                                    value={priceRange[0]}
+                                                    max={maxPrice}
+                                                    step={Math.ceil(maxPrice / 200)}
+                                                    value={pendingPriceRange[0]}
                                                     onChange={(e) => {
-                                                        const minValue = Math.min(Number(e.target.value), priceRange[1]);
-                                                        setPriceRange([minValue, priceRange[1]]);
+                                                        const minValue = Math.min(Number(e.target.value), pendingPriceRange[1]);
+                                                        setPendingPriceRange([minValue, pendingPriceRange[1]]);
                                                     }}
                                                     className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10 min-slider"
                                                 />
@@ -656,12 +898,12 @@ export default function ProductsPage() {
                                                 <input
                                                     type="range"
                                                     min="0"
-                                                    max="5000"
-                                                    step="50"
-                                                    value={priceRange[1]}
+                                                    max={maxPrice}
+                                                    step={Math.ceil(maxPrice / 200)}
+                                                    value={pendingPriceRange[1]}
                                                     onChange={(e) => {
-                                                        const maxValue = Math.max(Number(e.target.value), priceRange[0]);
-                                                        setPriceRange([priceRange[0], maxValue]);
+                                                        const maxValue = Math.max(Number(e.target.value), pendingPriceRange[0]);
+                                                        setPendingPriceRange([pendingPriceRange[0], maxValue]);
                                                     }}
                                                     className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10 max-slider"
                                                 />
@@ -704,8 +946,8 @@ export default function ProductsPage() {
                                             
                                             {/* Price labels below slider */}
                                             <div className="flex justify-between text-xs">
-                                                <span>₹{priceRange[0]}</span>
-                                                <span>₹{priceRange[1]}</span>
+                                                <span>₹{pendingPriceRange[0]}</span>
+                                                <span>₹{pendingPriceRange[1]}</span>
                                             </div>
                                         </div>
                                     )}
@@ -720,7 +962,7 @@ export default function ProductsPage() {
                                         CLEAR
                                     </button>
                                     <button
-                                        onClick={applyFilters}
+                                        onClick={handleApplyFilters}
                                         className="flex-1 px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800"
                                     >
                                         APPLY ({filteredProducts.length})
@@ -733,7 +975,7 @@ export default function ProductsPage() {
                         <div className="flex-1">
                             {/* Category Header */}
                             <div className="mb-6">
-                                <h1 className="text-3xl font-bold mb-4">{categoryName || "ALL PRODUCTS"}</h1>
+                                <h1 className="text-3xl font-bold mb-4">PRODUCTS</h1>
                                 
                                 {/* Category Tags */}
                                 <div className="flex flex-wrap gap-2 mb-4">

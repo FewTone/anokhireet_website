@@ -18,6 +18,11 @@ interface Product {
     original_price?: number | string;
     owner_user_id?: string;
     db_id?: string; // Database UUID
+    productTypes?: string[];
+    occasions?: string[];
+    colors?: string[];
+    materials?: string[];
+    cities?: string[];
 }
 
 export default function ProductDetailPage() {
@@ -29,10 +34,7 @@ export default function ProductDetailPage() {
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState<string>("");
     const [productImages, setProductImages] = useState<string[]>([]);
-    const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
-        productInfo: false,
-        shippingReturns: false,
-    });
+    // Removed expandedSections - no longer needed
     const [showLoginPopup, setShowLoginPopup] = useState(false);
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -160,7 +162,61 @@ export default function ProductDetailPage() {
             }
 
             if (productData) {
-                setProduct(productData);
+                // Fetch product facets (types, occasions, colors, materials, cities)
+                const [productTypesRes, occasionsRes, colorsRes, materialsRes, citiesRes] = await Promise.all([
+                    supabase
+                        .from("product_product_types")
+                        .select("type_id")
+                        .eq("product_id", productData.db_id),
+                    supabase
+                        .from("product_occasions")
+                        .select("occasion_id")
+                        .eq("product_id", productData.db_id),
+                    supabase
+                        .from("product_colors")
+                        .select("color_id")
+                        .eq("product_id", productData.db_id),
+                    supabase
+                        .from("product_materials")
+                        .select("material_id")
+                        .eq("product_id", productData.db_id),
+                    supabase
+                        .from("product_cities")
+                        .select("city_id")
+                        .eq("product_id", productData.db_id),
+                ]);
+
+                // Extract IDs and fetch names
+                const productTypeIds = productTypesRes.data?.map((pt: any) => pt.type_id).filter(Boolean) || [];
+                const occasionIds = occasionsRes.data?.map((oc: any) => oc.occasion_id).filter(Boolean) || [];
+                const colorIds = colorsRes.data?.map((c: any) => c.color_id).filter(Boolean) || [];
+                const materialIds = materialsRes.data?.map((m: any) => m.material_id).filter(Boolean) || [];
+                const cityIds = citiesRes.data?.map((c: any) => c.city_id).filter(Boolean) || [];
+
+                // Fetch names for each facet type
+                const [productTypesData, occasionsData, colorsData, materialsData, citiesData] = await Promise.all([
+                    productTypeIds.length > 0 ? supabase.from("product_types").select("name").in("id", productTypeIds) : Promise.resolve({ data: [], error: null }),
+                    occasionIds.length > 0 ? supabase.from("occasions").select("name").in("id", occasionIds) : Promise.resolve({ data: [], error: null }),
+                    colorIds.length > 0 ? supabase.from("colors").select("name").in("id", colorIds) : Promise.resolve({ data: [], error: null }),
+                    materialIds.length > 0 ? supabase.from("materials").select("name").in("id", materialIds) : Promise.resolve({ data: [], error: null }),
+                    cityIds.length > 0 ? supabase.from("cities").select("name").in("id", cityIds) : Promise.resolve({ data: [], error: null }),
+                ]);
+
+                const productTypes = productTypesData.data?.map((pt: any) => pt.name).filter(Boolean) || [];
+                const occasions = occasionsData.data?.map((oc: any) => oc.name).filter(Boolean) || [];
+                const colors = colorsData.data?.map((c: any) => c.name).filter(Boolean) || [];
+                const materials = materialsData.data?.map((m: any) => m.name).filter(Boolean) || [];
+                const cities = citiesData.data?.map((c: any) => c.name).filter(Boolean) || [];
+
+                setProduct({
+                    ...productData,
+                    productTypes,
+                    occasions,
+                    colors,
+                    materials,
+                    cities,
+                });
+
                 // Use all images if available, otherwise use single image
                 const imagesToUse = productImages.length > 0 ? productImages : (productData.image ? [productData.image] : []);
                 setProductImages(imagesToUse);
@@ -180,12 +236,7 @@ export default function ProductDetailPage() {
         }
     };
 
-    const toggleSection = (section: string) => {
-        setExpandedSections((prev) => ({
-            ...prev,
-            [section]: !prev[section],
-        }));
-    };
+    // Removed toggleSection - no longer needed
 
     const handleMakeInquiry = () => {
         if (!isLoggedIn) {
@@ -308,91 +359,8 @@ export default function ProductDetailPage() {
             <main className="min-h-screen pt-20 pb-12">
                 <div className="max-w-[1400px] mx-auto px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-                        {/* Left Sidebar - Product Information */}
-                        <div className="lg:col-span-3">
-                            <div className="sticky top-24">
-                                <h1 className="text-2xl font-bold mb-6">{product.name} Information</h1>
-                                
-                                {/* Expandable Sections */}
-                                <div className="space-y-0">
-                                    {/* Product Information Section */}
-                                    <div className="border-b border-gray-200">
-                                        <button
-                                            onClick={() => toggleSection("productInfo")}
-                                            className="w-full flex justify-between items-center py-4 text-left hover:bg-gray-50 transition-colors"
-                                        >
-                                            <span className="font-medium">Product Information</span>
-                                            <svg
-                                                width="20"
-                                                height="20"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                className={`transition-transform ${
-                                                    expandedSections.productInfo ? "rotate-45" : ""
-                                                }`}
-                                            >
-                                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                            </svg>
-                                        </button>
-                                        {expandedSections.productInfo && (
-                                            <div className="pb-4 text-sm text-gray-600 px-0">
-                                                <p>Product ID: {product.productId || product.id}</p>
-                                                {product.category && <p>Category: {product.category}</p>}
-                                                <p className="mt-2">
-                                                    <span className="font-medium">Rental Price:</span> {product.price}
-                                                </p>
-                                                {product.original_price && (
-                                                    <p className="mt-1 text-sm text-gray-500">
-                                                        <span className="font-medium">Original Price:</span> ₹{typeof product.original_price === 'number' ? product.original_price : product.original_price}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Shipping & Returns Section */}
-                                    <div className="border-b border-gray-200">
-                                        <button
-                                            onClick={() => toggleSection("shippingReturns")}
-                                            className="w-full flex justify-between items-center py-4 text-left hover:bg-gray-50 transition-colors"
-                                        >
-                                            <span className="font-medium">Shipping & Returns</span>
-                                            <svg
-                                                width="20"
-                                                height="20"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                className={`transition-transform ${
-                                                    expandedSections.shippingReturns ? "rotate-45" : ""
-                                                }`}
-                                            >
-                                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                            </svg>
-                                        </button>
-                                        {expandedSections.shippingReturns && (
-                                            <div className="pb-4 text-sm text-gray-600 px-0">
-                                                <p>Free shipping on orders over ₹999</p>
-                                                <p className="mt-2">Easy returns within 30 days</p>
-                                                <p className="mt-2">Standard delivery: 3-5 business days</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Main Content - Product Images with Thumbnails on Left */}
-                        <div className="lg:col-span-6">
+                        <div className="lg:col-span-8">
                             <div className="flex gap-4">
                                 {/* Left Side - Small Thumbnail Images (Vertical Column) */}
                                 <div className="hidden md:flex flex-col gap-3 w-20 flex-shrink-0">
@@ -448,7 +416,7 @@ export default function ProductDetailPage() {
                         </div>
 
                         {/* Right Sidebar - Product Information */}
-                        <div className="lg:col-span-3">
+                        <div className="lg:col-span-4">
                             <div className="sticky top-24">
                                 <div className="bg-white space-y-6">
                                     <div>
@@ -475,49 +443,54 @@ export default function ProductDetailPage() {
                                         {/* Product Details */}
                                         <div className="space-y-4 border-t border-gray-200 pt-6">
                                             <div>
-                                                <h3 className="text-sm font-semibold text-gray-700 mb-2">Product Details</h3>
-                                                <div className="space-y-2 text-sm text-gray-600">
+                                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Product Information</h3>
+                                                <div className="space-y-3 text-sm text-gray-600">
                                                     {product.productId && (
-                                                        <div className="flex justify-between">
-                                                            <span className="font-medium">Product ID:</span>
-                                                            <span>{product.productId}</span>
+                                                        <div>
+                                                            <span className="font-medium text-gray-700">Product ID:</span>
+                                                            <p className="mt-1">{product.productId}</p>
                                                         </div>
                                                     )}
                                                     {product.category && (
-                                                        <div className="flex justify-between">
-                                                            <span className="font-medium">Category:</span>
-                                                            <span>{product.category}</span>
+                                                        <div>
+                                                            <span className="font-medium text-gray-700">Category:</span>
+                                                            <p className="mt-1">{product.category}</p>
                                                         </div>
                                                     )}
-                                                    <div className="flex justify-between">
-                                                        <span className="font-medium">Images:</span>
-                                                        <span>{displayImages.length} photo{displayImages.length !== 1 ? 's' : ''}</span>
+                                                    <div>
+                                                        <span className="font-medium text-gray-700">Images:</span>
+                                                        <p className="mt-1">{displayImages.length} photo{displayImages.length !== 1 ? 's' : ''}</p>
                                                     </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Shipping & Returns */}
-                                            <div className="border-t border-gray-200 pt-4">
-                                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Shipping & Returns</h3>
-                                                <div className="space-y-2 text-sm text-gray-600">
-                                                    <div className="flex items-start gap-2">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 flex-shrink-0">
-                                                            <path d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                        <span>Free shipping on orders over ₹999</span>
-                                                    </div>
-                                                    <div className="flex items-start gap-2">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 flex-shrink-0">
-                                                            <path d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                        <span>Easy returns within 30 days</span>
-                                                    </div>
-                                                    <div className="flex items-start gap-2">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mt-0.5 flex-shrink-0">
-                                                            <path d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                        <span>Standard delivery: 3-5 business days</span>
-                                                    </div>
+                                                    {product.productTypes && product.productTypes.length > 0 && (
+                                                        <div>
+                                                            <span className="font-medium text-gray-700">Product Type:</span>
+                                                            <p className="mt-1">{product.productTypes.join(", ")}</p>
+                                                        </div>
+                                                    )}
+                                                    {product.occasions && product.occasions.length > 0 && (
+                                                        <div>
+                                                            <span className="font-medium text-gray-700">Occasion:</span>
+                                                            <p className="mt-1">{product.occasions.join(", ")}</p>
+                                                        </div>
+                                                    )}
+                                                    {product.colors && product.colors.length > 0 && (
+                                                        <div>
+                                                            <span className="font-medium text-gray-700">Color:</span>
+                                                            <p className="mt-1">{product.colors.join(", ")}</p>
+                                                        </div>
+                                                    )}
+                                                    {product.materials && product.materials.length > 0 && (
+                                                        <div>
+                                                            <span className="font-medium text-gray-700">Material:</span>
+                                                            <p className="mt-1">{product.materials.join(", ")}</p>
+                                                        </div>
+                                                    )}
+                                                    {product.cities && product.cities.length > 0 && (
+                                                        <div>
+                                                            <span className="font-medium text-gray-700">Available City:</span>
+                                                            <p className="mt-1">{product.cities.join(", ")}</p>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
 

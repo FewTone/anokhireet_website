@@ -260,6 +260,7 @@ export default function AdminPage() {
         name: "",
         phone: "+91",
         email: "",
+        cities: [] as string[], // Array of city IDs
     });
     // ⚠️ TODO: REMOVE BEFORE PRODUCTION - Test users only for development
     const [testUserFormData, setTestUserFormData] = useState({
@@ -2093,12 +2094,22 @@ To get these values:
 
 
 
-    const handleEditUser = (user: { id: string; name: string; phone: string; email: string | null }) => {
+    const handleEditUser = async (user: { id: string; name: string; phone: string; email: string | null }) => {
         setEditingUser(user);
+        
+        // Load user cities
+        const { data: userCitiesData } = await supabase
+            .from("user_cities")
+            .select("city_id")
+            .eq("user_id", user.id);
+        
+        const userCityIds = userCitiesData?.map((uc: any) => uc.city_id).filter(Boolean) || [];
+        
         setUserFormData({
             name: user.name,
             phone: user.phone,
             email: user.email || "",
+            cities: userCityIds,
         });
         setIsUserModalOpen(true);
     };
@@ -2169,10 +2180,21 @@ To get these values:
                     .select("id, name, phone, email, created_at, auth_user_id");
                 
                 if (updateError) throw updateError;
+                
+                // Update user cities
+                // Delete existing cities first
+                await supabase.from("user_cities").delete().eq("user_id", editingUser.id);
+                // Insert new cities if any selected
+                if (userFormData.cities.length > 0) {
+                    await supabase.from("user_cities").insert(
+                        userFormData.cities.map(cityId => ({ user_id: editingUser.id, city_id: cityId }))
+                    );
+                }
+                
                 showPopup("User updated successfully!", "success");
                 setIsUserModalOpen(false);
                 setEditingUser(null);
-                setUserFormData({ name: "", phone: "+91", email: "" });
+                setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
                 await loadUsers();
                 return;
             }
@@ -2192,16 +2214,31 @@ To get these values:
                     email: userEmail,
                 };
                 
-                const { error: updateError } = await supabase
+                const { data: updateData, error: updateError } = await supabase
                     .from("users")
                     .update(userData)
                     .eq("phone", userFormData.phone)
-                    .select("id, name, phone, email, created_at, auth_user_id");
+                    .select("id, name, phone, email, created_at, auth_user_id")
+                    .single();
                 
                 if (updateError) throw updateError;
+                
+                // Update user cities
+                const finalUserId = updateData?.id;
+                if (finalUserId) {
+                    // Delete existing cities first
+                    await supabase.from("user_cities").delete().eq("user_id", finalUserId);
+                    // Insert new cities if any selected
+                    if (userFormData.cities.length > 0) {
+                        await supabase.from("user_cities").insert(
+                            userFormData.cities.map(cityId => ({ user_id: finalUserId, city_id: cityId }))
+                        );
+                    }
+                }
+                
                 showPopup("User information updated successfully!", "success");
                 setIsUserModalOpen(false);
-                setUserFormData({ name: "", phone: "+91", email: "" });
+                setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
                 await loadUsers();
                 return;
             }
@@ -2223,7 +2260,8 @@ To get these values:
             const { data: insertData, error: userError } = await supabase
                 .from("users")
                 .insert([userData])
-                .select("id, name, phone, email, created_at, auth_user_id");
+                .select("id, name, phone, email, created_at, auth_user_id")
+                .single();
 
             if (userError) {
                 // If duplicate, try update instead
@@ -2232,21 +2270,41 @@ To get these values:
                         .from("users")
                         .update(userData)
                         .eq("phone", userFormData.phone)
-                        .select("id, name, phone, email, created_at, auth_user_id");
+                        .select("id, name, phone, email, created_at, auth_user_id")
+                        .single();
                     
                     if (updateError) {
                         throw updateError;
                     }
+                    
+                    // Save user cities for updated user
+                    const finalUserId = updateData?.id || userId;
+                    if (userFormData.cities.length > 0) {
+                        // Delete existing cities first
+                        await supabase.from("user_cities").delete().eq("user_id", finalUserId);
+                        // Insert new cities
+                        await supabase.from("user_cities").insert(
+                            userFormData.cities.map(cityId => ({ user_id: finalUserId, city_id: cityId }))
+                        );
+                    }
+                    
                     showPopup("User already exists. User information updated successfully!", "success");
                 } else {
                     throw userError;
                 }
             } else {
+                // Save user cities for new user
+                const finalUserId = insertData?.id || userId;
+                if (userFormData.cities.length > 0 && finalUserId) {
+                    await supabase.from("user_cities").insert(
+                        userFormData.cities.map(cityId => ({ user_id: finalUserId, city_id: cityId }))
+                    );
+                }
                 showPopup("User created successfully! User can now log in with phone OTP.", "success");
             }
             
             setIsUserModalOpen(false);
-            setUserFormData({ name: "", phone: "+91", email: "" });
+            setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
             await loadUsers();
         } catch (error: any) {
             showPopup(error.message || "Unknown error", "error", editingUser ? "Error Updating User" : "Error Creating User");
@@ -4951,6 +5009,44 @@ To get these values:
                                             />
                                             <p className="text-xs text-gray-500 mt-1">
                                                 Email is optional. User will log in with phone number + OTP.
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                From Where (Cities) *
+                                            </label>
+                                            <div className="border border-gray-300 rounded-md max-h-48 overflow-y-auto p-2">
+                                                {cities.length === 0 ? (
+                                                    <p className="text-xs text-gray-500">Loading cities...</p>
+                                                ) : (
+                                                    cities.map(city => (
+                                                        <label key={city.id} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-2 rounded">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={userFormData.cities.includes(city.id)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setUserFormData({
+                                                                            ...userFormData,
+                                                                            cities: [...userFormData.cities, city.id]
+                                                                        });
+                                                                    } else {
+                                                                        setUserFormData({
+                                                                            ...userFormData,
+                                                                            cities: userFormData.cities.filter(id => id !== city.id)
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-black"
+                                                            />
+                                                            <span className="text-sm text-gray-700">{city.name}</span>
+                                                        </label>
+                                                    ))
+                                                )}
+                                            </div>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Select one or more cities where the user is from (e.g., Ahmedabad, Surat, Rajkot).
                                             </p>
                                         </div>
 
