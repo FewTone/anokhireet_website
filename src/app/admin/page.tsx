@@ -1572,67 +1572,36 @@ To get these values:
         if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
         try {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1433',message:'handleDeleteCategory called',data:{categoryId:id,categoryName:name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-
             // Check if any products reference this category
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1440',message:'Checking products referencing category',data:{categoryId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
             const { data: productsWithCategory, error: checkError } = await supabase
                 .from("products")
                 .select("id, title, name")
                 .eq("category_id", id);
 
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1445',message:'Products referencing category found',data:{count:productsWithCategory?.length || 0,products:productsWithCategory},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
-
             if (checkError) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1450',message:'Error checking products',data:{error:checkError.message,code:checkError.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                // #endregion
                 throw checkError;
             }
 
             // If products reference this category, set their category_id to NULL first
             if (productsWithCategory && productsWithCategory.length > 0) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1455',message:'Setting category_id to NULL for products',data:{productCount:productsWithCategory.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
                 const { error: updateError } = await supabase
                     .from("products")
                     .update({ category_id: null })
                     .eq("category_id", id);
 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1460',message:'Update products result',data:{updateError:updateError?.message || null,success:!updateError},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
-
                 if (updateError) throw updateError;
             }
 
             // Now delete the category
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1467',message:'Attempting category deletion',data:{categoryId:id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             const { error } = await supabase
                 .from("categories")
                 .delete()
                 .eq("id", id);
 
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1472',message:'Category deletion result',data:{error:error?.message || null,code:error?.code || null,success:!error},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-
             if (error) throw error;
             showPopup("Category deleted successfully!", "success");
             loadCategories();
         } catch (error: any) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:1478',message:'Category deletion error caught',data:{error:error?.message || String(error),code:error?.code || null,constraint:error?.message?.includes('foreign key') || false},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             showPopup(error.message || "Failed to delete category", "error", "Error");
             console.error("Error deleting category:", error);
         }

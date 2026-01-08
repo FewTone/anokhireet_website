@@ -6218,3 +6218,4 @@
 {"location":"WebsiteGuard.tsx:31","message":"checkWebsiteSetting called","data":{"pathname":"/admin/manage-products/98a43e95-4a49-4fa8-8d43-a5a7f321bfcb","isAllowedRoute":true},"timestamp":1767855068967,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
 {"location":"WebsiteGuard.tsx:33","message":"Before Supabase query","data":{"supabaseClient":true},"timestamp":1767855068972,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
 {"location":"WebsiteGuard.tsx:37","message":"After Supabase query","data":{"hasData":true,"hasError":false},"timestamp":1767855069043,"sessionId":"debug-session","runId":"run1","hypothesisId":"B"}
+{"location":"admin/page.tsx:3354","message":"Main content area dimensions","data":{"width":1096,"height":787,"left":280,"top":65,"activeTab":"dashboard"},"timestamp":1767855109936,"sessionId":"debug-session","runId":"run1","hypothesisId":"A"}

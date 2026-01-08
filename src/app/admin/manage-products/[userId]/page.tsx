@@ -289,20 +289,10 @@ export default function ManageProductsPage() {
 
         // Clear any existing error popup when new files are selected
         if (popup.isOpen && popup.type === "error") {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:320',message:'Clearing existing error popup before new file selection',data:{previousError:popup.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-            // #endregion
             closePopup();
         }
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:327',message:'Files selected for upload',data:{fileCount:files.length,fileSizes:files.map(f=>({name:f.name,size:f.size,sizeMB:(f.size/(1024*1024)).toFixed(2),type:f.type,isGif:f.type==='image/gif'||f.name.toLowerCase().endsWith('.gif')})),maxSizeMB:5},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
-
         for (const file of files) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:322',message:'Validating individual file',data:{fileName:file.name,fileSize:file.size,fileSizeMB:(file.size/(1024*1024)).toFixed(2),limitMB:5,isTooLarge:file.size>5*1024*1024,type:file.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
             
             if (!file.type.startsWith("image/")) {
                 showPopup("Please select only image files", "error", "Invalid File Type");
@@ -312,17 +302,10 @@ export default function ManageProductsPage() {
             
             const maxSizeBytes = 5 * 1024 * 1024; // 5MB
             if (file.size > maxSizeBytes) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:331',message:'File size validation FAILED',data:{fileName:file.name,fileSize:file.size,fileSizeMB:(file.size/(1024*1024)).toFixed(2),limitMB:5,exceedsByMB:((file.size-maxSizeBytes)/(1024*1024)).toFixed(2)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
                 showPopup(`Image "${file.name}" is too large (max 5MB). Actual size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`, "error", "File Too Large");
                 e.target.value = "";
                 return;
             }
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:338',message:'File size validation PASSED',data:{fileName:file.name,fileSize:file.size,fileSizeMB:(file.size/(1024*1024)).toFixed(2)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-            // #endregion
         }
 
         const processPromises = files.map(async (file) => {
