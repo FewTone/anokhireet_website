@@ -624,20 +624,14 @@ export default function ProductsPage() {
                                     </button>
                                     {filterSections.find(s => s.id === "price")?.isOpen && (
                                         <div className="mt-4">
-                                            {/* Price labels below slider */}
-                                            <div className="flex justify-between text-xs mb-4">
-                                                <span>₹{priceRange[0]}</span>
-                                                <span>₹{priceRange[1]}</span>
-                                            </div>
-                                            
                                             {/* Dual Range Slider */}
-                                            <div className="relative h-6">
-                                                {/* Background track */}
-                                                <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 rounded-lg transform -translate-y-1/2"></div>
+                                            <div className="relative h-8 mb-2">
+                                                {/* Background track (gray) */}
+                                                <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 rounded transform -translate-y-1/2"></div>
                                                 
-                                                {/* Active range track (filled black between thumbs) */}
+                                                {/* Active range track (thick black line between thumbs) */}
                                                 <div
-                                                    className="absolute top-1/2 h-1 bg-black rounded-lg transform -translate-y-1/2"
+                                                    className="absolute top-1/2 h-2 bg-black rounded transform -translate-y-1/2"
                                                     style={{
                                                         left: `${(priceRange[0] / 5000) * 100}%`,
                                                         width: `${((priceRange[1] - priceRange[0]) / 5000) * 100}%`
@@ -676,25 +670,22 @@ export default function ProductsPage() {
                                                     .min-slider::-webkit-slider-thumb,
                                                     .max-slider::-webkit-slider-thumb {
                                                         appearance: none;
-                                                        width: 14px;
-                                                        height: 14px;
-                                                        background: #6b7280;
+                                                        width: 16px;
+                                                        height: 16px;
+                                                        background: #4b5563;
                                                         border-radius: 50%;
                                                         cursor: pointer;
                                                         position: relative;
                                                         z-index: 20;
-                                                        border: 2px solid #fff;
-                                                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                                                     }
                                                     .min-slider::-moz-range-thumb,
                                                     .max-slider::-moz-range-thumb {
-                                                        width: 14px;
-                                                        height: 14px;
-                                                        background: #6b7280;
+                                                        width: 16px;
+                                                        height: 16px;
+                                                        background: #4b5563;
                                                         border-radius: 50%;
                                                         cursor: pointer;
-                                                        border: 2px solid #fff;
-                                                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                                                        border: none;
                                                         position: relative;
                                                         z-index: 20;
                                                     }
@@ -709,6 +700,12 @@ export default function ProductsPage() {
                                                         height: 0;
                                                     }
                                                 `}</style>
+                                            </div>
+                                            
+                                            {/* Price labels below slider */}
+                                            <div className="flex justify-between text-xs">
+                                                <span>₹{priceRange[0]}</span>
+                                                <span>₹{priceRange[1]}</span>
                                             </div>
                                         </div>
                                     )}
