@@ -226,6 +226,11 @@ export default function AdminPage() {
     const [filterUserId, setFilterUserId] = useState<string>("all");
     const [filterCategory, setFilterCategory] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const [filterProductType, setFilterProductType] = useState<string | null>(null);
+    const [filterOccasion, setFilterOccasion] = useState<string | null>(null);
+    const [filterColor, setFilterColor] = useState<string | null>(null);
+    const [filterMaterial, setFilterMaterial] = useState<string | null>(null);
+    const [filterCity, setFilterCity] = useState<string | null>(null);
     // Column sorting and filtering (Finder-style)
     const [sortColumn, setSortColumn] = useState<string>("");
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -383,6 +388,59 @@ export default function AdminPage() {
         const categoryParam = searchParams.get("category");
         if (categoryParam) {
             setFilterCategory(categoryParam);
+        }
+        
+        // Read facet filters from URL and set filterCategory
+        const productTypeParam = searchParams.get("product_type");
+        const occasionParam = searchParams.get("occasion");
+        const colorParam = searchParams.get("colors");
+        const materialParam = searchParams.get("materials");
+        const cityParam = searchParams.get("cities");
+        
+        // Set filterCategory based on URL parameters (priority: product_type > occasion > colors > materials > cities)
+        if (productTypeParam) {
+            setFilterCategory(productTypeParam);
+            setFilterProductType(null);
+            setFilterOccasion(null);
+            setFilterColor(null);
+            setFilterMaterial(null);
+            setFilterCity(null);
+        } else if (occasionParam) {
+            setFilterCategory(occasionParam);
+            setFilterProductType(null);
+            setFilterOccasion(null);
+            setFilterColor(null);
+            setFilterMaterial(null);
+            setFilterCity(null);
+        } else if (colorParam) {
+            setFilterCategory(colorParam);
+            setFilterProductType(null);
+            setFilterOccasion(null);
+            setFilterColor(null);
+            setFilterMaterial(null);
+            setFilterCity(null);
+        } else if (materialParam) {
+            setFilterCategory(materialParam);
+            setFilterProductType(null);
+            setFilterOccasion(null);
+            setFilterColor(null);
+            setFilterMaterial(null);
+            setFilterCity(null);
+        } else if (cityParam) {
+            setFilterCategory(cityParam);
+            setFilterProductType(null);
+            setFilterOccasion(null);
+            setFilterColor(null);
+            setFilterMaterial(null);
+            setFilterCity(null);
+        } else {
+            // Clear all filters if no URL params
+            setFilterProductType(null);
+            setFilterOccasion(null);
+            setFilterColor(null);
+            setFilterMaterial(null);
+            setFilterCity(null);
+            // Don't clear filterCategory here - let it persist if user set it manually
         }
         
         const tabParam = searchParams.get("tab");
@@ -3812,6 +3870,17 @@ To get these values:
 
                     {/* Products Tab */}
                     {activeTab === "products" && (() => {
+                        // Show loading state if products haven't loaded yet
+                        if (userProducts.length === 0 && !isCheckingAuth) {
+                            return (
+                                <div className="space-y-6">
+                                    <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+                                        <p className="text-gray-500">Loading products...</p>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        
                         // Get all unique categories
                         const allCategories = Array.from(new Set([
                             ...userProducts.map(p => p.category).filter(Boolean)
@@ -3825,12 +3894,47 @@ To get these values:
                             filteredUserProducts = filteredUserProducts.filter(p => p.user_id === filterUserId);
                         }
 
-                        // Apply category filter - check if product belongs to selected category
+                        // Apply category/facet filter - check if product belongs to selected category or facet
                         if (filterCategory !== 'all') {
-                            // Filter products that belong to this category
-                            // Check category_ids array (from product_categories) or legacy category field
                             filteredUserProducts = filteredUserProducts.filter(p => {
-                                // Check if product has this category in its category_ids array
+                                // Check if filterCategory is a facet (product type, occasion, color, material, or city)
+                                const facets = (p.category && typeof p.category === 'object' && !Array.isArray(p.category))
+                                    ? p.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
+                                    : null;
+                                
+                                if (facets) {
+                                    // Check product types
+                                    const productType = productTypes.find(pt => pt.id === filterCategory);
+                                    if (productType && facets.productTypes.includes(productType.name)) {
+                                        return true;
+                                    }
+                                    
+                                    // Check occasions
+                                    const occasion = occasions.find(oc => oc.id === filterCategory);
+                                    if (occasion && facets.occasions.includes(occasion.name)) {
+                                        return true;
+                                    }
+                                    
+                                    // Check colors
+                                    const color = colors.find(c => c.id === filterCategory);
+                                    if (color && facets.colors.includes(color.name)) {
+                                        return true;
+                                    }
+                                    
+                                    // Check materials
+                                    const material = materials.find(m => m.id === filterCategory);
+                                    if (material && facets.materials.includes(material.name)) {
+                                        return true;
+                                    }
+                                    
+                                    // Check cities
+                                    const city = cities.find(c => c.id === filterCategory);
+                                    if (city && facets.cities.includes(city.name)) {
+                                        return true;
+                                    }
+                                }
+                                
+                                // Fallback: check category_ids array (from product_categories) or legacy category field
                                 if ((p as any).category_ids && Array.isArray((p as any).category_ids)) {
                                     return (p as any).category_ids.includes(filterCategory);
                                 }
@@ -6628,8 +6732,8 @@ To get these values:
                                                                 onClick={() => {
                                                                     setActiveTab("products");
                                                                     localStorage.setItem("adminActiveTab", "products");
-                                                                    const paramKey = item.type === 'product_type' ? 'product_type' : item.type === 'occasion' ? 'occasion' : '';
-                                                                    router.push(`/admin?tab=products&${paramKey}=${item.id}`);
+                                                                    setFilterCategory(item.id);
+                                                                    router.push(`/admin?tab=products`);
                                                                 }}
                                                             >
                                                                 View {item.productCount} products →
@@ -6731,7 +6835,8 @@ To get these values:
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
-                                                                router.push(`/admin?tab=products&product_type=${pt.id}`);
+                                                                setFilterCategory(pt.id);
+                                                                router.push(`/admin?tab=products`);
                                                             }}
                                                         >
                                                             View {productCount} products →
@@ -6879,7 +6984,8 @@ To get these values:
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
-                                                                router.push(`/admin?tab=products&occasion=${oc.id}`);
+                                                                setFilterCategory(oc.id);
+                                                                router.push(`/admin?tab=products`);
                                                             }}
                                                         >
                                                             View {productCount} products →
@@ -7011,7 +7117,8 @@ To get these values:
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
-                                                                router.push(`/admin?tab=products&color=${c.id}`);
+                                                                setFilterCategory(c.id);
+                                                                router.push(`/admin?tab=products`);
                                                             }}
                                                         >
                                                             View {productCount} products →
@@ -7113,7 +7220,8 @@ To get these values:
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
-                                                                router.push(`/admin?tab=products&material=${m.id}`);
+                                                                setFilterCategory(m.id);
+                                                                router.push(`/admin?tab=products`);
                                                             }}
                                                         >
                                                             View {productCount} products →
@@ -7218,7 +7326,8 @@ To get these values:
                                                             onClick={() => {
                                                                 setActiveTab("products");
                                                                 localStorage.setItem("adminActiveTab", "products");
-                                                                router.push(`/admin?tab=products&city=${city.id}`);
+                                                                setFilterCategory(city.id);
+                                                                router.push(`/admin?tab=products`);
                                                             }}
                                                         >
                                                             View {productCount} products →
