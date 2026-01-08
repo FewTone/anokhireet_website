@@ -34,3 +34,4 @@ SELECT id, name, email, is_admin FROM users WHERE email = 'anokhireet@gmail.com'
 
 
 
+

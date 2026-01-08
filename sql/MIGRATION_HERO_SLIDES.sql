@@ -50,3 +50,4 @@ VALUES
   ('https://d2d5n4ft74bagm.cloudfront.net/media/banners/08b2b979-41bf-470f-bfd9-a1b727705031/1763450928.jpeg?w=90', 'ACCESSORIES', 'COMPLETE YOUR LOOK', 6, true)
 ON CONFLICT DO NOTHING;
 
+

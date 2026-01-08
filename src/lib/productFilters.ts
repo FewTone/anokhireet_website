@@ -248,3 +248,4 @@ export async function filterProductsByFacetsOptimized(
   return filtered.map((p: any) => p.id);
 }
 
+

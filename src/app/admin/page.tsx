@@ -4139,88 +4139,20 @@ To get these values:
                                                         </div>
                                                     )}
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative group">
-                                                    <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={() => {
-                                                                if (sortColumn === 'category') {
-                                                                    setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-                                                                } else {
-                                                                    setSortColumn('category');
-                                                                    setSortDirection('asc');
-                                                                }
-                                                            }}
-                                                            className="flex items-center gap-1 hover:text-gray-900 transition-colors"
-                                                        >
-                                                            Facets
-                                                            {sortColumn === 'category' && (
-                                                                <svg className={`w-3 h-3 ${sortDirection === 'asc' ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-                                                                </svg>
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                setOpenFilterColumn(openFilterColumn === 'category' ? null : 'category');
-                                                            }}
-                                                            className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.category ? 'opacity-100 text-blue-600' : ''}`}
-                                                        >
-                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                                                            </svg>
-                                                        </button>
-                                                    </div>
-                                                    {openFilterColumn === 'category' && (
-                                                        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 min-w-[200px] filter-dropdown-container max-h-[300px] overflow-y-auto">
-                                                            <select
-                                                                value={columnFilters.category || ''}
-                                                                onChange={(e) => setColumnFilters({ ...columnFilters, category: e.target.value || undefined })}
-                                                                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
-                                                                autoFocus
-                                                            >
-                                                                <option value="">All Facets</option>
-                                                                <optgroup label="Product Types">
-                                                                    {productTypes.map(pt => (
-                                                                        <option key={pt.id} value={pt.name}>{pt.name}</option>
-                                                                    ))}
-                                                                </optgroup>
-                                                                <optgroup label="Occasions">
-                                                                    {occasions.map(oc => (
-                                                                        <option key={oc.id} value={oc.name}>{oc.name}</option>
-                                                                    ))}
-                                                                </optgroup>
-                                                                <optgroup label="Colors">
-                                                                    {colors.map(c => (
-                                                                        <option key={c.id} value={c.name}>{c.name}</option>
-                                                                    ))}
-                                                                </optgroup>
-                                                                <optgroup label="Materials">
-                                                                    {materials.map(m => (
-                                                                        <option key={m.id} value={m.name}>{m.name}</option>
-                                                                    ))}
-                                                                </optgroup>
-                                                                <optgroup label="Cities">
-                                                                    {cities.map(city => (
-                                                                        <option key={city.id} value={city.name}>{city.name}</option>
-                                                                    ))}
-                                                                </optgroup>
-                                                            </select>
-                                                            <div className="flex justify-end gap-2 mt-2">
-                                                                <button
-                                                                    onClick={() => {
-                                                                        const newFilters = { ...columnFilters };
-                                                                        delete newFilters.category;
-                                                                        setColumnFilters(newFilters);
-                                                                        setOpenFilterColumn(null);
-                                                                    }}
-                                                                    className="text-xs text-gray-600 hover:text-gray-900"
-                                                                >
-                                                                    Clear
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Types
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Occasions
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Colors
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Materials
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Cities
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative group">
                                                     <div className="flex items-center gap-2">
@@ -4380,6 +4312,9 @@ To get these values:
                                                 const imageCount = (product as any).images && Array.isArray((product as any).images) 
                                                     ? (product as any).images.length 
                                                     : ((product as any).image ? 1 : 0);
+                                                const facets = (product.category && typeof product.category === 'object' && !Array.isArray(product.category))
+                                                    ? product.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
+                                                    : { productTypes: [], occasions: [], colors: [], materials: [], cities: [] };
                                                 
                                                 return (
                                                     <tr key={`user-${product.id}`} className="hover:bg-gray-50">
@@ -4423,75 +4358,80 @@ To get these values:
                                                                 )}
                                                             </>
                                                     </td>
+                                                    {/* Types Column */}
                                                     <td className="px-6 py-4">
-                                                        {(() => {
-                                                            const facets = (product.category && typeof product.category === 'object' && !Array.isArray(product.category))
-                                                                ? product.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
-                                                                : { productTypes: [], occasions: [], colors: [], materials: [], cities: [] };
-                                                            
-                                                            const hasFacets = facets.productTypes.length > 0 || facets.occasions.length > 0 || 
-                                                                             facets.colors.length > 0 || facets.materials.length > 0 || facets.cities.length > 0;
-                                                            
-                                                            if (!hasFacets) {
-                                                                return <div className="text-sm text-gray-400 italic">No facets</div>;
-                                                            }
-                                                            
-                                                            return (
-                                                                <div className="space-y-1 max-w-xs">
-                                                                    {facets.productTypes.length > 0 && (
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            <span className="text-xs font-semibold text-gray-600">Types:</span>
-                                                                            {facets.productTypes.map((pt, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                                                                    {pt}
-                                                                                </span>
-                                                                            ))}
-                                                            </div>
-                                                                    )}
-                                                                    {facets.occasions.length > 0 && (
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            <span className="text-xs font-semibold text-gray-600">Occasions:</span>
-                                                                            {facets.occasions.map((oc, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
-                                                                                    {oc}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                    {facets.colors.length > 0 && (
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            <span className="text-xs font-semibold text-gray-600">Colors:</span>
-                                                                            {facets.colors.map((c, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                                                                    {c}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                    {facets.materials.length > 0 && (
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            <span className="text-xs font-semibold text-gray-600">Materials:</span>
-                                                                            {facets.materials.map((m, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                                                    {m}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                    {facets.cities.length > 0 && (
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            <span className="text-xs font-semibold text-gray-600">Cities:</span>
-                                                                            {facets.cities.map((city, idx) => (
-                                                                                <span key={idx} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                                                    {city}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })()}
-                                                        </td>
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.productTypes.length > 0 ? (
+                                                                facets.productTypes.map((pt, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                                        {pt}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {/* Occasions Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.occasions.length > 0 ? (
+                                                                facets.occasions.map((oc, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
+                                                                        {oc}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {/* Colors Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.colors.length > 0 ? (
+                                                                facets.colors.map((c, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                                        {c}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {/* Materials Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.materials.length > 0 ? (
+                                                                facets.materials.map((m, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                        {m}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    {/* Cities Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-1">
+                                                            {facets.cities.length > 0 ? (
+                                                                facets.cities.map((city, idx) => (
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                        {city}
+                                                                    </span>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-xs text-gray-400 italic">-</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm text-gray-500">
                                                                 {(product as any).product_id || `#${product.id}`}
@@ -4542,7 +4482,7 @@ To get these values:
                                             })}
                                             {allFilteredProducts.length === 0 && (
                                                 <tr>
-                                                    <td colSpan={10} className="px-6 py-12 text-center">
+                                                    <td colSpan={13} className="px-6 py-12 text-center">
                                                         <div className="text-gray-500">
                                                             <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
