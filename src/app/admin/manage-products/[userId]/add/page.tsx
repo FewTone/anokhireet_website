@@ -21,10 +21,6 @@ export default function AddProductPage() {
     const userId = params?.userId as string;
     const editProductId = searchParams.get("edit");
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:22',message:'Component initialized',data:{userId,editProductId,hasEditParam:!!editProductId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -75,15 +71,9 @@ export default function AddProductPage() {
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
     useEffect(() => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:73',message:'useEffect triggered',data:{userId,editProductId,hasEditParam:!!editProductId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         if (userId) {
             loadUser();
             loadAllFacets().then(() => {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:78',message:'Facets loaded, checking edit mode',data:{editProductId,hasEditParam:!!editProductId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                // #endregion
                 if (editProductId) {
                     loadProductForEdit(editProductId);
                 }
