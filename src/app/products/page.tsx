@@ -349,10 +349,6 @@ export default function ProductsPage() {
                     const priceB = parseFloat(b.price.replace(/[₹,]/g, '')) || 0;
                     return priceB - priceA;
                 });
-            case "name_asc":
-                return sorted.sort((a, b) => a.name.localeCompare(b.name));
-            case "name_desc":
-                return sorted.sort((a, b) => b.name.localeCompare(a.name));
             default:
                 return sorted;
         }
@@ -456,8 +452,6 @@ export default function ProductsPage() {
                                                     { value: "newest", label: "Newest First" },
                                                     { value: "price_low", label: "Price: Low to High" },
                                                     { value: "price_high", label: "Price: High to Low" },
-                                                    { value: "name_asc", label: "Name: A to Z" },
-                                                    { value: "name_desc", label: "Name: Z to A" },
                                                 ].map((option, index) => (
                                                     <button
                                                         key={option.value}
@@ -645,11 +639,75 @@ export default function ProductsPage() {
                                     </button>
                                     {filterSections.find(s => s.id === "price")?.isOpen && (
                                         <div className="mt-4">
-                                            <div className="flex justify-between text-xs mb-3">
+                                            <div className="flex justify-between text-xs mb-4">
                                                 <span>₹{priceRange[0]}</span>
                                                 <span>₹{priceRange[1]}</span>
                                             </div>
-                                            <div className="relative h-6 mb-2">
+                                            
+                                            {/* Min Price Input */}
+                                            <div className="mb-3">
+                                                <label className="text-xs text-gray-600 mb-1 block">Min Price</label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    max={priceRange[1]}
+                                                    step="50"
+                                                    value={priceRange[0]}
+                                                    onChange={(e) => {
+                                                        const minValue = Math.min(Math.max(0, Number(e.target.value)), priceRange[1]);
+                                                        setPriceRange([minValue, priceRange[1]]);
+                                                    }}
+                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                                                />
+                                            </div>
+                                            
+                                            {/* Max Price Input */}
+                                            <div className="mb-4">
+                                                <label className="text-xs text-gray-600 mb-1 block">Max Price</label>
+                                                <input
+                                                    type="number"
+                                                    min={priceRange[0]}
+                                                    max="5000"
+                                                    step="50"
+                                                    value={priceRange[1]}
+                                                    onChange={(e) => {
+                                                        const maxValue = Math.max(Math.min(5000, Number(e.target.value)), priceRange[0]);
+                                                        setPriceRange([priceRange[0], maxValue]);
+                                                    }}
+                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
+                                                />
+                                            </div>
+                                            
+                                            {/* Dual Range Slider */}
+                                            <div className="relative h-8">
+                                                {/* Background track */}
+                                                <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 rounded-lg transform -translate-y-1/2"></div>
+                                                
+                                                {/* Active range track */}
+                                                <div
+                                                    className="absolute top-1/2 h-1.5 bg-black rounded-lg transform -translate-y-1/2"
+                                                    style={{
+                                                        left: `${(priceRange[0] / 5000) * 100}%`,
+                                                        width: `${((priceRange[1] - priceRange[0]) / 5000) * 100}%`
+                                                    }}
+                                                ></div>
+                                                
+                                                {/* Min price slider */}
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="5000"
+                                                    step="50"
+                                                    value={priceRange[0]}
+                                                    onChange={(e) => {
+                                                        const minValue = Math.min(Number(e.target.value), priceRange[1]);
+                                                        setPriceRange([minValue, priceRange[1]]);
+                                                    }}
+                                                    className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10"
+                                                    style={{ background: 'transparent' }}
+                                                />
+                                                
+                                                {/* Max price slider */}
                                                 <input
                                                     type="range"
                                                     min="0"
@@ -657,16 +715,13 @@ export default function ProductsPage() {
                                                     step="50"
                                                     value={priceRange[1]}
                                                     onChange={(e) => {
-                                                        const maxValue = Number(e.target.value);
-                                                        if (maxValue >= priceRange[0]) {
-                                                            setPriceRange([priceRange[0], maxValue]);
-                                                        }
+                                                        const maxValue = Math.max(Number(e.target.value), priceRange[0]);
+                                                        setPriceRange([priceRange[0], maxValue]);
                                                     }}
-                                                    className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                                    style={{
-                                                        background: `linear-gradient(to right, #000 0%, #000 ${(priceRange[1] / 5000) * 100}%, #e5e7eb ${(priceRange[1] / 5000) * 100}%, #e5e7eb 100%)`
-                                                    }}
+                                                    className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10"
+                                                    style={{ background: 'transparent' }}
                                                 />
+                                                
                                                 <style jsx>{`
                                                     input[type="range"]::-webkit-slider-thumb {
                                                         appearance: none;
@@ -675,6 +730,8 @@ export default function ProductsPage() {
                                                         background: #000;
                                                         border-radius: 50%;
                                                         cursor: pointer;
+                                                        position: relative;
+                                                        z-index: 20;
                                                     }
                                                     input[type="range"]::-moz-range-thumb {
                                                         width: 16px;
@@ -683,6 +740,16 @@ export default function ProductsPage() {
                                                         border-radius: 50%;
                                                         cursor: pointer;
                                                         border: none;
+                                                        position: relative;
+                                                        z-index: 20;
+                                                    }
+                                                    input[type="range"]::-webkit-slider-runnable-track {
+                                                        background: transparent;
+                                                        height: 0;
+                                                    }
+                                                    input[type="range"]::-moz-range-track {
+                                                        background: transparent;
+                                                        height: 0;
                                                     }
                                                 `}</style>
                                             </div>
