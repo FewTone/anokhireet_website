@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 // ⚠️ TODO: REMOVE BEFORE PRODUCTION - Test user helper
 import { isTestUser as checkIsTestUser, getTestUserData, clearTestUserData } from "@/lib/testUserHelper";
@@ -29,6 +29,17 @@ export default function Profile() {
     const [verifyingOtp, setVerifyingOtp] = useState(false);
     const [pendingUserData, setPendingUserData] = useState<PendingUserData | null>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Helper function to get return URL and redirect
+    const getReturnUrlAndRedirect = () => {
+        const returnUrl = searchParams.get('returnUrl');
+        if (returnUrl) {
+            router.push(decodeURIComponent(returnUrl));
+        } else {
+            router.push("/user");
+        }
+    };
 
     useEffect(() => {
         // Check if user is already logged in via Supabase Auth session
@@ -64,9 +75,9 @@ export default function Profile() {
                 .eq("auth_user_id", session.user.id)
                 .maybeSingle();
 
-            // Regular user with active session - redirect to user page
+            // Regular user with active session - redirect to user page or return URL
             if (userData) {
-                router.push("/user");
+                getReturnUrlAndRedirect();
             }
         }
     };
@@ -98,7 +109,7 @@ export default function Profile() {
                     return;
                 } else if (activeUserData) {
                     // Regular user is already logged in - redirect them
-                    router.push("/user");
+                    getReturnUrlAndRedirect();
                     setLoading(false);
                     return;
                 } else {
@@ -273,7 +284,7 @@ export default function Profile() {
 
                 if (activeUserData) {
                     // Regular user already logged in - redirect
-                    router.push("/user");
+                    getReturnUrlAndRedirect();
                     setVerifyingOtp(false);
                     return;
                 }
@@ -399,9 +410,9 @@ export default function Profile() {
                 // Clear pending data from state
                 setPendingUserData(null);
 
-                // Redirect to user page
+                // Redirect to user page or return URL
                 setVerifyingOtp(false);
-                router.push("/user");
+                getReturnUrlAndRedirect();
                 return;
             }
 
@@ -423,7 +434,7 @@ export default function Profile() {
                     // No localStorage needed - session is managed by Supabase
                     console.log("✅ User authenticated via Supabase Auth session");
                     setVerifyingOtp(false);
-                    router.push("/user");
+                    getReturnUrlAndRedirect();
                     return;
                 }
             }
@@ -478,7 +489,7 @@ export default function Profile() {
                             
                             console.log("✅ Auth session created and linked to user");
                             setVerifyingOtp(false);
-                            router.push("/user");
+                            getReturnUrlAndRedirect();
                             return;
                         } else if (authError?.message?.includes("already registered")) {
                             // User already exists in auth - try to sign in
@@ -495,7 +506,7 @@ export default function Profile() {
                                 
                                 console.log("✅ Signed in existing auth user");
                                 setVerifyingOtp(false);
-                router.push("/user");
+                getReturnUrlAndRedirect();
                 return;
             }
                         }
@@ -552,7 +563,7 @@ export default function Profile() {
                     return;
                 } else if (activeUserData && !activeUserData.auth_user_id) {
                     // Regular user already logged in - redirect
-                    router.push("/user");
+                    getReturnUrlAndRedirect();
                     setLoading(false);
                     return;
                 }
@@ -602,7 +613,7 @@ export default function Profile() {
                             .eq("id", existingUserCheck.id);
                     }
                     
-                    router.push("/user");
+                    getReturnUrlAndRedirect();
                     setLoading(false);
                     return;
                 }
@@ -676,7 +687,7 @@ export default function Profile() {
                 // No localStorage needed - session is managed by Supabase
 
                 // Redirect to user page
-                router.push("/user");
+                getReturnUrlAndRedirect();
                 setLoading(false);
                 return;
             }

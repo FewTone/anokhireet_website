@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import LoginPopup from "@/components/LoginPopup";
 import { supabase } from "@/lib/supabase";
 
 interface Product {
@@ -28,6 +27,7 @@ interface Product {
 export default function ProductDetailPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const productId = params?.id as string;
     
     const [product, setProduct] = useState<Product | null>(null);
@@ -35,7 +35,6 @@ export default function ProductDetailPage() {
     const [selectedImage, setSelectedImage] = useState<string>("");
     const [productImages, setProductImages] = useState<string[]>([]);
     // Removed expandedSections - no longer needed
-    const [showLoginPopup, setShowLoginPopup] = useState(false);
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
@@ -51,6 +50,16 @@ export default function ProductDetailPage() {
             checkLoginStatus();
         }
     }, [productId]);
+
+    // Check if user was redirected from login (inquiry parameter)
+    useEffect(() => {
+        if (productId && isLoggedIn && searchParams.get('inquiry') === 'true') {
+            // User just logged in and returned - open inquiry modal
+            setTimeout(() => {
+                setShowInquiryModal(true);
+            }, 500);
+        }
+    }, [productId, isLoggedIn, searchParams]);
 
     const checkLoginStatus = async () => {
         try {
@@ -240,20 +249,14 @@ export default function ProductDetailPage() {
 
     const handleMakeInquiry = () => {
         if (!isLoggedIn) {
-            setShowLoginPopup(true);
+            // Redirect to login page with return URL
+            const returnUrl = `/products/${productId}?inquiry=true`;
+            router.push(`/profile?returnUrl=${encodeURIComponent(returnUrl)}`);
             return;
         }
         setShowInquiryModal(true);
     };
 
-    const handleLoginSuccess = () => {
-        checkLoginStatus();
-        setShowLoginPopup(false);
-        // Auto-open inquiry modal after login
-        setTimeout(() => {
-            setShowInquiryModal(true);
-        }, 100);
-    };
 
     const handleSubmitInquiry = async () => {
         if (!product || !currentUser || !product.db_id || !product.owner_user_id) {
@@ -303,6 +306,33 @@ export default function ProductDetailPage() {
                 .single();
 
             if (chatError) throw chatError;
+
+            // Create initial message in chat automatically
+            const startDateFormatted = new Date(inquiryForm.start_date).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            const endDateFormatted = new Date(inquiryForm.end_date).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            const initialMessage = `Hi! I'm interested in renting "${product.name}" from ${startDateFormatted} to ${endDateFormatted}. Please let me know if it's available.`;
+            
+            const { error: messageError } = await supabase
+                .from("messages")
+                .insert([{
+                    chat_id: chatData.id,
+                    sender_user_id: currentUser.id,
+                    message: initialMessage
+                }]);
+
+            if (messageError) {
+                console.error("Error creating initial message:", messageError);
+                // Don't fail the inquiry if message creation fails
+            }
 
             alert("Inquiry submitted successfully! You can now chat with the owner.");
             setShowInquiryModal(false);
@@ -391,14 +421,14 @@ export default function ProductDetailPage() {
                                 </div>
 
                                 {/* Center - Main Product Image */}
-                                <div className="flex-1 relative w-full aspect-[4/5] bg-gray-100 min-h-[500px]">
+                                <div className="flex-1 relative max-w-md w-full aspect-[4/5] bg-gray-100 mx-auto">
                                     {selectedImage ? (
                                         <Image
                                             src={selectedImage}
                                             alt={product.name}
                                             fill
-                                            className="object-contain"
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 40vw"
+                                            className="object-cover"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
                                             priority
                                             unoptimized
                                             onError={(e) => {
@@ -508,13 +538,6 @@ export default function ProductDetailPage() {
                 </div>
             </main>
             <Footer />
-
-            {/* Login Popup */}
-            <LoginPopup
-                isOpen={showLoginPopup}
-                onClose={() => setShowLoginPopup(false)}
-                onLoginSuccess={handleLoginSuccess}
-            />
 
             {/* Inquiry Modal */}
             {showInquiryModal && (
