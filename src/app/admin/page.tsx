@@ -262,6 +262,8 @@ export default function AdminPage() {
         email: "",
         cities: [] as string[], // Array of city IDs
     });
+    const [showAddCity, setShowAddCity] = useState(false);
+    const [newCityName, setNewCityName] = useState("");
     // ⚠️ TODO: REMOVE BEFORE PRODUCTION - Test users only for development
     const [testUserFormData, setTestUserFormData] = useState({
         name: "",
@@ -1007,6 +1009,47 @@ To get these values:
             setCities(data || []);
         } catch (error: any) {
             console.error("Error loading cities:", error);
+        }
+    };
+
+    const handleAddNewCity = async () => {
+        if (!newCityName.trim()) {
+            showPopup("Please enter a city name", "warning", "Validation Error");
+            return;
+        }
+
+        if (cities.some(c => c.name.toLowerCase() === newCityName.trim().toLowerCase())) {
+            showPopup("This city already exists", "warning", "Duplicate");
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from("cities")
+                .insert([{
+                    name: newCityName.trim(),
+                    display_order: cities.length
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+            
+            // Reload cities to get the updated list
+            await loadCities();
+            
+            // Automatically select the newly created city
+            setUserFormData((prev) => ({
+                ...prev,
+                cities: [...prev.cities, data.id]
+            }));
+            
+            setNewCityName("");
+            setShowAddCity(false);
+            showPopup("City added and selected!", "success");
+        } catch (error: any) {
+            showPopup(error.message || "Failed to add city", "error", "Error");
+            console.error("Error adding city:", error);
         }
     };
 
@@ -4749,6 +4792,9 @@ To get these values:
                                 </div>
                                 <button
                                     onClick={async () => {
+                                        // Reset form data when opening modal for new user
+                                        setEditingUser(null);
+                                        setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
                                         // Ensure cities are loaded when opening modal
                                         if (cities.length === 0) {
                                             await loadCities();
@@ -4903,6 +4949,8 @@ To get these values:
                                                 setIsUserModalOpen(false);
                                                 setEditingUser(null);
                                                 setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
+                                                setShowAddCity(false);
+                                                setNewCityName("");
                                             }}
                                             className="text-gray-400 hover:text-gray-600"
                                         >
@@ -4987,36 +5035,104 @@ To get these values:
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                From Where (Cities) *
-                                            </label>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <label className="block text-sm font-medium text-gray-700">
+                                                    From Where (Cities) *
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setShowAddCity(!showAddCity);
+                                                        if (showAddCity) {
+                                                            setNewCityName("");
+                                                        }
+                                                    }}
+                                                    className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                                                >
+                                                    {showAddCity ? "Cancel" : "+ Add New"}
+                                                </button>
+                                            </div>
+                                            
+                                            {showAddCity && (
+                                                <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            value={newCityName}
+                                                            onChange={(e) => setNewCityName(e.target.value)}
+                                                            onKeyPress={(e) => {
+                                                                if (e.key === 'Enter') {
+                                                                    e.preventDefault();
+                                                                    handleAddNewCity();
+                                                                }
+                                                            }}
+                                                            placeholder="Enter new city name"
+                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleAddNewCity}
+                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                        >
+                                                            Add
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
                                             <div className="border border-gray-300 rounded-md max-h-48 overflow-y-auto p-2">
                                                 {cities.length === 0 ? (
                                                     <p className="text-xs text-gray-500">Loading cities...</p>
                                                 ) : (
-                                                    cities.map(city => (
-                                                        <label key={city.id} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-2 rounded">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={userFormData.cities.includes(city.id)}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setUserFormData({
-                                                                            ...userFormData,
-                                                                            cities: [...userFormData.cities, city.id]
+                                                    cities.map(city => {
+                                                        const isChecked = userFormData.cities.includes(city.id);
+                                                        return (
+                                                            <label 
+                                                                key={city.id} 
+                                                                className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-2 rounded"
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isChecked}
+                                                                    value={city.id}
+                                                                    onChange={(e) => {
+                                                                        const checked = e.target.checked;
+                                                                        const cityId = city.id;
+                                                                        
+                                                                        setUserFormData((prev) => {
+                                                                            const currentCities = prev.cities || [];
+                                                                            
+                                                                            if (checked) {
+                                                                                // Add city if not already in array
+                                                                                if (currentCities.includes(cityId)) {
+                                                                                    return prev;
+                                                                                }
+                                                                                return {
+                                                                                    ...prev,
+                                                                                    cities: [...currentCities, cityId]
+                                                                                };
+                                                                            } else {
+                                                                                // Remove city from array
+                                                                                return {
+                                                                                    ...prev,
+                                                                                    cities: currentCities.filter(id => id !== cityId)
+                                                                                };
+                                                                            }
                                                                         });
-                                                                    } else {
-                                                                        setUserFormData({
-                                                                            ...userFormData,
-                                                                            cities: userFormData.cities.filter(id => id !== city.id)
-                                                                        });
-                                                                    }
-                                                                }}
-                                                                className="w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-black"
-                                                            />
-                                                            <span className="text-sm text-gray-700">{city.name}</span>
-                                                        </label>
-                                                    ))
+                                                                    }}
+                                                                    className="w-4 h-4 border-gray-300 rounded text-black focus:ring-2 focus:ring-black cursor-pointer"
+                                                                />
+                                                                <span className="text-sm text-gray-700 select-none">{city.name}</span>
+                                                            </label>
+                                                        );
+                                                    })
+                                                )}
+                                                {cities.length > 0 && userFormData.cities.length > 0 && (
+                                                    <div className="mt-2 pt-2 border-t border-gray-200">
+                                                        <p className="text-xs text-gray-600">
+                                                            Selected: {userFormData.cities.length} city{userFormData.cities.length !== 1 ? 'ies' : ''}
+                                                        </p>
+                                                    </div>
                                                 )}
                                             </div>
                                             <p className="text-xs text-gray-500 mt-1">
