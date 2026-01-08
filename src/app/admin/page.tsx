@@ -6477,28 +6477,6 @@ To get these values:
                                                             </p>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                                        <button
-                                                            onClick={async () => {
-                                                                const handler = item.type === 'product_type' 
-                                                                    ? handleDeleteProductType 
-                                                                    : item.type === 'occasion' 
-                                                                    ? handleDeleteOccasion 
-                                                                    : null;
-                                                                
-                                                                if (!handler) return;
-                                                                
-                                                                if (confirm(`Are you sure you want to delete "${item.name}"? This will remove it from all products.`)) {
-                                                                    await handler(item.id, item.name);
-                                                                    await Promise.all([loadProductTypes(), loadOccasions()]);
-                                                                }
-                                                            }}
-                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                            title="Delete item"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
                                                 </div>
                                             );
                                         })}
