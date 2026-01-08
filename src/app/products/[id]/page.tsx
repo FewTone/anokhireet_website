@@ -391,14 +391,14 @@ export default function ProductDetailPage() {
                                 </div>
 
                                 {/* Center - Main Product Image */}
-                                <div className="flex-1 relative aspect-[4/5] bg-gray-100">
+                                <div className="flex-1 relative w-full aspect-[4/5] bg-gray-100 min-h-[500px]">
                                     {selectedImage ? (
                                         <Image
                                             src={selectedImage}
                                             alt={product.name}
                                             fill
-                                            className="object-cover"
-                                            sizes="(max-width: 768px) 100vw, 50vw"
+                                            className="object-contain"
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 40vw"
                                             priority
                                             unoptimized
                                             onError={(e) => {
@@ -457,10 +457,6 @@ export default function ProductDetailPage() {
                                                             <p className="mt-1">{product.category}</p>
                                                         </div>
                                                     )}
-                                                    <div>
-                                                        <span className="font-medium text-gray-700">Images:</span>
-                                                        <p className="mt-1">{displayImages.length} photo{displayImages.length !== 1 ? 's' : ''}</p>
-                                                    </div>
                                                     {product.productTypes && product.productTypes.length > 0 && (
                                                         <div>
                                                             <span className="font-medium text-gray-700">Product Type:</span>

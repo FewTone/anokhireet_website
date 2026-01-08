@@ -49,13 +49,7 @@ export default function Home() {
         }, 15000); // 15 second timeout
 
         loadProducts(true); // Initial load
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:51',message:'Calling loadCategories from useEffect',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
-        // #endregion
         loadCategories().catch((error) => {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:54',message:'loadCategories promise rejected',data:{error:error?.message||String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
-            // #endregion
             console.error("Error loading categories:", error);
             setLoading(false);
         }); // Load categories from database
@@ -164,13 +158,7 @@ export default function Home() {
     }, []);
 
     const loadCategories = async () => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:139',message:'loadCategories called',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         try {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:142',message:'Querying categories with is_featured=true',data:{query:'select * from categories where is_featured=true order by display_order'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             // Load featured items from all 5 facet types
             const [productTypesResult, occasionsResult] = await Promise.all([
                 supabase
@@ -185,21 +173,11 @@ export default function Home() {
                     .order("display_order", { ascending: true })
             ]);
 
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:150',message:'Facet types query result',data:{productTypesCount:productTypesResult.data?.length||0,occasionsCount:occasionsResult.data?.length||0,productTypesError:productTypesResult.error?.message,occasionsError:occasionsResult.error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
-
             const allFeatured: Array<{ img: string; link_url?: string; display_order: number }> = [];
 
             // Add featured product types with their display_order
             if (productTypesResult.data && !productTypesResult.error) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:195',message:'Processing product types',data:{count:productTypesResult.data.length,items:productTypesResult.data.map((pt:any)=>({id:pt.id,name:pt.name,image_url:pt.image_url,is_featured:pt.is_featured,display_order:pt.display_order}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                // #endregion
                 productTypesResult.data.forEach(pt => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:198',message:'Adding product type to featured',data:{id:pt.id,name:pt.name,image_url:pt.image_url,hasImage:!!pt.image_url,imageUrlLength:pt.image_url?.length||0,display_order:pt.display_order},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                    // #endregion
                     allFeatured.push({
                         img: pt.image_url || "",
                         link_url: `/products?product_type=${pt.id}`,
@@ -210,13 +188,7 @@ export default function Home() {
 
             // Add featured occasions with their display_order
             if (occasionsResult.data && !occasionsResult.error) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:205',message:'Processing occasions',data:{count:occasionsResult.data.length,items:occasionsResult.data.map((oc:any)=>({id:oc.id,name:oc.name,image_url:oc.image_url,is_featured:oc.is_featured,display_order:oc.display_order}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                // #endregion
                 occasionsResult.data.forEach(oc => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:208',message:'Adding occasion to featured',data:{id:oc.id,name:oc.name,image_url:oc.image_url,hasImage:!!oc.image_url,imageUrlLength:oc.image_url?.length||0,display_order:oc.display_order},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                    // #endregion
                     allFeatured.push({
                         img: oc.image_url || "",
                         link_url: `/products?occasion=${oc.id}`,
@@ -230,41 +202,20 @@ export default function Home() {
             
             // Remove display_order from final array (not needed in component)
             const finalFeatured = allFeatured.map(({ display_order, ...rest }) => rest);
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:175',message:'Setting featured categories from facets',data:{totalCount:finalFeatured.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
 
             console.log('✅ Featured items from facets:', finalFeatured.length);
             console.log('📋 Featured items details (sorted by display_order):', finalFeatured);
             
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:218',message:'Before setFeaturedCategories',data:{totalCount:finalFeatured.length,itemsWithImages:finalFeatured.filter(c=>c.img&&c.img.trim()).length,itemsWithoutImages:finalFeatured.filter(c=>!c.img||!c.img.trim()).length,allFeatured:finalFeatured},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
-            
             // Log if there are errors
             if (productTypesResult.error) {
                 console.error('❌ Error loading product types:', productTypesResult.error);
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:222',message:'Product types error',data:{error:productTypesResult.error.message,code:productTypesResult.error.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
             }
             if (occasionsResult.error) {
                 console.error('❌ Error loading occasions:', occasionsResult.error);
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:226',message:'Occasions error',data:{error:occasionsResult.error.message,code:occasionsResult.error.code},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
             }
             
             setFeaturedCategories(finalFeatured);
-            
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:232',message:'After setFeaturedCategories',data:{totalCount:allFeatured.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
         } catch (error) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:181',message:'loadCategories catch error',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-            // #endregion
             console.error("Error loading featured items:", error);
             setFeaturedCategories([]);
         }
@@ -367,21 +318,11 @@ export default function Home() {
                 <Hero />
 
                 {/* Section 2: Featured Categories */}
-                {/* #region agent log */}
-                {(() => {
-                    console.log('🔍 Featured Categories State:', { length: featuredCategories.length, categories: featuredCategories });
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:261',message:'Rendering featured categories section',data:{featuredCategoriesLength:featuredCategories.length,featuredCategories:featuredCategories},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                    return null;
-                })()}
-                {/* #endregion */}
                 {featuredCategories.length > 0 ? (
                 <div className="mt-12 mb-12 text-center px-4">
                     <h2 className="text-2xl md:text-3xl font-bold mb-6">FEATURED CATEGORIES</h2>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
                             {featuredCategories.map((cat, idx) => {
-                                // #region agent log
-                                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:268',message:'Rendering featured category item',data:{index:idx,img:cat.img,link_url:cat.link_url,hasImg:!!cat.img},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
-                                // #endregion
                                 return (
                                 <Link href={cat.link_url || "/shirt-collection"} key={idx} className="block hover:scale-[1.02] transition-transform duration-300">
                                 <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100">
@@ -394,15 +335,7 @@ export default function Home() {
                                             sizes="20vw"
                                             unoptimized
                                             onError={(e) => {
-                                                // #region agent log
-                                                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:362',message:'Image load error',data:{index:idx,img:cat.img,link_url:cat.link_url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
-                                                // #endregion
                                                 (e.target as HTMLImageElement).style.display = 'none';
-                                            }}
-                                            onLoad={() => {
-                                                // #region agent log
-                                                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:370',message:'Image loaded successfully',data:{index:idx,img:cat.img},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                                                // #endregion
                                             }}
                                         />
                                     ) : (

@@ -23,9 +23,6 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
     }
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ErrorBoundary.tsx:25',message:'Error caught by boundary',data:{errorMessage:error?.message?.substring(0,200),errorStack:error?.stack?.substring(0,500),componentStack:errorInfo?.componentStack?.substring(0,500)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         console.error("Error caught by boundary:", error, errorInfo);
     }
 

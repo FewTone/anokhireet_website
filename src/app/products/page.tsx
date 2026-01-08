@@ -111,7 +111,12 @@ export default function ProductsPage() {
             params.set("sort", sortBy);
         }
         const newUrl = params.toString() ? `/products?${params.toString()}` : '/products';
-        router.replace(newUrl);
+        const currentUrl = window.location.pathname + window.location.search;
+        
+        // Only update URL if it's different from current URL
+        if (newUrl !== currentUrl) {
+            router.replace(newUrl);
+        }
     }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, maxPrice, router]);
 
     // Check URL params for auto-filtering (runs after filter options are loaded)
@@ -125,24 +130,15 @@ export default function ProductsPage() {
         const priceMaxParam = searchParams.get("price_max");
         const sortParam = searchParams.get("sort");
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:73',message:'URL params check',data:{productTypeParam,occasionParam,productTypesLength:productTypes.length,occasionsLength:occasions.length,currentSelectedTypes:appliedProductTypes,currentSelectedOccasions:appliedOccasions},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-        // #endregion
-
         if (productTypeParam && productTypes.length > 0) {
             const type = productTypes.find(pt => pt.id === productTypeParam);
+            // Only update if different from current state
             if (type && !appliedProductTypes.includes(productTypeParam)) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:79',message:'Setting product type from URL',data:{productTypeParam,typeName:type.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
                 setPendingProductTypes([productTypeParam]);
                 setAppliedProductTypes([productTypeParam]);
                 // Don't set categoryName - always show "PRODUCTS"
             }
         } else if (productTypeParam && appliedProductTypes.length === 0) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:84',message:'Fetching product type from DB',data:{productTypeParam},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
             // Wait for product types to load
             supabase
                 .from("product_types")
@@ -150,9 +146,6 @@ export default function ProductsPage() {
                 .eq("id", productTypeParam)
                 .single()
                 .then(({ data, error }) => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:91',message:'Product type fetch result',data:{productTypeParam,found:!!data,typeName:data?.name,error:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                    // #endregion
                     if (data) {
                         setPendingProductTypes([data.id]);
                         setAppliedProductTypes([data.id]);
@@ -163,18 +156,13 @@ export default function ProductsPage() {
 
         if (occasionParam && occasions.length > 0) {
             const occasion = occasions.find(oc => oc.id === occasionParam);
+            // Only update if different from current state
             if (occasion && !appliedOccasions.includes(occasionParam)) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:100',message:'Setting occasion from URL',data:{occasionParam,occasionName:occasion.name},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                // #endregion
                 setPendingOccasions([occasionParam]);
                 setAppliedOccasions([occasionParam]);
                 // Don't set categoryName - always show "PRODUCTS"
             }
         } else if (occasionParam && appliedOccasions.length === 0) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:105',message:'Fetching occasion from DB',data:{occasionParam},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
             // Wait for occasions to load
             supabase
                 .from("occasions")
@@ -182,9 +170,6 @@ export default function ProductsPage() {
                 .eq("id", occasionParam)
                 .single()
                 .then(({ data, error }) => {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:113',message:'Occasion fetch result',data:{occasionParam,found:!!data,occasionName:data?.name,error:error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                    // #endregion
                     if (data) {
                         setPendingOccasions([data.id]);
                         setAppliedOccasions([data.id]);
@@ -197,8 +182,13 @@ export default function ProductsPage() {
         if (colorsParam) {
             const colorIds = colorsParam.split(',').filter(id => id);
             if (colorIds.length > 0) {
-                setPendingColors(colorIds);
-                setAppliedColors(colorIds);
+                // Only update if different from current state
+                const colorIdsSorted = [...colorIds].sort().join(',');
+                const appliedColorsSorted = [...appliedColors].sort().join(',');
+                if (colorIdsSorted !== appliedColorsSorted) {
+                    setPendingColors(colorIds);
+                    setAppliedColors(colorIds);
+                }
             }
         }
 
@@ -206,8 +196,13 @@ export default function ProductsPage() {
         if (materialsParam) {
             const materialIds = materialsParam.split(',').filter(id => id);
             if (materialIds.length > 0) {
-                setPendingMaterials(materialIds);
-                setAppliedMaterials(materialIds);
+                // Only update if different from current state
+                const materialIdsSorted = [...materialIds].sort().join(',');
+                const appliedMaterialsSorted = [...appliedMaterials].sort().join(',');
+                if (materialIdsSorted !== appliedMaterialsSorted) {
+                    setPendingMaterials(materialIds);
+                    setAppliedMaterials(materialIds);
+                }
             }
         }
 
@@ -215,8 +210,13 @@ export default function ProductsPage() {
         if (citiesParam) {
             const cityIds = citiesParam.split(',').filter(id => id);
             if (cityIds.length > 0) {
-                setPendingCities(cityIds);
-                setAppliedCities(cityIds);
+                // Only update if different from current state
+                const cityIdsSorted = [...cityIds].sort().join(',');
+                const appliedCitiesSorted = [...appliedCities].sort().join(',');
+                if (cityIdsSorted !== appliedCitiesSorted) {
+                    setPendingCities(cityIds);
+                    setAppliedCities(cityIds);
+                }
             }
         }
 
@@ -278,18 +278,11 @@ export default function ProductsPage() {
     const loadProducts = async () => {
         try {
             setLoading(true);
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:147',message:'loadProducts called',data:{timestamp:Date.now()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             const { data: productsData, error } = await supabase
                 .from("products")
                 .select("*")
                 .eq("is_active", true)
                 .order("created_at", { ascending: false });
-
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:154',message:'Products query result',data:{count:productsData?.length||0,error:error?.message,firstProductCreatedAt:productsData?.[0]?.created_at,lastProductCreatedAt:productsData?.[productsData?.length-1]?.created_at,firstProductId:productsData?.[0]?.id,lastProductId:productsData?.[productsData?.length-1]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
 
             if (error) throw error;
 
@@ -314,10 +307,6 @@ export default function ProductsPage() {
                     } as Product & { created_at?: string };
                 });
 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:177',message:'Formatted products before setProducts',data:{count:formattedProducts.length,firstProductCreatedAt:formattedProducts[0]?.created_at,lastProductCreatedAt:formattedProducts[formattedProducts.length-1]?.created_at,firstProductId:formattedProducts[0]?.id,lastProductId:formattedProducts[formattedProducts.length-1]?.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                // #endregion
-
                 // Calculate max price from products and update priceRange if not set from URL
                 const prices = formattedProducts
                     .map(p => parseFloat(p.price.replace(/[₹,]/g, '')) || 0)
@@ -334,9 +323,6 @@ export default function ProductsPage() {
                     const currentMaxPrice = appliedPriceRange[1];
                     // Only update priceRange if current max is default (5000) or if max product price is higher
                     if (currentMaxPrice === 5000 || finalMaxPrice > currentMaxPrice) {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:203',message:'Updating price range',data:{calculatedMaxPrice,roundedMax,finalMaxPrice,currentMaxPrice,newPriceRange:[0,finalMaxPrice],allProductsUnder5000:calculatedMaxPrice <= 5000},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-                        // #endregion
                         setPendingPriceRange([0, finalMaxPrice]);
                         setAppliedPriceRange([0, finalMaxPrice]);
                     }
@@ -347,9 +333,6 @@ export default function ProductsPage() {
                 setProducts([]);
             }
         } catch (error) {
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:182',message:'loadProducts error',data:{error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-            // #endregion
             console.error("Error loading products:", error);
             setProducts([]);
         } finally {
@@ -369,9 +352,6 @@ export default function ProductsPage() {
     };
 
     const applyFilters = async () => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:190',message:'applyFilters called',data:{productsCount:products.length,selectedProductTypes:appliedProductTypes,selectedOccasions:appliedOccasions,selectedColors:appliedColors.length,selectedMaterials:appliedMaterials.length,selectedCities:appliedCities.length,priceRange:appliedPriceRange,sortBy},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-        // #endregion
         if (products.length === 0) {
             setFilteredProducts([]);
             return;
@@ -382,25 +362,15 @@ export default function ProductsPage() {
 
             // Filter by Product Types
             if (appliedProductTypes.length > 0) {
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:200',message:'Querying product_product_types',data:{selectedProductTypes:appliedProductTypes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
                 const { data: typeProducts, error: typeError } = await supabase
                     .from("product_product_types")
                     .select("product_id")
                     .in("type_id", appliedProductTypes);
 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:206',message:'Product types query result',data:{selectedProductTypes:appliedProductTypes,typeProductsCount:typeProducts?.length||0,productIds:typeProducts?.map((tp:any)=>String(tp.product_id)).slice(0,5),error:typeError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
-
                 if (typeProducts && typeProducts.length > 0) {
                     const ids = new Set(typeProducts.map((tp: any) => String(tp.product_id)));
                     filteredProductIds = ids;
                 } else {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:210',message:'No products found for selected types',data:{selectedProductTypes},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                    // #endregion
                     setFilteredProducts([]);
                     return;
                 }
@@ -504,50 +474,20 @@ export default function ProductsPage() {
 
             // Apply filters to products
             let filtered = products;
-            // #region agent log
-            const beforeIdFilter = filtered.length;
-            const idFilterBefore = filtered.map(p => String(p.id));
-            // #endregion
 
             // If we have filtered IDs, use them
             if (filteredProductIds && filteredProductIds.size > 0) {
-                const beforeCount = filtered.length;
                 filtered = filtered.filter(p => filteredProductIds!.has(String(p.id)));
-                // #region agent log
-                const filteredOutIds = idFilterBefore.filter(id => !filteredProductIds!.has(id));
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:311',message:'ID filter results',data:{beforeCount,afterCount:filtered.length,filteredIds:Array.from(filteredProductIds),filteredOutIds:filteredOutIds.slice(0,5),allProductIds:idFilterBefore.slice(0,6)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                // #endregion
             }
 
             // Filter by price range
-            // #region agent log
-            const priceFilterBefore = filtered.length;
-            const priceFilteredOut: any[] = [];
-            // #endregion
             filtered = filtered.filter(p => {
                 const price = parseFloat(p.price.replace(/[₹,]/g, '')) || 0;
-                const passes = price >= appliedPriceRange[0] && price <= appliedPriceRange[1];
-                // #region agent log
-                if (!passes) {
-                    priceFilteredOut.push({ id: p.id, name: p.name, price: p.price, parsedPrice: price, priceRange: appliedPriceRange });
-                }
-                // #endregion
-                return passes;
+                return price >= appliedPriceRange[0] && price <= appliedPriceRange[1];
             });
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:319',message:'Price filter results',data:{beforeCount:priceFilterBefore,afterCount:filtered.length,filteredOut:priceFilteredOut.slice(0,3),priceRange:appliedPriceRange},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
-
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:325',message:'Before sorting',data:{filteredCount:filtered.length,filteredIds:filtered.slice(0,3).map(p=>p.id),sortBy,firstProductCreatedAt:(filtered[0] as any)?.created_at,lastProductCreatedAt:(filtered[filtered.length-1] as any)?.created_at},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
 
             // Apply sorting
             filtered = sortProducts(filtered, sortBy);
-
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:332',message:'After sorting',data:{filteredCount:filtered.length,filteredIds:filtered.slice(0,3).map(p=>p.id),sortBy,firstProductCreatedAt:(filtered[0] as any)?.created_at,lastProductCreatedAt:(filtered[filtered.length-1] as any)?.created_at},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-            // #endregion
 
             setFilteredProducts(filtered);
         } catch (error) {
@@ -558,9 +498,6 @@ export default function ProductsPage() {
 
     const sortProducts = (productsToSort: Product[], sortOption: string): Product[] => {
         const sorted = [...productsToSort];
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'products/page.tsx:335',message:'sortProducts called',data:{productsCount:sorted.length,sortOption,firstProductCreatedAt:(sorted[0] as any)?.created_at,lastProductCreatedAt:(sorted[sorted.length-1] as any)?.created_at},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        // #endregion
         switch (sortOption) {
             case "newest":
                 // Products are loaded newest first (ascending: false), but after filtering we need to re-sort by created_at

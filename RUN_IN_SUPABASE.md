@@ -110,3 +110,4 @@ Run `COMPLETE_SUPABASE_SETUP.sql` in Supabase SQL Editor and you're done! 🎉
 
 
 
+

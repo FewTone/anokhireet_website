@@ -2150,6 +2150,12 @@ To get these values:
         const hasEmail = userFormData.email.trim().length > 0;
         const userEmail = hasEmail ? userFormData.email.trim() : null;
 
+        // Validate cities
+        if (!userFormData.cities || userFormData.cities.length === 0) {
+            showPopup("Please select at least one city", "error", "Validation Error");
+            return;
+        }
+
         try {
             if (editingUser) {
                 // Update existing user
@@ -4780,7 +4786,13 @@ To get these values:
                                 <div>
                                 </div>
                                 <button
-                                    onClick={() => setIsUserModalOpen(true)}
+                                    onClick={async () => {
+                                        // Ensure cities are loaded when opening modal
+                                        if (cities.length === 0) {
+                                            await loadCities();
+                                        }
+                                        setIsUserModalOpen(true);
+                                    }}
                                     className="px-5 py-2.5 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
