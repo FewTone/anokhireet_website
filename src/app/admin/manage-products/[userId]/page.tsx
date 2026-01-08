@@ -313,10 +313,6 @@ export default function ManageProductsPage() {
             try {
                 const { blob, size: convertedSize } = await convertToWebPOptimized(file);
                 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:367',message:'Image conversion result',data:{fileName:file.name,originalSize:originalSize,convertedSize:convertedSize,isSmaller:convertedSize<originalSize,reductionPercent:((1-convertedSize/originalSize)*100).toFixed(1)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                // #endregion
-                
                 const preview = await new Promise<string>((resolve) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target?.result as string);
@@ -325,9 +321,6 @@ export default function ManageProductsPage() {
                 
                 // Only use optimized version if it's smaller than original
                 if (convertedSize < originalSize) {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:380',message:'Using optimized image (smaller)',data:{fileName:file.name,originalSize:originalSize,convertedSize:convertedSize},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                    // #endregion
                 const convertedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".webp"), {
                     type: "image/webp",
                 });
@@ -337,9 +330,6 @@ export default function ManageProductsPage() {
                     sizeInfo: { original: originalSize, converted: convertedSize, name: file.name },
                 };
                 } else {
-                    // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:392',message:'Using original image (optimized was larger)',data:{fileName:file.name,originalSize:originalSize,convertedSize:convertedSize},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                    // #endregion
                     // Use original file if optimization didn't help
                     return {
                         file,
@@ -349,9 +339,6 @@ export default function ManageProductsPage() {
                 }
             } catch (error) {
                 console.error("Error converting image:", error);
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:400',message:'Image conversion error - using original',data:{fileName:file.name,originalSize:originalSize,error:error?.toString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                // #endregion
                 const preview = await new Promise<string>((resolve) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target?.result as string);
