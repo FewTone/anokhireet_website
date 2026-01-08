@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import Popup from "@/components/Popup";
@@ -17,10 +17,17 @@ interface User {
 export default function AddProductPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const userId = params?.userId as string;
+    const editProductId = searchParams.get("edit");
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:22',message:'Component initialized',data:{userId,editProductId,hasEditParam:!!editProductId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
     
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [editingProduct, setEditingProduct] = useState<any>(null);
     const [popup, setPopup] = useState<{
         isOpen: boolean;
         message: string;
@@ -68,11 +75,69 @@ export default function AddProductPage() {
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
     useEffect(() => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:73',message:'useEffect triggered',data:{userId,editProductId,hasEditParam:!!editProductId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+        // #endregion
         if (userId) {
             loadUser();
-            loadAllFacets();
+            loadAllFacets().then(() => {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:78',message:'Facets loaded, checking edit mode',data:{editProductId,hasEditParam:!!editProductId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                // #endregion
+                if (editProductId) {
+                    loadProductForEdit(editProductId);
+                }
+            });
+            
+            // Check if database columns exist on page load
+            const checkSchema = async () => {
+                try {
+                    const { error: schemaCheckError } = await supabase
+                        .from("products")
+                        .select("images, primary_image_index, original_price")
+                        .limit(0);
+                    
+                    if (schemaCheckError && (
+                        schemaCheckError.message?.includes('schema cache') || 
+                        schemaCheckError.message?.includes('images') ||
+                        schemaCheckError.message?.includes('does not exist') ||
+                        (schemaCheckError.message?.includes('column') && schemaCheckError.message?.includes('products'))
+                    )) {
+                        const sqlToRun = `ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT[];
+ALTER TABLE products ADD COLUMN IF NOT EXISTS primary_image_index INTEGER DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC;
+
+-- Verify (should show 3 rows):
+SELECT column_name FROM information_schema.columns 
+WHERE table_name = 'products' 
+AND column_name IN ('images', 'primary_image_index', 'original_price');`;
+                        
+                        showPopup(
+                            `⚠️ DATABASE MIGRATION REQUIRED\n\n` +
+                            `The required database columns are missing.\n\n` +
+                            `📋 Copy this SQL and run it in Supabase:\n\n` +
+                            `${sqlToRun}\n\n` +
+                            `Steps:\n` +
+                            `1. Open Supabase Dashboard → SQL Editor\n` +
+                            `2. Click "New Query"\n` +
+                            `3. Paste the SQL above\n` +
+                            `4. Click "Run" (should show 3 rows)\n` +
+                            `5. Wait 2-3 minutes for cache refresh\n` +
+                            `6. Refresh this page\n\n` +
+                            `File: sql/RUN_THIS_NOW.sql`,
+                            "error",
+                            "Migration Required"
+                        );
+                    }
+                } catch (error) {
+                    // Silently ignore - might be other issues
+                    console.warn("Schema check warning:", error);
+                }
+            };
+            
+            checkSchema();
         }
-    }, [userId]);
+    }, [userId, editProductId]);
 
     const loadUser = async () => {
         try {
@@ -89,6 +154,98 @@ export default function AddProductPage() {
             showPopup("Failed to load user information", "error", "Error");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadProductForEdit = async (productId: string) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:101',message:'loadProductForEdit called',data:{productId},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+        // #endregion
+        try {
+            // Load product data
+            const { data: product, error: productError } = await supabase
+                .from("products")
+                .select("*")
+                .eq("id", productId)
+                .single();
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:108',message:'Product query result',data:{productId,hasProduct:!!product,hasError:!!productError,errorMessage:productError?.message,productName:product?.name||product?.title},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+
+            if (productError || !product) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:111',message:'Product load failed',data:{productId,error:productError?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+                // #endregion
+                showPopup("Failed to load product for editing", "error", "Error");
+                router.push(`/admin/manage-products/${userId}`);
+                return;
+            }
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:185',message:'Setting editingProduct',data:{productId:product.id,productIdType:typeof product.id,productName:product.name||product.title,hasImages:!!product.images,imagesIsArray:Array.isArray(product.images),imagesLength:product.images?.length,hasImage:!!product.image},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+            // #endregion
+
+            setEditingProduct(product);
+
+            // Load existing images
+            const images = product.images && Array.isArray(product.images) && product.images.length > 0
+                ? product.images
+                : (product.image ? [product.image] : []);
+            setProductImages(images);
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:195',message:'Images loaded for edit',data:{productId:product.id,imagesCount:images.length,imagesArray:JSON.stringify(images)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H'})}).catch(()=>{});
+            // #endregion
+            
+            const validPrimaryIndex = product.primary_image_index !== undefined && product.primary_image_index >= 0 && product.primary_image_index < images.length
+                ? product.primary_image_index
+                : 0;
+            setPrimaryImageIndex(validPrimaryIndex);
+
+            // Load facets
+            const [productTypesRes, occasionsRes, colorsRes, materialsRes, citiesRes] = await Promise.all([
+                supabase.from("product_product_types").select("type_id, product_types(name)").eq("product_id", productId),
+                supabase.from("product_occasions").select("occasion_id, occasions(name)").eq("product_id", productId),
+                supabase.from("product_colors").select("color_id, colors(name)").eq("product_id", productId),
+                supabase.from("product_materials").select("material_id, materials(name)").eq("product_id", productId),
+                supabase.from("product_cities").select("city_id, cities(name)").eq("product_id", productId),
+            ]);
+
+            const productTypes = productTypesRes.data?.map((pt: any) => pt.product_types?.name).filter(Boolean) || [];
+            const occasions = occasionsRes.data?.map((oc: any) => oc.occasions?.name).filter(Boolean) || [];
+            const colors = colorsRes.data?.map((c: any) => c.colors?.name).filter(Boolean) || [];
+            const materials = materialsRes.data?.map((m: any) => m.materials?.name).filter(Boolean) || [];
+            const cities = citiesRes.data?.map((c: any) => c.cities?.name).filter(Boolean) || [];
+
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:142',message:'Facets loaded for edit',data:{productTypesCount:productTypes.length,occasionsCount:occasions.length,colorsCount:colors.length,materialsCount:materials.length,citiesCount:cities.length,productName:product.name||product.title,productPrice:product.price,hasOriginalPrice:!!product.original_price,imagesCount:images.length,imagesArray:images},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
+
+            setProductFormData({
+                name: product.name || product.title || "",
+                price: product.price || "",
+                originalPrice: product.original_price ? String(product.original_price) : "",
+                productTypes,
+                occasions,
+                colors,
+                materials,
+                cities,
+            });
+            
+            // Set step to 2 when editing (since we already have product data)
+            setCurrentStep(2);
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:159',message:'Product form data set, step set to 2',data:{formDataName:product.name||product.title||"",formDataPrice:product.price||"",formDataProductTypes:productTypes.length,formDataOccasions:occasions.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+            // #endregion
+        } catch (error) {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:163',message:'loadProductForEdit error caught',data:{productId,error:error instanceof Error?error.message:String(error)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+            console.error("Error loading product for edit:", error);
+            showPopup("Failed to load product for editing", "error", "Error");
+            router.push(`/admin/manage-products/${userId}`);
         }
     };
 
@@ -445,6 +602,56 @@ export default function AddProductPage() {
     const handleSaveProduct = async (e: React.FormEvent) => {
         e.preventDefault();
         
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:598',message:'handleSaveProduct called',data:{isEditing:!!editingProduct,editingProductId:editingProduct?.id,editingProductIdType:typeof editingProduct?.id,editingProductFull:JSON.stringify(editingProduct),formDataName:productFormData.name,formDataPrice:productFormData.price,productTypesCount:productFormData.productTypes.length,occasionsCount:productFormData.occasions.length,colorsCount:productFormData.colors.length,materialsCount:productFormData.materials.length,citiesCount:productFormData.cities.length,existingImagesCount:productImages.length,newImagesCount:productImageFiles.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'I'})}).catch(()=>{});
+        // #endregion
+        
+        // Pre-check: Verify required columns exist by attempting a simple query
+        try {
+            const { error: schemaCheckError } = await supabase
+                .from("products")
+                .select("images, primary_image_index, original_price")
+                .limit(0);
+            
+            if (schemaCheckError && (
+                schemaCheckError.message?.includes('schema cache') || 
+                schemaCheckError.message?.includes('images') ||
+                schemaCheckError.message?.includes('does not exist') ||
+                schemaCheckError.message?.includes('column') && schemaCheckError.message?.includes('products')
+            )) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:530',message:'Schema check failed - columns missing',data:{error:schemaCheckError.message,errorCode:schemaCheckError.code,errorDetails:schemaCheckError.details},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
+                // #endregion
+                
+                const sqlToRun = `ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT[];
+ALTER TABLE products ADD COLUMN IF NOT EXISTS primary_image_index INTEGER DEFAULT 0;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC;
+
+-- Verify (should show 3 rows):
+SELECT column_name FROM information_schema.columns 
+WHERE table_name = 'products' 
+AND column_name IN ('images', 'primary_image_index', 'original_price');`;
+                
+                showPopup(
+                    `DATABASE MIGRATION REQUIRED\n\n` +
+                    `The database columns are missing. Please run this SQL in Supabase:\n\n` +
+                    `${sqlToRun}\n\n` +
+                    `1. Go to Supabase Dashboard → SQL Editor\n` +
+                    `2. Click "New Query"\n` +
+                    `3. Paste the SQL above\n` +
+                    `4. Click "Run"\n` +
+                    `5. Wait 2-3 minutes for cache refresh\n` +
+                    `6. Refresh this page and try again`,
+                    "error",
+                    "Migration Required"
+                );
+                return;
+            }
+        } catch (preCheckError: any) {
+            // If it's not a schema error, continue (might be a different issue)
+            console.warn("Schema pre-check warning:", preCheckError);
+        }
+        
         // At least one facet must be selected (across all types)
         const totalFacetsSelected = 
             productFormData.productTypes.length +
@@ -458,8 +665,14 @@ export default function AddProductPage() {
             return;
         }
         
-        if (productImageFiles.length === 0) {
+        // When editing, allow existing images; when creating, require new images
+        if (!editingProduct && productImageFiles.length === 0) {
             showPopup("Please select at least one image file", "warning", "Validation Error");
+            return;
+        }
+
+        if (editingProduct && productImageFiles.length === 0 && productImages.length === 0) {
+            showPopup("At least one image is required", "warning", "Validation Error");
             return;
         }
 
@@ -477,34 +690,29 @@ export default function AddProductPage() {
                 }
             }
 
-            if (uploadedImageUrls.length === 0) {
+            // Combine existing images with newly uploaded ones
+            const allImageUrls = editingProduct 
+                ? [...productImages, ...uploadedImageUrls]
+                : uploadedImageUrls;
+
+            if (allImageUrls.length === 0) {
                 setIsUploadingImage(false);
                 showPopup("At least one image is required.", "error", "Validation Error");
                 return;
             }
 
             let validPrimaryIndex = primaryImageIndex;
-            if (validPrimaryIndex < 0 || validPrimaryIndex >= uploadedImageUrls.length) {
+            if (validPrimaryIndex < 0 || validPrimaryIndex >= allImageUrls.length) {
                 validPrimaryIndex = 0;
             }
-
-            const productId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
             const productData: any = {
                 name: productFormData.name,
                 price: productFormData.price,
-                images: uploadedImageUrls,
+                images: allImageUrls,
                 primary_image_index: validPrimaryIndex,
-                product_id: productId,
-                image: uploadedImageUrls[validPrimaryIndex],
+                image: allImageUrls[validPrimaryIndex],
             };
-
-            if (productFormData.originalPrice && productFormData.originalPrice.trim() !== "") {
-                const originalPriceNum = parseFloat(productFormData.originalPrice);
-                if (!isNaN(originalPriceNum)) {
-                    productData.original_price = originalPriceNum;
-                }
-            }
 
             // Verify admin session
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -520,18 +728,118 @@ export default function AddProductPage() {
                 .maybeSingle();
             
             if (adminError || !adminCheck) {
-                throw new Error("Permission denied. Only admins can create products.");
+                throw new Error("Permission denied. Only admins can manage products.");
             }
+            
+            let productToUpdate: any;
+            
+            if (editingProduct) {
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:595',message:'Updating existing product',data:{editingProductId:editingProduct.id,updateDataName:productData.name,updateDataPrice:productData.price,updateDataImagesCount:productData.images.length,primaryImageIndex:productData.primary_image_index},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
+                // Update existing product
+                const updateData: any = {
+                    title: productData.name || "Untitled Product",
+                    name: productData.name || "Untitled Product",
+                    price: productData.price || "",
+                    price_per_day: productData.price ? parseFloat(productData.price.replace(/[₹,]/g, '')) || null : null,
+                    image: productData.image || "",
+                    images: productData.images,
+                    primary_image_index: productData.primary_image_index,
+                };
+
+                if (productFormData.originalPrice && productFormData.originalPrice.trim() !== "") {
+                    const originalPriceNum = parseFloat(productFormData.originalPrice);
+                    if (!isNaN(originalPriceNum)) {
+                        updateData.original_price = originalPriceNum;
+                    }
+                }
+
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:656',message:'Attempting product update',data:{editingProductId:editingProduct.id,updateDataKeys:Object.keys(updateData),hasImages:!!updateData.images,imagesCount:updateData.images?.length,hasPrimaryIndex:updateData.primary_image_index!==undefined,primaryIndexValue:updateData.primary_image_index,hasOriginalPrice:!!updateData.original_price},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
+
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:754',message:'About to execute UPDATE query',data:{editingProductId:editingProduct.id,editingProductIdType:typeof editingProduct.id,updateDataKeys:Object.keys(updateData),updateDataValues:JSON.stringify(updateData)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                // #endregion
+
+                const { data: updatedProduct, error: updateError } = await supabase
+                    .from("products")
+                    .update(updateData)
+                    .eq("id", editingProduct.id)
+                    .select()
+                    .single();
+
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:763',message:'Product update result',data:{editingProductId:editingProduct.id,hasUpdatedProduct:!!updatedProduct,updatedProductId:updatedProduct?.id,hasError:!!updateError,errorMessage:updateError?.message,errorCode:updateError?.code,errorDetails:updateError?.details,errorHint:updateError?.hint,updateDataSent:JSON.stringify(updateData)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
+                // #endregion
+
+                if (updateError) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:777',message:'Update error details',data:{errorMessage:updateError.message,errorCode:updateError.code,fullError:JSON.stringify(updateError),isSchemaCacheError:updateError.message?.includes('schema cache')||updateError.message?.includes('images')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+                    // #endregion
+                    
+                    // If it's a schema cache error, provide helpful message
+                    if (updateError.message?.includes('schema cache') || updateError.message?.includes('images')) {
+                        throw new Error(
+                            `Database schema error: The 'images' column may not exist yet. ` +
+                            `Please run the migration file 'sql/MIGRATION_PRODUCT_IMAGES.sql' in Supabase SQL Editor, ` +
+                            `then wait 1-2 minutes for the schema cache to refresh. ` +
+                            `Original error: ${updateError.message}`
+                        );
+                    }
+                    throw updateError;
+                }
+                
+                if (!updatedProduct) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:797',message:'UPDATE returned no product',data:{editingProductId:editingProduct.id,updateDataKeys:Object.keys(updateData)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+                    // #endregion
+                    throw new Error(`Failed to update product: No product found with ID ${editingProduct.id}. The product may have been deleted.`);
+                }
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:802',message:'UPDATE successful, setting productToUpdate',data:{editingProductId:editingProduct.id,updatedProductId:updatedProduct.id,idsMatch:updatedProduct.id===editingProduct.id},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'J'})}).catch(()=>{});
+                // #endregion
+                
+                productToUpdate = updatedProduct;
+
+                // Delete existing facet associations
+                await Promise.all([
+                    supabase.from("product_product_types").delete().eq("product_id", editingProduct.id),
+                    supabase.from("product_occasions").delete().eq("product_id", editingProduct.id),
+                    supabase.from("product_colors").delete().eq("product_id", editingProduct.id),
+                    supabase.from("product_materials").delete().eq("product_id", editingProduct.id),
+                    supabase.from("product_cities").delete().eq("product_id", editingProduct.id),
+                ]);
+            } else {
+                // Create new product
+                const productId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+                productData.product_id = productId;
             
             const insertData: any = {
                 owner_user_id: userId,
                 title: productData.name || "Untitled Product",
                 name: productData.name || "Untitled Product",
                 price: productData.price || "",
-                price_per_day: productData.price ? parseFloat(productData.price) || null : null,
+                    price_per_day: productData.price ? parseFloat(productData.price.replace(/[₹,]/g, '')) || null : null,
                 image: productData.image || "",
+                    images: productData.images,
+                    primary_image_index: productData.primary_image_index,
+                    product_id: productId,
                 is_active: true,
             };
+
+                if (productFormData.originalPrice && productFormData.originalPrice.trim() !== "") {
+                    const originalPriceNum = parseFloat(productFormData.originalPrice);
+                    if (!isNaN(originalPriceNum)) {
+                        insertData.original_price = originalPriceNum;
+                    }
+                }
+                
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:722',message:'Attempting product insert',data:{insertDataKeys:Object.keys(insertData),hasImages:!!insertData.images,imagesCount:insertData.images?.length,hasPrimaryIndex:insertData.primary_image_index!==undefined,primaryIndexValue:insertData.primary_image_index,hasOriginalPrice:!!insertData.original_price},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
             
             const { data: insertedProduct, error: insertError } = await supabase
                 .from("products")
@@ -539,7 +847,28 @@ export default function AddProductPage() {
                 .select()
                 .single();
 
-            if (insertError) throw insertError;
+                // #region agent log
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:729',message:'Product insert result',data:{hasInsertedProduct:!!insertedProduct,hasError:!!insertError,errorMessage:insertError?.message,errorCode:insertError?.code,errorDetails:insertError?.details,errorHint:insertError?.hint},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                // #endregion
+
+                if (insertError) {
+                    // #region agent log
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'add/page.tsx:735',message:'Insert error details',data:{errorMessage:insertError.message,errorCode:insertError.code,fullError:JSON.stringify(insertError),isSchemaCacheError:insertError.message?.includes('schema cache')||insertError.message?.includes('images')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+                    // #endregion
+                    
+                    // If it's a schema cache error, provide helpful message
+                    if (insertError.message?.includes('schema cache') || insertError.message?.includes('images')) {
+                        throw new Error(
+                            `Database schema error: The 'images' column may not exist yet. ` +
+                            `Please run the migration file 'sql/QUICK_FIX_ADD_IMAGES_COLUMN.sql' in Supabase SQL Editor, ` +
+                            `then wait 1-2 minutes for the schema cache to refresh. ` +
+                            `Original error: ${insertError.message}`
+                        );
+                    }
+                    throw insertError;
+                }
+                productToUpdate = insertedProduct;
+            }
             
             // Save facet associations to junction tables
             const facetPromises: Array<Promise<{ error: any }>> = [];
@@ -554,7 +883,7 @@ export default function AddProductPage() {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_product_types").insert(
                             productTypeIds.map(typeId => ({
-                                product_id: insertedProduct.id,
+                                product_id: productToUpdate.id,
                                 type_id: typeId
                             }))
                         )).then(res => res)
@@ -572,7 +901,7 @@ export default function AddProductPage() {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_occasions").insert(
                             occasionIds.map(occasionId => ({
-                                product_id: insertedProduct.id,
+                                product_id: productToUpdate.id,
                                 occasion_id: occasionId
                             }))
                         )).then(res => res)
@@ -590,7 +919,7 @@ export default function AddProductPage() {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_colors").insert(
                             colorIds.map(colorId => ({
-                                product_id: insertedProduct.id,
+                                product_id: productToUpdate.id,
                                 color_id: colorId
                             }))
                         )).then(res => res)
@@ -608,7 +937,7 @@ export default function AddProductPage() {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_materials").insert(
                             materialIds.map(materialId => ({
-                                product_id: insertedProduct.id,
+                                product_id: productToUpdate.id,
                                 material_id: materialId
                             }))
                         )).then(res => res)
@@ -626,7 +955,7 @@ export default function AddProductPage() {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_cities").insert(
                             cityIds.map(cityId => ({
-                                product_id: insertedProduct.id,
+                                product_id: productToUpdate.id,
                                 city_id: cityId
                             }))
                         )).then(res => res)
@@ -641,7 +970,7 @@ export default function AddProductPage() {
                 console.error("Some facet associations failed:", facetErrors);
             }
             
-            showPopup("Product added successfully!", "success");
+            showPopup(editingProduct ? "Product updated successfully!" : "Product added successfully!", "success");
             
             // Redirect back to manage products page after a short delay
             setTimeout(() => {
@@ -674,7 +1003,7 @@ export default function AddProductPage() {
                 <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Add Product</h1>
+                            <h1 className="text-2xl font-bold text-gray-900">{editingProduct ? "Edit Product" : "Add Product"}</h1>
                             {user && (
                                 <p className="text-sm text-gray-600 mt-1">For: {user.name} ({user.phone})</p>
                             )}
@@ -729,8 +1058,14 @@ export default function AddProductPage() {
                                 showPopup("Please enter an original price", "warning", "Validation Error");
                                 return;
                             }
-                            if (productImageFiles.length === 0) {
+                            // When editing, allow existing images; when creating, require new images
+                            if (!editingProduct && productImageFiles.length === 0) {
                                 showPopup("Please upload at least one product image", "warning", "Validation Error");
+                                return;
+                            }
+
+                            if (editingProduct && productImageFiles.length === 0 && productImages.length === 0) {
+                                showPopup("At least one image is required", "warning", "Validation Error");
                                 return;
                             }
                             // Move to step 2
@@ -845,22 +1180,23 @@ export default function AddProductPage() {
                             )}
                         </div>
 
-                        {productImagePreviews.length > 0 && (
+                        {/* Display existing images when editing */}
+                        {editingProduct && productImages.length > 0 && (
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    Product Images ({productImagePreviews.length})
+                                    Existing Product Images ({productImages.length})
                                 </label>
                                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                    {productImagePreviews.map((preview, index) => (
-                                        <div key={`preview-${index}`} className="relative group">
+                                    {productImages.map((imgUrl, index) => (
+                                        <div key={`existing-${index}`} className="relative group">
                                             <button
                                                 type="button"
                                                 onClick={() => setPrimaryImage(index)}
-                                                className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-400 transition-all"
+                                                className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-300 hover:border-gray-400 transition-all"
                                             >
                                                 <Image
-                                                    src={preview}
-                                                    alt={`New image ${index + 1}`}
+                                                    src={imgUrl}
+                                                    alt={`Existing image ${index + 1}`}
                                                     fill
                                                     className="object-cover"
                                                     unoptimized
@@ -882,7 +1218,14 @@ export default function AddProductPage() {
                                                     aria-label="Remove image"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        removeImage(index);
+                                                        const newImages = productImages.filter((_, i) => i !== index);
+                                                        setProductImages(newImages);
+                                                        // Adjust primary index if needed
+                                                        if (primaryImageIndex === index) {
+                                                            setPrimaryImageIndex(newImages.length > 0 ? 0 : (productImagePreviews.length > 0 ? productImages.length : 0));
+                                                        } else if (primaryImageIndex > index) {
+                                                            setPrimaryImageIndex(primaryImageIndex - 1);
+                                                        }
                                                     }}
                                                     className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                 >
@@ -893,6 +1236,65 @@ export default function AddProductPage() {
                                             </button>
                                         </div>
                                     ))}
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    Click an image to set it as primary (shown on home page).
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Display newly uploaded image previews */}
+                        {productImagePreviews.length > 0 && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">
+                                    New Product Images ({productImagePreviews.length})
+                                </label>
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                    {productImagePreviews.map((preview, index) => {
+                                        const totalIndex = productImages.length + index;
+                                        return (
+                                            <div key={`preview-${index}`} className="relative group">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPrimaryImage(totalIndex)}
+                                                    className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-400 transition-all"
+                                                >
+                                                    <Image
+                                                        src={preview}
+                                                        alt={`New image ${index + 1}`}
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized
+                                                    />
+                                                    <div className="absolute top-2 right-2 z-10">
+                                                        <div className={`${primaryImageIndex === totalIndex ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md`}>
+                                                            <svg 
+                                                                className={`w-5 h-5 ${primaryImageIndex === totalIndex ? 'text-white fill-white' : 'text-gray-400'}`} 
+                                                                fill={primaryImageIndex === totalIndex ? "currentColor" : "none"} 
+                                                                stroke="currentColor" 
+                                                                viewBox="0 0 24 24"
+                                                            >
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        role="button"
+                                                        aria-label="Remove image"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeImage(totalIndex);
+                                                        }}
+                                                        className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </div>
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                                 <p className="text-xs text-gray-500 mt-2">
                                     Click an image to set it as primary (shown on home page).
@@ -936,15 +1338,32 @@ export default function AddProductPage() {
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Images</p>
-                                        <p className="text-sm font-medium text-gray-900">{productImagePreviews.length} image{productImagePreviews.length !== 1 ? 's' : ''} uploaded</p>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {productImages.length + productImagePreviews.length} image{(productImages.length + productImagePreviews.length) !== 1 ? 's' : ''} 
+                                            {editingProduct && productImages.length > 0 && ` (${productImages.length} existing, ${productImagePreviews.length} new)`}
+                                            {!editingProduct && productImagePreviews.length > 0 && ' uploaded'}
+                                        </p>
                                     </div>
                                 </div>
-                                {productImagePreviews.length > 0 && (
+                                {(productImages.length > 0 || productImagePreviews.length > 0) && (
                                     <div className="mt-4">
-                                        <p className="text-xs text-gray-500 mb-2">Preview Images</p>
+                                        <p className="text-xs text-gray-500 mb-2">Product Images</p>
                                         <div className="flex gap-2 overflow-x-auto">
-                                            {productImagePreviews.slice(0, 3).map((preview, index) => (
-                                                <div key={index} className="relative w-16 h-16 rounded border border-gray-300 overflow-hidden flex-shrink-0">
+                                            {/* Show existing images first */}
+                                            {productImages.slice(0, 3).map((imgUrl, index) => (
+                                                <div key={`existing-summary-${index}`} className="relative w-16 h-16 rounded border border-gray-300 overflow-hidden flex-shrink-0">
+                                                    <Image
+                                                        src={imgUrl}
+                                                        alt={`Existing ${index + 1}`}
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            ))}
+                                            {/* Then show new previews */}
+                                            {productImagePreviews.slice(0, Math.max(0, 3 - productImages.length)).map((preview, index) => (
+                                                <div key={`preview-summary-${index}`} className="relative w-16 h-16 rounded border border-gray-300 overflow-hidden flex-shrink-0">
                                                     <Image
                                                         src={preview}
                                                         alt={`Preview ${index + 1}`}
@@ -954,9 +1373,9 @@ export default function AddProductPage() {
                                                     />
                                                 </div>
                                             ))}
-                                            {productImagePreviews.length > 3 && (
+                                            {(productImages.length + productImagePreviews.length) > 3 && (
                                                 <div className="flex items-center justify-center w-16 h-16 rounded border border-gray-300 bg-gray-100 text-gray-500 text-xs font-medium">
-                                                    +{productImagePreviews.length - 3}
+                                                    +{(productImages.length + productImagePreviews.length) - 3}
                                                 </div>
                                             )}
                                         </div>
@@ -1446,7 +1865,7 @@ export default function AddProductPage() {
                                     disabled={isUploadingImage}
                                     className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {isUploadingImage ? "Uploading..." : "Create Product"}
+                                    {isUploadingImage ? "Uploading..." : editingProduct ? "Update Product" : "Create Product"}
                                 </button>
                             </div>
                         </form>

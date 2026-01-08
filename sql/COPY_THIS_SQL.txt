@@ -1,0 +1,28 @@
+-- ============================================
+-- COPY THIS ENTIRE FILE AND PASTE IN SUPABASE
+-- ============================================
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS images TEXT[];
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS primary_image_index INTEGER DEFAULT 0;
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC;
+
+UPDATE products
+SET images = ARRAY[image]
+WHERE image IS NOT NULL 
+  AND image != ''
+  AND (images IS NULL OR array_length(images, 1) IS NULL);
+
+UPDATE products
+SET primary_image_index = 0
+WHERE images IS NOT NULL 
+  AND array_length(images, 1) > 0
+  AND (primary_image_index IS NULL OR primary_image_index < 0);
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'products' 
+  AND column_name IN ('images', 'primary_image_index', 'original_price')
+ORDER BY column_name;
+
