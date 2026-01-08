@@ -56,7 +56,7 @@ export default function ProductsPage() {
         { id: "color", title: "COLOR", isOpen: false },
         { id: "material", title: "MATERIAL", isOpen: false },
         { id: "city", title: "AVAILABLE CITY", isOpen: false },
-        { id: "price", title: "RENTAL PRICE", isOpen: true },
+        { id: "price", title: "PRICE", isOpen: true },
     ]);
 
     // Category tags (can be made dynamic later)
@@ -336,7 +336,11 @@ export default function ProductsPage() {
         const sorted = [...productsToSort];
         switch (sortOption) {
             case "newest":
-                return sorted.reverse(); // Already sorted by newest in loadProducts
+                // Products are loaded newest first (ascending: false), so return as-is
+                return sorted;
+            case "oldest":
+                // Products are loaded newest first, so reverse to get oldest first
+                return sorted.reverse();
             case "price_low":
                 return sorted.sort((a, b) => {
                     const priceA = parseFloat(a.price.replace(/[₹,]/g, '')) || 0;
@@ -410,7 +414,6 @@ export default function ProductsPage() {
         if (selectedColors.length > 0) count += selectedColors.length;
         if (selectedMaterials.length > 0) count += selectedMaterials.length;
         if (selectedCities.length > 0) count += selectedCities.length;
-        if (priceRange[0] > 0 || priceRange[1] < 5000) count += 1;
         return count;
     };
 
@@ -449,6 +452,7 @@ export default function ProductsPage() {
                                         <div className="mt-2 space-y-2">
                                             {[
                                                 { value: "newest", label: "Newest First" },
+                                                { value: "oldest", label: "Oldest First" },
                                                 { value: "price_low", label: "Price: Low to High" },
                                                 { value: "price_high", label: "Price: High to Low" },
                                             ].map((option) => (
@@ -609,64 +613,31 @@ export default function ProductsPage() {
                                     )}
                                 </div>
 
-                                {/* RENTAL PRICE */}
+                                {/* PRICE */}
                                 <div className="border-b border-gray-200 pb-3 mb-3">
                                     <button
                                         onClick={() => toggleFilterSection("price")}
                                         className="w-full flex items-center justify-between text-sm font-medium"
                                     >
-                                        <span>RENTAL PRICE</span>
+                                        <span>PRICE</span>
                                         <span>{filterSections.find(s => s.id === "price")?.isOpen ? "−" : "+"}</span>
                                     </button>
                                     {filterSections.find(s => s.id === "price")?.isOpen && (
                                         <div className="mt-4">
+                                            {/* Price labels below slider */}
                                             <div className="flex justify-between text-xs mb-4">
                                                 <span>₹{priceRange[0]}</span>
                                                 <span>₹{priceRange[1]}</span>
                                             </div>
                                             
-                                            {/* Min Price Input */}
-                                            <div className="mb-3">
-                                                <label className="text-xs text-gray-600 mb-1 block">Min Price</label>
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    max={priceRange[1]}
-                                                    step="50"
-                                                    value={priceRange[0]}
-                                                    onChange={(e) => {
-                                                        const minValue = Math.min(Math.max(0, Number(e.target.value)), priceRange[1]);
-                                                        setPriceRange([minValue, priceRange[1]]);
-                                                    }}
-                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                                                />
-                                            </div>
-                                            
-                                            {/* Max Price Input */}
-                                            <div className="mb-4">
-                                                <label className="text-xs text-gray-600 mb-1 block">Max Price</label>
-                                                <input
-                                                    type="number"
-                                                    min={priceRange[0]}
-                                                    max="5000"
-                                                    step="50"
-                                                    value={priceRange[1]}
-                                                    onChange={(e) => {
-                                                        const maxValue = Math.max(Math.min(5000, Number(e.target.value)), priceRange[0]);
-                                                        setPriceRange([priceRange[0], maxValue]);
-                                                    }}
-                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-black"
-                                                />
-                                            </div>
-                                            
                                             {/* Dual Range Slider */}
-                                            <div className="relative h-8">
+                                            <div className="relative h-6">
                                                 {/* Background track */}
-                                                <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 rounded-lg transform -translate-y-1/2"></div>
+                                                <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 rounded-lg transform -translate-y-1/2"></div>
                                                 
-                                                {/* Active range track */}
+                                                {/* Active range track (filled black between thumbs) */}
                                                 <div
-                                                    className="absolute top-1/2 h-1.5 bg-black rounded-lg transform -translate-y-1/2"
+                                                    className="absolute top-1/2 h-1 bg-black rounded-lg transform -translate-y-1/2"
                                                     style={{
                                                         left: `${(priceRange[0] / 5000) * 100}%`,
                                                         width: `${((priceRange[1] - priceRange[0]) / 5000) * 100}%`
@@ -684,8 +655,7 @@ export default function ProductsPage() {
                                                         const minValue = Math.min(Number(e.target.value), priceRange[1]);
                                                         setPriceRange([minValue, priceRange[1]]);
                                                     }}
-                                                    className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10"
-                                                    style={{ background: 'transparent' }}
+                                                    className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10 min-slider"
                                                 />
                                                 
                                                 {/* Max price slider */}
@@ -699,36 +669,42 @@ export default function ProductsPage() {
                                                         const maxValue = Math.max(Number(e.target.value), priceRange[0]);
                                                         setPriceRange([priceRange[0], maxValue]);
                                                     }}
-                                                    className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10"
-                                                    style={{ background: 'transparent' }}
+                                                    className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10 max-slider"
                                                 />
                                                 
                                                 <style jsx>{`
-                                                    input[type="range"]::-webkit-slider-thumb {
+                                                    .min-slider::-webkit-slider-thumb,
+                                                    .max-slider::-webkit-slider-thumb {
                                                         appearance: none;
-                                                        width: 16px;
-                                                        height: 16px;
-                                                        background: #000;
+                                                        width: 14px;
+                                                        height: 14px;
+                                                        background: #6b7280;
                                                         border-radius: 50%;
                                                         cursor: pointer;
                                                         position: relative;
                                                         z-index: 20;
+                                                        border: 2px solid #fff;
+                                                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                                                     }
-                                                    input[type="range"]::-moz-range-thumb {
-                                                        width: 16px;
-                                                        height: 16px;
-                                                        background: #000;
+                                                    .min-slider::-moz-range-thumb,
+                                                    .max-slider::-moz-range-thumb {
+                                                        width: 14px;
+                                                        height: 14px;
+                                                        background: #6b7280;
                                                         border-radius: 50%;
                                                         cursor: pointer;
-                                                        border: none;
+                                                        border: 2px solid #fff;
+                                                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                                                         position: relative;
                                                         z-index: 20;
                                                     }
-                                                    input[type="range"]::-webkit-slider-runnable-track {
+                                                    .min-slider::-webkit-slider-runnable-track,
+                                                    .max-slider::-webkit-slider-runnable-track {
                                                         background: transparent;
                                                         height: 0;
                                                     }
-                                                    input[type="range"]::-moz-range-track {
+                                                    .min-slider::-moz-range-track,
+                                                    .max-slider::-moz-range-track {
                                                         background: transparent;
                                                         height: 0;
                                                     }
