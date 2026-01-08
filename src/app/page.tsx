@@ -383,7 +383,7 @@ export default function Home() {
                                 fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:268',message:'Rendering featured category item',data:{index:idx,img:cat.img,link_url:cat.link_url,hasImg:!!cat.img},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'G'})}).catch(()=>{});
                                 // #endregion
                                 return (
-                                <Link href={cat.link_url || "/shirt-collection"} key={idx} className="block hover:scale-105 transition-transform duration-200">
+                                <Link href={cat.link_url || "/shirt-collection"} key={idx} className="block hover:scale-[1.02] transition-transform duration-300">
                                 <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100">
                                     {cat.img && cat.img.trim() !== "" ? (
                                         <Image
