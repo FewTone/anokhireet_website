@@ -446,46 +446,27 @@ export default function ProductsPage() {
                                         <span>{filterSections.find(s => s.id === "sort")?.isOpen ? "−" : "+"}</span>
                                     </button>
                                     {filterSections.find(s => s.id === "sort")?.isOpen && (
-                                        <div className="mt-2">
-                                            <div className="bg-gray-700 rounded-lg overflow-hidden border border-gray-600">
-                                                {[
-                                                    { value: "newest", label: "Newest First" },
-                                                    { value: "price_low", label: "Price: Low to High" },
-                                                    { value: "price_high", label: "Price: High to Low" },
-                                                ].map((option, index) => (
-                                                    <button
-                                                        key={option.value}
-                                                        onClick={() => {
+                                        <div className="mt-2 space-y-2">
+                                            {[
+                                                { value: "newest", label: "Newest First" },
+                                                { value: "price_low", label: "Price: Low to High" },
+                                                { value: "price_high", label: "Price: High to Low" },
+                                            ].map((option) => (
+                                                <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="sort"
+                                                        value={option.value}
+                                                        checked={sortBy === option.value}
+                                                        onChange={() => {
                                                             setSortBy(option.value);
                                                             setFilteredProducts(sortProducts(filteredProducts, option.value));
                                                         }}
-                                                        className={`w-full px-4 py-2.5 text-sm text-left flex items-center gap-2 transition-colors ${
-                                                            sortBy === option.value
-                                                                ? "bg-blue-400 text-white"
-                                                                : "text-white hover:bg-gray-600"
-                                                        } ${index !== 0 ? 'border-t border-gray-600' : ''}`}
-                                                    >
-                                                        <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
-                                                            {sortBy === option.value && (
-                                                                <svg
-                                                                    className="w-4 h-4"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={2}
-                                                                        d="M5 13l4 4L19 7"
-                                                                    />
-                                                                </svg>
-                                                            )}
-                                                        </div>
-                                                        <span>{option.label}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
+                                                        className="w-4 h-4 border-gray-300 text-black focus:ring-black"
+                                                    />
+                                                    <span className="text-sm">{option.label}</span>
+                                                </label>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
