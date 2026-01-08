@@ -4928,7 +4928,7 @@ To get these values:
                                             onClick={() => {
                                                 setIsUserModalOpen(false);
                                                 setEditingUser(null);
-                                                setUserFormData({ name: "", phone: "+91", email: "" });
+                                                setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
                                             }}
                                             className="text-gray-400 hover:text-gray-600"
                                         >
