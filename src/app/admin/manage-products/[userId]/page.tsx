@@ -124,16 +124,10 @@ export default function ManageProductsPage() {
     }, [userId]);
 
     const showPopup = (message: string, type: "error" | "success" | "info" | "warning" = "info", title?: string) => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:188',message:'showPopup called',data:{message:message,type:type,title:title,containsGif:message.includes('gif')||message.includes('GIF'),containsUUID:/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i.test(message)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         setPopup({ isOpen: true, message, type, title });
     };
 
     const closePopup = () => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'manage-products/[userId]/page.tsx:195',message:'closePopup called',data:{previousMessage:popup.message,previousType:popup.type},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-        // #endregion
         setPopup({ ...popup, isOpen: false });
     };
 

@@ -3387,14 +3387,7 @@ To get these values:
                     </aside>
 
                     {/* Main Content Area */}
-                    <div className="flex-1 min-w-0" ref={(el) => {
-                        // #region agent log
-                        if (el) {
-                            const rect = el.getBoundingClientRect();
-                            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'admin/page.tsx:3354',message:'Main content area dimensions',data:{width:rect.width,height:rect.height,left:rect.left,top:rect.top,activeTab},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        }
-                        // #endregion
-                    }}>
+                    <div className="flex-1 min-w-0">
 
                     {/* Categories Tab - Removed: Now using 5 facet types instead */}
                     {/* Removed categories tab - using facets instead */}
