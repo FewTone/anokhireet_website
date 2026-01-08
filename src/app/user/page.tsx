@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-// ⚠️ TODO: REMOVE BEFORE PRODUCTION - Test user helper
-import { isTestUser as checkIsTestUser, getTestUserData, clearTestUserData } from "@/lib/testUserHelper";
 // ⚠️ DEVELOPMENT ONLY - OTP bypass for testing
 import { isOtpBypassEnabled } from "@/lib/devConfig";
 
@@ -37,57 +35,36 @@ export default function UserPage() {
     useEffect(() => {
         loadUserData();
 
-        // ⚠️ TODO: REMOVE BEFORE PRODUCTION - Only listen for auth changes if not test user
-        if (!checkIsTestUser()) {
-            // ========== NORMAL USER FLOW ==========
-            // Listen for auth state changes (only for regular users)
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-                // In bypass mode, ignore auth state changes (since we rely on localStorage)
-                if (isOtpBypassEnabled()) return;
+        // ========== NORMAL USER FLOW ==========
+        // Listen for auth state changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            // In bypass mode, ignore auth state changes (since we rely on localStorage)
+            if (isOtpBypassEnabled()) return;
 
-                if (session?.user) {
-                    loadUserData();
-                } else {
-                    // Don't redirect immediately on auth change if we are still loading initial data
-                    // But if we clearly lost session, we should handle it.
-                    // For now, relying on loadUserData to make the final decision is safer.
-                    // But to be consistent with original logic:
-                    if (!loading) {
-                        // If we were loaded and session vanished, then redirect.
-                        // Check bypass first purely to be safe, though callback above handles it.
-                        if (!isOtpBypassEnabled()) {
-                            router.push("/profile");
-                        }
+            if (session?.user) {
+                loadUserData();
+            } else {
+                // Don't redirect immediately on auth change if we are still loading initial data
+                // But if we clearly lost session, we should handle it.
+                // For now, relying on loadUserData to make the final decision is safer.
+                // But to be consistent with original logic:
+                if (!loading) {
+                    // If we were loaded and session vanished, then redirect.
+                    // Check bypass first purely to be safe, though callback above handles it.
+                    if (!isOtpBypassEnabled()) {
+                        router.push("/profile");
                     }
                 }
-            });
+            }
+        });
 
-            return () => {
-                subscription.unsubscribe();
-            };
-        }
+        return () => {
+            subscription.unsubscribe();
+        };
     }, [router, loading]); // Added 'loading' to dependencies to ensure `loading` in callback is fresh
 
     const loadUserData = async () => {
         try {
-            // ⚠️ TODO: REMOVE BEFORE PRODUCTION - Isolated test user check (doesn't affect normal flow)
-            if (checkIsTestUser()) {
-                const testUserData = getTestUserData();
-                if (testUserData) {
-                    // Test user - use localStorage data (no Supabase Auth needed)
-                    setUserName(testUserData.userName);
-                    setUserPhone(testUserData.userPhone);
-                    setLoading(false);
-                    return; // Exit early - normal flow not affected
-                } else {
-                    // Test user data missing - redirect to login
-                    clearTestUserData();
-                    setLoading(false);
-                    router.push("/profile");
-                    return;
-                }
-            }
-
             // ========== NORMAL USER FLOW ==========
             // Check Supabase Auth session only (no localStorage)
             console.log("🔍 loadUserData: Checking Supabase session");
@@ -156,7 +133,6 @@ export default function UserPage() {
             localStorage.removeItem("userName");
             localStorage.removeItem("userPhone");
             localStorage.removeItem("userEmail");
-            localStorage.removeItem("isTestUser");
             setLoading(false);
             // Use setTimeout to ensure state is updated before redirect
             setTimeout(() => {
@@ -167,23 +143,24 @@ export default function UserPage() {
 
     const handleLogout = async () => {
         try {
-            // ⚠️ TODO: REMOVE BEFORE PRODUCTION - Isolated test user check
-            const isTestUserFlag = checkIsTestUser();
+            // ========== NORMAL USER FLOW ==========
+            // Regular user - sign out from Supabase Auth
+            await supabase.auth.signOut();
 
-            if (!isTestUserFlag) {
-                // ========== NORMAL USER FLOW ==========
-                // Regular user - sign out from Supabase Auth
-                await supabase.auth.signOut();
-            }
-
-            // Clear all localStorage (works for both test and normal users)
-            clearTestUserData();
+            // Clear all localStorage
+            localStorage.removeItem("userId");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userPhone");
+            localStorage.removeItem("userEmail");
             localStorage.removeItem("pendingUserData");
             router.push("/profile");
         } catch (error) {
             console.error("Error signing out:", error);
             // Still clear localStorage and redirect even if signOut fails
-            clearTestUserData();
+            localStorage.removeItem("userId");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userPhone");
+            localStorage.removeItem("userEmail");
             localStorage.removeItem("pendingUserData");
             router.push("/profile");
         }

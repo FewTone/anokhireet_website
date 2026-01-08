@@ -140,8 +140,8 @@ export default function Navbar() {
                 <div className="flex justify-center md:flex-1 w-full md:w-auto order-1 md:order-none mb-2 md:mb-0 items-center gap-2">
                     <Link href="/" className="flex items-center gap-2">
                         <Image
-                            src="/group-190.svg"
-                            alt="Logo Icon"
+                            src="/Anokhi reet Logo.svg"
+                            alt="Anokhi Reet Logo"
                             width={40}
                             height={40}
                             className="w-10 h-10 md:w-12 md:h-12 object-contain cursor-pointer brightness-0"

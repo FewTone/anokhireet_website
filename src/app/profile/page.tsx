@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-// ⚠️ TODO: REMOVE BEFORE PRODUCTION - Test user helper
-import { isTestUser as checkIsTestUser, getTestUserData, clearTestUserData } from "@/lib/testUserHelper";
 // ⚠️ DEVELOPMENT ONLY - OTP bypass for testing
 import { isOtpBypassEnabled } from "@/lib/devConfig";
 

@@ -6,8 +6,6 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-// ⚠️ TODO: REMOVE BEFORE PRODUCTION - Test user helper
-import { isTestUser as checkIsTestUser, getTestUserData } from "@/lib/testUserHelper";
 // ⚠️ DEVELOPMENT ONLY - OTP bypass for testing
 import { isOtpBypassEnabled } from "@/lib/devConfig";
 
@@ -42,54 +40,30 @@ export default function MyProductsPage() {
             setLoading(false);
         });
         
-        // ⚠️ TODO: REMOVE BEFORE PRODUCTION - Only listen for auth changes if not test user
-        if (!checkIsTestUser()) {
-            // ========== NORMAL USER FLOW ==========
-            // Listen for auth state changes (only for regular users)
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-                if (session?.user) {
-                    loadUserAndProducts().catch((error) => {
-                        console.error("Error in loadUserAndProducts (auth change):", error);
-                        setLoading(false);
-                    });
-                } else {
-                    setUserId(null);
-                    setUserName("");
-                    setMyProducts([]);
+        // ========== NORMAL USER FLOW ==========
+        // Listen for auth state changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user) {
+                loadUserAndProducts().catch((error) => {
+                    console.error("Error in loadUserAndProducts (auth change):", error);
                     setLoading(false);
-                }
-            });
-
-            return () => {
-                clearTimeout(timeoutId);
-                subscription.unsubscribe();
-            };
-        }
+                });
+            } else {
+                setUserId(null);
+                setUserName("");
+                setMyProducts([]);
+                setLoading(false);
+            }
+        });
 
         return () => {
             clearTimeout(timeoutId);
+            subscription.unsubscribe();
         };
     }, []);
 
     const loadUserAndProducts = async () => {
         try {
-            // ⚠️ TODO: REMOVE BEFORE PRODUCTION - Isolated test user check (doesn't affect normal flow)
-            if (checkIsTestUser()) {
-                const testUserData = getTestUserData();
-                if (testUserData) {
-                    // Test user - use localStorage data (no Supabase Auth needed)
-                    setUserId(testUserData.userId);
-                    setUserName(testUserData.userName);
-                    // Note: Test users don't have products in user_products table
-                    // They're completely separate, so products will be empty
-                    loadProducts(testUserData.userId);
-                    return; // Exit early - normal flow not affected
-                } else {
-                    setLoading(false);
-                    return;
-                }
-            }
-
             // ========== NORMAL USER FLOW ==========
             // Check Supabase Auth session only (no localStorage)
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
