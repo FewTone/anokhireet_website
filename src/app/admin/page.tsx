@@ -6393,13 +6393,12 @@ To get these values:
             {/* Featured Categories Tab */}
             {activeTab === "featured" && (
                 <div className="space-y-6">
-                    <div className="bg-white rounded-lg border border-gray-200 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
-                                <p className="text-sm text-gray-600 mt-1">Pin items from Product Types, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
-                            </div>
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
+                            <p className="text-sm text-gray-600 mt-1">Pin items from Product Types, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
                         </div>
+                    </div>
 
                         {/* Top Section: All Featured Items Combined */}
                         {(() => {
@@ -7202,7 +7201,6 @@ To get these values:
                                 </div>
                             </div>
                         </div>
-                    </div>
                 </div>
             )}
         </div>
