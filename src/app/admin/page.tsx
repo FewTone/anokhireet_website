@@ -2387,39 +2387,12 @@ To get these values:
     // Test user functions removed - using OTP bypass dev mode instead
 
     const handleEditUserProduct = (product: UserProduct) => {
-        setEditingUserProduct(product);
-        
-        // Load images array or fallback to single image
-        const images = product.images && Array.isArray(product.images) && product.images.length > 0
-            ? product.images
-            : (product.image ? [product.image] : []);
-        
-        setUserProductFormData({
-            name: product.name,
-            price: product.price,
-            image: product.image || (images.length > 0 ? images[0] : ""),
-            originalPrice: product.original_price ? String(product.original_price) : "",
-            category: product.category || "",
-        });
-        
-        setUserProductImages(images);
-        // Ensure primary image index is valid - PRIMARY IS MANDATORY
-        const validPrimaryIndex = images.length > 0 
-            ? (product.primary_image_index !== undefined && product.primary_image_index >= 0 && product.primary_image_index < images.length
-                ? product.primary_image_index 
-                : 0) // Auto-set first image as primary if invalid
-            : 0;
-        setPrimaryImageIndex(validPrimaryIndex);
-        setUserProductImageFiles([]);
-        setUserProductImagePreviews([]);
-        setUserProductImageFile(null);
-        setUserProductImagePreview(images.length > 0 ? images[0] : "");
-        setOriginalFileSize(0);
-        setConvertedWebPSize(0);
-        setConvertedWebPBlob(null);
-        setIsConvertingImage(false);
-        // Note: This function is no longer used since we navigate to a page instead
-        // Keeping for backward compatibility but it won't be called
+        // Navigate to the add product page with edit parameter
+        if (product.user_id) {
+            router.push(`/admin/manage-products/${product.user_id}/add?edit=${product.id}`);
+        } else {
+            console.error("Product missing user_id, cannot navigate to edit page");
+        }
     };
 
     // Convert image to WebP format with optimized quality and optional resizing
