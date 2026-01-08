@@ -189,49 +189,57 @@ export default function Home() {
             fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:150',message:'Facet types query result',data:{productTypesCount:productTypesResult.data?.length||0,occasionsCount:occasionsResult.data?.length||0,productTypesError:productTypesResult.error?.message,occasionsError:occasionsResult.error?.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
             // #endregion
 
-            const allFeatured: Array<{ img: string; link_url?: string }> = [];
+            const allFeatured: Array<{ img: string; link_url?: string; display_order: number }> = [];
 
-            // Add featured product types
+            // Add featured product types with their display_order
             if (productTypesResult.data && !productTypesResult.error) {
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:195',message:'Processing product types',data:{count:productTypesResult.data.length,items:productTypesResult.data.map((pt:any)=>({id:pt.id,name:pt.name,image_url:pt.image_url,is_featured:pt.is_featured}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:195',message:'Processing product types',data:{count:productTypesResult.data.length,items:productTypesResult.data.map((pt:any)=>({id:pt.id,name:pt.name,image_url:pt.image_url,is_featured:pt.is_featured,display_order:pt.display_order}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                 // #endregion
                 productTypesResult.data.forEach(pt => {
                     // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:198',message:'Adding product type to featured',data:{id:pt.id,name:pt.name,image_url:pt.image_url,hasImage:!!pt.image_url,imageUrlLength:pt.image_url?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:198',message:'Adding product type to featured',data:{id:pt.id,name:pt.name,image_url:pt.image_url,hasImage:!!pt.image_url,imageUrlLength:pt.image_url?.length||0,display_order:pt.display_order},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                     // #endregion
                     allFeatured.push({
                         img: pt.image_url || "",
-                        link_url: `/products?product_type=${pt.id}`
+                        link_url: `/products?product_type=${pt.id}`,
+                        display_order: pt.display_order ?? 0
                     });
                 });
             }
 
-            // Add featured occasions
+            // Add featured occasions with their display_order
             if (occasionsResult.data && !occasionsResult.error) {
                 // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:205',message:'Processing occasions',data:{count:occasionsResult.data.length,items:occasionsResult.data.map((oc:any)=>({id:oc.id,name:oc.name,image_url:oc.image_url,is_featured:oc.is_featured}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:205',message:'Processing occasions',data:{count:occasionsResult.data.length,items:occasionsResult.data.map((oc:any)=>({id:oc.id,name:oc.name,image_url:oc.image_url,is_featured:oc.is_featured,display_order:oc.display_order}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                 // #endregion
                 occasionsResult.data.forEach(oc => {
                     // #region agent log
-                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:208',message:'Adding occasion to featured',data:{id:oc.id,name:oc.name,image_url:oc.image_url,hasImage:!!oc.image_url,imageUrlLength:oc.image_url?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+                    fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:208',message:'Adding occasion to featured',data:{id:oc.id,name:oc.name,image_url:oc.image_url,hasImage:!!oc.image_url,imageUrlLength:oc.image_url?.length||0,display_order:oc.display_order},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
                     // #endregion
                     allFeatured.push({
                         img: oc.image_url || "",
-                        link_url: `/products?occasion=${oc.id}`
+                        link_url: `/products?occasion=${oc.id}`,
+                        display_order: oc.display_order ?? 0
                     });
                 });
             }
-
-            // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:175',message:'Setting featured categories from facets',data:{totalCount:allFeatured.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-            // #endregion
-
-            console.log('✅ Featured items from facets:', allFeatured.length);
-            console.log('📋 Featured items details:', allFeatured);
+            
+            // Sort all featured items by display_order to maintain the order set in admin panel
+            allFeatured.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+            
+            // Remove display_order from final array (not needed in component)
+            const finalFeatured = allFeatured.map(({ display_order, ...rest }) => rest);
             
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:218',message:'Before setFeaturedCategories',data:{totalCount:allFeatured.length,itemsWithImages:allFeatured.filter(c=>c.img&&c.img.trim()).length,itemsWithoutImages:allFeatured.filter(c=>!c.img||!c.img.trim()).length,allFeatured:allFeatured},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:175',message:'Setting featured categories from facets',data:{totalCount:finalFeatured.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+            // #endregion
+
+            console.log('✅ Featured items from facets:', finalFeatured.length);
+            console.log('📋 Featured items details (sorted by display_order):', finalFeatured);
+            
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:218',message:'Before setFeaturedCategories',data:{totalCount:finalFeatured.length,itemsWithImages:finalFeatured.filter(c=>c.img&&c.img.trim()).length,itemsWithoutImages:finalFeatured.filter(c=>!c.img||!c.img.trim()).length,allFeatured:finalFeatured},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
             // #endregion
             
             // Log if there are errors
@@ -248,7 +256,7 @@ export default function Home() {
                 // #endregion
             }
             
-            setFeaturedCategories(allFeatured);
+            setFeaturedCategories(finalFeatured);
             
             // #region agent log
             fetch('http://127.0.0.1:7242/ingest/2c9fd14d-ce25-467e-afb5-33c950f09df0',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'page.tsx:232',message:'After setFeaturedCategories',data:{totalCount:allFeatured.length},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});

@@ -187,6 +187,9 @@ export default function AdminPage() {
     const [isUploadingCategoryImage, setIsUploadingCategoryImage] = useState(false);
     const [draggedCategoryId, setDraggedCategoryId] = useState<string | null>(null);
     const [dragOverCategoryId, setDragOverCategoryId] = useState<string | null>(null);
+    // Featured items drag state (tracking both type and id: "product_type:123" or "occasion:456")
+    const [draggedFeaturedItem, setDraggedFeaturedItem] = useState<string | null>(null);
+    const [dragOverFeaturedItem, setDragOverFeaturedItem] = useState<string | null>(null);
     const [websiteEnabled, setWebsiteEnabled] = useState(false);
     const [isTogglingWebsite, setIsTogglingWebsite] = useState(false);
     
@@ -3634,9 +3637,12 @@ To get these values:
                                             </svg>
                         </div>
                                     </div>
-                                    <p className="text-4xl font-bold text-gray-900">{categories.length}</p>
+                                    <p className="text-4xl font-bold text-gray-900">
+                                        {productTypes.length + occasions.length + colors.length + materials.length + cities.length}
+                                    </p>
                                     <p className="text-xs text-gray-500 mt-2">
-                                        {categories.filter(c => c.is_featured).length} featured
+                                        {productTypes.filter(pt => pt.is_featured).length + 
+                                         occasions.filter(oc => oc.is_featured).length} featured
                                     </p>
                                 </div>
                                 <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200">
@@ -4364,8 +4370,8 @@ To get these values:
                                                             {facets.productTypes.length > 0 ? (
                                                                 facets.productTypes.map((pt, idx) => (
                                                                     <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                                                        {pt}
-                                                                    </span>
+                                                                                    {pt}
+                                                                                </span>
                                                                 ))
                                                             ) : (
                                                                 <span className="text-xs text-gray-400 italic">-</span>
@@ -4379,8 +4385,8 @@ To get these values:
                                                             {facets.occasions.length > 0 ? (
                                                                 facets.occasions.map((oc, idx) => (
                                                                     <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
-                                                                        {oc}
-                                                                    </span>
+                                                                                    {oc}
+                                                                                </span>
                                                                 ))
                                                             ) : (
                                                                 <span className="text-xs text-gray-400 italic">-</span>
@@ -4394,8 +4400,8 @@ To get these values:
                                                             {facets.colors.length > 0 ? (
                                                                 facets.colors.map((c, idx) => (
                                                                     <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                                                                        {c}
-                                                                    </span>
+                                                                                    {c}
+                                                                                </span>
                                                                 ))
                                                             ) : (
                                                                 <span className="text-xs text-gray-400 italic">-</span>
@@ -4409,8 +4415,8 @@ To get these values:
                                                             {facets.materials.length > 0 ? (
                                                                 facets.materials.map((m, idx) => (
                                                                     <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                                        {m}
-                                                                    </span>
+                                                                                    {m}
+                                                                                </span>
                                                                 ))
                                                             ) : (
                                                                 <span className="text-xs text-gray-400 italic">-</span>
@@ -4424,14 +4430,14 @@ To get these values:
                                                             {facets.cities.length > 0 ? (
                                                                 facets.cities.map((city, idx) => (
                                                                     <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                                        {city}
-                                                                    </span>
+                                                                                    {city}
+                                                                                </span>
                                                                 ))
                                                             ) : (
                                                                 <span className="text-xs text-gray-400 italic">-</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
+                                                                    )}
+                                                                </div>
+                                                        </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm text-gray-500">
                                                                 {(product as any).product_id || `#${product.id}`}
@@ -6295,6 +6301,216 @@ To get these values:
                             </div>
                         </div>
 
+                        {/* Top Section: All Featured Items Combined */}
+                        {(() => {
+                            // Combine all featured items from all facet types
+                            const featuredItems: Array<{ id: string; name: string; image_url: string | null; type: string; typeLabel: string; display_order: number; productCount?: number }> = [];
+                            
+                            // Add featured product types
+                            productTypes.filter(pt => pt.is_featured).forEach(pt => {
+                                featuredItems.push({
+                                    id: pt.id,
+                                    name: pt.name,
+                                    image_url: pt.image_url,
+                                    type: 'product_type',
+                                    typeLabel: 'Product Type',
+                                    display_order: pt.display_order,
+                                    productCount: facetProductCounts.get(`product_type_${pt.id}`) || 0
+                                });
+                            });
+                            
+                            // Add featured occasions
+                            occasions.filter(oc => oc.is_featured).forEach(oc => {
+                                featuredItems.push({
+                                    id: oc.id,
+                                    name: oc.name,
+                                    image_url: oc.image_url,
+                                    type: 'occasion',
+                                    typeLabel: 'Occasion',
+                                    display_order: oc.display_order,
+                                    productCount: facetProductCounts.get(`occasion_${oc.id}`) || 0
+                                });
+                            });
+                            
+                            // Sort by display_order
+                            featuredItems.sort((a, b) => a.display_order - b.display_order);
+                            
+                            return featuredItems.length > 0 ? (
+                                <div className="mb-8 border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                                <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-medium rounded">★</span>
+                                                Featured Items - Reorder Here
+                                            </h3>
+                                            <p className="text-sm text-gray-600 mt-1">Drag and drop to reorder featured items across all types. This order will be used on the home page.</p>
+                                        </div>
+                                        <span className="text-sm text-gray-500">{featuredItems.length} featured items</span>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {featuredItems.map((item, index) => {
+                                            const itemKey = `${item.type}:${item.id}`;
+                                            return (
+                                                <div
+                                                    key={itemKey}
+                                                    draggable
+                                                    onDragStart={(e) => {
+                                                        setDraggedFeaturedItem(itemKey);
+                                                        e.dataTransfer.effectAllowed = "move";
+                                                        e.dataTransfer.setData("text/html", itemKey);
+                                                    }}
+                                                    onDragOver={(e) => {
+                                                        e.preventDefault();
+                                                        e.dataTransfer.dropEffect = "move";
+                                                        if (draggedFeaturedItem && draggedFeaturedItem !== itemKey) {
+                                                            setDragOverFeaturedItem(itemKey);
+                                                        }
+                                                    }}
+                                                    onDragLeave={() => setDragOverFeaturedItem(null)}
+                                                    onDrop={async (e) => {
+                                                        e.preventDefault();
+                                                        setDragOverFeaturedItem(null);
+                                                        
+                                                        if (!draggedFeaturedItem || draggedFeaturedItem === itemKey) {
+                                                            setDraggedFeaturedItem(null);
+                                                            return;
+                                                        }
+                                                        
+                                                        const draggedIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === draggedFeaturedItem);
+                                                        const targetIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === itemKey);
+                                                        
+                                                        if (draggedIndex === -1 || targetIndex === -1) {
+                                                            setDraggedFeaturedItem(null);
+                                                            return;
+                                                        }
+                                                        
+                                                        // Reorder array
+                                                        const newItems = [...featuredItems];
+                                                        const [removed] = newItems.splice(draggedIndex, 1);
+                                                        newItems.splice(targetIndex, 0, removed);
+                                                        
+                                                        // Update display_order for all featured items globally
+                                                        try {
+                                                            const updatePromises = newItems.map(async (it, idx) => {
+                                                                const tableName = it.type === 'product_type' ? 'product_types' : it.type === 'occasion' ? 'occasions' : null;
+                                                                if (!tableName) return Promise.resolve();
+                                                                
+                                                                return supabase
+                                                                    .from(tableName)
+                                                                    .update({ 
+                                                                        display_order: idx,
+                                                                        updated_at: new Date().toISOString()
+                                                                    })
+                                                                    .eq("id", it.id);
+                                                            });
+                                                            
+                                                            await Promise.all(updatePromises);
+                                                            showPopup("Featured items reordered successfully! The order will be reflected on the home page.", "success");
+                                                            await Promise.all([loadProductTypes(), loadOccasions()]);
+                                                        } catch (error: any) {
+                                                            showPopup(error.message || "Failed to reorder featured items", "error", "Error");
+                                                            console.error("Error reordering featured items:", error);
+                                                        }
+                                                        
+                                                        setDraggedFeaturedItem(null);
+                                                    }}
+                                                    onDragEnd={() => {
+                                                        setDraggedFeaturedItem(null);
+                                                        setDragOverFeaturedItem(null);
+                                                    }}
+                                                    className={`flex items-center gap-4 p-4 rounded-lg border transition-all cursor-move ${
+                                                        draggedFeaturedItem === itemKey
+                                                            ? "opacity-50 border-gray-300 bg-white"
+                                                            : dragOverFeaturedItem === itemKey
+                                                            ? "border-yellow-400 bg-yellow-100 shadow-md"
+                                                            : "bg-white border-yellow-200 hover:shadow-md"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-3 flex-shrink-0">
+                                                        <div className="text-yellow-600 font-bold text-sm w-6">{index + 1}</div>
+                                                        <div>
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                        {item.image_url ? (
+                                                            <Image
+                                                                src={item.image_url}
+                                                                alt={item.name}
+                                                                fill
+                                                                className="object-cover"
+                                                                unoptimized
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                                No Image
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                                                            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                {item.typeLabel}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-gray-600 mb-1">
+                                                            /products?{item.type === 'product_type' ? 'product_type' : item.type === 'occasion' ? 'occasion' : item.type}={item.id}
+                                                        </p>
+                                                        {item.productCount !== undefined && (
+                                                            <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                                onClick={() => {
+                                                                    setActiveTab("products");
+                                                                    localStorage.setItem("adminActiveTab", "products");
+                                                                    const paramKey = item.type === 'product_type' ? 'product_type' : item.type === 'occasion' ? 'occasion' : '';
+                                                                    router.push(`/admin?tab=products&${paramKey}=${item.id}`);
+                                                                }}
+                                                            >
+                                                                View {item.productCount} products →
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                                        <button
+                                                            onClick={async () => {
+                                                                const handler = item.type === 'product_type' 
+                                                                    ? handleDeleteProductType 
+                                                                    : item.type === 'occasion' 
+                                                                    ? handleDeleteOccasion 
+                                                                    : null;
+                                                                
+                                                                if (!handler) return;
+                                                                
+                                                                if (confirm(`Are you sure you want to delete "${item.name}"? This will remove it from all products.`)) {
+                                                                    await handler(item.id, item.name);
+                                                                    await Promise.all([loadProductTypes(), loadOccasions()]);
+                                                                }
+                                                            }}
+                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                            title="Delete item"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="mb-8 border-2 border-gray-200 border-dashed rounded-lg p-8 bg-gray-50 text-center">
+                                    <p className="text-sm text-gray-500">No featured items yet. Pin items from the sections below to add them here.</p>
+                                </div>
+                            );
+                        })()}
+
                         {/* Vertical List Layout */}
                         <div className="space-y-8">
                             {/* Section 1: Product Types */}
@@ -6430,6 +6646,12 @@ To get these values:
                                                             className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
                                                         >
                                                             Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteProductType(pt.id, pt.name)}
+                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                        >
+                                                            Delete
                                                         </button>
                                                     </div>
         </div>
@@ -6573,6 +6795,12 @@ To get these values:
                                                         >
                                                             Edit
                                                         </button>
+                                                        <button
+                                                            onClick={() => handleDeleteOccasion(oc.id, oc.name)}
+                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                        >
+                                                            Delete
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -6673,6 +6901,12 @@ To get these values:
                                                         >
                                                             Edit
                                                         </button>
+                                                        <button
+                                                            onClick={() => handleDeleteColor(c.id, c.name)}
+                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                        >
+                                                            Delete
+                                                        </button>
                                                     </div>
                                                 </div>
                                             );
@@ -6768,6 +7002,12 @@ To get these values:
                                                             className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
                                                         >
                                                             Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteMaterial(m.id, m.name)}
+                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                        >
+                                                            Delete
                                                         </button>
                                                     </div>
                                                 </div>
@@ -6867,6 +7107,12 @@ To get these values:
                                                             className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
                                                         >
                                                             Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteCity(city.id, city.name)}
+                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                        >
+                                                            Delete
                                                         </button>
                                                     </div>
                                                 </div>
