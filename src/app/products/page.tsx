@@ -56,6 +56,7 @@ export default function ProductsPage() {
     
     const [maxPrice, setMaxPrice] = useState<number>(5000); // Dynamic max price from products
     const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent URL updates
+    const [searchQuery, setSearchQuery] = useState<string>(""); // Search query for product ID or name
 
     // Filter options data
     const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string; image_url?: string | null }>>([]);
@@ -113,6 +114,10 @@ export default function ProductsPage() {
         if (sortBy !== "newest") {
             params.set("sort", sortBy);
         }
+        // Add search query to URL if it exists
+        if (searchQuery.trim()) {
+            params.set("search", searchQuery.trim());
+        }
         const newUrl = params.toString() ? `/products?${params.toString()}` : '/products';
         const currentUrl = window.location.pathname + window.location.search;
         
@@ -120,7 +125,7 @@ export default function ProductsPage() {
         if (newUrl !== currentUrl) {
             router.replace(newUrl);
         }
-    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, maxPrice, router]);
+    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, maxPrice, router]);
 
     // Check URL params for auto-filtering (runs after filter options are loaded)
     useEffect(() => {
@@ -243,9 +248,17 @@ export default function ProductsPage() {
         if (sortParam && ['newest', 'oldest', 'price_low', 'price_high'].includes(sortParam)) {
             setSortBy(sortParam);
         }
+
+        // Read search query from URL
+        const searchParam = searchParams.get("search");
+        if (searchParam !== null) {
+            setSearchQuery(searchParam);
+        } else {
+            setSearchQuery("");
+        }
     }, [searchParams, productTypes, occasions, maxPrice]);
 
-    // Filter products when applied filters, products, or sort change
+    // Filter products when applied filters, products, sort, or search query change
     useEffect(() => {
         if (!loading && products.length >= 0) {
             applyFilters();
@@ -256,7 +269,7 @@ export default function ProductsPage() {
                 setIsInitialLoad(false); // Mark initial load complete
             }
         }
-    }, [products, appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, loading, maxPrice, isInitialLoad, updateURLParams]);
+    }, [products, appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, loading, maxPrice, isInitialLoad, updateURLParams]);
 
     const loadFilterOptions = async () => {
         try {
@@ -515,6 +528,16 @@ export default function ProductsPage() {
                 const price = parseFloat(p.price.replace(/[₹,]/g, '')) || 0;
                 return price >= appliedPriceRange[0] && price <= appliedPriceRange[1];
             });
+
+            // Filter by search query (product ID or name)
+            if (searchQuery.trim()) {
+                const query = searchQuery.trim().toLowerCase();
+                filtered = filtered.filter(p => {
+                    const productId = (p.productId || String(p.id)).toLowerCase();
+                    const productName = p.name.toLowerCase();
+                    return productId.includes(query) || productName.includes(query);
+                });
+            }
 
             // Apply sorting
             filtered = sortProducts(filtered, sortBy);

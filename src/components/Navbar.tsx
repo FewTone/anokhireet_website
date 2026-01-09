@@ -1,12 +1,27 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function Navbar() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const menuRef = useRef<HTMLDivElement>(null);
+
+    // Initialize search query from URL if on products page
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const path = window.location.pathname;
+            if (path === "/products") {
+                const query = searchParams?.get("search") || "";
+                setSearchQuery(query);
+            }
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -23,6 +38,21 @@ export default function Navbar() {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, [isMenuOpen]);
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+        } else {
+            router.push("/products");
+        }
+    };
+
+    const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            handleSearch(e);
+        }
+    };
 
     return (
         <>
@@ -164,7 +194,7 @@ export default function Navbar() {
 
                     {/* Right: Search & Profile */}
                     <div className="flex flex-1 justify-end items-center gap-4">
-                        <div className="flex max-w-[250px] h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
+                        <form onSubmit={handleSearch} className="flex max-w-[250px] h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
                             <Image
                                 src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
                                 alt="search"
@@ -175,10 +205,14 @@ export default function Navbar() {
                             />
                             <input
                                 type="search"
-                                placeholder="Search Jeans"
+                                placeholder="Search by Product ID or Name"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyPress={handleSearchKeyPress}
                                 className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent"
                             />
-                        </div>
+                            <button type="submit" className="hidden" aria-label="Search" />
+                        </form>
                         <button className="bg-transparent border-none cursor-pointer">
                             <Link href="/profile">
                                 <Image
@@ -236,7 +270,7 @@ export default function Navbar() {
                     
                     {/* Search Bar and Chat Button - Same row */}
                     <div className="flex items-center gap-2">
-                        <div className="flex flex-1 h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
+                        <form onSubmit={handleSearch} className="flex flex-1 h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
                             <Image
                                 src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
                                 alt="search"
@@ -247,10 +281,14 @@ export default function Navbar() {
                             />
                             <input
                                 type="search"
-                                placeholder="Search Jeans"
+                                placeholder="Search by Product ID or Name"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyPress={handleSearchKeyPress}
                                 className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent"
                             />
-                        </div>
+                            <button type="submit" className="hidden" aria-label="Search" />
+                        </form>
                         <Link href="/chat" className="flex-shrink-0 p-2">
                             <svg
                                 width="24"
