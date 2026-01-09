@@ -20,7 +20,7 @@ export default function AddProductPage() {
     const searchParams = useSearchParams();
     const userId = params?.userId as string;
     const editProductId = searchParams.get("edit");
-    
+
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -34,7 +34,7 @@ export default function AddProductPage() {
         message: "",
         type: "info",
     });
-    
+
     const [productFormData, setProductFormData] = useState({
         name: "",
         price: "",
@@ -50,7 +50,7 @@ export default function AddProductPage() {
     const [availableColors, setAvailableColors] = useState<Array<{ id: string; name: string }>>([]);
     const [availableMaterials, setAvailableMaterials] = useState<Array<{ id: string; name: string }>>([]);
     const [availableCities, setAvailableCities] = useState<Array<{ id: string; name: string }>>([]);
-    
+
     // Add new item states
     const [showAddProductType, setShowAddProductType] = useState(false);
     const [newProductTypeName, setNewProductTypeName] = useState("");
@@ -78,7 +78,7 @@ export default function AddProductPage() {
                     loadProductForEdit(editProductId);
                 }
             });
-            
+
             // Check if database columns exist on page load
             const checkSchema = async () => {
                 try {
@@ -86,9 +86,9 @@ export default function AddProductPage() {
                         .from("products")
                         .select("images, primary_image_index, original_price")
                         .limit(0);
-                    
+
                     if (schemaCheckError && (
-                        schemaCheckError.message?.includes('schema cache') || 
+                        schemaCheckError.message?.includes('schema cache') ||
                         schemaCheckError.message?.includes('images') ||
                         schemaCheckError.message?.includes('does not exist') ||
                         (schemaCheckError.message?.includes('column') && schemaCheckError.message?.includes('products'))
@@ -101,7 +101,7 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC;
 SELECT column_name FROM information_schema.columns 
 WHERE table_name = 'products' 
 AND column_name IN ('images', 'primary_image_index', 'original_price');`;
-                        
+
                         showPopup(
                             `⚠️ DATABASE MIGRATION REQUIRED\n\n` +
                             `The required database columns are missing.\n\n` +
@@ -124,7 +124,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     console.warn("Schema check warning:", error);
                 }
             };
-            
+
             checkSchema();
         }
     }, [userId, editProductId]);
@@ -169,7 +169,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 ? product.images
                 : (product.image ? [product.image] : []);
             setProductImages(images);
-            
+
             const validPrimaryIndex = product.primary_image_index !== undefined && product.primary_image_index >= 0 && product.primary_image_index < images.length
                 ? product.primary_image_index
                 : 0;
@@ -200,7 +200,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 materials,
                 cities,
             });
-            
+
             // Set step to 2 when editing (since we already have product data)
             setCurrentStep(2);
         } catch (error) {
@@ -260,7 +260,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 .single();
 
             if (error) throw error;
-            
+
             setAvailableProductTypes([...availableProductTypes, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
             setProductFormData({
                 ...productFormData,
@@ -297,7 +297,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 .single();
 
             if (error) throw error;
-            
+
             setAvailableOccasions([...availableOccasions, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
             setProductFormData({
                 ...productFormData,
@@ -334,7 +334,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 .single();
 
             if (error) throw error;
-            
+
             setAvailableColors([...availableColors, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
             setProductFormData({
                 ...productFormData,
@@ -371,7 +371,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 .single();
 
             if (error) throw error;
-            
+
             setAvailableMaterials([...availableMaterials, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
             setProductFormData({
                 ...productFormData,
@@ -408,7 +408,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 .single();
 
             if (error) throw error;
-            
+
             setAvailableCities([...availableCities, { id: data.id, name: data.name }].sort((a, b) => a.name.localeCompare(b.name)));
             setProductFormData({
                 ...productFormData,
@@ -445,7 +445,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 e.target.value = "";
                 return;
             }
-            
+
             const maxSizeBytes = 5 * 1024 * 1024;
             if (file.size > maxSizeBytes) {
                 showPopup(`Image "${file.name}" is too large (max 5MB)`, "error", "File Too Large");
@@ -460,7 +460,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 const converted = await convertToWebPOptimized(file);
                 const convertedSize = converted.size;
                 const convertedBlob = converted.blob;
-                
+
                 if (convertedSize < originalSize) {
                     const preview = await new Promise<string>((resolve) => {
                         const reader = new FileReader();
@@ -538,12 +538,20 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
         const bucketName = "product-images";
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(2, 15);
-        const fileName = `user-products/${userId}/${timestamp}-${randomStr}.webp`;
+
+        // Determine file extension from mime type or file name
+        let fileExt = "webp";
+        if (file.type === "image/jpeg") fileExt = "jpg";
+        else if (file.type === "image/png") fileExt = "png";
+        else if (file.type === "image/gif") fileExt = "gif";
+        else if (file.name.includes(".")) fileExt = file.name.split(".").pop() || "webp";
+
+        const fileName = `user-products/${userId}/${timestamp}-${randomStr}.${fileExt}`;
 
         const { data, error } = await supabase.storage
             .from(bucketName)
             .upload(fileName, file, {
-                contentType: "image/webp",
+                contentType: file.type,
                 upsert: false,
             });
 
@@ -562,16 +570,16 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
 
     const handleSaveProduct = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Pre-check: Verify required columns exist by attempting a simple query
         try {
             const { error: schemaCheckError } = await supabase
                 .from("products")
                 .select("images, primary_image_index, original_price")
                 .limit(0);
-            
+
             if (schemaCheckError && (
-                schemaCheckError.message?.includes('schema cache') || 
+                schemaCheckError.message?.includes('schema cache') ||
                 schemaCheckError.message?.includes('images') ||
                 schemaCheckError.message?.includes('does not exist') ||
                 schemaCheckError.message?.includes('column') && schemaCheckError.message?.includes('products')
@@ -584,7 +592,7 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS original_price NUMERIC;
 SELECT column_name FROM information_schema.columns 
 WHERE table_name = 'products' 
 AND column_name IN ('images', 'primary_image_index', 'original_price');`;
-                
+
                 showPopup(
                     `DATABASE MIGRATION REQUIRED\n\n` +
                     `The database columns are missing. Please run this SQL in Supabase:\n\n` +
@@ -604,20 +612,20 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
             // If it's not a schema error, continue (might be a different issue)
             console.warn("Schema pre-check warning:", preCheckError);
         }
-        
+
         // At least one facet must be selected (across all types)
-        const totalFacetsSelected = 
+        const totalFacetsSelected =
             productFormData.productTypes.length +
             productFormData.occasions.length +
             productFormData.colors.length +
             productFormData.materials.length +
             productFormData.cities.length;
-        
+
         if (totalFacetsSelected === 0) {
             showPopup("Please select at least one facet (product type, occasion, color, material, or city)", "warning", "Validation Error");
             return;
         }
-        
+
         // When editing, allow existing images; when creating, require new images
         if (!editingProduct && productImageFiles.length === 0) {
             showPopup("Please select at least one image file", "warning", "Validation Error");
@@ -644,7 +652,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
             }
 
             // Combine existing images with newly uploaded ones
-            const allImageUrls = editingProduct 
+            const allImageUrls = editingProduct
                 ? [...productImages, ...uploadedImageUrls]
                 : uploadedImageUrls;
 
@@ -669,23 +677,23 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
 
             // Verify admin session
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            
+
             if (sessionError || !session?.user) {
                 throw new Error("No active session. Please log in as admin first.");
             }
-            
+
             const { data: adminCheck, error: adminError } = await supabase
                 .from("admins")
                 .select("id, email, auth_user_id")
                 .eq("auth_user_id", session.user.id)
                 .maybeSingle();
-            
+
             if (adminError || !adminCheck) {
                 throw new Error("Permission denied. Only admins can manage products.");
             }
-            
+
             let productToUpdate: any;
-            
+
             if (editingProduct) {
                 // Update existing product
                 const updateData: any = {
@@ -724,11 +732,11 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     }
                     throw updateError;
                 }
-                
+
                 if (!updatedProduct) {
                     throw new Error(`Failed to update product: No product found with ID ${editingProduct.id}. The product may have been deleted.`);
                 }
-                
+
                 productToUpdate = updatedProduct;
 
                 // Delete existing facet associations
@@ -743,19 +751,19 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 // Create new product
                 const productId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
                 productData.product_id = productId;
-            
-            const insertData: any = {
-                owner_user_id: userId,
-                title: productData.name || "Untitled Product",
-                name: productData.name || "Untitled Product",
-                price: productData.price || "",
+
+                const insertData: any = {
+                    owner_user_id: userId,
+                    title: productData.name || "Untitled Product",
+                    name: productData.name || "Untitled Product",
+                    price: productData.price || "",
                     price_per_day: productData.price ? parseFloat(productData.price.replace(/[₹,]/g, '')) || null : null,
-                image: productData.image || "",
+                    image: productData.image || "",
                     images: productData.images,
                     primary_image_index: productData.primary_image_index,
                     product_id: productId,
-                is_active: true,
-            };
+                    is_active: true,
+                };
 
                 if (productFormData.originalPrice && productFormData.originalPrice.trim() !== "") {
                     const originalPriceNum = parseFloat(productFormData.originalPrice);
@@ -763,10 +771,10 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                         insertData.original_price = originalPriceNum;
                     }
                 }
-            
-            const { data: insertedProduct, error: insertError } = await supabase
-                .from("products")
-                .insert(insertData)
+
+                const { data: insertedProduct, error: insertError } = await supabase
+                    .from("products")
+                    .insert(insertData)
                     .select()
                     .single();
 
@@ -784,16 +792,16 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 }
                 productToUpdate = insertedProduct;
             }
-            
+
             // Save facet associations to junction tables
             const facetPromises: Array<Promise<{ error: any }>> = [];
-            
+
             // Product Types
             if (productFormData.productTypes.length > 0) {
                 const productTypeIds = productFormData.productTypes
                     .map(name => availableProductTypes.find(pt => pt.name === name)?.id)
                     .filter((id): id is string => id !== undefined);
-                
+
                 if (productTypeIds.length > 0) {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_product_types").insert(
@@ -805,13 +813,13 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     );
                 }
             }
-            
+
             // Occasions
             if (productFormData.occasions.length > 0) {
                 const occasionIds = productFormData.occasions
                     .map(name => availableOccasions.find(oc => oc.name === name)?.id)
                     .filter((id): id is string => id !== undefined);
-                
+
                 if (occasionIds.length > 0) {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_occasions").insert(
@@ -823,13 +831,13 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     );
                 }
             }
-            
+
             // Colors
             if (productFormData.colors.length > 0) {
                 const colorIds = productFormData.colors
                     .map(name => availableColors.find(c => c.name === name)?.id)
                     .filter((id): id is string => id !== undefined);
-                
+
                 if (colorIds.length > 0) {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_colors").insert(
@@ -841,13 +849,13 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     );
                 }
             }
-            
+
             // Materials
             if (productFormData.materials.length > 0) {
                 const materialIds = productFormData.materials
                     .map(name => availableMaterials.find(m => m.name === name)?.id)
                     .filter((id): id is string => id !== undefined);
-                
+
                 if (materialIds.length > 0) {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_materials").insert(
@@ -859,13 +867,13 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     );
                 }
             }
-            
+
             // Cities
             if (productFormData.cities.length > 0) {
                 const cityIds = productFormData.cities
                     .map(name => availableCities.find(c => c.name === name)?.id)
                     .filter((id): id is string => id !== undefined);
-                
+
                 if (cityIds.length > 0) {
                     facetPromises.push(
                         Promise.resolve(supabase.from("product_cities").insert(
@@ -877,21 +885,21 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     );
                 }
             }
-            
+
             // Execute all facet insertions
             const facetResults = await Promise.all(facetPromises);
             const facetErrors = facetResults.filter(r => r.error).map(r => r.error);
             if (facetErrors.length > 0) {
                 console.error("Some facet associations failed:", facetErrors);
             }
-            
+
             showPopup(editingProduct ? "Product updated successfully!" : "Product added successfully!", "success");
-            
+
             // Redirect back to manage products page after a short delay
             setTimeout(() => {
                 router.push(`/admin/manage-products/${userId}`);
             }, 1500);
-            
+
         } catch (error: any) {
             showPopup(error.message || "Failed to save product", "error", "Error");
             console.error("Error saving product:", error);
@@ -986,207 +994,142 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                             // Move to step 2
                             setCurrentStep(2);
                         }} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Product Name *
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={productFormData.name}
-                                onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                placeholder="Enter product name"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Rental Price *
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={productFormData.price}
-                                onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                placeholder="e.g., ₹999"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">The rental price for this outfit (required)</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Original Price of Outfit *
-                            </label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                required
-                                value={productFormData.originalPrice}
-                                onChange={(e) => setProductFormData({ ...productFormData, originalPrice: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                placeholder="e.g., 1299"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Original purchase price of the outfit (required)</p>
-                        </div>
-
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                            <label className="block text-sm font-semibold text-gray-800 mb-3">
-                                Upload Product Images *
-                            </label>
-                            <label
-                                htmlFor="product-images-input"
-                                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
-                            >
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <p className="mb-2 text-sm text-gray-500">
-                                        <span className="font-semibold">Click to upload</span> or drag and drop
-                                    </p>
-                                    <p className="text-xs text-gray-500">Multiple images supported (PNG, JPG, WEBP)</p>
-                                </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Product Name *
+                                </label>
                                 <input
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleMultipleImagesChange}
-                                    className="hidden"
-                                    id="product-images-input"
+                                    type="text"
+                                    required
+                                    value={productFormData.name}
+                                    onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    placeholder="Enter product name"
                                 />
-                            </label>
-                            {imageSizeInfo.length > 0 && (
-                                <div className="mt-3 border border-gray-200 rounded-lg bg-white">
-                                    <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-                                        <h4 className="text-xs font-semibold text-gray-700 uppercase">Size Optimization</h4>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Rental Price *
+                                </label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={productFormData.price}
+                                    onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    placeholder="e.g., ₹999"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">The rental price for this outfit (required)</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Original Price of Outfit *
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    required
+                                    value={productFormData.originalPrice}
+                                    onChange={(e) => setProductFormData({ ...productFormData, originalPrice: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    placeholder="e.g., 1299"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Original purchase price of the outfit (required)</p>
+                            </div>
+
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                <label className="block text-sm font-semibold text-gray-800 mb-3">
+                                    Upload Product Images *
+                                </label>
+                                <label
+                                    htmlFor="product-images-input"
+                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                                >
+                                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <p className="mb-2 text-sm text-gray-500">
+                                            <span className="font-semibold">Click to upload</span> or drag and drop
+                                        </p>
+                                        <p className="text-xs text-gray-500">Multiple images supported (PNG, JPG, WEBP)</p>
                                     </div>
-                                    <div className="divide-y divide-gray-100">
-                                        {imageSizeInfo.map((info, index) => {
-                                            const isOptimized = info.converted < info.original;
-                                            const reduction = isOptimized ? ((1 - info.converted / info.original) * 100).toFixed(1) : null;
-                                            return (
-                                                <div key={index} className="px-4 py-2.5">
-                                                    <div className="flex items-center justify-between gap-4">
-                                                        <p className="text-xs font-medium text-gray-900 truncate max-w-[200px]">
-                                                            {info.name}
-                                                        </p>
-                                                        <div className="flex items-center gap-3">
-                                                            <span className="text-xs text-gray-500">{formatFileSize(info.original)}</span>
-                                                            {isOptimized ? (
-                                                                <>
-                                                                    <span className="text-xs text-gray-400">→</span>
-                                                                    <span className="text-xs font-semibold text-green-600">
-                                                                        {formatFileSize(info.converted)}
-                                                                    </span>
-                                                                    <span className="text-xs text-blue-600 font-medium">-{reduction}%</span>
-                                                                </>
-                                                            ) : (
-                                                                <span className="text-xs text-gray-500 italic">(using original - optimization not beneficial)</span>
-                                                            )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleMultipleImagesChange}
+                                        className="hidden"
+                                        id="product-images-input"
+                                    />
+                                </label>
+                                {imageSizeInfo.length > 0 && (
+                                    <div className="mt-3 border border-gray-200 rounded-lg bg-white">
+                                        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                                            <h4 className="text-xs font-semibold text-gray-700 uppercase">Size Optimization</h4>
+                                        </div>
+                                        <div className="divide-y divide-gray-100">
+                                            {imageSizeInfo.map((info, index) => {
+                                                const isOptimized = info.converted < info.original;
+                                                const reduction = isOptimized ? ((1 - info.converted / info.original) * 100).toFixed(1) : null;
+                                                return (
+                                                    <div key={index} className="px-4 py-2.5">
+                                                        <div className="flex items-center justify-between gap-4">
+                                                            <p className="text-xs font-medium text-gray-900 truncate max-w-[200px]">
+                                                                {info.name}
+                                                            </p>
+                                                            <div className="flex items-center gap-3">
+                                                                <span className="text-xs text-gray-500">{formatFileSize(info.original)}</span>
+                                                                {isOptimized ? (
+                                                                    <>
+                                                                        <span className="text-xs text-gray-400">→</span>
+                                                                        <span className="text-xs font-semibold text-green-600">
+                                                                            {formatFileSize(info.converted)}
+                                                                        </span>
+                                                                        <span className="text-xs text-blue-600 font-medium">-{reduction}%</span>
+                                                                    </>
+                                                                ) : (
+                                                                    <span className="text-xs text-gray-500 italic">(using original - optimization not beneficial)</span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Display existing images when editing */}
-                        {editingProduct && productImages.length > 0 && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    Existing Product Images ({productImages.length})
-                                </label>
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                    {productImages.map((imgUrl, index) => (
-                                        <div key={`existing-${index}`} className="relative group">
-                                            <button
-                                                type="button"
-                                                onClick={() => setPrimaryImage(index)}
-                                                className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-300 hover:border-gray-400 transition-all"
-                                            >
-                                                <Image
-                                                    src={imgUrl}
-                                                    alt={`Existing image ${index + 1}`}
-                                                    fill
-                                                    className="object-cover"
-                                                    unoptimized
-                                                />
-                                                <div className="absolute top-2 right-2 z-10">
-                                                    <div className={`${primaryImageIndex === index ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md`}>
-                                                        <svg 
-                                                            className={`w-5 h-5 ${primaryImageIndex === index ? 'text-white fill-white' : 'text-gray-400'}`} 
-                                                            fill={primaryImageIndex === index ? "currentColor" : "none"} 
-                                                            stroke="currentColor" 
-                                                            viewBox="0 0 24 24"
-                                                        >
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                                <div
-                                                    role="button"
-                                                    aria-label="Remove image"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        const newImages = productImages.filter((_, i) => i !== index);
-                                                        setProductImages(newImages);
-                                                        // Adjust primary index if needed
-                                                        if (primaryImageIndex === index) {
-                                                            setPrimaryImageIndex(newImages.length > 0 ? 0 : (productImagePreviews.length > 0 ? productImages.length : 0));
-                                                        } else if (primaryImageIndex > index) {
-                                                            setPrimaryImageIndex(primaryImageIndex - 1);
-                                                        }
-                                                    }}
-                                                    className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </div>
-                                            </button>
+                                                );
+                                            })}
                                         </div>
-                                    ))}
-                                </div>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    Click an image to set it as primary (shown on home page).
-                                </p>
+                                    </div>
+                                )}
                             </div>
-                        )}
 
-                        {/* Display newly uploaded image previews */}
-                        {productImagePreviews.length > 0 && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">
-                                    New Product Images ({productImagePreviews.length})
-                                </label>
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                                    {productImagePreviews.map((preview, index) => {
-                                        const totalIndex = productImages.length + index;
-                                        return (
-                                            <div key={`preview-${index}`} className="relative group">
+                            {/* Display existing images when editing */}
+                            {editingProduct && productImages.length > 0 && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        Existing Product Images ({productImages.length})
+                                    </label>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                        {productImages.map((imgUrl, index) => (
+                                            <div key={`existing-${index}`} className="relative group">
                                                 <button
                                                     type="button"
-                                                    onClick={() => setPrimaryImage(totalIndex)}
-                                                    className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-400 transition-all"
+                                                    onClick={() => setPrimaryImage(index)}
+                                                    className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-300 hover:border-gray-400 transition-all"
                                                 >
                                                     <Image
-                                                        src={preview}
-                                                        alt={`New image ${index + 1}`}
+                                                        src={imgUrl}
+                                                        alt={`Existing image ${index + 1}`}
                                                         fill
                                                         className="object-cover"
                                                         unoptimized
                                                     />
                                                     <div className="absolute top-2 right-2 z-10">
-                                                        <div className={`${primaryImageIndex === totalIndex ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md`}>
-                                                            <svg 
-                                                                className={`w-5 h-5 ${primaryImageIndex === totalIndex ? 'text-white fill-white' : 'text-gray-400'}`} 
-                                                                fill={primaryImageIndex === totalIndex ? "currentColor" : "none"} 
-                                                                stroke="currentColor" 
+                                                        <div className={`${primaryImageIndex === index ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md`}>
+                                                            <svg
+                                                                className={`w-5 h-5 ${primaryImageIndex === index ? 'text-white fill-white' : 'text-gray-400'}`}
+                                                                fill={primaryImageIndex === index ? "currentColor" : "none"}
+                                                                stroke="currentColor"
                                                                 viewBox="0 0 24 24"
                                                             >
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -1198,7 +1141,14 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         aria-label="Remove image"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            removeImage(totalIndex);
+                                                            const newImages = productImages.filter((_, i) => i !== index);
+                                                            setProductImages(newImages);
+                                                            // Adjust primary index if needed
+                                                            if (primaryImageIndex === index) {
+                                                                setPrimaryImageIndex(newImages.length > 0 ? 0 : (productImagePreviews.length > 0 ? productImages.length : 0));
+                                                            } else if (primaryImageIndex > index) {
+                                                                setPrimaryImageIndex(primaryImageIndex - 1);
+                                                            }
                                                         }}
                                                         className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                     >
@@ -1208,31 +1158,89 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     </div>
                                                 </button>
                                             </div>
-                                        );
-                                    })}
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Click an image to set it as primary (shown on home page).
+                                    </p>
                                 </div>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    Click an image to set it as primary (shown on home page).
-                                </p>
-                            </div>
-                        )}
+                            )}
 
-                        <div className="flex gap-4 pt-4 border-t border-gray-200">
-                            <button
-                                type="button"
-                                onClick={() => router.push(`/admin/manage-products/${userId}`)}
-                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity"
-                            >
-                                Next: Select Facets
-                            </button>
-                        </div>
-                    </form>
+                            {/* Display newly uploaded image previews */}
+                            {productImagePreviews.length > 0 && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                                        New Product Images ({productImagePreviews.length})
+                                    </label>
+                                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                                        {productImagePreviews.map((preview, index) => {
+                                            const totalIndex = productImages.length + index;
+                                            return (
+                                                <div key={`preview-${index}`} className="relative group">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setPrimaryImage(totalIndex)}
+                                                        className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-400 transition-all"
+                                                    >
+                                                        <Image
+                                                            src={preview}
+                                                            alt={`New image ${index + 1}`}
+                                                            fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                        />
+                                                        <div className="absolute top-2 right-2 z-10">
+                                                            <div className={`${primaryImageIndex === totalIndex ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md`}>
+                                                                <svg
+                                                                    className={`w-5 h-5 ${primaryImageIndex === totalIndex ? 'text-white fill-white' : 'text-gray-400'}`}
+                                                                    fill={primaryImageIndex === totalIndex ? "currentColor" : "none"}
+                                                                    stroke="currentColor"
+                                                                    viewBox="0 0 24 24"
+                                                                >
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <div
+                                                            role="button"
+                                                            aria-label="Remove image"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                removeImage(totalIndex);
+                                                            }}
+                                                            className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </div>
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Click an image to set it as primary (shown on home page).
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="flex gap-4 pt-4 border-t border-gray-200">
+                                <button
+                                    type="button"
+                                    onClick={() => router.push(`/admin/manage-products/${userId}`)}
+                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity"
+                                >
+                                    Next: Select Facets
+                                </button>
+                            </div>
+                        </form>
                     ) : (
                         <form onSubmit={handleSaveProduct} className="space-y-6">
                             {/* Step 1 Summary */}
@@ -1254,7 +1262,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     <div>
                                         <p className="text-xs text-gray-500">Images</p>
                                         <p className="text-sm font-medium text-gray-900">
-                                            {productImages.length + productImagePreviews.length} image{(productImages.length + productImagePreviews.length) !== 1 ? 's' : ''} 
+                                            {productImages.length + productImagePreviews.length} image{(productImages.length + productImagePreviews.length) !== 1 ? 's' : ''}
                                             {editingProduct && productImages.length > 0 && ` (${productImages.length} existing, ${productImagePreviews.length} new)`}
                                             {!editingProduct && productImagePreviews.length > 0 && ' uploaded'}
                                         </p>
@@ -1360,11 +1368,10 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={pt.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                                                isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
                                                                     ? "bg-blue-50 border border-blue-200"
                                                                     : "hover:bg-gray-50 border border-transparent"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             <input
                                                                 type="checkbox"
@@ -1453,11 +1460,10 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={oc.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                                                isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
                                                                     ? "bg-blue-50 border border-blue-200"
                                                                     : "hover:bg-gray-50 border border-transparent"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             <input
                                                                 type="checkbox"
@@ -1546,11 +1552,10 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={c.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                                                isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
                                                                     ? "bg-blue-50 border border-blue-200"
                                                                     : "hover:bg-gray-50 border border-transparent"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             <input
                                                                 type="checkbox"
@@ -1639,11 +1644,10 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={m.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                                                isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
                                                                     ? "bg-blue-50 border border-blue-200"
                                                                     : "hover:bg-gray-50 border border-transparent"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             <input
                                                                 type="checkbox"
@@ -1732,11 +1736,10 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={city.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
-                                                                isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
                                                                     ? "bg-blue-50 border border-blue-200"
                                                                     : "hover:bg-gray-50 border border-transparent"
-                                                            }`}
+                                                                }`}
                                                         >
                                                             <input
                                                                 type="checkbox"

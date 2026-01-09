@@ -60,26 +60,20 @@ export default function ChatPage() {
 
     // Load chats when user is loaded
     useEffect(() => {
-        // For demo purposes, load demo chats
-        loadDemoChats();
-        // Uncomment below to load real chats
-        // if (currentUser) {
-        //     loadChats();
-        // }
+        if (currentUser) {
+            loadChats();
+        }
     }, [currentUser]);
 
     // Load messages when chat is selected
     useEffect(() => {
         if (selectedChat) {
             loadMessages(selectedChat.id);
-            // Only subscribe to real chats, not demo chats
-            if (!selectedChat.id.startsWith("demo-chat-")) {
-                subscribeToMessages(selectedChat.id);
-            }
+            subscribeToMessages(selectedChat.id);
         }
 
         return () => {
-            if (selectedChat && !selectedChat.id.startsWith("demo-chat-")) {
+            if (selectedChat) {
                 unsubscribeFromMessages();
             }
         };
@@ -104,108 +98,29 @@ export default function ChatPage() {
 
     const checkLoginStatus = async () => {
         try {
-            // For demo purposes, set a demo user
-            setCurrentUser({ id: "current-user", name: "You" });
-            setLoading(false);
-            return;
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                const { data: userData, error } = await supabase
+                    .from("users")
+                    .select("id, name, phone")
+                    .eq("auth_user_id", session.user.id)
+                    .single();
 
-            // Uncomment below for real authentication
-            // const { data: { session } } = await supabase.auth.getSession();
-            // if (session?.user) {
-            //     const { data: userData, error } = await supabase
-            //         .from("users")
-            //         .select("id, name, phone")
-            //         .eq("auth_user_id", session.user.id)
-            //         .single();
-
-            //     if (userData && !error) {
-            //         setCurrentUser({ id: userData.id, name: userData.name || "User" });
-            //     } else {
-            //         setCurrentUser(null);
-            //     }
-            // } else {
-            //     setCurrentUser(null);
-            // }
+                if (userData && !error) {
+                    setCurrentUser({ id: userData.id, name: userData.name || "User" });
+                } else {
+                    // Fallback if user record not found but auth exists
+                    setCurrentUser({ id: session.user.id, name: "User" });
+                }
+            } else {
+                setCurrentUser(null);
+            }
         } catch (error) {
             console.error("Error checking login status:", error);
             setCurrentUser(null);
         } finally {
             setLoading(false);
         }
-    };
-
-    const loadDemoChats = () => {
-        // Demo chat data
-        const demoChats: Chat[] = [
-            {
-                id: "demo-chat-1",
-                inquiry_id: "demo-inquiry-1",
-                created_at: new Date().toISOString(),
-                inquiry: {
-                    product: {
-                        title: "Blue Denim Jeans",
-                        name: "Blue Denim Jeans",
-                    },
-                    owner_user_id: "demo-owner-1",
-                    renter_user_id: "demo-renter-1",
-                },
-                other_user: {
-                    id: "demo-user-1",
-                    name: "Rajesh Kumar",
-                    phone: "+91 98765 43210",
-                },
-                last_message: {
-                    message: "Hi, I'm interested in renting this product. Is it available?",
-                    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-                },
-            },
-            {
-                id: "demo-chat-2",
-                inquiry_id: "demo-inquiry-2",
-                created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-                inquiry: {
-                    product: {
-                        title: "Formal White Shirt",
-                        name: "Formal White Shirt",
-                    },
-                    owner_user_id: "demo-owner-2",
-                    renter_user_id: "demo-renter-2",
-                },
-                other_user: {
-                    id: "demo-user-2",
-                    name: "Priya Sharma",
-                    phone: "+91 98765 43211",
-                },
-                last_message: {
-                    message: "Thank you! The product was perfect.",
-                    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-                },
-            },
-            {
-                id: "demo-chat-3",
-                inquiry_id: "demo-inquiry-3",
-                created_at: new Date(Date.now() - 2 * 86400000).toISOString(), // 2 days ago
-                inquiry: {
-                    product: {
-                        title: "Leather Jacket",
-                        name: "Leather Jacket",
-                    },
-                    owner_user_id: "demo-owner-3",
-                    renter_user_id: "demo-renter-3",
-                },
-                other_user: {
-                    id: "demo-user-3",
-                    name: "Amit Patel",
-                    phone: "+91 98765 43212",
-                },
-                last_message: {
-                    message: "When can I pick it up?",
-                    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
-                },
-            },
-        ];
-
-        setChats(demoChats);
     };
 
     const loadChats = async () => {
@@ -305,12 +220,6 @@ export default function ChatPage() {
     };
 
     const loadMessages = async (chatId: string) => {
-        // Check if it's a demo chat
-        if (chatId.startsWith("demo-chat-")) {
-            loadDemoMessages(chatId);
-            return;
-        }
-
         try {
             const { data: messagesData, error } = await supabase
                 .from("messages")
@@ -347,128 +256,6 @@ export default function ChatPage() {
         }
     };
 
-    const loadDemoMessages = (chatId: string) => {
-        const now = new Date();
-        const demoMessages: Message[] = [];
-
-        if (chatId === "demo-chat-1") {
-            demoMessages.push(
-                {
-                    id: "demo-msg-1",
-                    chat_id: chatId,
-                    sender_user_id: "demo-user-1",
-                    message: "Hi, I'm interested in renting this product. Is it available?",
-                    created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "Rajesh Kumar" },
-                },
-                {
-                    id: "demo-msg-2",
-                    chat_id: chatId,
-                    sender_user_id: "current-user",
-                    message: "Yes, it's available! When would you like to rent it?",
-                    created_at: new Date(now.getTime() - 1.5 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "You" },
-                },
-                {
-                    id: "demo-msg-3",
-                    chat_id: chatId,
-                    sender_user_id: "demo-user-1",
-                    message: "I need it for this weekend. What's the rental price?",
-                    created_at: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "Rajesh Kumar" },
-                },
-                {
-                    id: "demo-msg-4",
-                    chat_id: chatId,
-                    sender_user_id: "current-user",
-                    message: "The rental price is ₹500 per day. Does that work for you?",
-                    created_at: new Date(now.getTime() - 45 * 60 * 1000).toISOString(),
-                    sender: { name: "You" },
-                },
-                {
-                    id: "demo-msg-5",
-                    chat_id: chatId,
-                    sender_user_id: "demo-user-1",
-                    message: "Perfect! I'll take it for 2 days. Can I pick it up tomorrow?",
-                    created_at: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-                    sender: { name: "Rajesh Kumar" },
-                }
-            );
-        } else if (chatId === "demo-chat-2") {
-            demoMessages.push(
-                {
-                    id: "demo-msg-6",
-                    chat_id: chatId,
-                    sender_user_id: "demo-user-2",
-                    message: "Hello! I saw your product listing. Is it still available?",
-                    created_at: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "Priya Sharma" },
-                },
-                {
-                    id: "demo-msg-7",
-                    chat_id: chatId,
-                    sender_user_id: "current-user",
-                    message: "Yes, it's available. When do you need it?",
-                    created_at: new Date(now.getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "You" },
-                },
-                {
-                    id: "demo-msg-8",
-                    chat_id: chatId,
-                    sender_user_id: "demo-user-2",
-                    message: "I need it for a wedding next week. Can you confirm?",
-                    created_at: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "Priya Sharma" },
-                },
-                {
-                    id: "demo-msg-9",
-                    chat_id: chatId,
-                    sender_user_id: "current-user",
-                    message: "Sure! I'll reserve it for you. Thank you!",
-                    created_at: new Date(now.getTime() - 4.5 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "You" },
-                },
-                {
-                    id: "demo-msg-10",
-                    chat_id: chatId,
-                    sender_user_id: "demo-user-2",
-                    message: "Thank you! The product was perfect.",
-                    created_at: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "Priya Sharma" },
-                }
-            );
-        } else if (chatId === "demo-chat-3") {
-            demoMessages.push(
-                {
-                    id: "demo-msg-11",
-                    chat_id: chatId,
-                    sender_user_id: "demo-user-3",
-                    message: "Hi, I'm interested in the leather jacket.",
-                    created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "Amit Patel" },
-                },
-                {
-                    id: "demo-msg-12",
-                    chat_id: chatId,
-                    sender_user_id: "current-user",
-                    message: "Great! It's available. What size are you looking for?",
-                    created_at: new Date(now.getTime() - 1.5 * 60 * 60 * 1000).toISOString(),
-                    sender: { name: "You" },
-                },
-                {
-                    id: "demo-msg-13",
-                    chat_id: chatId,
-                    sender_user_id: "demo-user-3",
-                    message: "I need size Large. When can I pick it up?",
-                    created_at: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-                    sender: { name: "Amit Patel" },
-                }
-            );
-        }
-
-        setMessages(demoMessages);
-    };
-
     const subscribeToMessages = (chatId: string) => {
         const channel = supabase
             .channel(`messages:${chatId}`)
@@ -483,13 +270,26 @@ export default function ChatPage() {
                 async (payload) => {
                     if (payload.eventType === "INSERT") {
                         const newMessage = payload.new as Message;
-                        
+
                         // Check if message already exists
+                        // Optimistically add message with unknown sender (will update later)
+                        // Or just wait for the fetch?
+                        // Let's just remove the no-op and let the async fetch handle it, OR add a fallback immediately ?
+                        // Better: Check if sender is me, if so add immediately with my details.
+                        // Actually, let's just delete the no-op block. The catch block handles the fallback.
+                        // But wait! If we delete lines 275-280, the code proceeds to fetch. 
+                        // If fetch hangs, user waits.
+                        // Best UX: Add immediately. 
+
                         setMessages((prev) => {
-                            if (prev.some((m) => m.id === newMessage.id)) {
-                                return prev;
-                            }
-                            return prev;
+                            if (prev.some((m) => m.id === newMessage.id)) return prev;
+
+                            // If sender is me, I know who I am
+                            const senderName = newMessage.sender_user_id === currentUser?.id
+                                ? currentUser?.name
+                                : "Loading...";
+
+                            return [...prev, { ...newMessage, sender: { name: senderName || "Unknown" } }];
                         });
 
                         // Fetch sender information for the new message
@@ -506,19 +306,22 @@ export default function ChatPage() {
                             };
 
                             setMessages((prev) => {
+                                // If exists, update it with sender info
                                 if (prev.some((m) => m.id === newMessage.id)) {
-                                    return prev;
+                                    return prev.map(m => m.id === newMessage.id ? messageWithSender : m);
                                 }
                                 return [...prev, messageWithSender];
                             });
                         } catch (error) {
                             console.error("Error fetching sender info:", error);
                             // Add message without sender info if fetch fails
+                            // Update or add with Unknown if fetch fails
                             setMessages((prev) => {
+                                const fallbackMessage = { ...newMessage, sender: { name: "Unknown" } };
                                 if (prev.some((m) => m.id === newMessage.id)) {
-                                    return prev;
+                                    return prev.map(m => m.id === newMessage.id ? fallbackMessage : m);
                                 }
-                                return [...prev, { ...newMessage, sender: { name: "Unknown" } }];
+                                return [...prev, fallbackMessage];
                             });
                         }
                     }
@@ -541,37 +344,6 @@ export default function ChatPage() {
             return;
         }
 
-        // Handle demo chats
-        if (selectedChat.id.startsWith("demo-chat-")) {
-            const newMessage: Message = {
-                id: `demo-msg-${Date.now()}`,
-                chat_id: selectedChat.id,
-                sender_user_id: currentUser.id,
-                message: messageInput.trim(),
-                created_at: new Date().toISOString(),
-                sender: { name: currentUser.name },
-            };
-
-            setMessages((prev) => [...prev, newMessage]);
-            setMessageInput("");
-
-            // Update last message in chat list
-            setChats((prev) =>
-                prev.map((chat) =>
-                    chat.id === selectedChat.id
-                        ? {
-                              ...chat,
-                              last_message: {
-                                  message: messageInput.trim(),
-                                  created_at: new Date().toISOString(),
-                              },
-                          }
-                        : chat
-                )
-            );
-            return;
-        }
-
         setSending(true);
 
         try {
@@ -590,6 +362,16 @@ export default function ChatPage() {
             if (error) throw error;
 
             setMessageInput("");
+
+            // Manually add message to UI immediately for better responsiveness
+            if (data) {
+                const newMessage = {
+                    ...data,
+                    sender: { name: currentUser.name || "Me" }
+                };
+                setMessages((prev) => [...prev, newMessage]);
+            }
+
             // Reload chats to update last message
             loadChats();
         } catch (error) {
@@ -609,6 +391,65 @@ export default function ChatPage() {
             e.preventDefault();
             sendMessage();
         }
+    };
+
+    const renderMessageContent = (msg: Message) => {
+        let messageContent = msg.message;
+        let isInquiryCard = false;
+        let cardData = null;
+
+        try {
+            if (msg.message.trim().startsWith('{') && msg.message.trim().endsWith('}')) {
+                const parsed = JSON.parse(msg.message);
+                if (parsed.type === 'inquiry_card') {
+                    isInquiryCard = true;
+                    cardData = parsed;
+                    messageContent = parsed.text;
+                }
+            }
+        } catch (e) {
+            // Not JSON
+        }
+
+        if (isInquiryCard && cardData) {
+            return (
+                <div className="mb-1 w-full">
+                    <div className="bg-gray-50 rounded p-2 mb-2 flex gap-3 border border-gray-200 overflow-hidden w-full max-w-[300px]">
+                        {cardData.product.image && (
+                            <div className="w-16 h-20 relative flex-shrink-0 bg-gray-200 rounded overflow-hidden">
+                                { /* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={cardData.product.image}
+                                    alt={cardData.product.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        )}
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <h4 className="font-semibold text-sm truncate text-gray-900 leading-tight">{cardData.product.name}</h4>
+                            <p className="text-xs text-gray-500 mt-1">
+                                {cardData.dates.start} - {cardData.dates.end}
+                            </p>
+
+                            {/* Product ID Display */}
+                            <p className="text-[10px] text-gray-400 mt-0.5" title="Product ID">
+                                ID: {cardData.product.productId}
+                            </p>
+
+                            {cardData.product.price && (
+                                <p className="text-xs font-medium mt-1 text-gray-900">Price: {cardData.product.price}</p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
+                {messageContent}
+            </p>
+        );
     };
 
     const formatTime = (dateString: string) => {
@@ -690,11 +531,10 @@ export default function ChatPage() {
                                                 <div
                                                     key={chat.id}
                                                     onClick={() => setSelectedChat(chat)}
-                                                    className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${
-                                                        isSelected
-                                                            ? "bg-[#e9edef]"
-                                                            : "bg-white hover:bg-gray-50"
-                                                    }`}
+                                                    className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${isSelected
+                                                        ? "bg-[#e9edef]"
+                                                        : "bg-white hover:bg-gray-50"
+                                                        }`}
                                                 >
                                                     <div className="flex items-start gap-3">
                                                         {/* Avatar */}
@@ -722,7 +562,20 @@ export default function ChatPage() {
                                                             </p>
                                                             {chat.last_message && (
                                                                 <p className="text-sm text-gray-600 truncate">
-                                                                    {chat.last_message.message}
+                                                                    {(() => {
+                                                                        const msg = chat.last_message.message.trim();
+                                                                        if (msg.startsWith('{') && msg.endsWith('}')) {
+                                                                            try {
+                                                                                const parsed = JSON.parse(msg);
+                                                                                if (parsed.type === 'inquiry_card') {
+                                                                                    return `Inquiry: ${parsed.product.name}`;
+                                                                                }
+                                                                            } catch (e) {
+                                                                                // ignore
+                                                                            }
+                                                                        }
+                                                                        return msg;
+                                                                    })()}
                                                                 </p>
                                                             )}
                                                         </div>
@@ -772,9 +625,9 @@ export default function ChatPage() {
                                         ) : (
                                             <>
                                                 {messages.map((message, index) => {
-                                                    const isSent = message.sender_user_id === currentUser.id;
+                                                    const isSent = message.sender_user_id === currentUser?.id;
                                                     const showAvatar = index === 0 || messages[index - 1].sender_user_id !== message.sender_user_id;
-                                                    const showTime = index === messages.length - 1 || 
+                                                    const showTime = index === messages.length - 1 ||
                                                         new Date(message.created_at).getTime() - new Date(messages[index + 1].created_at).getTime() > 300000; // 5 minutes
 
                                                     return (
@@ -790,19 +643,16 @@ export default function ChatPage() {
                                                                 )}
 
                                                                 {/* Message Bubble */}
-                                                                <div className={`rounded-lg px-3 py-2 ${
-                                                                    isSent
-                                                                        ? "bg-[#dcf8c6] rounded-tr-none"
-                                                                        : "bg-white rounded-tl-none"
-                                                                }`}>
+                                                                <div className={`rounded-lg px-3 py-2 ${isSent
+                                                                    ? "bg-[#dcf8c6] rounded-tr-none"
+                                                                    : "bg-white rounded-tl-none"
+                                                                    }`}>
                                                                     {!isSent && showAvatar && (
                                                                         <p className="text-xs font-semibold text-[#128c7e] mb-1">
                                                                             {message.sender?.name || "Unknown"}
                                                                         </p>
                                                                     )}
-                                                                    <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
-                                                                        {message.message}
-                                                                    </p>
+                                                                    {renderMessageContent(message)}
                                                                     {showTime && (
                                                                         <p className={`text-xs mt-1 ${isSent ? "text-gray-500" : "text-gray-400"}`}>
                                                                             {formatTime(message.created_at)}
@@ -929,9 +779,9 @@ export default function ChatPage() {
                                     ) : (
                                         <>
                                             {messages.map((message, index) => {
-                                                const isSent = message.sender_user_id === currentUser.id;
+                                                const isSent = message.sender_user_id === currentUser?.id;
                                                 const showAvatar = index === 0 || messages[index - 1].sender_user_id !== message.sender_user_id;
-                                                const showTime = index === messages.length - 1 || 
+                                                const showTime = index === messages.length - 1 ||
                                                     new Date(message.created_at).getTime() - new Date(messages[index + 1].created_at).getTime() > 300000;
 
                                                 return (
@@ -945,11 +795,10 @@ export default function ChatPage() {
                                                                 </div>
                                                             )}
 
-                                                            <div className={`rounded-lg px-3 py-2 ${
-                                                                isSent
-                                                                    ? "bg-[#dcf8c6] rounded-tr-none"
-                                                                    : "bg-white rounded-tl-none"
-                                                            }`}>
+                                                            <div className={`rounded-lg px-3 py-2 ${isSent
+                                                                ? "bg-[#dcf8c6] rounded-tr-none"
+                                                                : "bg-white rounded-tl-none"
+                                                                }`}>
                                                                 {!isSent && showAvatar && (
                                                                     <p className="text-xs font-semibold text-[#128c7e] mb-1">
                                                                         {message.sender?.name || "Unknown"}

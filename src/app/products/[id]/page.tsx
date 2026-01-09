@@ -29,7 +29,7 @@ export default function ProductDetailPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const productId = params?.id as string;
-    
+
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState<string>("");
@@ -70,7 +70,7 @@ export default function ProductDetailPage() {
                     .select("id, name")
                     .eq("auth_user_id", session.user.id)
                     .maybeSingle();
-                
+
                 if (userData) {
                     setIsLoggedIn(true);
                     setCurrentUser(userData);
@@ -127,7 +127,7 @@ export default function ProductDetailPage() {
                 } else if (p.image) {
                     productImages = [p.image];
                 }
-                
+
                 productData = {
                     id: typeof p.id === 'string' ? p.id : 0,
                     productId: p.product_id,
@@ -155,7 +155,7 @@ export default function ProductDetailPage() {
                     } else if (p.image) {
                         productImages = [p.image];
                     }
-                    
+
                     productData = {
                         id: typeof p.id === 'string' ? p.id : 0,
                         productId: p.product_id || p.id,
@@ -230,7 +230,7 @@ export default function ProductDetailPage() {
                 const imagesToUse = productImages.length > 0 ? productImages : (productData.image ? [productData.image] : []);
                 setProductImages(imagesToUse);
                 setSelectedImage(imagesToUse.length > 0 ? imagesToUse[0] : productData.image);
-                
+
                 // Track view after product is loaded
                 const finalProductId = productData.productId || productId;
                 trackProductView(finalProductId);
@@ -308,26 +308,51 @@ export default function ProductDetailPage() {
             if (chatError) throw chatError;
 
             // Create initial message in chat automatically
-            const startDateFormatted = new Date(inquiryForm.start_date).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
+            const startDateFormatted = new Date(inquiryForm.start_date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
             });
-            const endDateFormatted = new Date(inquiryForm.end_date).toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
+            const endDateFormatted = new Date(inquiryForm.end_date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
             });
-            
-            const initialMessage = `Hi! I'm interested in renting "${product.name}" from ${startDateFormatted} to ${endDateFormatted}. Please let me know if it's available.`;
-            
+
+            // Create a rich message object for the card
+            const cardMessage = {
+                type: "inquiry_card",
+                product: {
+                    id: product.db_id,
+                    productId: product.productId || "N/A", // Add human readable ID
+                    name: product.name,
+                    image: product.image,
+                    price: product.price
+                },
+                dates: {
+                    start: startDateFormatted,
+                    end: endDateFormatted
+                }
+            };
+
+            // The text message
+            const textMessage = `Hi! I'm interested in renting "${product.name}" from ${startDateFormatted} to ${endDateFormatted}. Please let me know if it's available.`;
+
+            // Insert both messages
             const { error: messageError } = await supabase
                 .from("messages")
-                .insert([{
-                    chat_id: chatData.id,
-                    sender_user_id: currentUser.id,
-                    message: initialMessage
-                }]);
+                .insert([
+                    {
+                        chat_id: chatData.id,
+                        sender_user_id: currentUser.id,
+                        message: JSON.stringify(cardMessage)
+                    },
+                    {
+                        chat_id: chatData.id,
+                        sender_user_id: currentUser.id,
+                        message: textMessage
+                    }
+                ]);
 
             if (messageError) {
                 console.error("Error creating initial message:", messageError);
@@ -398,11 +423,10 @@ export default function ProductDetailPage() {
                                         <button
                                             key={index}
                                             onClick={() => setSelectedImage(img)}
-                                            className={`relative w-full aspect-[4/5] border-2 transition-all overflow-hidden bg-gray-50 ${
-                                                selectedImage === img
-                                                    ? "border-black"
-                                                    : "border-gray-300 hover:border-gray-500"
-                                            }`}
+                                            className={`relative w-full aspect-[4/5] border-2 transition-all overflow-hidden bg-gray-50 ${selectedImage === img
+                                                ? "border-black"
+                                                : "border-gray-300 hover:border-gray-500"
+                                                }`}
                                         >
                                             <Image
                                                 src={img}
@@ -451,7 +475,7 @@ export default function ProductDetailPage() {
                                 <div className="bg-white space-y-6">
                                     <div>
                                         <h2 className="text-2xl font-bold mb-4">{product.name}</h2>
-                                        
+
                                         {/* Pricing Information */}
                                         <div className="mb-6 space-y-2">
                                             <div className="flex items-baseline gap-2">
