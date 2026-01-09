@@ -179,8 +179,17 @@ export default function Profile() {
 
             // Case 1: User found in users table (admin-created or self-registered)
             if (existingUser) {
-                // Check if admin
-                if (existingUser.auth_user_id) {
+                // Check if this user is an admin (check admins table, not just auth_user_id)
+                // Admin-created users will have auth_user_id = null initially, but after first login they'll have auth_user_id
+                // We need to check the admins table to see if they're actually an admin
+                const userIdToCheck = existingUser.auth_user_id || existingUser.id;
+                const { data: adminCheck } = await supabase
+                    .from("admins")
+                    .select("id")
+                    .eq("auth_user_id", userIdToCheck)
+                    .maybeSingle();
+
+                if (adminCheck) {
                     setError("This is an admin account. Please use the admin panel to login.");
                     setLoading(false);
                     return;

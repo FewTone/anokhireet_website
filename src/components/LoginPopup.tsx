@@ -64,28 +64,30 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
             }
 
             if (existingUser) {
-                // User exists - check if auth_user_id exists
-                if (existingUser.auth_user_id) {
-                    // User already has auth_user_id - generate OTP for login
-                    setPendingUserData({
-                        id: existingUser.id,
-                        name: existingUser.name,
-                        phone: existingUser.phone,
-                        email: existingUser.email,
-                        auth_user_id: existingUser.auth_user_id
-                    });
-                    setIsNewUser(false);
-                } else {
-                    // User exists but no auth_user_id - still need OTP verification
-                    setPendingUserData({
-                        id: existingUser.id,
-                        name: existingUser.name,
-                        phone: existingUser.phone,
-                        email: existingUser.email,
-                        auth_user_id: null
-                    });
-                    setIsNewUser(false);
+                // Check if this user is an admin (check admins table)
+                const userIdToCheck = existingUser.auth_user_id || existingUser.id;
+                const { data: adminCheck } = await supabase
+                    .from("admins")
+                    .select("id")
+                    .eq("auth_user_id", userIdToCheck)
+                    .maybeSingle();
+
+                if (adminCheck) {
+                    setError("This is an admin account. Please use the admin panel to login.");
+                    setLoading(false);
+                    return;
                 }
+
+                // User exists - store user data for OTP verification
+                // Whether they have auth_user_id or not, they need OTP verification
+                setPendingUserData({
+                    id: existingUser.id,
+                    name: existingUser.name,
+                    phone: existingUser.phone,
+                    email: existingUser.email,
+                    auth_user_id: existingUser.auth_user_id
+                });
+                setIsNewUser(false);
             } else {
                 // New user
                 setIsNewUser(true);

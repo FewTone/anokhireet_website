@@ -60,20 +60,26 @@ export default function ChatPage() {
 
     // Load chats when user is loaded
     useEffect(() => {
-        if (currentUser) {
-            loadChats();
-        }
+        // For demo purposes, load demo chats
+        loadDemoChats();
+        // Uncomment below to load real chats
+        // if (currentUser) {
+        //     loadChats();
+        // }
     }, [currentUser]);
 
     // Load messages when chat is selected
     useEffect(() => {
         if (selectedChat) {
             loadMessages(selectedChat.id);
-            subscribeToMessages(selectedChat.id);
+            // Only subscribe to real chats, not demo chats
+            if (!selectedChat.id.startsWith("demo-chat-")) {
+                subscribeToMessages(selectedChat.id);
+            }
         }
 
         return () => {
-            if (selectedChat) {
+            if (selectedChat && !selectedChat.id.startsWith("demo-chat-")) {
                 unsubscribeFromMessages();
             }
         };
@@ -86,28 +92,108 @@ export default function ChatPage() {
 
     const checkLoginStatus = async () => {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                const { data: userData, error } = await supabase
-                    .from("users")
-                    .select("id, name, phone")
-                    .eq("auth_user_id", session.user.id)
-                    .single();
+            // For demo purposes, set a demo user
+            setCurrentUser({ id: "current-user", name: "You" });
+            setLoading(false);
+            return;
 
-                if (userData && !error) {
-                    setCurrentUser({ id: userData.id, name: userData.name || "User" });
-                } else {
-                    setCurrentUser(null);
-                }
-            } else {
-                setCurrentUser(null);
-            }
+            // Uncomment below for real authentication
+            // const { data: { session } } = await supabase.auth.getSession();
+            // if (session?.user) {
+            //     const { data: userData, error } = await supabase
+            //         .from("users")
+            //         .select("id, name, phone")
+            //         .eq("auth_user_id", session.user.id)
+            //         .single();
+
+            //     if (userData && !error) {
+            //         setCurrentUser({ id: userData.id, name: userData.name || "User" });
+            //     } else {
+            //         setCurrentUser(null);
+            //     }
+            // } else {
+            //     setCurrentUser(null);
+            // }
         } catch (error) {
             console.error("Error checking login status:", error);
             setCurrentUser(null);
         } finally {
             setLoading(false);
         }
+    };
+
+    const loadDemoChats = () => {
+        // Demo chat data
+        const demoChats: Chat[] = [
+            {
+                id: "demo-chat-1",
+                inquiry_id: "demo-inquiry-1",
+                created_at: new Date().toISOString(),
+                inquiry: {
+                    product: {
+                        title: "Blue Denim Jeans",
+                        name: "Blue Denim Jeans",
+                    },
+                    owner_user_id: "demo-owner-1",
+                    renter_user_id: "demo-renter-1",
+                },
+                other_user: {
+                    id: "demo-user-1",
+                    name: "Rajesh Kumar",
+                    phone: "+91 98765 43210",
+                },
+                last_message: {
+                    message: "Hi, I'm interested in renting this product. Is it available?",
+                    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+                },
+            },
+            {
+                id: "demo-chat-2",
+                inquiry_id: "demo-inquiry-2",
+                created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+                inquiry: {
+                    product: {
+                        title: "Formal White Shirt",
+                        name: "Formal White Shirt",
+                    },
+                    owner_user_id: "demo-owner-2",
+                    renter_user_id: "demo-renter-2",
+                },
+                other_user: {
+                    id: "demo-user-2",
+                    name: "Priya Sharma",
+                    phone: "+91 98765 43211",
+                },
+                last_message: {
+                    message: "Thank you! The product was perfect.",
+                    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+                },
+            },
+            {
+                id: "demo-chat-3",
+                inquiry_id: "demo-inquiry-3",
+                created_at: new Date(Date.now() - 2 * 86400000).toISOString(), // 2 days ago
+                inquiry: {
+                    product: {
+                        title: "Leather Jacket",
+                        name: "Leather Jacket",
+                    },
+                    owner_user_id: "demo-owner-3",
+                    renter_user_id: "demo-renter-3",
+                },
+                other_user: {
+                    id: "demo-user-3",
+                    name: "Amit Patel",
+                    phone: "+91 98765 43212",
+                },
+                last_message: {
+                    message: "When can I pick it up?",
+                    created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 minutes ago
+                },
+            },
+        ];
+
+        setChats(demoChats);
     };
 
     const loadChats = async () => {
@@ -207,6 +293,12 @@ export default function ChatPage() {
     };
 
     const loadMessages = async (chatId: string) => {
+        // Check if it's a demo chat
+        if (chatId.startsWith("demo-chat-")) {
+            loadDemoMessages(chatId);
+            return;
+        }
+
         try {
             const { data: messagesData, error } = await supabase
                 .from("messages")
@@ -241,6 +333,128 @@ export default function ChatPage() {
             console.error("Error loading messages:", error);
             setMessages([]);
         }
+    };
+
+    const loadDemoMessages = (chatId: string) => {
+        const now = new Date();
+        const demoMessages: Message[] = [];
+
+        if (chatId === "demo-chat-1") {
+            demoMessages.push(
+                {
+                    id: "demo-msg-1",
+                    chat_id: chatId,
+                    sender_user_id: "demo-user-1",
+                    message: "Hi, I'm interested in renting this product. Is it available?",
+                    created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "Rajesh Kumar" },
+                },
+                {
+                    id: "demo-msg-2",
+                    chat_id: chatId,
+                    sender_user_id: "current-user",
+                    message: "Yes, it's available! When would you like to rent it?",
+                    created_at: new Date(now.getTime() - 1.5 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "You" },
+                },
+                {
+                    id: "demo-msg-3",
+                    chat_id: chatId,
+                    sender_user_id: "demo-user-1",
+                    message: "I need it for this weekend. What's the rental price?",
+                    created_at: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "Rajesh Kumar" },
+                },
+                {
+                    id: "demo-msg-4",
+                    chat_id: chatId,
+                    sender_user_id: "current-user",
+                    message: "The rental price is ₹500 per day. Does that work for you?",
+                    created_at: new Date(now.getTime() - 45 * 60 * 1000).toISOString(),
+                    sender: { name: "You" },
+                },
+                {
+                    id: "demo-msg-5",
+                    chat_id: chatId,
+                    sender_user_id: "demo-user-1",
+                    message: "Perfect! I'll take it for 2 days. Can I pick it up tomorrow?",
+                    created_at: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
+                    sender: { name: "Rajesh Kumar" },
+                }
+            );
+        } else if (chatId === "demo-chat-2") {
+            demoMessages.push(
+                {
+                    id: "demo-msg-6",
+                    chat_id: chatId,
+                    sender_user_id: "demo-user-2",
+                    message: "Hello! I saw your product listing. Is it still available?",
+                    created_at: new Date(now.getTime() - 6 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "Priya Sharma" },
+                },
+                {
+                    id: "demo-msg-7",
+                    chat_id: chatId,
+                    sender_user_id: "current-user",
+                    message: "Yes, it's available. When do you need it?",
+                    created_at: new Date(now.getTime() - 5.5 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "You" },
+                },
+                {
+                    id: "demo-msg-8",
+                    chat_id: chatId,
+                    sender_user_id: "demo-user-2",
+                    message: "I need it for a wedding next week. Can you confirm?",
+                    created_at: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "Priya Sharma" },
+                },
+                {
+                    id: "demo-msg-9",
+                    chat_id: chatId,
+                    sender_user_id: "current-user",
+                    message: "Sure! I'll reserve it for you. Thank you!",
+                    created_at: new Date(now.getTime() - 4.5 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "You" },
+                },
+                {
+                    id: "demo-msg-10",
+                    chat_id: chatId,
+                    sender_user_id: "demo-user-2",
+                    message: "Thank you! The product was perfect.",
+                    created_at: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "Priya Sharma" },
+                }
+            );
+        } else if (chatId === "demo-chat-3") {
+            demoMessages.push(
+                {
+                    id: "demo-msg-11",
+                    chat_id: chatId,
+                    sender_user_id: "demo-user-3",
+                    message: "Hi, I'm interested in the leather jacket.",
+                    created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "Amit Patel" },
+                },
+                {
+                    id: "demo-msg-12",
+                    chat_id: chatId,
+                    sender_user_id: "current-user",
+                    message: "Great! It's available. What size are you looking for?",
+                    created_at: new Date(now.getTime() - 1.5 * 60 * 60 * 1000).toISOString(),
+                    sender: { name: "You" },
+                },
+                {
+                    id: "demo-msg-13",
+                    chat_id: chatId,
+                    sender_user_id: "demo-user-3",
+                    message: "I need size Large. When can I pick it up?",
+                    created_at: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
+                    sender: { name: "Amit Patel" },
+                }
+            );
+        }
+
+        setMessages(demoMessages);
     };
 
     const subscribeToMessages = (chatId: string) => {
@@ -312,6 +526,37 @@ export default function ChatPage() {
             if (!currentUser) {
                 alert("Please log in to send messages");
             }
+            return;
+        }
+
+        // Handle demo chats
+        if (selectedChat.id.startsWith("demo-chat-")) {
+            const newMessage: Message = {
+                id: `demo-msg-${Date.now()}`,
+                chat_id: selectedChat.id,
+                sender_user_id: currentUser.id,
+                message: messageInput.trim(),
+                created_at: new Date().toISOString(),
+                sender: { name: currentUser.name },
+            };
+
+            setMessages((prev) => [...prev, newMessage]);
+            setMessageInput("");
+
+            // Update last message in chat list
+            setChats((prev) =>
+                prev.map((chat) =>
+                    chat.id === selectedChat.id
+                        ? {
+                              ...chat,
+                              last_message: {
+                                  message: messageInput.trim(),
+                                  created_at: new Date().toISOString(),
+                              },
+                          }
+                        : chat
+                )
+            );
             return;
         }
 
@@ -389,14 +634,9 @@ export default function ChatPage() {
             <Navbar />
             <main className="fixed inset-0 top-[95px] md:top-[70px] bg-gray-100">
                 <div className="h-full w-full">
-                    <div className="flex h-full bg-white overflow-hidden">
+                    <div className="flex h-full bg-white overflow-hidden relative">
                         {/* Chat List Sidebar */}
-                        <div className="w-full md:w-1/3 border-r border-gray-200 flex flex-col">
-                            {/* Header */}
-                            <div className="bg-[#f0f2f5] px-4 py-3 border-b border-gray-200">
-                                <h2 className="text-lg font-semibold text-gray-800">Chats</h2>
-                            </div>
-
+                        <div className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
                             {/* Chat List */}
                             <div className="flex-1 overflow-y-auto bg-white">
                                 {chats.length === 0 ? (
@@ -419,8 +659,9 @@ export default function ChatPage() {
                                     </div>
                                 ) : (
                                     <div>
-                                        {chats.map((chat) => {
+                                        {chats.map((chat, index) => {
                                             const isSelected = selectedChat?.id === chat.id;
+                                            const isFirstItem = index === 0;
                                             const productName =
                                                 chat.inquiry?.product?.title ||
                                                 chat.inquiry?.product?.name ||
@@ -446,12 +687,13 @@ export default function ChatPage() {
 
                                                         {/* Chat Info */}
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center justify-between mb-1">
-                                                                <h3 className="text-sm font-semibold text-gray-800 truncate">
+                                                            {/* Mobile: Stack name and timestamp vertically, Desktop: Side by side */}
+                                                            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-1">
+                                                                <h3 className="text-base md:text-sm font-semibold text-gray-800 break-words md:truncate">
                                                                     {chat.other_user?.name || "Unknown User"}
                                                                 </h3>
                                                                 {chat.last_message && (
-                                                                    <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                                                                    <span className="text-xs text-gray-500 md:ml-2 md:flex-shrink-0 mt-0.5 md:mt-0">
                                                                         {formatTime(chat.last_message.created_at)}
                                                                     </span>
                                                                 )}
@@ -619,7 +861,7 @@ export default function ChatPage() {
 
                         {/* Mobile Chat View - Show when chat is selected */}
                         {selectedChat && (
-                            <div className="md:hidden absolute inset-0 bg-white z-10 flex flex-col">
+                            <div className="md:hidden fixed inset-0 top-[95px] bottom-0 bg-white z-20 flex flex-col">
                                 {/* Mobile Header */}
                                 <div className="bg-[#075e54] px-4 py-3 flex items-center gap-3 text-white">
                                     <button
