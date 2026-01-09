@@ -2,6 +2,7 @@ import Image from "next/image";
 
 export default function Footer() {
     return (
+        <div className="hidden md:block">
         <footer className="bg-[#f8eee6] py-10 px-5 mt-16">
             <div className="text-center mb-8">
                 <h3 className="text-xl font-bold mb-8">
@@ -146,5 +147,6 @@ export default function Footer() {
                 </div>
             </div>
         </footer>
+        </div>
     );
 }

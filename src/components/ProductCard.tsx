@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -16,6 +17,65 @@ interface ProductProps {
 }
 
 export default function ProductCard({ product }: ProductProps) {
+    const [isFavorite, setIsFavorite] = useState(false);
+
+    useEffect(() => {
+        // Check if product is in wishlist
+        const wishlist = localStorage.getItem("wishlist");
+        if (wishlist) {
+            try {
+                const parsed = JSON.parse(wishlist);
+                const productId = product.productId || product.id;
+                const exists = parsed.some((p: any) => (p.id === productId || p.productId === productId));
+                setIsFavorite(exists);
+            } catch (error) {
+                console.error("Error parsing wishlist:", error);
+            }
+        }
+    }, [product.productId, product.id]);
+
+    const toggleFavorite = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const productId = product.productId || product.id;
+        const wishlist = localStorage.getItem("wishlist");
+        let updatedWishlist = [];
+
+        if (wishlist) {
+            try {
+                updatedWishlist = JSON.parse(wishlist);
+            } catch (error) {
+                console.error("Error parsing wishlist:", error);
+                updatedWishlist = [];
+            }
+        }
+
+        const existingIndex = updatedWishlist.findIndex(
+            (p: any) => (p.id === productId || p.productId === productId)
+        );
+
+        if (existingIndex > -1) {
+            // Remove from wishlist
+            updatedWishlist.splice(existingIndex, 1);
+            setIsFavorite(false);
+        } else {
+            // Add to wishlist
+            updatedWishlist.push({
+                id: productId,
+                productId: product.productId || product.id,
+                name: product.name,
+                price: product.price,
+                image: product.image,
+                category: product.category,
+                original_price: product.original_price,
+            });
+            setIsFavorite(true);
+        }
+
+        localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+    };
+
     // Format price to ensure it has ₹ symbol
     const formatPrice = (price: string): string => {
         if (!price || price.trim() === "") return "";
@@ -27,7 +87,7 @@ export default function ProductCard({ product }: ProductProps) {
     };
 
     return (
-        <Link href={`/products/${product.productId || product.id}`} className="block bg-white group">
+        <Link href={`/products/${product.productId || product.id}`} className="block bg-white group relative">
             <div className="relative w-full aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
                 {product.image ? (
                     <Image
@@ -47,6 +107,27 @@ export default function ProductCard({ product }: ProductProps) {
                         <span className="text-sm">No Image</span>
                     </div>
                 )}
+                
+                {/* Favorite Button */}
+                <button
+                    onClick={toggleFavorite}
+                    className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white rounded-full p-1.5 shadow-sm transition-all duration-200 hover:scale-110"
+                    aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+                >
+                    <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill={isFavorite ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={isFavorite ? "text-red-500" : "text-gray-600"}
+                    >
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                </button>
             </div>
 
             <div>

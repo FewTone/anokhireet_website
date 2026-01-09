@@ -177,7 +177,7 @@ export default function Navbar() {
                             className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent"
                         />
                     </div>
-                    <div className="flex">
+                    <div className="hidden md:flex">
                         <button className="bg-transparent border-none ml-4 cursor-pointer">
                             <Link href="/profile">
                                 <Image

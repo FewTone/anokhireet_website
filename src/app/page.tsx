@@ -7,6 +7,7 @@ import Hero from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
 
 const TABS = [
@@ -37,7 +38,7 @@ export default function Home() {
     const [activeTab, setActiveTab] = useState("ALL");
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
-    const [featuredCategories, setFeaturedCategories] = useState<Array<{ img: string; link_url?: string }>>([]);
+    const [featuredCategories, setFeaturedCategories] = useState<Array<{ img: string; link_url?: string; name?: string }>>([]);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -174,7 +175,7 @@ export default function Home() {
                     .order("display_order", { ascending: true })
             ]);
 
-            const allFeatured: Array<{ img: string; link_url?: string; display_order: number }> = [];
+            const allFeatured: Array<{ img: string; link_url?: string; name?: string; display_order: number }> = [];
 
             // Add featured product types with their display_order
             if (productTypesResult.data && !productTypesResult.error) {
@@ -182,6 +183,7 @@ export default function Home() {
                     allFeatured.push({
                         img: pt.image_url || "",
                         link_url: `/products?product_type=${pt.id}`,
+                        name: pt.name || "",
                         display_order: pt.display_order ?? 0
                     });
                 });
@@ -193,6 +195,7 @@ export default function Home() {
                     allFeatured.push({
                         img: oc.image_url || "",
                         link_url: `/products?occasion=${oc.id}`,
+                        name: oc.name || "",
                         display_order: oc.display_order ?? 0
                     });
                 });
@@ -316,41 +319,41 @@ export default function Home() {
     return (
         <>
             <Navbar />
-            <main className="min-h-screen">
+            <main className="min-h-screen pb-16 md:pb-0 bg-white">
                 <Hero />
 
                 {/* Section 2: Featured Categories */}
                 {featuredCategories.length > 0 ? (
-                <div className="mt-12 mb-12 text-center px-4">
-                    <h2 className="text-2xl md:text-3xl font-bold mb-6">FEATURED CATEGORIES</h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto">
+                <div className="mt-8 md:mt-12 mb-8 md:mb-12 px-4">
+                    <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 text-center md:text-center">FEATURED CATEGORIES</h2>
+                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 max-w-7xl mx-auto">
                             {featuredCategories.map((cat, idx) => {
                                 return (
                                 <Link href={cat.link_url || "/shirt-collection"} key={idx} className="block hover:scale-[1.02] transition-transform duration-300">
-                                <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100">
-                                    {cat.img && cat.img.trim() !== "" ? (
-                                        <Image
-                                            src={cat.img}
-                                            alt={`Category ${idx}`}
-                                            fill
-                                            className="rounded-lg object-cover"
-                                            sizes="20vw"
-                                            unoptimized
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 text-gray-400">
-                                            <div className="text-center">
-                                                <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                <span className="text-xs font-medium">No Image</span>
+                                    <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 mb-2">
+                                        {cat.img && cat.img.trim() !== "" ? (
+                                            <Image
+                                                src={cat.img}
+                                                alt={cat.name || `Category ${idx}`}
+                                                fill
+                                                className="rounded-lg object-cover"
+                                                sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                                                unoptimized
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 text-gray-400">
+                                                <div className="text-center">
+                                                    <svg className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span className="text-xs font-medium">No Image</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
                             </Link>
                         );
                             })}
@@ -363,8 +366,8 @@ export default function Home() {
                 )}
 
                 {/* Section 3: Shop Your Size */}
-                <div className="mt-12 text-center px-4">
-                    <h2 className="text-2xl font-bold mb-4">SHOP YOUR SIZE</h2>
+                <div className="mt-8 md:mt-12 text-center px-4">
+                    <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">SHOP YOUR SIZE</h2>
                     <div className="max-w-[1200px] mx-auto">
                         <Image
                             src="https://cdn.shopify.com/s/files/1/0420/7073/7058/files/refresh_18_nov_PLP02.jpg?v=1763468105"
@@ -378,18 +381,18 @@ export default function Home() {
                 </div>
 
                 {/* Section 4: New and Popular */}
-                <div className="mt-12 pb-12">
-                    <h3 className="text-2xl font-bold text-center mb-4">
+                <div className="mt-8 md:mt-12 pb-12 md:pb-12">
+                    <h3 className="text-xl md:text-2xl font-bold text-center mb-4 md:mb-6">
                         NEW AND POPULAR
                     </h3>
 
                     {/* Filter Tabs */}
-                    <div className="flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-2 mb-8 px-4 scrollbar-hide">
+                    <div className="flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-2 mb-6 md:mb-8 px-4 scrollbar-hide">
                         {TABS.map((tab) => (
                             <span
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`border border-black px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap 
+                                className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap 
                   ${activeTab === tab
                                         ? "bg-black text-white"
                                         : "bg-white hover:bg-[#f0f0f0]"
@@ -406,7 +409,7 @@ export default function Home() {
                             <p className="text-gray-500">Loading products...</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 max-w-[1400px] mx-auto px-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 max-w-[1400px] mx-auto px-4">
                             {filteredProducts.map((product) => (
                                 <ProductCard key={product.id} product={product} />
                             ))}
@@ -418,6 +421,7 @@ export default function Home() {
                 </div>
             </main>
             <Footer />
+            <BottomNav />
         </>
     );
 }

@@ -233,6 +233,7 @@ export default function Hero() {
                 @media (min-width: 768px) {
                     .hero-slide {
                         width: calc((100vw - 32px) / 3); /* Desktop width */
+                        aspect-ratio: 4 / 5;
                     }
                 }
                 .hero-scroll-track {

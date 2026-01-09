@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import ProductCard from "@/components/ProductCard";
 import { supabase } from "@/lib/supabase";
 
@@ -57,11 +58,12 @@ export default function ProductsPage() {
     const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent URL updates
 
     // Filter options data
-    const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string }>>([]);
-    const [occasions, setOccasions] = useState<Array<{ id: string; name: string }>>([]);
+    const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string; image_url?: string | null }>>([]);
+    const [occasions, setOccasions] = useState<Array<{ id: string; name: string; image_url?: string | null }>>([]);
     const [colors, setColors] = useState<Array<{ id: string; name: string; hex?: string }>>([]);
     const [materials, setMaterials] = useState<Array<{ id: string; name: string }>>([]);
     const [cities, setCities] = useState<Array<{ id: string; name: string }>>([]);
+    const [showCategories, setShowCategories] = useState(true); // Show categories section by default
 
     // Filter sections collapse state
     const [filterSections, setFilterSections] = useState<FilterSection[]>([
@@ -259,8 +261,8 @@ export default function ProductsPage() {
     const loadFilterOptions = async () => {
         try {
             const [productTypesRes, occasionsRes, colorsRes, materialsRes, citiesRes] = await Promise.all([
-                supabase.from("product_types").select("id, name").order("display_order", { ascending: true }),
-                supabase.from("occasions").select("id, name").order("display_order", { ascending: true }),
+                supabase.from("product_types").select("id, name, image_url").order("display_order", { ascending: true }),
+                supabase.from("occasions").select("id, name, image_url").order("display_order", { ascending: true }),
                 supabase.from("colors").select("id, name, hex").order("display_order", { ascending: true }),
                 supabase.from("materials").select("id, name").order("display_order", { ascending: true }),
                 supabase.from("cities").select("id, name").order("display_order", { ascending: true }),
@@ -274,6 +276,32 @@ export default function ProductsPage() {
         } catch (error) {
             console.error("Error loading filter options:", error);
         }
+    };
+
+    const handleCategoryClick = (categoryType: 'product_type' | 'occasion', categoryId: string, categoryName: string) => {
+        setShowCategories(false); // Hide categories when one is selected
+        if (categoryType === 'product_type') {
+            setPendingProductTypes([categoryId]);
+            setAppliedProductTypes([categoryId]);
+            setCategoryName(categoryName);
+        } else {
+            setPendingOccasions([categoryId]);
+            setAppliedOccasions([categoryId]);
+            setCategoryName(categoryName);
+        }
+        // Apply filters immediately
+        updateURLParams();
+    };
+
+    const clearCategoryFilter = () => {
+        setShowCategories(true);
+        setPendingProductTypes([]);
+        setAppliedProductTypes([]);
+        setPendingOccasions([]);
+        setAppliedOccasions([]);
+        setCategoryName("");
+        setActiveTag("ALL");
+        updateURLParams();
     };
 
     const loadProducts = async () => {
@@ -916,8 +944,31 @@ export default function ProductsPage() {
                             <div className="mb-6">
                                 <h1 className="text-3xl font-bold mb-4">PRODUCTS</h1>
                                 
-                                {/* Category Tags */}
-                                <div className="flex flex-wrap gap-2 mb-4">
+                                {/* Horizontal Category Tags - Mobile */}
+                                <div className="flex md:hidden justify-start flex-nowrap overflow-x-auto gap-2 mb-6 px-4 -mx-4 scrollbar-hide pb-2">
+                                    {["ALL", "ACCESSORIES", "TRENDING", "SALE", "PLUS SIZE"].map(tag => (
+                                        <button
+                                            key={tag}
+                                            onClick={() => {
+                                                if (tag === "ALL") {
+                                                    clearCategoryFilter();
+                                                } else {
+                                                    setActiveTag(tag);
+                                                }
+                                            }}
+                                            className={`px-4 py-1.5 text-xs border border-black whitespace-nowrap transition-all ${
+                                                (activeTag === tag || (tag === "ALL" && activeTag === "ALL" && !categoryName))
+                                                    ? "bg-black text-white"
+                                                    : "bg-white hover:bg-gray-50"
+                                            }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Desktop Category Tags */}
+                                <div className="hidden md:flex flex-wrap gap-2 mb-4">
                                     {categoryTags.map(tag => (
                                         <button
                                             key={tag}
@@ -933,12 +984,134 @@ export default function ProductsPage() {
                                     ))}
                                 </div>
 
-                                {/* Product Count */}
+                                {/* Categories Section - Mobile View */}
+                                {showCategories && (
+                                    <div className="md:hidden mb-6">
+                                        <div className="space-y-2">
+                                            {/* BESTSELLERS - Show all products sorted by popularity/newest */}
+                                            <button
+                                                onClick={() => {
+                                                    clearCategoryFilter();
+                                                    setActiveTag("ALL");
+                                                }}
+                                                className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                            >
+                                                <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-400 to-orange-500">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="2">
+                                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <span className="font-bold text-left flex-1">BESTSELLERS</span>
+                                            </button>
+
+                                            {/* NEW - Show newest products */}
+                                            <button
+                                                onClick={() => {
+                                                    clearCategoryFilter();
+                                                    setActiveTag("NEW");
+                                                    setSortBy("newest");
+                                                }}
+                                                className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                            >
+                                                <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500">
+                                                        <span className="text-white font-bold text-lg">N</span>
+                                                    </div>
+                                                </div>
+                                                <span className="font-bold text-left flex-1">NEW</span>
+                                            </button>
+
+                                            {/* Product Types from Database */}
+                                            {productTypes.slice(0, 8).map((type) => (
+                                                <button
+                                                    key={type.id}
+                                                    onClick={() => handleCategoryClick('product_type', type.id, type.name)}
+                                                    className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                        {type.image_url ? (
+                                                            <Image
+                                                                src={type.image_url}
+                                                                alt={type.name}
+                                                                fill
+                                                                className="object-cover"
+                                                                sizes="64px"
+                                                                unoptimized
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                <span className="text-gray-400 text-xs">No Image</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="font-bold text-left flex-1">{type.name.toUpperCase()}</span>
+                                                </button>
+                                            ))}
+
+                                            {/* Occasions from Database */}
+                                            {occasions.slice(0, 3).map((occasion) => (
+                                                <button
+                                                    key={occasion.id}
+                                                    onClick={() => handleCategoryClick('occasion', occasion.id, occasion.name)}
+                                                    className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                                >
+                                                    <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                        {occasion.image_url ? (
+                                                            <Image
+                                                                src={occasion.image_url}
+                                                                alt={occasion.name}
+                                                                fill
+                                                                className="object-cover"
+                                                                sizes="64px"
+                                                                unoptimized
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                <span className="text-gray-400 text-xs">No Image</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="font-bold text-left flex-1">{occasion.name.toUpperCase()}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Selected Category Header */}
+                                {categoryName && (
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <div>
+                                            <h2 className="text-xl font-bold">{categoryName.toUpperCase()}</h2>
+                                            <button
+                                                onClick={clearCategoryFilter}
+                                                className="text-sm text-gray-600 hover:text-black mt-1"
+                                            >
+                                                Clear filter
+                                            </button>
+                                        </div>
+                                        <span className="text-sm text-gray-600">
+                                            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Product Count - When no category selected */}
+                                {!categoryName && (
                                 <div className="flex items-center justify-between mb-4">
                                     <span className="text-sm text-gray-600">
                                         {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
                                     </span>
                                 </div>
+                                )}
                             </div>
 
                             {/* Products Grid */}
