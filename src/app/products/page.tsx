@@ -650,7 +650,7 @@ export default function ProductsPage() {
     };
 
     const updatePriceRange = (index: number, value: number) => {
-        setPriceRange(prev => {
+        setPendingPriceRange(prev => {
             const newRange: [number, number] = [...prev];
             newRange[index] = value;
             // Ensure min <= max

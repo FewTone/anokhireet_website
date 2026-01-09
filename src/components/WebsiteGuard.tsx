@@ -27,14 +27,32 @@ export default function WebsiteGuard({ children }: WebsiteGuardProps) {
         
         const isAllowedRoute = allowedRoutes.some(route => pathname?.startsWith(route));
 
-        // Check website setting
+        // Check website setting with timeout for static export compatibility
         const checkWebsiteSetting = async () => {
+            // Add timeout for static export (Hostinger) - if Supabase fails, default to enabled
+            const timeoutPromise = new Promise<{ timeout: true }>((resolve) => {
+                setTimeout(() => resolve({ timeout: true }), 3000); // 3 second timeout
+            });
+
             try {
-                const { data, error } = await supabase
+                const supabasePromise = supabase
                     .from("website_settings")
                     .select("value")
                     .eq("key", "website_enabled")
                     .single();
+
+                // Race between Supabase call and timeout
+                const result = await Promise.race([supabasePromise, timeoutPromise]);
+
+                // If timeout occurred, default to enabled
+                if ('timeout' in result && result.timeout) {
+                    console.warn("⚠️ WebsiteGuard: Supabase call timed out (static export?) - defaulting to enabled");
+                    setIsEnabled(true);
+                    setLoading(false);
+                    return;
+                }
+
+                const { data, error } = result as any;
 
                 if (error) {
                     if (error.code === 'PGRST116') {
@@ -227,12 +245,7 @@ export default function WebsiteGuard({ children }: WebsiteGuardProps) {
         }
     }, [isEnabled, loading, pathname, router]);
 
-    // Show loading state
-    if (loading) {
-        return null; // Or a loading spinner if preferred
-    }
-
-    // Define allowed routes that should always be accessible
+    // Define allowed routes that should always be accessible (especially /admin)
     const allowedRoutes = [
         "/admin",
         "/profile",
@@ -243,6 +256,17 @@ export default function WebsiteGuard({ children }: WebsiteGuardProps) {
         "/coming-soon"
     ];
     const isAllowedRoute = allowedRoutes.some(route => pathname?.startsWith(route));
+    
+    // CRITICAL: /admin should ALWAYS be accessible, even during loading or errors
+    // This ensures it works in static export (Hostinger) where Supabase calls might fail
+    if (pathname?.startsWith("/admin")) {
+        return <>{children}</>;
+    }
+    
+    // Show loading state for other routes
+    if (loading) {
+        return null; // Or a loading spinner if preferred
+    }
     
     // If website is disabled (setting is true = coming soon active)
     if (!isEnabled) {
