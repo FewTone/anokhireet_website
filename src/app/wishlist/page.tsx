@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import ProductCard from "@/components/ProductCard";
 interface WishlistProduct {
     id: number;
@@ -91,6 +92,7 @@ export default function WishListPage() {
                 </div>
             </main>
             <Footer />
+            <BottomNav />
         </>
     );
 }
