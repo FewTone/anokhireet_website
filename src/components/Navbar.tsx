@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
 export default function Navbar() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const [searchQuery, setSearchQuery] = useState("");
 
     // Initialize search query from URL if on products page
@@ -109,25 +110,27 @@ export default function Navbar() {
 
                     {/* Right: Search & Profile */}
                     <div className="flex flex-1 justify-end items-center gap-4">
-                        <form onSubmit={handleSearch} className="flex max-w-[250px] h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
-                            <Image
-                                src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
-                                alt="search"
-                                width={18}
-                                height={18}
-                                className="opacity-60"
-                                suppressHydrationWarning
-                            />
-                            <input
-                                type="search"
-                                placeholder="Search by Product ID or Name"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyPress={handleSearchKeyPress}
-                                className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent"
-                            />
-                            <button type="submit" className="hidden" aria-label="Search" />
-                        </form>
+                        {!pathname?.startsWith("/chat") && (
+                            <form onSubmit={handleSearch} className="flex max-w-[250px] h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
+                                <Image
+                                    src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
+                                    alt="search"
+                                    width={18}
+                                    height={18}
+                                    className="opacity-60"
+                                    suppressHydrationWarning
+                                />
+                                <input
+                                    type="search"
+                                    placeholder="Search by Product ID or Name"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={handleSearchKeyPress}
+                                    className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent"
+                                />
+                                <button type="submit" className="hidden" aria-label="Search" />
+                            </form>
+                        )}
                         <button className="bg-transparent border-none cursor-pointer">
                             <Link href="/profile">
                                 <Image
@@ -139,21 +142,23 @@ export default function Navbar() {
                                 />
                             </Link>
                         </button>
-                        <Link href="/chat" className="bg-transparent border-none cursor-pointer">
-                            <svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-black"
-                            >
-                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                            </svg>
-                        </Link>
+                        {!pathname?.startsWith("/chat") && (
+                            <Link href="/chat" className="bg-transparent border-none cursor-pointer">
+                                <svg
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="text-black"
+                                >
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                </svg>
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -182,44 +187,46 @@ export default function Navbar() {
                             />
                         </Link>
                     </div>
-                    
+
                     {/* Search Bar and Chat Button - Same row */}
-                    <div className="flex items-center gap-2">
-                        <form onSubmit={handleSearch} className="flex flex-1 h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
-                            <Image
-                                src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
-                                alt="search"
-                                width={18}
-                                height={18}
-                                className="opacity-60"
-                                suppressHydrationWarning
-                            />
-                            <input
-                                type="search"
-                                placeholder="Search by Product ID or Name"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                onKeyPress={handleSearchKeyPress}
-                                className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent"
-                            />
-                            <button type="submit" className="hidden" aria-label="Search" />
-                        </form>
-                        <Link href="/chat" className="flex-shrink-0 p-2">
-                            <svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-black"
-                            >
-                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                            </svg>
-                        </Link>
-                    </div>
+                    {!pathname?.startsWith("/chat") && (
+                        <div className="flex items-center gap-2">
+                            <form onSubmit={handleSearch} className="flex flex-1 h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
+                                <Image
+                                    src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
+                                    alt="search"
+                                    width={18}
+                                    height={18}
+                                    className="opacity-60"
+                                    suppressHydrationWarning
+                                />
+                                <input
+                                    type="search"
+                                    placeholder="Search by Product ID or Name"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={handleSearchKeyPress}
+                                    className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent"
+                                />
+                                <button type="submit" className="hidden" aria-label="Search" />
+                            </form>
+                            <Link href="/chat" className="flex-shrink-0 p-2">
+                                <svg
+                                    width="24"
+                                    height="24"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="text-black"
+                                >
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                </svg>
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </nav>
             {/* Spacer for fixed nav */}

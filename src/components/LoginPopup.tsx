@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getOtpChannel } from "@/lib/devConfig";
 
 interface LoginPopupProps {
     isOpen: boolean;
@@ -31,9 +32,12 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
 
     const handleSendOTP = async () => {
         if (!phone || phone.length !== 10) {
+            console.log("[LoginDebug] Invalid phone number entered:", phone);
             setError("Please enter a valid 10-digit phone number");
             return;
         }
+
+        console.log("[LoginDebug] Starting login flow with phone:", phone);
 
         setLoading(true);
         setError("");
@@ -41,6 +45,7 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
         try {
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
+            console.log("[LoginDebug] Normalized phone number:", phoneNumber);
 
             // Check if user exists in database
             const { data: allUsers, error: allUsersError } = await supabase
@@ -62,6 +67,7 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
                 });
                 existingUser = foundUser || null;
             }
+            console.log("[LoginDebug] Existing user check result:", existingUser ? "Found" : "Not Found", existingUser);
 
             if (existingUser) {
                 // Check if this user is an admin (check admins table)
@@ -73,6 +79,7 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
                     .maybeSingle();
 
                 if (adminCheck) {
+                    console.log("[LoginDebug] Admin account detected, blocking login");
                     setError("This is an admin account. Please use the admin panel to login.");
                     setLoading(false);
                     return;
@@ -94,30 +101,37 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
                 setPendingUserData(null);
             }
 
-            // Send OTP (or use bypass for testing)
-            const OTP_BYPASS = "000000";
-            const testOtp = OTP_BYPASS;
 
-            // For testing: auto-verify with bypass code
-            if (testOtp === OTP_BYPASS) {
-                console.log("⚠️ Using OTP bypass for testing");
-                setOtpSent(true);
-                setOtp(OTP_BYPASS);
-                setLoading(false);
-                // Auto-verify after a short delay
-                setTimeout(() => {
-                    handleVerifyOtp();
-                }, 500);
-                return;
-            }
 
+            // Send OTP using configured channel (SMS for testing, WhatsApp for production)
+            const otpChannel = getOtpChannel();
             const { error: otpError } = await supabase.auth.signInWithOtp({
                 phone: phoneNumber,
+                options: {
+                    channel: otpChannel, // 'sms' for testing, 'whatsapp' for production
+                },
             });
 
             if (otpError) {
-                console.warn("OTP sending failed:", otpError.message);
+                console.error("[LoginDebug] ❌ OTP sending failed:", otpError.message);
+
+                // Provide helpful error messages
+                if (otpError.message.includes("whatsapp") || otpError.message.includes("WhatsApp")) {
+                    setError(
+                        "WhatsApp OTP not configured. Please set up Twilio Verify WhatsApp or use SMS channel."
+                    );
+                } else if (otpError.message.includes("Twilio") || otpError.message.includes("provider")) {
+                    setError(
+                        "Twilio not configured. Please configure Twilio in Supabase Dashboard or use SMS channel."
+                    );
+                } else {
+                    setError(`Failed to send OTP: ${otpError.message}`);
+                }
+                setLoading(false);
+                return;
             }
+
+            console.log("[LoginDebug] OTP sent successfully via channel:", otpChannel);
 
             setOtpSent(true);
             setLoading(false);
@@ -129,6 +143,7 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
 
     const handleVerifyOtp = async () => {
         if (!otp || otp.length !== 6) {
+            console.log("[LoginDebug] Invalid OTP entered:", otp);
             setError("Please enter a valid 6-digit OTP");
             return;
         }
@@ -137,56 +152,30 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
         setError("");
 
         try {
+            console.log("[LoginDebug] Verifying OTP:", otp);
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
-            const OTP_BYPASS = "000000";
 
-            let session;
-            if (otp === OTP_BYPASS) {
-                // Bypass OTP - create session directly
-                console.log("⚠️ Using OTP bypass - creating session");
-                
-                // Sign in with OTP bypass
-                const { data: signInData, error: signInError } = await supabase.auth.signInWithOtp({
-                    phone: phoneNumber,
-                });
+            // Verify OTP normally
+            const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+                phone: phoneNumber,
+                token: otp,
+                type: 'sms',
+            });
 
-                if (signInError && !signInError.message.includes("already registered")) {
-                    // Try to sign in with password (for testing)
-                    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-                    if (sessionError || !sessionData.session) {
-                        // Create a test session
-                        throw new Error("Please enter OTP: 000000 for testing");
-                    }
-                    session = sessionData.session;
-                } else {
-                    // Use magic link or create session
-                    const { data: { session: newSession } } = await supabase.auth.getSession();
-                    session = newSession;
-                }
-
-                // If still no session, we need to handle this differently
-                if (!session) {
-                    throw new Error("Session creation failed. Please try OTP: 000000");
-                }
-            } else {
-                // Verify OTP normally
-                const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-                    phone: phoneNumber,
-                    token: otp,
-                    type: 'sms',
-                });
-
-                if (verifyError) throw verifyError;
-                session = verifyData.session;
-            }
+            if (verifyError) throw verifyError;
+            const session = verifyData.session;
 
             if (!session?.user) {
+                console.error("[LoginDebug] OTP verification failed: No session user found");
                 throw new Error("OTP verification failed. Please try again.");
             }
 
+            console.log("[LoginDebug] Session established for user:", session.user.id);
+
             // Handle user creation/update
             if (pendingUserData) {
+                console.log("[LoginDebug] Updating existing user data");
                 // Existing user - update auth_user_id if needed
                 if (!pendingUserData.auth_user_id) {
                     const { error: updateError } = await supabase
@@ -209,10 +198,13 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
                         role: 'renter'
                     }]);
 
+                console.log("[LoginDebug] New user created");
+
                 if (insertError) throw insertError;
             }
 
             // Success - call callback and close
+            console.log("[LoginDebug] Login successful, calling onLoginSuccess");
             onLoginSuccess();
             handleClose();
         } catch (err: any) {
@@ -323,7 +315,7 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent text-center text-2xl tracking-widest"
                                 maxLength={6}
                             />
-                            <p className="text-sm text-gray-500 mt-2">Enter OTP: <strong>000000</strong> for testing</p>
+
                         </div>
 
                         <button

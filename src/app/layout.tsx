@@ -4,7 +4,7 @@ import "./globals.css";
 import WebsiteGuard from "@/components/WebsiteGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-const inter = Inter({ 
+const inter = Inter({
     subsets: ["latin"],
     variable: "--font-inter",
     display: "swap",
@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={`${inter.variable} ${playfairDisplay.variable} ${inter.className} antialiased w-full max-w-[480px] md:max-w-none mx-auto bg-gray-100 md:bg-white min-h-screen`}>
+            <body suppressHydrationWarning className={`${inter.variable} ${playfairDisplay.variable} ${inter.className} antialiased w-full max-w-[480px] md:max-w-none mx-auto bg-gray-100 md:bg-white min-h-screen`}>
                 <ErrorBoundary>
                     <WebsiteGuard>
                         {children}

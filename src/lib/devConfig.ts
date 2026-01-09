@@ -1,26 +1,26 @@
-// ⚠️ DEVELOPMENT ONLY - Remove before production
-// This file controls development/testing features
 
 /**
- * DEVELOPMENT MODE: Bypass OTP for testing
+ * OTP Channel Configuration
  * 
- * Set to true to skip OTP verification during development
- * Users can login with just phone number (no OTP needed)
+ * 'whatsapp' - Send OTP via WhatsApp using Twilio Verify (requires WhatsApp setup)
+ * 'sms' - Send OTP via SMS (works with test phone numbers and regular SMS)
  * 
- * ⚠️ WARNING: This is INSECURE and should NEVER be enabled in production
- * ⚠️ Set to false before deploying to production
+ * For testing with Supabase test phone numbers, use 'sms'
+ * For production with WhatsApp, use 'whatsapp'
  */
-export const DEV_MODE_BYPASS_OTP = true; // Change to false to enable OTP
+export const OTP_CHANNEL: 'whatsapp' | 'sms' = 'sms'; // Change to 'whatsapp' for production
 
 /**
- * Check if OTP bypass is enabled
+ * Get OTP channel based on environment
+ * In production, use WhatsApp. In development, use SMS (works with test numbers)
  */
-export const isOtpBypassEnabled = (): boolean => {
-    // Only enable in development environment
+export const getOtpChannel = (): 'whatsapp' | 'sms' => {
+    // In production, use WhatsApp if configured
     if (process.env.NODE_ENV === 'production') {
-        return false; // Always require OTP in production
+        return 'whatsapp';
     }
-    return DEV_MODE_BYPASS_OTP;
+    // In development, use configured channel (default SMS for testing)
+    return OTP_CHANNEL;
 };
 
 

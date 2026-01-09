@@ -170,7 +170,7 @@ export default function Home() {
                     .order("display_order", { ascending: true }),
                 supabase
                     .from("occasions")
-                .select("*")
+                    .select("*")
                     .eq("is_featured", true)
                     .order("display_order", { ascending: true })
             ]);
@@ -200,16 +200,16 @@ export default function Home() {
                     });
                 });
             }
-            
+
             // Sort all featured items by display_order to maintain the order set in admin panel
             allFeatured.sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-            
+
             // Remove display_order from final array (not needed in component)
             const finalFeatured = allFeatured.map(({ display_order, ...rest }) => rest);
 
             console.log('✅ Featured items from facets:', finalFeatured.length);
             console.log('📋 Featured items details (sorted by display_order):', finalFeatured);
-            
+
             // Log if there are errors
             if (productTypesResult.error) {
                 console.error('❌ Error loading product types:', productTypesResult.error);
@@ -217,7 +217,7 @@ export default function Home() {
             if (occasionsResult.error) {
                 console.error('❌ Error loading occasions:', occasionsResult.error);
             }
-            
+
             setFeaturedCategories(finalFeatured);
         } catch (error) {
             console.error("Error loading featured items:", error);
@@ -256,7 +256,7 @@ export default function Home() {
                     const uniqueId = p.id && typeof p.id === 'string' && p.id.length > 0
                         ? p.id
                         : `product-${Date.now()}-${index}-${Math.random().toString(36).substring(2, 9)}`;
-                    
+
                     // Get primary image from images array or fallback to single image
                     let primaryImage = p.image || "";
                     if (p.images && Array.isArray(p.images) && p.images.length > 0) {
@@ -265,7 +265,7 @@ export default function Home() {
                             : 0;
                         primaryImage = p.images[primaryIndex] || p.images[0] || "";
                     }
-                    
+
                     allProducts.push({
                         id: uniqueId, // Use unique string ID
                         productId: p.product_id || p.id, // Use product_id if available, otherwise use id
@@ -286,7 +286,7 @@ export default function Home() {
                     const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
                     return dateB - dateA; // Newest first
                 });
-                
+
                 // Remove created_at before setting (not needed in Product interface)
                 const cleanedProducts = allProducts.map(({ created_at, ...rest }) => rest);
                 setProducts(cleanedProducts);
@@ -302,7 +302,7 @@ export default function Home() {
             setProducts([]);
         } finally {
             if (showLoading) {
-            setLoading(false);
+                setLoading(false);
             }
         }
     };
@@ -324,45 +324,45 @@ export default function Home() {
 
                 {/* Section 2: Featured Categories */}
                 {featuredCategories.length > 0 ? (
-                <div className="mt-8 md:mt-12 mb-8 md:mb-12 px-4">
-                    <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 text-center md:text-center">FEATURED CATEGORIES</h2>
-                    <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 max-w-7xl mx-auto">
+                    <div className="mt-8 md:mt-12 mb-8 md:mb-12 px-4">
+                        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 text-center md:text-center">FEATURED CATEGORIES</h2>
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 max-w-7xl mx-auto">
                             {featuredCategories.map((cat, idx) => {
                                 return (
-                                <Link href={cat.link_url || "/shirt-collection"} key={idx} className="block hover:scale-[1.02] transition-transform duration-300">
-                                    <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 mb-2">
-                                        {cat.img && cat.img.trim() !== "" ? (
-                                            <Image
-                                                src={cat.img}
-                                                alt={cat.name || `Category ${idx}`}
-                                                fill
-                                                className="rounded-lg object-cover"
-                                                sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
-                                                unoptimized
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 text-gray-400">
-                                                <div className="text-center">
-                                                    <svg className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <span className="text-xs font-medium">No Image</span>
+                                    <Link href={cat.link_url || "/shirt-collection"} key={idx} className="block hover:scale-[1.02] transition-transform duration-300">
+                                        <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 mb-2">
+                                            {cat.img && cat.img.trim() !== "" ? (
+                                                <Image
+                                                    src={cat.img}
+                                                    alt={cat.name || `Category ${idx}`}
+                                                    fill
+                                                    className="rounded-lg object-cover"
+                                                    sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                                                    unoptimized
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300 text-gray-400">
+                                                    <div className="text-center">
+                                                        <svg className="w-8 h-8 md:w-12 md:h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                        </svg>
+                                                        <span className="text-xs font-medium">No Image</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        )}
-                                    </div>
-                            </Link>
-                        );
+                                            )}
+                                        </div>
+                                    </Link>
+                                );
                             })}
+                        </div>
                     </div>
-                </div>
                 ) : (
                     <div className="mt-12 text-center px-4">
                         <p className="text-gray-500 text-sm">No featured categories available. Pin categories in the admin panel to display them here.</p>
-                </div>
+                    </div>
                 )}
 
                 {/* Section 3: Shop Your Size */}
@@ -376,6 +376,7 @@ export default function Home() {
                             width={1200}
                             height={400}
                             className="w-full h-auto"
+                            priority
                         />
                     </div>
                 </div>

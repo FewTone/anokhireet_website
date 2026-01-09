@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-// ⚠️ DEVELOPMENT ONLY - OTP bypass for testing
-import { isOtpBypassEnabled } from "@/lib/devConfig";
+import { getOtpChannel } from "@/lib/devConfig";
 
 interface PendingUserData {
     id: string;
@@ -121,6 +120,7 @@ export default function Profile() {
             const phoneNumber = `+91${normalizedPhone}`;
 
             console.log("🔍 Checking for existing user...");
+            console.log("[LoginDebug] Starting login flow with phone:", phone);
             console.log("Input phone (normalized):", normalizedPhone);
             console.log("Input phone (with +91):", phoneNumber);
 
@@ -176,6 +176,7 @@ export default function Profile() {
             }
 
             console.log("🎯 Final existingUser result:", existingUser ? `${existingUser.name} (${existingUser.phone})` : "NOT FOUND");
+            console.log("[LoginDebug] Existing user check result:", existingUser ? "Found" : "Not Found", existingUser);
 
             // Case 1: User found in users table (admin-created or self-registered)
             if (existingUser) {
@@ -197,7 +198,7 @@ export default function Profile() {
 
                 // User exists in user table - show OTP screen (OTP required for all users)
                 console.log("✅ User found in database, showing OTP screen...");
-                
+
                 // Store user info in state for after OTP verification (not localStorage)
                 // We'll use this to link auth_user_id if it's admin-created user
                 setPendingUserData({
@@ -208,19 +209,50 @@ export default function Profile() {
                     auth_user_id: existingUser.auth_user_id
                 });
 
-                // Send OTP (required for all users to verify ownership)
+                // Send OTP using configured channel (SMS for testing, WhatsApp for production)
+                const otpChannel = getOtpChannel();
                 const { error: otpError } = await supabase.auth.signInWithOtp({
                     phone: phoneNumber,
+                    options: {
+                        channel: otpChannel, // 'sms' for testing, 'whatsapp' for production
+                    },
                 });
 
                 if (otpError) {
-                    // OTP sending failed (likely not connected to Supabase OTP)
-                    // Still show OTP screen - user needs to enter OTP
-                    console.warn("⚠️ OTP sending failed (may not be connected to Supabase OTP):", otpError.message);
-                    // Don't throw error - continue to show OTP screen
+                    // OTP sending failed - show helpful error message
+                    console.error("❌ OTP sending failed:", otpError.message);
+                    console.error("[LoginDebug] ❌ OTP sending failed:", otpError.message);
+
+                    // Provide helpful error messages based on the error
+                    if (otpError.message.includes("whatsapp") || otpError.message.includes("WhatsApp")) {
+                        setError(
+                            "WhatsApp OTP not configured. Please:\n" +
+                            "1. Set up Twilio Verify WhatsApp in Supabase Dashboard\n" +
+                            "2. Configure WhatsApp Sender in Twilio\n" +
+                            "3. Or change OTP_CHANNEL to 'sms' in src/lib/devConfig.ts for SMS delivery\n\n" +
+                            "You can still enter OTP if you received it.\n" +
+                            "💡 DEV MODE: Try '000000' to bypass."
+                        );
+                    } else if (otpError.message.includes("Twilio") || otpError.message.includes("provider")) {
+                        setError(
+                            "Twilio not configured. Please:\n" +
+                            "1. Configure Twilio in Supabase Dashboard → Authentication → Providers → Phone\n" +
+                            "2. Enter Twilio Account SID, Auth Token, and Verify Service SID\n" +
+                            "3. Or use SMS channel by setting OTP_CHANNEL = 'sms' in src/lib/devConfig.ts\n\n" +
+                            "You can still enter OTP if you received it."
+                        );
+                    } else {
+                        setError(`Failed to send OTP: ${otpError.message}. Check Twilio configuration in Supabase Dashboard.\n\nYou can still enter OTP if you received it.`);
+                    }
+                    // Still show OTP screen even if sending failed - user might have received OTP
+                    setOtpSent(true);
+                    setIsNewUser(false);
+                    setLoading(false);
+                    return;
                 }
 
                 setOtpSent(true);
+                console.log("[LoginDebug] OTP sent successfully via channel:", otpChannel);
                 setIsNewUser(false); // Existing user, not new
                 setLoading(false);
                 return;
@@ -230,10 +262,12 @@ export default function Profile() {
             // Mark as new user FIRST before sending OTP
             setIsNewUser(true);
 
-            // Send OTP (required for all users to verify ownership)
+            // Send OTP using configured channel (SMS for testing, WhatsApp for production)
+            const otpChannel = getOtpChannel();
             const { error: otpError } = await supabase.auth.signInWithOtp({
                 phone: phoneNumber,
                 options: {
+                    channel: otpChannel, // 'sms' for testing, 'whatsapp' for production
                     data: {
                         // We'll collect name/email after OTP verification
                     },
@@ -241,10 +275,34 @@ export default function Profile() {
             });
 
             if (otpError) {
-                // OTP sending failed (likely not connected to Supabase OTP)
-                // Still show OTP screen - user needs to enter OTP
-                console.warn("⚠️ OTP sending failed (may not be connected to Supabase OTP):", otpError.message);
-                // Don't throw error - continue to show OTP screen
+                // OTP sending failed - show helpful error message
+                console.error("❌ OTP sending failed:", otpError.message);
+                console.error("[LoginDebug] ❌ OTP sending failed (New User):", otpError.message);
+
+                // Provide helpful error messages based on the error
+                if (otpError.message.includes("whatsapp") || otpError.message.includes("WhatsApp")) {
+                    setError(
+                        "WhatsApp OTP not configured. Please:\n" +
+                        "1. Set up Twilio Verify WhatsApp in Supabase Dashboard\n" +
+                        "2. Configure WhatsApp Sender in Twilio\n" +
+                        "3. Or change OTP_CHANNEL to 'sms' in src/lib/devConfig.ts for SMS delivery\n\n" +
+                        "You can still enter OTP if you received it."
+                    );
+                } else if (otpError.message.includes("Twilio") || otpError.message.includes("provider")) {
+                    setError(
+                        "Twilio not configured. Please:\n" +
+                        "1. Configure Twilio in Supabase Dashboard → Authentication → Providers → Phone\n" +
+                        "2. Enter Twilio Account SID, Auth Token, and Verify Service SID\n" +
+                        "3. Or use SMS channel by setting OTP_CHANNEL = 'sms' in src/lib/devConfig.ts\n\n" +
+                        "You can still enter OTP if you received it."
+                    );
+                } else {
+                    setError(`Failed to send OTP: ${otpError.message}. Check Twilio configuration in Supabase Dashboard.\n\nYou can still enter OTP if you received it.`);
+                }
+                // Still show OTP screen even if sending failed - user might have received OTP
+                setOtpSent(true);
+                setLoading(false);
+                return;
             }
 
             setOtpSent(true);
@@ -264,6 +322,7 @@ export default function Profile() {
 
         setVerifyingOtp(true);
         setError("");
+        console.log("[LoginDebug] Verifying OTP:", otp);
 
         try {
             // Check if there's an active admin session before verifying OTP
@@ -302,110 +361,46 @@ export default function Profile() {
 
             // ⚠️ TESTING MODE: Use "000000" as test OTP (create Supabase Auth session for testing)
             let authUser: any = null;
-            
-            if (otp === "000000") {
-                // Test OTP bypass mode: Create Supabase Auth session for testing
-                console.warn("⚠️ TESTING MODE: Using test OTP '000000' - creating Supabase Auth session");
-                
-                // For "000000", create a Supabase Auth user with a temporary password
-                // This ensures we have a proper auth session
-                const tempPassword = `test_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                
-                try {
-                    // Try to create user in Supabase Auth
-                    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                        phone: phoneNumber,
-                        password: tempPassword,
-                    });
 
-                    if (signUpData?.user) {
-                        // User created successfully
-                        authUser = signUpData.user;
-                        console.log("✅ Created new auth user for test OTP:", authUser.id);
-                    } else if (signUpError?.message?.includes("already registered") || signUpError?.message?.includes("User already registered")) {
-                        // User already exists in Supabase Auth - we'll handle this below by finding the user
-                        console.log("ℹ️ User already exists in Supabase Auth");
-                        // Try to get existing session
-                        const { data: sessionData } = await supabase.auth.getSession();
-                        if (sessionData?.session?.user) {
-                            authUser = sessionData.session.user;
-                        }
-                    } else {
-                        console.warn("⚠️ Error creating auth user:", signUpError);
-                        // Will continue and try to authenticate via users table
-                    }
-                } catch (err) {
-                    console.warn("⚠️ Error creating auth session with test OTP:", err);
-                    // Continue - will authenticate via users table if needed
-                }
-            } else {
-                // Normal OTP verification with Supabase
-                const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+            // Normal OTP verification with Supabase
+            // Use the same channel type as sending (sms for SMS, sms for WhatsApp too)
+            const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
                 phone: phoneNumber,
                 token: otp,
-                type: "sms",
+                type: "sms", // Use 'sms' type for both SMS and WhatsApp OTPs
             });
 
             if (verifyError) {
                 throw verifyError;
             }
 
-                if (!verifyData.user) {
+            if (!verifyData.user) {
                 throw new Error("Authentication failed");
             }
 
-                authUser = verifyData.user;
-            }
+            authUser = verifyData.user;
 
             if (pendingUserData) {
                 // Existing user found in users table - Authenticate
                 console.log("✅ User found in pendingUserData, authenticating...", pendingUserData);
-                
+
                 // If we have auth session, link auth_user_id to user
                 if (authUser) {
                     // Update users table to link auth_user_id
                     if (!pendingUserData.auth_user_id || pendingUserData.auth_user_id !== authUser.id) {
                         try {
-                    const { error: updateError } = await supabase
-                        .from("users")
+                            const { error: updateError } = await supabase
+                                .from("users")
                                 .update({ auth_user_id: authUser.id })
-                        .eq("id", pendingUserData.id);
+                                .eq("id", pendingUserData.id);
 
-                    if (updateError) {
+                            if (updateError) {
                                 console.warn("⚠️ Failed to update auth_user_id (non-critical):", updateError);
                             } else {
                                 console.log("✅ Linked auth_user_id to user");
                             }
                         } catch (updateErr) {
                             console.warn("⚠️ Error updating auth_user_id (non-critical):", updateErr);
-                        }
-                    }
-                } else if (otp === "000000") {
-                    // No auth session but using test OTP - create one
-                    console.log("⚠️ No auth session with test OTP, creating one...");
-                    const tempPassword = `test_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                    
-                    const { data: authData, error: authError } = await supabase.auth.signUp({
-                        phone: phoneNumber,
-                        password: tempPassword,
-                    });
-                    
-                    if (authData?.user) {
-                        // Link auth_user_id to user
-                        await supabase
-                            .from("users")
-                            .update({ auth_user_id: authData.user.id })
-                            .eq("id", pendingUserData.id);
-                        console.log("✅ Created auth session and linked to user");
-                    } else if (authError?.message?.includes("already registered")) {
-                        // User exists in auth - get session
-                        const { data: sessionData } = await supabase.auth.getSession();
-                        if (sessionData?.session?.user) {
-                            await supabase
-                                .from("users")
-                                .update({ auth_user_id: sessionData.session.user.id })
-                                .eq("id", pendingUserData.id);
-                            console.log("✅ Linked existing auth session to user");
                         }
                     }
                 }
@@ -423,109 +418,71 @@ export default function Profile() {
                 return;
             }
 
-            // Check if user already exists in users table
+            // Check if user already exists in users table (via Auth ID)
             if (authUser) {
                 // Check by auth ID
-            const { data: existingUser, error: userError } = await supabase
-                .from("users")
-                .select("id, name, phone, email, auth_user_id")
+                const { data: existingUser, error: userError } = await supabase
+                    .from("users")
+                    .select("id, name, phone, email, auth_user_id")
                     .eq("auth_user_id", authUser.id)
-                .maybeSingle();
+                    .maybeSingle();
 
-            if (userError && userError.code !== "PGRST116") {
-                throw userError;
-            }
+                if (userError && userError.code !== "PGRST116") {
+                    throw userError;
+                }
 
-            if (existingUser) {
-                    // User already exists in database - authenticated via Supabase Auth
-                    // No localStorage needed - session is managed by Supabase
-                    console.log("✅ User authenticated via Supabase Auth session");
+                if (existingUser) {
+                    console.log("✅ User authenticated via Supabase Auth session (Found by Auth ID)");
+                    setVerifyingOtp(false);
+                    getReturnUrlAndRedirect();
+                    return;
+                }
+
+                // CRITICAL FIX: Check if user exists by PHONE now that we are authenticated
+                // RLS might have hidden them before, but we might be able to see/link them now.
+                console.log("ℹ️ Checking for existing user profile by phone...", phoneNumber);
+
+                // DEBUG: Check what the user object looks like and what Supabase thinks our phone is
+                console.log("ℹ️ Current Auth User ID:", authUser.id);
+                console.log("ℹ️ Current Auth Phone:", authUser.phone);
+
+                const { data: profileByPhone, error: profileError } = await supabase
+                    .from("users")
+                    .select("*")
+                    .eq("phone", phoneNumber)
+                    .maybeSingle();
+
+                if (profileError) {
+                    console.error("❌ Error checking profile by phone:", profileError);
+                } else {
+                    console.log("ℹ️ Profile query result:", profileByPhone ? "FOUND" : "NOT FOUND", profileByPhone);
+                }
+
+                if (profileByPhone) {
+                    console.log("✅ Found existing profile by phone (Post-Auth):", profileByPhone);
+                    // Link immediately
+                    if (profileByPhone.auth_user_id !== authUser.id) {
+                        console.log(`ℹ️ Linking new Auth ID ${authUser.id} to existing user ${profileByPhone.id} (was ${profileByPhone.auth_user_id})`);
+                        const { error: linkError } = await supabase
+                            .from("users")
+                            .update({ auth_user_id: authUser.id })
+                            .eq("id", profileByPhone.id);
+
+                        if (linkError) {
+                            console.error("❌ Link update failed:", linkError);
+                        } else {
+                            console.log("✅ Linked account automatically");
+                        }
+                    }
+
                     setVerifyingOtp(false);
                     getReturnUrlAndRedirect();
                     return;
                 }
             }
-            
-            // If no auth session and no existing user found, check by phone for test OTP
-            if (!authUser && otp === "000000") {
-                console.log("ℹ️ No auth session with test OTP, checking users table by phone...");
-                
-                const { data: allUsers } = await supabase
-                    .from("users")
-                    .select("id, name, phone, email, auth_user_id");
-
-                if (allUsers && allUsers.length > 0) {
-                    const foundUser = allUsers.find((u: any) => {
-                        if (!u.phone) return false;
-                        const storedDigits = u.phone.replace(/\D/g, "").trim();
-                        const storedLast10 = storedDigits.slice(-10);
-                        const inputLast10 = normalizedPhone.slice(-10);
-                        return storedLast10 === inputLast10;
-                    }) as { id: string; name: string; phone: string; email: string | null; auth_user_id: string | null } | undefined;
-
-                    if (foundUser) {
-                        // Check if user is an admin (in admins table)
-                        const userIdToCheck = foundUser.auth_user_id || foundUser.id;
-                        const { data: adminCheck } = await supabase
-                            .from("admins")
-                            .select("id")
-                            .eq("auth_user_id", userIdToCheck)
-                            .maybeSingle();
-                        
-                        if (adminCheck) {
-                            setError("This is an admin account. Please use the admin panel to login.");
-                            setVerifyingOtp(false);
-                            return;
-                        }
-                        // User exists but no auth session - create one
-                        console.log("✅ User found in database, creating auth session...", foundUser);
-                        
-                        // Create auth user for this phone number
-                        const tempPassword = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                        const { data: authData, error: authError } = await supabase.auth.signUp({
-                            phone: phoneNumber,
-                            password: tempPassword,
-                        });
-                        
-                        if (authData?.user) {
-                            // Link auth_user_id to user
-                            await supabase
-                                .from("users")
-                                .update({ auth_user_id: authData.user.id })
-                                .eq("id", foundUser.id);
-                            
-                            console.log("✅ Auth session created and linked to user");
-                            setVerifyingOtp(false);
-                            getReturnUrlAndRedirect();
-                            return;
-                        } else if (authError?.message?.includes("already registered")) {
-                            // User already exists in auth - try to sign in
-                            const { data: signInData } = await supabase.auth.signInWithPassword({
-                                phone: phoneNumber,
-                                password: tempPassword,
-                            });
-                            
-                            if (signInData?.user) {
-                                await supabase
-                                    .from("users")
-                                    .update({ auth_user_id: signInData.user.id })
-                                    .eq("id", foundUser.id);
-                                
-                                console.log("✅ Signed in existing auth user");
-                                setVerifyingOtp(false);
-                getReturnUrlAndRedirect();
-                return;
-            }
-                        }
-                        
-                        setError("Failed to create authentication session. Please try again.");
-                        setVerifyingOtp(false);
-                        return;
-                    }
-                }
-            }
 
             // New user - Show form to collect name/email
+            // If we are here, we truly didn't find the user
             if (isNewUser) {
                 // New user - Ask for information (after OTP verification)
                 setOtpSent(false); // Hide OTP screen, show info form
@@ -579,135 +536,23 @@ export default function Profile() {
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
 
-            // ⚠️ DEVELOPMENT ONLY - OTP Bypass for testing
-            if (isOtpBypassEnabled()) {
-                console.warn("⚠️ DEV MODE: OTP bypass enabled - creating user");
 
-                // First, check if user already exists (in case they were created by admin)
-                // Use the same robust phone matching logic as handleLogin
-                console.log("🔍 Checking if user already exists before creating...");
-                const { data: allUsersCheck, error: allUsersCheckError } = await supabase
-                    .from("users")
-                    .select("id, name, phone, email, auth_user_id");
-
-                let existingUserCheck = null;
-                if (!allUsersCheckError && allUsersCheck) {
-                    const foundUser = allUsersCheck.find(u => {
-                        if (!u.phone) return false;
-                        const storedDigits = u.phone.replace(/\D/g, "").trim();
-                        const storedLast10 = storedDigits.slice(-10);
-                        const inputLast10 = normalizedPhone.slice(-10);
-                        return storedLast10 === inputLast10;
-                    });
-                    existingUserCheck = foundUser || null;
-                }
-
-                if (existingUserCheck) {
-                    // User already exists - get/create auth session
-                    console.log("✅ User already exists, creating auth session:", existingUserCheck);
-                    
-                    // Create auth session for existing user
-                    const tempPassword = `temp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-                    const { data: authData } = await supabase.auth.signUp({
-                        phone: phoneNumber,
-                        password: tempPassword,
-                    });
-                    
-                    if (authData?.user) {
-                        await supabase
-                            .from("users")
-                            .update({ auth_user_id: authData.user.id })
-                            .eq("id", existingUserCheck.id);
-                    }
-                    
-                    getReturnUrlAndRedirect();
-                    setLoading(false);
-                    return;
-                }
-
-                // Create user through Supabase Auth first (this creates auth.users entry)
-                // This is needed to satisfy RLS policies that require authentication
-                console.log("📝 Creating new user in Supabase Auth...");
-                const { data: authData, error: authError } = await supabase.auth.signUp({
-                    phone: phoneNumber,
-                    password: "dev-password-bypass-" + Date.now(), // Unique password for each user
-                });
-
-                let authUserId = null;
-                if (authData?.user) {
-                    authUserId = authData.user.id;
-                    console.log("✅ Created auth user:", authUserId);
-                } else if (authError) {
-                    // If user already exists in auth, try to sign in
-                    if (authError.message?.includes("already registered") || authError.message?.includes("User already registered")) {
-                        console.log("ℹ️ User already exists in auth, trying to sign in...");
-                        const { data: signInData } = await supabase.auth.signInWithPassword({
-                            phone: phoneNumber,
-                            password: "dev-password-bypass-" + Date.now(),
-                        });
-                        if (signInData?.user) {
-                            authUserId = signInData.user.id;
-                            console.log("✅ Signed in existing auth user:", authUserId);
-                        }
-                    } else {
-                        console.warn("⚠️ Auth signup error (non-critical):", authError);
-                        // Continue anyway - we'll generate a UUID
-                    }
-                }
-
-                // Use auth user ID if available, otherwise generate UUID
-                const userId = authUserId || crypto.randomUUID();
-                console.log("📝 Using user ID:", userId, authUserId ? "(from auth)" : "(generated)");
-
-                // Create user in users table
-                // RLS policy should now allow this if auth.uid() matches id or auth_user_id
-                console.log("📝 Inserting user into users table...");
-                const { data: newUser, error: createError } = await supabase
-                    .from("users")
-                    .insert([{
-                        id: userId,
-                        name: newUserName.trim(),
-                        phone: phoneNumber,
-                        email: newUserEmail.trim() || null,
-                        auth_user_id: authUserId, // Link to Supabase Auth if available
-                    }])
-                    .select()
-                    .single();
-
-                if (createError) {
-                    console.error("❌ Error creating user:", createError);
-                    // If RLS error, provide helpful message
-                    if (createError.message?.includes("row-level security") || createError.code === "42501") {
-                        throw new Error(
-                            "Database security policy error. " +
-                            "The RLS policy has been updated, but you may need to refresh your session. " +
-                            "Please try again. If the error persists, check Supabase RLS policies.\n\n" +
-                            "Original error: " + createError.message
-                        );
-                    }
-                    throw createError;
-                }
-
-                console.log("✅ User created successfully:", newUser);
-
-                // User created - auth session already exists from OTP verification
-                // No localStorage needed - session is managed by Supabase
-
-                // Redirect to user page
-                getReturnUrlAndRedirect();
-                setLoading(false);
-                return;
-            }
 
             // ========== NORMAL FLOW (OTP REQUIRED) ==========
             // Get current auth session (user already verified OTP)
-            const { data: { session } } = await supabase.auth.getSession();
+            // Use getUser() as it is more robust than getSession() for validation
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
 
-            if (!session?.user) {
-                throw new Error("Authentication session expired. Please login again.");
+            if (userError || !user) {
+                // Try refresh session
+                const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+                if (!refreshedSession?.user) {
+                    throw new Error("Authentication session expired. Please login again.");
+                }
             }
 
-            const authUserId = session.user.id;
+            const authUserId = user?.id || (await supabase.auth.getUser()).data.user?.id;
+            if (!authUserId) throw new Error("User ID missing");
 
             // Create user in users table using auth user ID
             // RLS policy "user create self profile" allows this when auth_user_id = auth.uid()
@@ -724,6 +569,56 @@ export default function Profile() {
                 .single();
 
             if (createError) {
+                // Check for unique key violation (user already exists)
+                if (createError.code === "23505") { // duplicate key value violates unique constraint
+                    console.warn("⚠️ User already exists (duplicate phone), linking account...", createError);
+
+                    // The user exists, but we couldn't find them earlier (likely due to RLS).
+                    // Now we are authenticated as 'authUserId', so we try to claim the existing user record.
+
+                    // We need to find the user by phone to get their ID, but RLS might block SELECT.
+                    // However, we can try to Update directly using phone match.
+                    // RLS policy usually allows "update own record", but we are not 'own' yet until auth_user_id is set.
+                    // If RLS allows Authenticated users to Update rows where phone = their phone? Unlikely default.
+
+                    // BEST EFFORT: Service Role would be ideal here, but we are client-side.
+                    // Let's assume the user IS the owner and try to update based on phone number.
+                    // Note: This query might fail if RLS prevents UPDATE.
+
+                    /* 
+                       Workaround:
+                       If we are here, it means:
+                       1. Auth Session is Active (authUserId)
+                       2. Users Table row exists (phone conflict)
+                       3. Request failed.
+                       
+                       If RLS blocks us from updating the row to set auth_user_id, we are stuck without server-side help.
+                       However, often admins create the user and leave auth_user_id NULL.
+                       
+                       Let's try to update the user record where phone matches.
+                    */
+
+                    const { data: linkedUser, error: linkError } = await supabase
+                        .from("users")
+                        .update({ auth_user_id: authUserId })
+                        .eq("phone", phoneNumber)
+                        .select()
+                        .single();
+
+                    if (linkError) {
+                        console.error("❌ Failed to link existing user:", linkError);
+                        // Fallback: If we can't link, we can't proceed safely.
+                        // But maybe the UPDATE worked despite error? (Policy violation vs not found)
+
+                        throw new Error("This phone number is already registered but could not be linked. Please contact support.");
+                    }
+
+                    // Linked successfully!
+                    console.log("✅ Successfully linked existing user:", linkedUser);
+                    router.push("/user");
+                    return;
+                }
+
                 throw createError;
             }
 
@@ -776,10 +671,10 @@ export default function Profile() {
                     </h2>
                     <p className="mt-3 text-[#4d5563] text-[0.8rem]">
                         {otpSent
-                                ? "Enter the OTP sent to your phone"
+                            ? "Enter the OTP sent to your phone"
                             : isNewUser
-                                    ? "Enter your details to create an account"
-                                        : "Enter your phone number to login"}
+                                ? "Enter your details to create an account"
+                                : "Enter your phone number to login"}
                     </p>
 
                     {otpSent ? (
@@ -810,7 +705,7 @@ export default function Profile() {
                                             // Allow up to 6 digits
                                             if (value.length <= 6) {
                                                 setOtp(value);
-                                            setError("");
+                                                setError("");
                                             }
                                         }}
                                         onKeyPress={(e) => {

@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-// ⚠️ DEVELOPMENT ONLY - OTP bypass for testing
-import { isOtpBypassEnabled } from "@/lib/devConfig";
+// import { isOtpBypassEnabled } from "@/lib/devConfig";
 
 export default function UserPage() {
     const [userName, setUserName] = useState("");
@@ -39,7 +38,7 @@ export default function UserPage() {
         // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             // In bypass mode, ignore auth state changes (since we rely on localStorage)
-            if (isOtpBypassEnabled()) return;
+            // if (isOtpBypassEnabled()) return;
 
             if (session?.user) {
                 loadUserData();
@@ -51,9 +50,9 @@ export default function UserPage() {
                 if (!loading) {
                     // If we were loaded and session vanished, then redirect.
                     // Check bypass first purely to be safe, though callback above handles it.
-                    if (!isOtpBypassEnabled()) {
-                        router.push("/profile");
-                    }
+                    // if (!isOtpBypassEnabled()) {
+                    router.push("/profile");
+                    // }
                 }
             }
         });

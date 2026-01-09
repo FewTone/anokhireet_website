@@ -6,8 +6,7 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
-// ⚠️ DEVELOPMENT ONLY - OTP bypass for testing
-import { isOtpBypassEnabled } from "@/lib/devConfig";
+// import { isOtpBypassEnabled } from "@/lib/devConfig";
 
 interface UserProduct {
     id: string;
@@ -39,7 +38,7 @@ export default function MyProductsPage() {
             console.error("Error in loadUserAndProducts:", error);
             setLoading(false);
         });
-        
+
         // ========== NORMAL USER FLOW ==========
         // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -78,7 +77,7 @@ export default function MyProductsPage() {
             // User is logged in via Supabase Auth
             const authUserId = session.user.id;
             console.log("✅ Supabase Auth session found, authUserId:", authUserId);
-            
+
             // Find the user in users table by matching auth_user_id or id
             // This handles both admin-created users (linked via auth_user_id) and self-registered users
             const { data: userData, error: userError } = await supabase
@@ -86,21 +85,21 @@ export default function MyProductsPage() {
                 .select("id, name, auth_user_id")
                 .or(`id.eq.${authUserId},auth_user_id.eq.${authUserId}`)
                 .maybeSingle();
-            
+
             if (userError || !userData) {
                 console.error("❌ User not found in users table:", userError);
                 setLoading(false);
                 return;
             }
-            
+
             console.log("✅ User found in database:", userData);
-            
+
             // Use the users.id (not auth_user_id) to query products
             // Products are linked by user_id which references users.id
             const actualUserId = userData.id;
             setUserId(actualUserId);
             setUserName(userData.name || "");
-            
+
             // Load products using the actual users.id
             loadProducts(actualUserId);
         } catch (error) {
@@ -114,25 +113,25 @@ export default function MyProductsPage() {
             setLoading(true);
             console.log("🔍 Loading products for user_id:", uid);
             console.log("🔍 user_id type:", typeof uid);
-            
+
             // First, let's verify the user exists and get their actual ID
             const { data: userCheck, error: userCheckError } = await supabase
                 .from("users")
                 .select("id, name, phone")
                 .eq("id", uid)
                 .maybeSingle();
-            
+
             if (userCheckError) {
                 console.error("❌ Error checking user:", userCheckError);
             }
-            
+
             if (userCheck) {
                 console.log("✅ User verified:", userCheck);
                 console.log("🔍 User ID from database:", userCheck.id, "Type:", typeof userCheck.id);
             } else {
                 console.warn("⚠️ User not found with ID:", uid);
             }
-            
+
             // Try querying products with the exact user_id
             const { data, error } = await supabase
                 .from("products")
@@ -143,29 +142,29 @@ export default function MyProductsPage() {
             if (error) {
                 console.error("❌ Error loading products:", error);
                 console.error("❌ Error details:", JSON.stringify(error, null, 2));
-                
+
                 // Try alternative query - maybe user_id is stored as text
                 console.log("🔄 Trying alternative query...");
-                    const { data: altData, error: altError } = await supabase
-                        .from("products")
-                        .select("*")
-                        .eq("owner_user_id", String(uid))
-                        .order("created_at", { ascending: false });
-                
+                const { data: altData, error: altError } = await supabase
+                    .from("products")
+                    .select("*")
+                    .eq("owner_user_id", String(uid))
+                    .order("created_at", { ascending: false });
+
                 if (!altError && altData) {
                     console.log("✅ Products loaded with alternative query:", altData.length, "products");
                     setMyProducts(altData);
                     setLoading(false);
                     return;
                 }
-                
+
                 throw error;
             }
-            
+
             console.log("✅ Products query successful");
             console.log("✅ Products loaded:", data?.length || 0, "products");
             console.log("✅ Products data:", data);
-            
+
             if (data && data.length > 0) {
                 setMyProducts(data);
             } else {
@@ -200,16 +199,7 @@ export default function MyProductsPage() {
                         </p>
                     </div>
 
-                    {/* Debug Info - Remove in production */}
-                    {process.env.NODE_ENV === 'development' && (
-                        <div className="mb-4 p-4 bg-gray-100 rounded text-xs">
-                            <p><strong>Debug Info:</strong></p>
-                            <p>userId: {userId || "Not set"}</p>
-                            <p>userName: {userName || "Not set"}</p>
-                            <p>Products count: {myProducts.length}</p>
-                            <p>Loading: {loading ? "Yes" : "No"}</p>
-                        </div>
-                    )}
+
 
                     {loading ? (
                         <div className="text-center py-12">
@@ -228,11 +218,7 @@ export default function MyProductsPage() {
                             <p className="text-gray-400 text-sm mb-4">
                                 Contact an admin to add products to your account.
                             </p>
-                            {process.env.NODE_ENV === 'development' && (
-                                <p className="text-xs text-gray-400 mt-2">
-                                    Debug: User ID is {userId}. Check console for product query details.
-                                </p>
-                            )}
+
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">

@@ -90,6 +90,18 @@ export default function ChatPage() {
         scrollToBottom();
     }, [messages]);
 
+    // Hide search bar in mobile when chat is selected
+    useEffect(() => {
+        if (selectedChat) {
+            document.body.classList.add('chat-selected');
+        } else {
+            document.body.classList.remove('chat-selected');
+        }
+        return () => {
+            document.body.classList.remove('chat-selected');
+        };
+    }, [selectedChat]);
+
     const checkLoginStatus = async () => {
         try {
             // For demo purposes, set a demo user
@@ -632,6 +644,13 @@ export default function ChatPage() {
     return (
         <>
             <Navbar />
+            <style jsx global>{`
+                @media (max-width: 767px) {
+                    body.chat-selected nav .md\\:hidden > div:last-child form {
+                        display: none !important;
+                    }
+                }
+            `}</style>
             <main className="fixed inset-0 top-[95px] md:top-[70px] bg-gray-100">
                 <div className="h-full w-full">
                     <div className="flex h-full bg-white overflow-hidden relative">
