@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Popup from "@/components/Popup";
 import Image from "next/image";
@@ -160,7 +160,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
     );
 };
 
-const AdminDashboardContent = () => {
+export default function AdminPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [users, setUsers] = useState<User[]>([]);
@@ -7207,12 +7207,3 @@ To get these values:
     );
 }
 
-const AdminPage = () => {
-    return (
-        <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-lg">Loading Admin Panel...</div>}>
-            <AdminDashboardContent />
-        </Suspense>
-    );
-};
-
-export default AdminPage;
