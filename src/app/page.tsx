@@ -325,18 +325,18 @@ export default function Home() {
                 {/* Section 2: Featured Categories */}
                 {featuredCategories.length > 0 ? (
                     <div className="mt-8 md:mt-12 mb-8 md:mb-12 px-4">
-                        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 text-center md:text-center">FEATURED CATEGORIES</h2>
-                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 max-w-7xl mx-auto">
+                        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 md:mb-8 text-center">FEATURED CATEGORIES</h2>
+                        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 w-full">
                             {featuredCategories.map((cat, idx) => {
                                 return (
                                     <Link href={cat.link_url || "/shirt-collection"} key={idx} className="block hover:scale-[1.02] transition-transform duration-300">
-                                        <div className="relative w-full aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 mb-2">
+                                        <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-100">
                                             {cat.img && cat.img.trim() !== "" ? (
                                                 <Image
                                                     src={cat.img}
                                                     alt={cat.name || `Category ${idx}`}
                                                     fill
-                                                    className="rounded-lg object-cover"
+                                                    className="object-cover"
                                                     sizes="(max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                                                     unoptimized
                                                     onError={(e) => {
@@ -367,13 +367,13 @@ export default function Home() {
 
                 {/* Section 3: Shop Your Size */}
                 <div className="mt-8 md:mt-12 text-center px-4">
-                    <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">SHOP YOUR SIZE</h2>
-                    <div className="max-w-[1200px] mx-auto">
+                    <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 md:mb-8 text-center">SHOP YOUR SIZE</h2>
+                    <div className="w-full">
                         <Image
                             src="https://cdn.shopify.com/s/files/1/0420/7073/7058/files/refresh_18_nov_PLP02.jpg?v=1763468105"
                             alt="Shop Size Banner"
                             sizes="100vw"
-                            width={1200}
+                            width={1400}
                             height={400}
                             className="w-full h-auto"
                             priority
@@ -383,7 +383,7 @@ export default function Home() {
 
                 {/* Section 4: New and Popular */}
                 <div className="mt-8 md:mt-12 pb-12 md:pb-12">
-                    <h3 className="text-xl md:text-2xl font-bold text-center mb-4 md:mb-6">
+                    <h3 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 md:mb-8 text-center">
                         NEW AND POPULAR
                     </h3>
 
@@ -410,7 +410,7 @@ export default function Home() {
                             <p className="text-gray-500">Loading products...</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 max-w-[1400px] mx-auto px-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 w-full px-4">
                             {filteredProducts.map((product) => (
                                 <ProductCard key={product.id} product={product} />
                             ))}

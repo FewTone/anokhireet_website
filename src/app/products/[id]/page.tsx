@@ -280,32 +280,80 @@ export default function ProductDetailPage() {
         setSubmittingInquiry(true);
 
         try {
-            // Create inquiry
-            const { data: inquiryData, error: inquiryError } = await supabase
+            let chatId = null;
+            let inquiryId = null;
+
+            // 1. Check if an inquiry already exists for this product and user pair
+            const { data: existingInquiries } = await supabase
                 .from("inquiries")
-                .insert([{
-                    product_id: product.db_id,
-                    owner_user_id: product.owner_user_id,
-                    renter_user_id: currentUser.id,
-                    start_date: inquiryForm.start_date,
-                    end_date: inquiryForm.end_date,
-                    status: 'pending'
-                }])
-                .select()
-                .single();
+                .select("id, status")
+                .eq("product_id", product.db_id)
+                .eq("owner_user_id", product.owner_user_id)
+                .eq("renter_user_id", currentUser.id)
+                .order("created_at", { ascending: false })
+                .limit(1);
 
-            if (inquiryError) throw inquiryError;
+            if (existingInquiries && existingInquiries.length > 0) {
+                const existingInquiry = existingInquiries[0];
 
-            // Create chat for this inquiry
-            const { data: chatData, error: chatError } = await supabase
-                .from("chats")
-                .insert([{
-                    inquiry_id: inquiryData.id
-                }])
-                .select()
-                .single();
+                // 2. Check if a chat exists for this inquiry
+                const { data: existingChat } = await supabase
+                    .from("chats")
+                    .select("id")
+                    .eq("inquiry_id", existingInquiry.id)
+                    .single();
 
-            if (chatError) throw chatError;
+                if (existingChat) {
+                    chatId = existingChat.id;
+                    inquiryId = existingInquiry.id;
+
+                    console.log("Found existing chat, reusing:", chatId);
+
+                    // Update existing inquiry with new dates and set to pending
+                    const { error: updateError } = await supabase
+                        .from("inquiries")
+                        .update({
+                            start_date: inquiryForm.start_date,
+                            end_date: inquiryForm.end_date,
+                            status: 'pending'
+                        })
+                        .eq("id", inquiryId);
+
+                    if (updateError) console.error("Error updating existing inquiry:", updateError);
+                }
+            }
+
+            // 3. If no existing chat found, create new inquiry and chat
+            if (!chatId) {
+                // Create inquiry
+                const { data: inquiryData, error: inquiryError } = await supabase
+                    .from("inquiries")
+                    .insert([{
+                        product_id: product.db_id,
+                        owner_user_id: product.owner_user_id,
+                        renter_user_id: currentUser.id,
+                        start_date: inquiryForm.start_date,
+                        end_date: inquiryForm.end_date,
+                        status: 'pending'
+                    }])
+                    .select()
+                    .single();
+
+                if (inquiryError) throw inquiryError;
+                inquiryId = inquiryData.id;
+
+                // Create chat for this inquiry
+                const { data: chatData, error: chatError } = await supabase
+                    .from("chats")
+                    .insert([{
+                        inquiry_id: inquiryData.id
+                    }])
+                    .select()
+                    .single();
+
+                if (chatError) throw chatError;
+                chatId = chatData.id;
+            }
 
             // Create initial message in chat automatically
             const startDateFormatted = new Date(inquiryForm.start_date).toLocaleDateString('en-US', {
@@ -343,12 +391,12 @@ export default function ProductDetailPage() {
                 .from("messages")
                 .insert([
                     {
-                        chat_id: chatData.id,
+                        chat_id: chatId,
                         sender_user_id: currentUser.id,
                         message: JSON.stringify(cardMessage)
                     },
                     {
-                        chat_id: chatData.id,
+                        chat_id: chatId,
                         sender_user_id: currentUser.id,
                         message: textMessage
                     }
@@ -362,6 +410,9 @@ export default function ProductDetailPage() {
             alert("Inquiry submitted successfully! You can now chat with the owner.");
             setShowInquiryModal(false);
             setInquiryForm({ start_date: "", end_date: "" });
+
+            // Redirect to chat
+            // router.push('/chat'); // Optional: redirect user to chat page to see their message
         } catch (error: any) {
             console.error("Error submitting inquiry:", error);
             alert(error.message || "Failed to submit inquiry. Please try again.");

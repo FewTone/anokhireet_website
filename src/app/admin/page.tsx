@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Popup from "@/components/Popup";
 import Image from "next/image";
@@ -160,7 +160,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
     );
 };
 
-export default function AdminPage() {
+const AdminDashboardContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [users, setUsers] = useState<User[]>([]);
@@ -3303,8 +3303,8 @@ To get these values:
                                         });
                                     }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "dashboard"
-                                            ? "bg-black text-white shadow-md"
-                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3329,8 +3329,8 @@ To get these values:
                                         });
                                     }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "products"
-                                            ? "bg-black text-white shadow-md"
-                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3355,8 +3355,8 @@ To get these values:
                                         });
                                     }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "users"
-                                            ? "bg-black text-white shadow-md"
-                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3381,8 +3381,8 @@ To get these values:
                                         });
                                     }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "featured"
-                                            ? "bg-black text-white shadow-md"
-                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3407,8 +3407,8 @@ To get these values:
                                         });
                                     }}
                                     className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "hero"
-                                            ? "bg-black text-white shadow-md"
-                                            : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -3497,10 +3497,10 @@ To get these values:
                                                     onDrop={(e) => handleDrop(e, category.id)}
                                                     onDragEnd={handleDragEnd}
                                                     className={`flex items-center gap-4 p-4 rounded-lg border transition-all cursor-move relative ${draggedCategoryId === category.id
-                                                            ? "opacity-50 border-gray-200 bg-gray-50"
-                                                            : dragOverCategoryId === category.id
-                                                                ? "border-gray-200 bg-gray-50"
-                                                                : "bg-gray-50 border-gray-200 hover:shadow-md"
+                                                        ? "opacity-50 border-gray-200 bg-gray-50"
+                                                        : dragOverCategoryId === category.id
+                                                            ? "border-gray-200 bg-gray-50"
+                                                            : "bg-gray-50 border-gray-200 hover:shadow-md"
                                                         }`}
                                                     style={dragOverCategoryId === category.id ? {
                                                         borderLeft: '4px solid #3b82f6'
@@ -3596,8 +3596,8 @@ To get these values:
                                                         <button
                                                             onClick={() => toggleCategoryFeatured(category.id, category.is_featured || false)}
                                                             className={`p-2 rounded-lg transition-colors ${category.is_featured
-                                                                    ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
-                                                                    : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                                ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                                : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
                                                                 }`}
                                                             title={category.is_featured ? "Unpin from Featured Categories" : "Pin to Featured Categories"}
                                                         >
@@ -4646,8 +4646,8 @@ To get these values:
                                         <button
                                             onClick={() => setActiveFacetTab("product_types")}
                                             className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "product_types"
-                                                    ? "bg-black text-white"
-                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                                ? "bg-black text-white"
+                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
                                         >
                                             Product Types
@@ -4655,8 +4655,8 @@ To get these values:
                                         <button
                                             onClick={() => setActiveFacetTab("occasions")}
                                             className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "occasions"
-                                                    ? "bg-black text-white"
-                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                                ? "bg-black text-white"
+                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
                                         >
                                             Occasions
@@ -4664,8 +4664,8 @@ To get these values:
                                         <button
                                             onClick={() => setActiveFacetTab("colors")}
                                             className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "colors"
-                                                    ? "bg-black text-white"
-                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                                ? "bg-black text-white"
+                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
                                         >
                                             Colors
@@ -4673,8 +4673,8 @@ To get these values:
                                         <button
                                             onClick={() => setActiveFacetTab("materials")}
                                             className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "materials"
-                                                    ? "bg-black text-white"
-                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                                ? "bg-black text-white"
+                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
                                         >
                                             Materials
@@ -4682,8 +4682,8 @@ To get these values:
                                         <button
                                             onClick={() => setActiveFacetTab("cities")}
                                             className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "cities"
-                                                    ? "bg-black text-white"
-                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                                ? "bg-black text-white"
+                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
                                         >
                                             Cities
@@ -5862,10 +5862,10 @@ To get these values:
                                                     onDragEnd={handleHeroDragEnd}
                                                     onDrop={(e) => handleHeroDrop(e, slide.id)}
                                                     className={`flex items-center gap-4 p-4 border-2 rounded-lg transition-all ${draggedHeroId === slide.id
-                                                            ? "border-blue-500 bg-blue-50 opacity-50"
-                                                            : dragOverHeroId === slide.id
-                                                                ? "border-green-500 bg-green-50"
-                                                                : "border-gray-200 hover:border-gray-300 bg-white"
+                                                        ? "border-blue-500 bg-blue-50 opacity-50"
+                                                        : dragOverHeroId === slide.id
+                                                            ? "border-green-500 bg-green-50"
+                                                            : "border-gray-200 hover:border-gray-300 bg-white"
                                                         }`}
                                                 >
                                                     <div className="flex items-center gap-3 flex-shrink-0">
@@ -5910,8 +5910,8 @@ To get these values:
                                                         <button
                                                             onClick={() => toggleHeroSlideActive(slide.id, slide.is_active)}
                                                             className={`p-2 rounded-lg transition-colors ${slide.is_active
-                                                                    ? "text-green-600 hover:bg-green-50 bg-green-50"
-                                                                    : "text-gray-400 hover:text-green-600 hover:bg-gray-100"
+                                                                ? "text-green-600 hover:bg-green-50 bg-green-50"
+                                                                : "text-gray-400 hover:text-green-600 hover:bg-gray-100"
                                                                 }`}
                                                             title={slide.is_active ? "Deactivate slide" : "Activate slide"}
                                                         >
@@ -6400,810 +6400,819 @@ To get these values:
                         </div>
                     </div>
 
-                        {/* Top Section: All Featured Items Combined */}
-                        {(() => {
-                            // Combine all featured items from all facet types
-                            const featuredItems: Array<{ id: string; name: string; image_url: string | null; type: string; typeLabel: string; display_order: number; productCount?: number }> = [];
+                    {/* Top Section: All Featured Items Combined */}
+                    {(() => {
+                        // Combine all featured items from all facet types
+                        const featuredItems: Array<{ id: string; name: string; image_url: string | null; type: string; typeLabel: string; display_order: number; productCount?: number }> = [];
 
-                            // Add featured product types
-                            productTypes.filter(pt => pt.is_featured).forEach(pt => {
-                                featuredItems.push({
-                                    id: pt.id,
-                                    name: pt.name,
-                                    image_url: pt.image_url,
-                                    type: 'product_type',
-                                    typeLabel: 'Product Type',
-                                    display_order: pt.display_order,
-                                    productCount: facetProductCounts.get(`product_type_${pt.id}`) || 0
-                                });
+                        // Add featured product types
+                        productTypes.filter(pt => pt.is_featured).forEach(pt => {
+                            featuredItems.push({
+                                id: pt.id,
+                                name: pt.name,
+                                image_url: pt.image_url,
+                                type: 'product_type',
+                                typeLabel: 'Product Type',
+                                display_order: pt.display_order,
+                                productCount: facetProductCounts.get(`product_type_${pt.id}`) || 0
                             });
+                        });
 
-                            // Add featured occasions
-                            occasions.filter(oc => oc.is_featured).forEach(oc => {
-                                featuredItems.push({
-                                    id: oc.id,
-                                    name: oc.name,
-                                    image_url: oc.image_url,
-                                    type: 'occasion',
-                                    typeLabel: 'Occasion',
-                                    display_order: oc.display_order,
-                                    productCount: facetProductCounts.get(`occasion_${oc.id}`) || 0
-                                });
+                        // Add featured occasions
+                        occasions.filter(oc => oc.is_featured).forEach(oc => {
+                            featuredItems.push({
+                                id: oc.id,
+                                name: oc.name,
+                                image_url: oc.image_url,
+                                type: 'occasion',
+                                typeLabel: 'Occasion',
+                                display_order: oc.display_order,
+                                productCount: facetProductCounts.get(`occasion_${oc.id}`) || 0
                             });
+                        });
 
-                            // Sort by display_order
-                            featuredItems.sort((a, b) => a.display_order - b.display_order);
+                        // Sort by display_order
+                        featuredItems.sort((a, b) => a.display_order - b.display_order);
 
-                            return featuredItems.length > 0 ? (
-                                <div className="mb-8 border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div>
-                                            <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-medium rounded">★</span>
-                                                Featured Items - Reorder Here
-                                            </h3>
-                                            <p className="text-sm text-gray-600 mt-1">Drag and drop to reorder featured items across all types. This order will be used on the home page.</p>
-                                        </div>
-                                        <span className="text-sm text-gray-500">{featuredItems.length} featured items</span>
+                        return featuredItems.length > 0 ? (
+                            <div className="mb-8 border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                            <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-medium rounded">★</span>
+                                            Featured Items - Reorder Here
+                                        </h3>
+                                        <p className="text-sm text-gray-600 mt-1">Drag and drop to reorder featured items across all types. This order will be used on the home page.</p>
                                     </div>
-                                    <div className="space-y-3">
-                                        {featuredItems.map((item, index) => {
-                                            const itemKey = `${item.type}:${item.id}`;
-                                            return (
-                                                <div
-                                                    key={itemKey}
-                                                    draggable
-                                                    onDragStart={(e) => {
-                                                        setDraggedFeaturedItem(itemKey);
-                                                        e.dataTransfer.effectAllowed = "move";
-                                                        e.dataTransfer.setData("text/html", itemKey);
-                                                    }}
-                                                    onDragOver={(e) => {
-                                                        e.preventDefault();
-                                                        e.dataTransfer.dropEffect = "move";
-                                                        if (draggedFeaturedItem && draggedFeaturedItem !== itemKey) {
-                                                            setDragOverFeaturedItem(itemKey);
-                                                        }
-                                                    }}
-                                                    onDragLeave={() => setDragOverFeaturedItem(null)}
-                                                    onDrop={async (e) => {
-                                                        e.preventDefault();
-                                                        setDragOverFeaturedItem(null);
+                                    <span className="text-sm text-gray-500">{featuredItems.length} featured items</span>
+                                </div>
+                                <div className="space-y-3">
+                                    {featuredItems.map((item, index) => {
+                                        const itemKey = `${item.type}:${item.id}`;
+                                        return (
+                                            <div
+                                                key={itemKey}
+                                                draggable
+                                                onDragStart={(e) => {
+                                                    setDraggedFeaturedItem(itemKey);
+                                                    e.dataTransfer.effectAllowed = "move";
+                                                    e.dataTransfer.setData("text/html", itemKey);
+                                                }}
+                                                onDragOver={(e) => {
+                                                    e.preventDefault();
+                                                    e.dataTransfer.dropEffect = "move";
+                                                    if (draggedFeaturedItem && draggedFeaturedItem !== itemKey) {
+                                                        setDragOverFeaturedItem(itemKey);
+                                                    }
+                                                }}
+                                                onDragLeave={() => setDragOverFeaturedItem(null)}
+                                                onDrop={async (e) => {
+                                                    e.preventDefault();
+                                                    setDragOverFeaturedItem(null);
 
-                                                        if (!draggedFeaturedItem || draggedFeaturedItem === itemKey) {
-                                                            setDraggedFeaturedItem(null);
-                                                            return;
-                                                        }
-
-                                                        const draggedIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === draggedFeaturedItem);
-                                                        const targetIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === itemKey);
-
-                                                        if (draggedIndex === -1 || targetIndex === -1) {
-                                                            setDraggedFeaturedItem(null);
-                                                            return;
-                                                        }
-
-                                                        // Reorder array
-                                                        const newItems = [...featuredItems];
-                                                        const [removed] = newItems.splice(draggedIndex, 1);
-                                                        newItems.splice(targetIndex, 0, removed);
-
-                                                        // Update display_order for all featured items globally
-                                                        try {
-                                                            const updatePromises = newItems.map(async (it, idx) => {
-                                                                const tableName = it.type === 'product_type' ? 'product_types' : it.type === 'occasion' ? 'occasions' : null;
-                                                                if (!tableName) return Promise.resolve();
-
-                                                                return supabase
-                                                                    .from(tableName)
-                                                                    .update({
-                                                                        display_order: idx,
-                                                                        updated_at: new Date().toISOString()
-                                                                    })
-                                                                    .eq("id", it.id);
-                                                            });
-
-                                                            await Promise.all(updatePromises);
-                                                            showPopup("Featured items reordered successfully! The order will be reflected on the home page.", "success");
-                                                            await Promise.all([loadProductTypes(), loadOccasions()]);
-                                                        } catch (error: any) {
-                                                            showPopup(error.message || "Failed to reorder featured items", "error", "Error");
-                                                            console.error("Error reordering featured items:", error);
-                                                        }
-
+                                                    if (!draggedFeaturedItem || draggedFeaturedItem === itemKey) {
                                                         setDraggedFeaturedItem(null);
-                                                    }}
-                                                    onDragEnd={() => {
+                                                        return;
+                                                    }
+
+                                                    const draggedIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === draggedFeaturedItem);
+                                                    const targetIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === itemKey);
+
+                                                    if (draggedIndex === -1 || targetIndex === -1) {
                                                         setDraggedFeaturedItem(null);
-                                                        setDragOverFeaturedItem(null);
-                                                    }}
-                                                    className={`flex items-center gap-4 p-4 rounded-lg border transition-all cursor-move ${draggedFeaturedItem === itemKey
-                                                            ? "opacity-50 border-gray-300 bg-white"
-                                                            : dragOverFeaturedItem === itemKey
-                                                                ? "border-yellow-400 bg-yellow-100 shadow-md"
-                                                                : "bg-white border-yellow-200 hover:shadow-md"
-                                                        }`}
-                                                >
-                                                    <div className="flex items-center gap-3 flex-shrink-0">
-                                                        <div className="text-yellow-600 font-bold text-sm w-6">{index + 1}</div>
-                                                        <div>
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                            </svg>
+                                                        return;
+                                                    }
+
+                                                    // Reorder array
+                                                    const newItems = [...featuredItems];
+                                                    const [removed] = newItems.splice(draggedIndex, 1);
+                                                    newItems.splice(targetIndex, 0, removed);
+
+                                                    // Update display_order for all featured items globally
+                                                    try {
+                                                        const updatePromises = newItems.map(async (it, idx) => {
+                                                            const tableName = it.type === 'product_type' ? 'product_types' : it.type === 'occasion' ? 'occasions' : null;
+                                                            if (!tableName) return Promise.resolve();
+
+                                                            return supabase
+                                                                .from(tableName)
+                                                                .update({
+                                                                    display_order: idx,
+                                                                    updated_at: new Date().toISOString()
+                                                                })
+                                                                .eq("id", it.id);
+                                                        });
+
+                                                        await Promise.all(updatePromises);
+                                                        showPopup("Featured items reordered successfully! The order will be reflected on the home page.", "success");
+                                                        await Promise.all([loadProductTypes(), loadOccasions()]);
+                                                    } catch (error: any) {
+                                                        showPopup(error.message || "Failed to reorder featured items", "error", "Error");
+                                                        console.error("Error reordering featured items:", error);
+                                                    }
+
+                                                    setDraggedFeaturedItem(null);
+                                                }}
+                                                onDragEnd={() => {
+                                                    setDraggedFeaturedItem(null);
+                                                    setDragOverFeaturedItem(null);
+                                                }}
+                                                className={`flex items-center gap-4 p-4 rounded-lg border transition-all cursor-move ${draggedFeaturedItem === itemKey
+                                                    ? "opacity-50 border-gray-300 bg-white"
+                                                    : dragOverFeaturedItem === itemKey
+                                                        ? "border-yellow-400 bg-yellow-100 shadow-md"
+                                                        : "bg-white border-yellow-200 hover:shadow-md"
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="text-yellow-600 font-bold text-sm w-6">{index + 1}</div>
+                                                    <div>
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                    {item.image_url ? (
+                                                        <Image
+                                                            src={item.image_url}
+                                                            alt={item.name}
+                                                            fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                            No Image
                                                         </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                            {item.typeLabel}
+                                                        </span>
                                                     </div>
-                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                                        {item.image_url ? (
-                                                            <Image
-                                                                src={item.image_url}
-                                                                alt={item.name}
-                                                                fill
-                                                                className="object-cover"
-                                                                unoptimized
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                                No Image
-                                                            </div>
-                                                        )}
+                                                    <p className="text-xs text-gray-600 mb-1">
+                                                        /products?{item.type === 'product_type' ? 'product_type' : item.type === 'occasion' ? 'occasion' : item.type}={item.id}
+                                                    </p>
+                                                    {item.productCount !== undefined && (
+                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                            onClick={() => {
+                                                                setActiveTab("products");
+                                                                localStorage.setItem("adminActiveTab", "products");
+                                                                setFilterCategory(item.id);
+                                                                router.push(`/admin?tab=products`);
+                                                            }}
+                                                        >
+                                                            View {item.productCount} products →
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="mb-8 border-2 border-gray-200 border-dashed rounded-lg p-8 bg-gray-50 text-center">
+                                <p className="text-sm text-gray-500">No featured items yet. Pin items from the sections below to add them here.</p>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Vertical List Layout */}
+                    <div className="space-y-8">
+                        {/* Section 1: Product Types */}
+                        <div className="border border-gray-200 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-gray-900">Product Types</h3>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm text-gray-500">{productTypes.length} items</span>
+                                    <button
+                                        onClick={() => {
+                                            setActiveFacetTab("product_types");
+                                            setEditingFacet(null);
+                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
+                                            setIsFacetModalOpen(true);
+                                        }}
+                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                {productTypes.length === 0 ? (
+                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                        <p className="text-sm text-gray-500">No items</p>
+                                    </div>
+                                ) : (
+                                    productTypes.map((pt, index) => {
+                                        const productCount = facetProductCounts.get(`product_type_${pt.id}`) || 0;
+
+                                        return (
+                                            <div
+                                                key={pt.id}
+                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                    <div className="cursor-move">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                        </svg>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                                                </div>
+                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                    {pt.image_url ? (
+                                                        <Image
+                                                            src={pt.image_url}
+                                                            alt={pt.name}
+                                                            fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                            No Image
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h4 className="font-semibold text-gray-900">{pt.name}</h4>
+                                                        {pt.is_featured && (
                                                             <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                                                                {item.typeLabel}
+                                                                ★ Featured
                                                             </span>
-                                                        </div>
-                                                        <p className="text-xs text-gray-600 mb-1">
-                                                            /products?{item.type === 'product_type' ? 'product_type' : item.type === 'occasion' ? 'occasion' : item.type}={item.id}
-                                                        </p>
-                                                        {item.productCount !== undefined && (
-                                                            <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                                onClick={() => {
-                                                                    setActiveTab("products");
-                                                                    localStorage.setItem("adminActiveTab", "products");
-                                                                    setFilterCategory(item.id);
-                                                                    router.push(`/admin?tab=products`);
-                                                                }}
-                                                            >
-                                                                View {item.productCount} products →
-                                                            </p>
                                                         )}
                                                     </div>
+                                                    <p className="text-xs text-gray-600 mb-1">/products?product_type={pt.id}</p>
+                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            setFilterCategory(pt.id);
+                                                            router.push(`/admin?tab=products`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="mb-8 border-2 border-gray-200 border-dashed rounded-lg p-8 bg-gray-50 text-center">
-                                    <p className="text-sm text-gray-500">No featured items yet. Pin items from the sections below to add them here.</p>
-                                </div>
-                            );
-                        })()}
-
-                        {/* Vertical List Layout */}
-                        <div className="space-y-8">
-                            {/* Section 1: Product Types */}
-                            <div className="border border-gray-200 rounded-lg p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-gray-900">Product Types</h3>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500">{productTypes.length} items</span>
-                                        <button
-                                            onClick={() => {
-                                                setActiveFacetTab("product_types");
-                                                setEditingFacet(null);
-                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                                setFacetImageFile(null);
-                                                setFacetImagePreview("");
-                                                setIsFacetModalOpen(true);
-                                            }}
-                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                            </svg>
-                                            Add
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    {productTypes.length === 0 ? (
-                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-sm text-gray-500">No items</p>
-                                        </div>
-                                    ) : (
-                                        productTypes.map((pt, index) => {
-                                            const productCount = facetProductCounts.get(`product_type_${pt.id}`) || 0;
-
-                                            return (
-                                                <div
-                                                    key={pt.id}
-                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                                >
-                                                    <div className="flex items-center gap-3 flex-shrink-0">
-                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                        <div className="cursor-move">
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                                        {pt.image_url ? (
-                                                            <Image
-                                                                src={pt.image_url}
-                                                                alt={pt.name}
-                                                                fill
-                                                                className="object-cover"
-                                                                unoptimized
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                                No Image
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <h4 className="font-semibold text-gray-900">{pt.name}</h4>
-                                                            {pt.is_featured && (
-                                                                <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                                                                    ★ Featured
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-xs text-gray-600 mb-1">/products?product_type={pt.id}</p>
-                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                            onClick={() => {
-                                                                setActiveTab("products");
-                                                                localStorage.setItem("adminActiveTab", "products");
-                                                                setFilterCategory(pt.id);
-                                                                router.push(`/admin?tab=products`);
-                                                            }}
-                                                        >
-                                                            View {productCount} products →
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                                        <button
-                                                            onClick={async () => {
-                                                                const newFeatured = !pt.is_featured;
-                                                                try {
-                                                                    const { error } = await supabase
-                                                                        .from("product_types")
-                                                                        .update({ is_featured: newFeatured })
-                                                                        .eq("id", pt.id);
-                                                                    if (error) throw error;
-                                                                    loadProductTypes();
-                                                                    showPopup(newFeatured ? "Product type pinned!" : "Product type unpinned!", "success");
-                                                                } catch (error: any) {
-                                                                    showPopup(error.message || "Failed to update", "error");
-                                                                }
-                                                            }}
-                                                            className={`p-2 rounded transition-colors ${pt.is_featured
-                                                                    ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
-                                                                    : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
-                                                                }`}
-                                                            title={pt.is_featured ? "Unpin" : "Pin"}
-                                                        >
-                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                                            </svg>
-                                                        </button>
-                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                        <button
-                                                            onClick={() => {
-                                                                setActiveFacetTab("product_types");
-                                                                setEditingFacet(pt);
-                                                                setFacetFormData({
-                                                                    name: pt.name,
-                                                                    hex: "",
-                                                                    state: "",
-                                                                    country: "",
-                                                                    image_url: pt.image_url || ""
-                                                                });
-                                                                setFacetImageFile(null);
-                                                                setFacetImagePreview(pt.image_url || "");
-                                                                setIsFacetModalOpen(true);
-                                                            }}
-                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteProductType(pt.id, pt.name)}
-                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <button
+                                                        onClick={async () => {
+                                                            const newFeatured = !pt.is_featured;
+                                                            try {
+                                                                const { error } = await supabase
+                                                                    .from("product_types")
+                                                                    .update({ is_featured: newFeatured })
+                                                                    .eq("id", pt.id);
+                                                                if (error) throw error;
+                                                                loadProductTypes();
+                                                                showPopup(newFeatured ? "Product type pinned!" : "Product type unpinned!", "success");
+                                                            } catch (error: any) {
+                                                                showPopup(error.message || "Failed to update", "error");
+                                                            }
+                                                        }}
+                                                        className={`p-2 rounded transition-colors ${pt.is_featured
+                                                            ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                            : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                            }`}
+                                                        title={pt.is_featured ? "Unpin" : "Pin"}
+                                                    >
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                        </svg>
+                                                    </button>
+                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveFacetTab("product_types");
+                                                            setEditingFacet(pt);
+                                                            setFacetFormData({
+                                                                name: pt.name,
+                                                                hex: "",
+                                                                state: "",
+                                                                country: "",
+                                                                image_url: pt.image_url || ""
+                                                            });
+                                                            setFacetImageFile(null);
+                                                            setFacetImagePreview(pt.image_url || "");
+                                                            setIsFacetModalOpen(true);
+                                                        }}
+                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteProductType(pt.id, pt.name)}
+                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                    >
+                                                        Delete
+                                                    </button>
                                                 </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Section 2: Occasions */}
-                            <div className="border border-gray-200 rounded-lg p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-gray-900">Occasions</h3>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500">{occasions.length} items</span>
-                                        <button
-                                            onClick={() => {
-                                                setActiveFacetTab("occasions");
-                                                setEditingFacet(null);
-                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                                setFacetImageFile(null);
-                                                setFacetImagePreview("");
-                                                setIsFacetModalOpen(true);
-                                            }}
-                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                            </svg>
-                                            Add
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    {occasions.length === 0 ? (
-                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-sm text-gray-500">No items</p>
-                                        </div>
-                                    ) : (
-                                        occasions.map((oc, index) => {
-                                            const productCount = facetProductCounts.get(`occasion_${oc.id}`) || 0;
-
-                                            return (
-                                                <div
-                                                    key={oc.id}
-                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                                >
-                                                    <div className="flex items-center gap-3 flex-shrink-0">
-                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                        <div className="cursor-move">
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                                        {oc.image_url ? (
-                                                            <Image
-                                                                src={oc.image_url}
-                                                                alt={oc.name}
-                                                                fill
-                                                                className="object-cover"
-                                                                unoptimized
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                                No Image
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <h4 className="font-semibold text-gray-900">{oc.name}</h4>
-                                                            {oc.is_featured && (
-                                                                <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                                                                    ★ Featured
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-xs text-gray-600 mb-1">/products?occasion={oc.id}</p>
-                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                            onClick={() => {
-                                                                setActiveTab("products");
-                                                                localStorage.setItem("adminActiveTab", "products");
-                                                                setFilterCategory(oc.id);
-                                                                router.push(`/admin?tab=products`);
-                                                            }}
-                                                        >
-                                                            View {productCount} products →
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                                        <button
-                                                            onClick={async () => {
-                                                                const newFeatured = !oc.is_featured;
-                                                                try {
-                                                                    const { error } = await supabase
-                                                                        .from("occasions")
-                                                                        .update({ is_featured: newFeatured })
-                                                                        .eq("id", oc.id);
-                                                                    if (error) throw error;
-                                                                    loadOccasions();
-                                                                    showPopup(newFeatured ? "Occasion pinned!" : "Occasion unpinned!", "success");
-                                                                } catch (error: any) {
-                                                                    showPopup(error.message || "Failed to update", "error");
-                                                                }
-                                                            }}
-                                                            className={`p-2 rounded transition-colors ${oc.is_featured
-                                                                    ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
-                                                                    : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
-                                                                }`}
-                                                            title={oc.is_featured ? "Unpin" : "Pin"}
-                                                        >
-                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                                            </svg>
-                                                        </button>
-                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                        <button
-                                                            onClick={() => {
-                                                                setActiveFacetTab("occasions");
-                                                                setEditingFacet(oc);
-                                                                setFacetFormData({
-                                                                    name: oc.name,
-                                                                    hex: "",
-                                                                    state: "",
-                                                                    country: "",
-                                                                    image_url: oc.image_url || ""
-                                                                });
-                                                                setFacetImageFile(null);
-                                                                setFacetImagePreview(oc.image_url || "");
-                                                                setIsFacetModalOpen(true);
-                                                            }}
-                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteOccasion(oc.id, oc.name)}
-                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Section 3: Colors */}
-                            <div className="border border-gray-200 rounded-lg p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-gray-900">Colors</h3>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500">{colors.length} items</span>
-                                        <button
-                                            onClick={() => {
-                                                setActiveFacetTab("colors");
-                                                setEditingFacet(null);
-                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                                setFacetImageFile(null);
-                                                setFacetImagePreview("");
-                                                setIsFacetModalOpen(true);
-                                            }}
-                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                            </svg>
-                                            Add
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    {colors.length === 0 ? (
-                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-sm text-gray-500">No items</p>
-                                        </div>
-                                    ) : (
-                                        colors.map((c, index) => {
-                                            const productCount = facetProductCounts.get(`color_${c.id}`) || 0;
-
-                                            return (
-                                                <div
-                                                    key={c.id}
-                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                                >
-                                                    <div className="flex items-center gap-3 flex-shrink-0">
-                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                        <div className="cursor-move">
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                        {c.hex ? (
-                                                            <div className="w-full h-full rounded-lg border border-gray-300" style={{ backgroundColor: c.hex }}></div>
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs rounded-lg">
-                                                                No Color
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="font-semibold text-gray-900 mb-1">{c.name}</h4>
-                                                        <p className="text-xs text-gray-600 mb-1">/products?color={c.id}</p>
-                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                            onClick={() => {
-                                                                setActiveTab("products");
-                                                                localStorage.setItem("adminActiveTab", "products");
-                                                                setFilterCategory(c.id);
-                                                                router.push(`/admin?tab=products`);
-                                                            }}
-                                                        >
-                                                            View {productCount} products →
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                        <button
-                                                            onClick={() => {
-                                                                setActiveFacetTab("colors");
-                                                                setEditingFacet(c);
-                                                                setFacetFormData({
-                                                                    name: c.name,
-                                                                    hex: c.hex || "",
-                                                                    state: "",
-                                                                    country: "",
-                                                                    image_url: ""
-                                                                });
-                                                                setFacetImageFile(null);
-                                                                setFacetImagePreview("");
-                                                                setIsFacetModalOpen(true);
-                                                            }}
-                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteColor(c.id, c.name)}
-                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Section 4: Materials */}
-                            <div className="border border-gray-200 rounded-lg p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-gray-900">Materials</h3>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500">{materials.length} items</span>
-                                        <button
-                                            onClick={() => {
-                                                setActiveFacetTab("materials");
-                                                setEditingFacet(null);
-                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                                setFacetImageFile(null);
-                                                setFacetImagePreview("");
-                                                setIsFacetModalOpen(true);
-                                            }}
-                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                            </svg>
-                                            Add
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    {materials.length === 0 ? (
-                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-sm text-gray-500">No items</p>
-                                        </div>
-                                    ) : (
-                                        materials.map((m, index) => {
-                                            const productCount = facetProductCounts.get(`material_${m.id}`) || 0;
-
-                                            return (
-                                                <div
-                                                    key={m.id}
-                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                                >
-                                                    <div className="flex items-center gap-3 flex-shrink-0">
-                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                        <div className="cursor-move">
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                            No Image
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="font-semibold text-gray-900 mb-1">{m.name}</h4>
-                                                        <p className="text-xs text-gray-600 mb-1">/products?material={m.id}</p>
-                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                            onClick={() => {
-                                                                setActiveTab("products");
-                                                                localStorage.setItem("adminActiveTab", "products");
-                                                                setFilterCategory(m.id);
-                                                                router.push(`/admin?tab=products`);
-                                                            }}
-                                                        >
-                                                            View {productCount} products →
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                        <button
-                                                            onClick={() => {
-                                                                setActiveFacetTab("materials");
-                                                                setEditingFacet(m);
-                                                                setFacetFormData({
-                                                                    name: m.name,
-                                                                    hex: "",
-                                                                    state: "",
-                                                                    country: "",
-                                                                    image_url: ""
-                                                                });
-                                                                setFacetImageFile(null);
-                                                                setFacetImagePreview("");
-                                                                setIsFacetModalOpen(true);
-                                                            }}
-                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteMaterial(m.id, m.name)}
-                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Section 5: Cities */}
-                            <div className="border border-gray-200 rounded-lg p-6">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-gray-900">Cities</h3>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm text-gray-500">{cities.length} items</span>
-                                        <button
-                                            onClick={() => {
-                                                setActiveFacetTab("cities");
-                                                setEditingFacet(null);
-                                                setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                                setFacetImageFile(null);
-                                                setFacetImagePreview("");
-                                                setIsFacetModalOpen(true);
-                                            }}
-                                            className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                        >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                            </svg>
-                                            Add
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    {cities.length === 0 ? (
-                                        <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                            <p className="text-sm text-gray-500">No items</p>
-                                        </div>
-                                    ) : (
-                                        cities.map((city, index) => {
-                                            const productCount = facetProductCounts.get(`city_${city.id}`) || 0;
-
-                                            return (
-                                                <div
-                                                    key={city.id}
-                                                    className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                                >
-                                                    <div className="flex items-center gap-3 flex-shrink-0">
-                                                        <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                        <div className="cursor-move">
-                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                            </svg>
-                                                        </div>
-                                                    </div>
-                                                    <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                            No Image
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h4 className="font-semibold text-gray-900 mb-1">{city.name}</h4>
-                                                        {city.state && (
-                                                            <p className="text-xs text-gray-600 mb-1">{city.state}</p>
-                                                        )}
-                                                        <p className="text-xs text-gray-600 mb-1">/products?city={city.id}</p>
-                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                            onClick={() => {
-                                                                setActiveTab("products");
-                                                                localStorage.setItem("adminActiveTab", "products");
-                                                                setFilterCategory(city.id);
-                                                                router.push(`/admin?tab=products`);
-                                                            }}
-                                                        >
-                                                            View {productCount} products →
-                                                        </p>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                                        <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                        <button
-                                                            onClick={() => {
-                                                                setActiveFacetTab("cities");
-                                                                setEditingFacet(city);
-                                                                setFacetFormData({
-                                                                    name: city.name,
-                                                                    hex: "",
-                                                                    state: city.state || "",
-                                                                    country: city.country || "",
-                                                                    image_url: ""
-                                                                });
-                                                                setFacetImageFile(null);
-                                                                setFacetImagePreview("");
-                                                                setIsFacetModalOpen(true);
-                                                            }}
-                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDeleteCity(city.id, city.name)}
-                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
+
+                        {/* Section 2: Occasions */}
+                        <div className="border border-gray-200 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-gray-900">Occasions</h3>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm text-gray-500">{occasions.length} items</span>
+                                    <button
+                                        onClick={() => {
+                                            setActiveFacetTab("occasions");
+                                            setEditingFacet(null);
+                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
+                                            setIsFacetModalOpen(true);
+                                        }}
+                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                {occasions.length === 0 ? (
+                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                        <p className="text-sm text-gray-500">No items</p>
+                                    </div>
+                                ) : (
+                                    occasions.map((oc, index) => {
+                                        const productCount = facetProductCounts.get(`occasion_${oc.id}`) || 0;
+
+                                        return (
+                                            <div
+                                                key={oc.id}
+                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                    <div className="cursor-move">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                    {oc.image_url ? (
+                                                        <Image
+                                                            src={oc.image_url}
+                                                            alt={oc.name}
+                                                            fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                            No Image
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <h4 className="font-semibold text-gray-900">{oc.name}</h4>
+                                                        {oc.is_featured && (
+                                                            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                ★ Featured
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-gray-600 mb-1">/products?occasion={oc.id}</p>
+                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            setFilterCategory(oc.id);
+                                                            router.push(`/admin?tab=products`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <button
+                                                        onClick={async () => {
+                                                            const newFeatured = !oc.is_featured;
+                                                            try {
+                                                                const { error } = await supabase
+                                                                    .from("occasions")
+                                                                    .update({ is_featured: newFeatured })
+                                                                    .eq("id", oc.id);
+                                                                if (error) throw error;
+                                                                loadOccasions();
+                                                                showPopup(newFeatured ? "Occasion pinned!" : "Occasion unpinned!", "success");
+                                                            } catch (error: any) {
+                                                                showPopup(error.message || "Failed to update", "error");
+                                                            }
+                                                        }}
+                                                        className={`p-2 rounded transition-colors ${oc.is_featured
+                                                            ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                            : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                            }`}
+                                                        title={oc.is_featured ? "Unpin" : "Pin"}
+                                                    >
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                        </svg>
+                                                    </button>
+                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveFacetTab("occasions");
+                                                            setEditingFacet(oc);
+                                                            setFacetFormData({
+                                                                name: oc.name,
+                                                                hex: "",
+                                                                state: "",
+                                                                country: "",
+                                                                image_url: oc.image_url || ""
+                                                            });
+                                                            setFacetImageFile(null);
+                                                            setFacetImagePreview(oc.image_url || "");
+                                                            setIsFacetModalOpen(true);
+                                                        }}
+                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteOccasion(oc.id, oc.name)}
+                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Section 3: Colors */}
+                        <div className="border border-gray-200 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-gray-900">Colors</h3>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm text-gray-500">{colors.length} items</span>
+                                    <button
+                                        onClick={() => {
+                                            setActiveFacetTab("colors");
+                                            setEditingFacet(null);
+                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
+                                            setIsFacetModalOpen(true);
+                                        }}
+                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                {colors.length === 0 ? (
+                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                        <p className="text-sm text-gray-500">No items</p>
+                                    </div>
+                                ) : (
+                                    colors.map((c, index) => {
+                                        const productCount = facetProductCounts.get(`color_${c.id}`) || 0;
+
+                                        return (
+                                            <div
+                                                key={c.id}
+                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                    <div className="cursor-move">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                    {c.hex ? (
+                                                        <div className="w-full h-full rounded-lg border border-gray-300" style={{ backgroundColor: c.hex }}></div>
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs rounded-lg">
+                                                            No Color
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-semibold text-gray-900 mb-1">{c.name}</h4>
+                                                    <p className="text-xs text-gray-600 mb-1">/products?color={c.id}</p>
+                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            setFilterCategory(c.id);
+                                                            router.push(`/admin?tab=products`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveFacetTab("colors");
+                                                            setEditingFacet(c);
+                                                            setFacetFormData({
+                                                                name: c.name,
+                                                                hex: c.hex || "",
+                                                                state: "",
+                                                                country: "",
+                                                                image_url: ""
+                                                            });
+                                                            setFacetImageFile(null);
+                                                            setFacetImagePreview("");
+                                                            setIsFacetModalOpen(true);
+                                                        }}
+                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteColor(c.id, c.name)}
+                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Section 4: Materials */}
+                        <div className="border border-gray-200 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-gray-900">Materials</h3>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm text-gray-500">{materials.length} items</span>
+                                    <button
+                                        onClick={() => {
+                                            setActiveFacetTab("materials");
+                                            setEditingFacet(null);
+                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
+                                            setIsFacetModalOpen(true);
+                                        }}
+                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                {materials.length === 0 ? (
+                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                        <p className="text-sm text-gray-500">No items</p>
+                                    </div>
+                                ) : (
+                                    materials.map((m, index) => {
+                                        const productCount = facetProductCounts.get(`material_${m.id}`) || 0;
+
+                                        return (
+                                            <div
+                                                key={m.id}
+                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                    <div className="cursor-move">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                        No Image
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-semibold text-gray-900 mb-1">{m.name}</h4>
+                                                    <p className="text-xs text-gray-600 mb-1">/products?material={m.id}</p>
+                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            setFilterCategory(m.id);
+                                                            router.push(`/admin?tab=products`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveFacetTab("materials");
+                                                            setEditingFacet(m);
+                                                            setFacetFormData({
+                                                                name: m.name,
+                                                                hex: "",
+                                                                state: "",
+                                                                country: "",
+                                                                image_url: ""
+                                                            });
+                                                            setFacetImageFile(null);
+                                                            setFacetImagePreview("");
+                                                            setIsFacetModalOpen(true);
+                                                        }}
+                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteMaterial(m.id, m.name)}
+                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Section 5: Cities */}
+                        <div className="border border-gray-200 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-lg font-bold text-gray-900">Cities</h3>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm text-gray-500">{cities.length} items</span>
+                                    <button
+                                        onClick={() => {
+                                            setActiveFacetTab("cities");
+                                            setEditingFacet(null);
+                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                            setFacetImageFile(null);
+                                            setFacetImagePreview("");
+                                            setIsFacetModalOpen(true);
+                                        }}
+                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                {cities.length === 0 ? (
+                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                        <p className="text-sm text-gray-500">No items</p>
+                                    </div>
+                                ) : (
+                                    cities.map((city, index) => {
+                                        const productCount = facetProductCounts.get(`city_${city.id}`) || 0;
+
+                                        return (
+                                            <div
+                                                key={city.id}
+                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                            >
+                                                <div className="flex items-center gap-3 flex-shrink-0">
+                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                    <div className="cursor-move">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                        No Image
+                                                    </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-semibold text-gray-900 mb-1">{city.name}</h4>
+                                                    {city.state && (
+                                                        <p className="text-xs text-gray-600 mb-1">{city.state}</p>
+                                                    )}
+                                                    <p className="text-xs text-gray-600 mb-1">/products?city={city.id}</p>
+                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                        onClick={() => {
+                                                            setActiveTab("products");
+                                                            localStorage.setItem("adminActiveTab", "products");
+                                                            setFilterCategory(city.id);
+                                                            router.push(`/admin?tab=products`);
+                                                        }}
+                                                    >
+                                                        View {productCount} products →
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2 flex-shrink-0">
+                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveFacetTab("cities");
+                                                            setEditingFacet(city);
+                                                            setFacetFormData({
+                                                                name: city.name,
+                                                                hex: "",
+                                                                state: city.state || "",
+                                                                country: city.country || "",
+                                                                image_url: ""
+                                                            });
+                                                            setFacetImageFile(null);
+                                                            setFacetImagePreview("");
+                                                            setIsFacetModalOpen(true);
+                                                        }}
+                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteCity(city.id, city.name)}
+                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
     );
 }
 
+const AdminPage = () => {
+    return (
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-lg">Loading Admin Panel...</div>}>
+            <AdminDashboardContent />
+        </Suspense>
+    );
+};
+
+export default AdminPage;
