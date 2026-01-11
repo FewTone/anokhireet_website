@@ -165,7 +165,7 @@ export default function Hero() {
     const activeDotIndex = currentSlideIndex % heroSlides.length;
 
     return (
-        <div className="hero-container relative w-full overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0">
+        <div className="hero-container relative w-full overflow-hidden bg-white mt-2 md:mt-0">
             {/* Hero Slides Track */}
             <div
                 className="hero-scroll-track flex items-start gap-4"
@@ -192,6 +192,7 @@ export default function Hero() {
                             />
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+
                     </div>
                 ))}
             </div>

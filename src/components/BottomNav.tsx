@@ -66,14 +66,12 @@ export default function BottomNav() {
                             <Link
                                 key={item.name}
                                 href={item.href}
-                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
-                                    active ? "text-black" : "text-gray-500"
-                                }`}
+                                className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${active ? "text-black" : "text-gray-500"
+                                    }`}
                             >
                                 <div className={active ? "text-black" : "text-gray-500"}>
                                     {item.icon}
                                 </div>
-                                <span className="text-xs font-medium">{item.name}</span>
                             </Link>
                         );
                     })}
