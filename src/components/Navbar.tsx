@@ -230,7 +230,7 @@ export default function Navbar() {
                 </div>
             </nav>
             {/* Spacer for fixed nav */}
-            <div className="h-[95px] md:h-[80px]"></div>
+            <div className="h-[95px] md:h-[70px]"></div>
         </>
     );
 }

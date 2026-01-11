@@ -319,12 +319,12 @@ export default function Home() {
     return (
         <>
             <Navbar />
-            <main className="min-h-screen pb-16 md:pb-0 bg-white">
+            <main className="min-h-screen pb-12 md:pb-0 bg-white">
                 <Hero />
 
                 {/* Section 2: Featured Categories */}
                 {featuredCategories.length > 0 ? (
-                    <div className="mt-8 md:mt-12 mb-8 md:mb-12 px-4">
+                    <div className="mt-8 md:mt-12 mb-8 md:mb-12">
                         <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 md:mb-8 text-center">FEATURED CATEGORIES</h2>
                         <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4 w-full">
                             {featuredCategories.map((cat, idx) => {
@@ -366,7 +366,7 @@ export default function Home() {
                 )}
 
                 {/* Section 3: Shop Your Size */}
-                <div className="mt-8 md:mt-12 text-center px-4">
+                <div className="mt-8 md:mt-12 text-center">
                     <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 md:mb-8 text-center">SHOP YOUR SIZE</h2>
                     <div className="w-full">
                         <Image
@@ -410,7 +410,7 @@ export default function Home() {
                             <p className="text-gray-500">Loading products...</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 w-full px-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 w-full">
                             {filteredProducts.map((product) => (
                                 <ProductCard key={product.id} product={product} />
                             ))}

@@ -19,7 +19,7 @@ interface Product {
     db_id?: string; // Database UUID
     productTypes?: string[];
     occasions?: string[];
-    colors?: string[];
+    colors?: { name: string; hex?: string }[];
     materials?: string[];
     cities?: string[];
 }
@@ -206,14 +206,14 @@ export default function ProductDetailPage() {
                 const [productTypesData, occasionsData, colorsData, materialsData, citiesData] = await Promise.all([
                     productTypeIds.length > 0 ? supabase.from("product_types").select("name").in("id", productTypeIds) : Promise.resolve({ data: [], error: null }),
                     occasionIds.length > 0 ? supabase.from("occasions").select("name").in("id", occasionIds) : Promise.resolve({ data: [], error: null }),
-                    colorIds.length > 0 ? supabase.from("colors").select("name").in("id", colorIds) : Promise.resolve({ data: [], error: null }),
+                    colorIds.length > 0 ? supabase.from("colors").select("name, hex").in("id", colorIds) : Promise.resolve({ data: [], error: null }),
                     materialIds.length > 0 ? supabase.from("materials").select("name").in("id", materialIds) : Promise.resolve({ data: [], error: null }),
                     cityIds.length > 0 ? supabase.from("cities").select("name").in("id", cityIds) : Promise.resolve({ data: [], error: null }),
                 ]);
 
                 const productTypes = productTypesData.data?.map((pt: any) => pt.name).filter(Boolean) || [];
                 const occasions = occasionsData.data?.map((oc: any) => oc.name).filter(Boolean) || [];
-                const colors = colorsData.data?.map((c: any) => c.name).filter(Boolean) || [];
+                const colors = colorsData.data?.map((c: any) => ({ name: c.name, hex: c.hex })).filter((c: any) => c.name) || [];
                 const materials = materialsData.data?.map((m: any) => m.name).filter(Boolean) || [];
                 const cities = citiesData.data?.map((c: any) => c.name).filter(Boolean) || [];
 
@@ -577,7 +577,16 @@ export default function ProductDetailPage() {
                                                     {product.colors && product.colors.length > 0 && (
                                                         <div>
                                                             <span className="font-medium text-gray-700">Color:</span>
-                                                            <p className="mt-1">{product.colors.join(", ")}</p>
+                                                            <div className="flex gap-2 mt-1">
+                                                                {product.colors.map((color, index) => (
+                                                                    <div
+                                                                        key={index}
+                                                                        className="w-6 h-6 rounded border border-gray-300"
+                                                                        style={{ backgroundColor: color.hex || color.name }}
+                                                                        title={color.name}
+                                                                    />
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     )}
                                                     {product.materials && product.materials.length > 0 && (
