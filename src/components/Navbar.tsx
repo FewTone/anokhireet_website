@@ -9,6 +9,7 @@ export default function Navbar() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const pathname = usePathname();
+    const isHomePage = pathname === "/";
     const [searchQuery, setSearchQuery] = useState("");
 
     // Initialize search query from URL if on products page
@@ -39,7 +40,16 @@ export default function Navbar() {
 
     return (
         <>
-            <nav className="absolute md:fixed top-0 left-0 w-full z-[1000] bg-transparent md:bg-white shadow-none md:shadow-[0.1rem_0.1rem_0.2rem_rgb(119,118,118)] transition-all duration-300">
+            <nav
+                className={`
+                    top-0 left-0 w-full z-[1000] transition-all duration-300
+                    md:fixed md:bg-white md:shadow-[0.1rem_0.1rem_0.2rem_rgb(119,118,118)]
+                    ${isHomePage
+                        ? 'absolute bg-transparent shadow-none'
+                        : 'fixed bg-white shadow-[0.1rem_0.1rem_0.2rem_rgb(119,118,118)]'
+                    }
+                `}
+            >
                 {/* Desktop Layout */}
                 <div className="hidden md:flex h-[70px] px-4 items-center justify-between">
                     {/* Left Section: My Products and Wish List */}
@@ -163,49 +173,126 @@ export default function Navbar() {
                 </div>
 
                 {/* Mobile Layout */}
-                <div className="md:hidden pt-4 pb-12 px-4 bg-gradient-to-b from-black to-transparent">
-                    {/* Search Bar and Chat Button - Same row */}
-                    {!pathname?.startsWith("/chat") && (
-                        <div className="flex items-center gap-3">
-                            <form onSubmit={handleSearch} className="flex flex-1 h-[42px] border border-white/30 rounded backdrop-blur-sm bg-white/10 text-sm items-center pl-3">
+                {/* Mobile Layout */}
+                {isHomePage ? (
+                    // Home Page Overlay Layout
+                    <div className="md:hidden pt-4 pb-24 px-4 bg-gradient-to-b from-black via-black/70 to-transparent">
+                        {!pathname?.startsWith("/chat") && (
+                            <div className="flex items-center gap-3">
+                                <Link href="/" className="flex-shrink-0">
+                                    <Image
+                                        src="/Anokhi reet Logo.svg"
+                                        alt="Anokhi Reet Logo"
+                                        width={40}
+                                        height={40}
+                                        className="w-10 h-10 object-contain brightness-0 invert"
+                                        priority
+                                        suppressHydrationWarning
+                                    />
+                                </Link>
+                                <form onSubmit={handleSearch} className="flex flex-1 h-[42px] border border-white/30 rounded backdrop-blur-sm bg-white/10 text-sm items-center pl-3">
+                                    <Image
+                                        src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
+                                        alt="search"
+                                        width={18}
+                                        height={18}
+                                        className="opacity-70 invert"
+                                        suppressHydrationWarning
+                                    />
+                                    <input
+                                        type="search"
+                                        placeholder="Search by Product ID or Name"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyPress={handleSearchKeyPress}
+                                        className="h-full w-full text-[0.95rem] pl-3 border-none outline-none bg-transparent text-white placeholder-white/70"
+                                    />
+                                    <button type="submit" className="hidden" aria-label="Search" />
+                                </form>
+                                <Link href="/chat" className="flex-shrink-0 p-2 text-white">
+                                    <svg
+                                        width="28"
+                                        height="28"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                    </svg>
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    // Standard Mobile Layout (Other Pages)
+                    <div className="md:hidden py-3 px-4">
+                        <div className="flex justify-center items-center mb-3">
+                            <Link href="/" className="flex items-center gap-2">
                                 <Image
-                                    src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
-                                    alt="search"
-                                    width={18}
-                                    height={18}
-                                    className="opacity-70 invert"
+                                    src="/Anokhi reet Logo.svg"
+                                    alt="Anokhi Reet Logo"
+                                    width={40}
+                                    height={40}
+                                    className="w-10 h-10 object-contain cursor-pointer brightness-0"
+                                    priority
                                     suppressHydrationWarning
                                 />
-                                <input
-                                    type="search"
-                                    placeholder="Search by Product ID or Name"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    onKeyPress={handleSearchKeyPress}
-                                    className="h-full w-full text-[0.95rem] pl-3 border-none outline-none bg-transparent text-white placeholder-white/70"
+                                <Image
+                                    src="/anokhi-reet.svg"
+                                    alt="Anokhi Reet"
+                                    width={120}
+                                    height={18}
+                                    className="h-4 w-auto object-contain cursor-pointer brightness-0"
+                                    priority
+                                    suppressHydrationWarning
                                 />
-                                <button type="submit" className="hidden" aria-label="Search" />
-                            </form>
-                            <Link href="/chat" className="flex-shrink-0 p-2 text-white">
-                                <svg
-                                    width="28"
-                                    height="28"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                                </svg>
                             </Link>
                         </div>
-                    )}
-                </div>
+                        {!pathname?.startsWith("/chat") && (
+                            <div className="flex items-center gap-2">
+                                <form onSubmit={handleSearch} className="flex flex-1 h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
+                                    <Image
+                                        src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
+                                        alt="search"
+                                        width={18}
+                                        height={18}
+                                        className="opacity-60"
+                                        suppressHydrationWarning
+                                    />
+                                    <input
+                                        type="search"
+                                        placeholder="Search by Product ID or Name"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyPress={handleSearchKeyPress}
+                                        className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent text-black"
+                                    />
+                                    <button type="submit" className="hidden" aria-label="Search" />
+                                </form>
+                                <Link href="/chat" className="flex-shrink-0 p-2 text-black">
+                                    <svg
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                    </svg>
+                                </Link>
+                            </div>
+                        )}
+                    </div>
+                )}
             </nav>
             {/* Spacer for fixed nav */}
-            <div className="hidden md:block h-[70px]"></div>
+            <div className={`hidden md:block ${!isHomePage ? 'block' : ''} h-[70px]`}></div>
         </>
     );
 }
