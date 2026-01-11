@@ -174,9 +174,13 @@ export default function Navbar() {
 
                 {/* Mobile Layout */}
                 {/* Mobile Layout */}
-                {isHomePage ? (
-                    // Home Page Overlay Layout
-                    <div className="md:hidden pt-4 pb-24 px-4 bg-gradient-to-b from-black via-black/70 to-transparent">
+                {/* Mobile Layout */}
+                {isHomePage || pathname?.startsWith("/products") ? (
+                    // Home Page Overlay Layout OR Products Page Layout (Same structure, diff style)
+                    <div className={`md:hidden pt-4 px-4 ${isHomePage
+                            ? "pb-24 bg-gradient-to-b from-black via-black/70 to-transparent"
+                            : "pb-2 bg-white border-b border-gray-100" // Reduced padding, no shadow
+                        }`}>
                         {!pathname?.startsWith("/chat") && (
                             <div className="flex items-center gap-3">
                                 <Link href="/" className="flex-shrink-0">
@@ -185,31 +189,35 @@ export default function Navbar() {
                                         alt="Anokhi Reet Logo"
                                         width={40}
                                         height={40}
-                                        className="w-10 h-10 object-contain brightness-0 invert"
+                                        className={`w-10 h-10 object-contain ${isHomePage ? "brightness-0 invert" : "brightness-0"}`}
                                         priority
                                         suppressHydrationWarning
                                     />
                                 </Link>
-                                <form onSubmit={handleSearch} className="flex flex-1 h-[42px] border border-white/30 rounded backdrop-blur-sm bg-white/10 text-sm items-center pl-3">
+                                <form onSubmit={handleSearch} className={`flex flex-1 h-[42px] border rounded text-sm items-center pl-3 ${isHomePage
+                                    ? "border-white/30 backdrop-blur-sm bg-white/10"
+                                    : "border-gray-200 bg-gray-50"
+                                    }`}>
                                     <Image
                                         src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
                                         alt="search"
                                         width={18}
                                         height={18}
-                                        className="opacity-70 invert"
+                                        className={`opacity-70 ${isHomePage ? "invert" : ""}`}
                                         suppressHydrationWarning
                                     />
                                     <input
                                         type="search"
-                                        placeholder="Search by Product ID or Name"
+                                        placeholder="Search"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onKeyPress={handleSearchKeyPress}
-                                        className="h-full w-full text-[0.95rem] pl-3 border-none outline-none bg-transparent text-white placeholder-white/70"
+                                        className={`h-full w-full text-[0.95rem] pl-3 border-none outline-none bg-transparent ${isHomePage ? "text-white placeholder-white/70" : "text-black placeholder-gray-500"
+                                            }`}
                                     />
                                     <button type="submit" className="hidden" aria-label="Search" />
                                 </form>
-                                <Link href="/chat" className="flex-shrink-0 p-2 text-white">
+                                <Link href="/chat" className={`flex-shrink-0 p-2 ${isHomePage ? "text-white" : "text-black"}`}>
                                     <svg
                                         width="28"
                                         height="28"

@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ProductCard from "@/components/ProductCard";
+import MobileFilterSheet from "@/components/MobileFilterSheet";
 import { supabase } from "@/lib/supabase";
 
 interface Product {
@@ -43,7 +44,7 @@ export default function ProductsPage() {
     const [pendingMaterials, setPendingMaterials] = useState<string[]>([]);
     const [pendingCities, setPendingCities] = useState<string[]>([]);
     const [pendingPriceRange, setPendingPriceRange] = useState<[number, number]>([0, 5000]);
-    
+
     // Applied filter states (actually used for filtering)
     const [appliedProductTypes, setAppliedProductTypes] = useState<string[]>([]);
     const [appliedOccasions, setAppliedOccasions] = useState<string[]>([]);
@@ -51,16 +52,16 @@ export default function ProductsPage() {
     const [appliedMaterials, setAppliedMaterials] = useState<string[]>([]);
     const [appliedCities, setAppliedCities] = useState<string[]>([]);
     const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000]);
-    
+
     // Removed aliases - use applied states directly throughout the code
-    
+
     const [maxPrice, setMaxPrice] = useState<number>(5000); // Dynamic max price from products
     const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load to prevent URL updates
     const [searchQuery, setSearchQuery] = useState<string>(""); // Search query for product ID or name
 
     // Filter options data
-    const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string; image_url?: string | null }>>([]);
-    const [occasions, setOccasions] = useState<Array<{ id: string; name: string; image_url?: string | null }>>([]);
+    const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string; image_url?: string | null; is_featured?: boolean }>>([]);
+    const [occasions, setOccasions] = useState<Array<{ id: string; name: string; image_url?: string | null; is_featured?: boolean }>>([]);
     const [colors, setColors] = useState<Array<{ id: string; name: string; hex?: string }>>([]);
     const [materials, setMaterials] = useState<Array<{ id: string; name: string }>>([]);
     const [cities, setCities] = useState<Array<{ id: string; name: string }>>([]);
@@ -68,7 +69,7 @@ export default function ProductsPage() {
 
     // Filter sections collapse state
     const [filterSections, setFilterSections] = useState<FilterSection[]>([
-        { id: "sort", title: "SORT", isOpen: true },
+        { id: "sort", title: "SORT", isOpen: false },
         { id: "product_type", title: "PRODUCT TYPE", isOpen: false },
         { id: "occasion", title: "OCCASION", isOpen: false },
         { id: "color", title: "COLOR", isOpen: false },
@@ -76,10 +77,12 @@ export default function ProductsPage() {
         { id: "city", title: "AVAILABLE CITY", isOpen: false },
         { id: "price", title: "PRICE", isOpen: true },
     ]);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     // Category tags (can be made dynamic later)
     const categoryTags = ["ALL", "NEW", "FORMAL", "BLACK", "LUXE", "PLUS SIZE", "SLIM", "LINEN", "KOREAN", "CHINOS", "GURKHA", "BEIGE", "RELAXED", "BAGGY", "DENIM"];
     const [activeTag, setActiveTag] = useState("ALL");
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // 'grid' = 2 cols, 'list' = 1 col
 
     // Load filter options and products
     useEffect(() => {
@@ -120,7 +123,7 @@ export default function ProductsPage() {
         }
         const newUrl = params.toString() ? `/products?${params.toString()}` : '/products';
         const currentUrl = window.location.pathname + window.location.search;
-        
+
         // Only update URL if it's different from current URL
         if (newUrl !== currentUrl) {
             router.replace(newUrl);
@@ -274,8 +277,8 @@ export default function ProductsPage() {
     const loadFilterOptions = async () => {
         try {
             const [productTypesRes, occasionsRes, colorsRes, materialsRes, citiesRes] = await Promise.all([
-                supabase.from("product_types").select("id, name, image_url").order("display_order", { ascending: true }),
-                supabase.from("occasions").select("id, name, image_url").order("display_order", { ascending: true }),
+                supabase.from("product_types").select("id, name, image_url, is_featured").order("display_order", { ascending: true }),
+                supabase.from("occasions").select("id, name, image_url, is_featured").order("display_order", { ascending: true }),
                 supabase.from("colors").select("id, name, hex").order("display_order", { ascending: true }),
                 supabase.from("materials").select("id, name").order("display_order", { ascending: true }),
                 supabase.from("cities").select("id, name").order("display_order", { ascending: true }),
@@ -362,7 +365,7 @@ export default function ProductsPage() {
                     // If any product is above 5000, use the calculated max (minimum 5000)
                     const finalMaxPrice = Math.max(roundedMax, 5000);
                     setMaxPrice(finalMaxPrice);
-                    
+
                     const currentMaxPrice = appliedPriceRange[1];
                     // Only update priceRange if current max is default (5000) or if max product price is higher
                     if (currentMaxPrice === 5000 || finalMaxPrice > currentMaxPrice) {
@@ -585,9 +588,19 @@ export default function ProductsPage() {
 
     const toggleFilterSection = (sectionId: string) => {
         setFilterSections(sections =>
-            sections.map(section =>
-                section.id === sectionId ? { ...section, isOpen: !section.isOpen } : section
-            )
+            sections.map(section => {
+                if (section.id === sectionId) {
+                    return { ...section, isOpen: !section.isOpen };
+                } else {
+                    // Close others when opening one
+                    // If we are opening the clicked one (!section.isOpen would be true), then close others.
+                    // Actually, the simpler logic is: if we match the ID, toggle. If we don't match, ALWAYS close if the matched one IS OPENING.
+                    // But simpler: "Accordion" usually means only one open at a time.
+                    // So if ID matches, toggle. If it doesn't match, set isOpen = false.
+                    // However, if we are CLOSING the active one, we don't care about others (they are already closed).
+                    return { ...section, isOpen: false };
+                }
+            })
         );
     };
 
@@ -619,6 +632,16 @@ export default function ProductsPage() {
                 );
                 break;
         }
+    };
+
+    const handleMobileApply = () => {
+        handleApplyFilters();
+        setIsFilterOpen(false);
+    };
+
+    const handleMobileClear = () => {
+        clearAllFilters();
+        // setIsFilterOpen(false); // Keep open or close? Usually keep open on clear or just clear. Let's keep open to let user see it cleared.
     };
 
     const clearAllFilters = () => {
@@ -663,11 +686,11 @@ export default function ProductsPage() {
     return (
         <>
             <Navbar />
-            <main className="min-h-screen pt-20 pb-12">
+            <main className="min-h-screen pt-24 md:pt-20 pb-12">
                 <div className="max-w-[1400px] mx-auto px-4">
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Left Sidebar - Filters */}
-                        <aside className="w-full lg:w-64 flex-shrink-0">
+                        <aside className="hidden lg:block w-64 flex-shrink-0">
                             <div className="sticky top-24 bg-white border border-gray-200 rounded-lg p-4">
                                 <h2 className="text-lg font-bold mb-4">FILTERS</h2>
 
@@ -860,7 +883,7 @@ export default function ProductsPage() {
                                             <div className="relative h-8 mb-2">
                                                 {/* Background track (gray) */}
                                                 <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 rounded transform -translate-y-1/2"></div>
-                                                
+
                                                 {/* Active range track (thick black line between thumbs) */}
                                                 <div
                                                     className="absolute top-1/2 h-2 bg-black rounded transform -translate-y-1/2"
@@ -869,7 +892,7 @@ export default function ProductsPage() {
                                                         width: `${((pendingPriceRange[1] - pendingPriceRange[0]) / maxPrice) * 100}%`
                                                     }}
                                                 ></div>
-                                                
+
                                                 {/* Min price slider */}
                                                 <input
                                                     type="range"
@@ -883,7 +906,7 @@ export default function ProductsPage() {
                                                     }}
                                                     className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10 min-slider"
                                                 />
-                                                
+
                                                 {/* Max price slider */}
                                                 <input
                                                     type="range"
@@ -897,7 +920,7 @@ export default function ProductsPage() {
                                                     }}
                                                     className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10 max-slider"
                                                 />
-                                                
+
                                                 <style jsx>{`
                                                     .min-slider::-webkit-slider-thumb,
                                                     .max-slider::-webkit-slider-thumb {
@@ -933,7 +956,7 @@ export default function ProductsPage() {
                                                     }
                                                 `}</style>
                                             </div>
-                                            
+
                                             {/* Price labels below slider */}
                                             <div className="flex justify-between text-xs">
                                                 <span>₹{pendingPriceRange[0]}</span>
@@ -965,30 +988,51 @@ export default function ProductsPage() {
                         <div className="flex-1">
                             {/* Category Header */}
                             <div className="mb-6">
-                                <h1 className="text-3xl font-bold mb-4">PRODUCTS</h1>
-                                
-                                {/* Horizontal Category Tags - Mobile */}
-                                <div className="flex md:hidden justify-start flex-nowrap overflow-x-auto gap-2 mb-6 px-4 -mx-4 scrollbar-hide pb-2">
-                                    {["ALL", "ACCESSORIES", "TRENDING", "SALE", "PLUS SIZE"].map(tag => (
+                                <h1 className="hidden md:block text-3xl font-bold mb-4">PRODUCTS</h1>
+
+                                {/* Mobile Filter & View Bar - Only show when NOT in category view */}
+                                {!showCategories && (
+                                    <div className="md:hidden flex items-center justify-between mb-4 px-1">
+                                        {/* View Toggles */}
+                                        <div className="flex items-center gap-4">
+                                            <button
+                                                onClick={() => setViewMode('list')}
+                                                className={`p-1 ${viewMode === 'list' ? 'opacity-100' : 'opacity-40'}`}
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode('grid')}
+                                                className={`p-1 ${viewMode === 'grid' ? 'opacity-100' : 'opacity-40'}`}
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                    <line x1="12" y1="3" x2="12" y2="21"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        {/* Filter Button */}
                                         <button
-                                            key={tag}
-                                            onClick={() => {
-                                                if (tag === "ALL") {
-                                                    clearCategoryFilter();
-                                                } else {
-                                                    setActiveTag(tag);
-                                                }
-                                            }}
-                                            className={`px-4 py-1.5 text-xs border border-black whitespace-nowrap transition-all ${
-                                                (activeTag === tag || (tag === "ALL" && activeTag === "ALL" && !categoryName))
-                                                    ? "bg-black text-white"
-                                                    : "bg-white hover:bg-gray-50"
-                                            }`}
+                                            onClick={() => setIsFilterOpen(true)}
+                                            className="p-1"
                                         >
-                                            {tag}
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="4" y1="21" x2="4" y2="14"></line>
+                                                <line x1="4" y1="10" x2="4" y2="3"></line>
+                                                <line x1="12" y1="21" x2="12" y2="12"></line>
+                                                <line x1="12" y1="8" x2="12" y2="3"></line>
+                                                <line x1="20" y1="21" x2="20" y2="16"></line>
+                                                <line x1="20" y1="12" x2="20" y2="3"></line>
+                                                <line x1="1" y1="14" x2="7" y2="14"></line>
+                                                <line x1="9" y1="8" x2="15" y2="8"></line>
+                                                <line x1="17" y1="16" x2="23" y2="16"></line>
+                                            </svg>
                                         </button>
-                                    ))}
-                                </div>
+                                    </div>
+                                )}
 
                                 {/* Desktop Category Tags */}
                                 <div className="hidden md:flex flex-wrap gap-2 mb-4">
@@ -996,11 +1040,10 @@ export default function ProductsPage() {
                                         <button
                                             key={tag}
                                             onClick={() => setActiveTag(tag)}
-                                            className={`px-4 py-1.5 text-xs border border-black whitespace-nowrap transition-all ${
-                                                activeTag === tag
-                                                    ? "bg-black text-white"
-                                                    : "bg-white hover:bg-gray-50"
-                                            }`}
+                                            className={`px-4 py-1.5 text-xs border border-black whitespace-nowrap transition-all ${activeTag === tag
+                                                ? "bg-black text-white"
+                                                : "bg-white hover:bg-gray-50"
+                                                }`}
                                         >
                                             {tag}
                                         </button>
@@ -1010,130 +1053,138 @@ export default function ProductsPage() {
                                 {/* Categories Section - Mobile View */}
                                 {showCategories && (
                                     <div className="md:hidden mb-6">
-                                        <div className="space-y-2">
-                                            {/* BESTSELLERS - Show all products sorted by popularity/newest */}
-                                            <button
-                                                onClick={() => {
-                                                    clearCategoryFilter();
-                                                    setActiveTag("ALL");
-                                                }}
-                                                className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                            >
-                                                <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-400 to-orange-500">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="white" strokeWidth="2">
-                                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                                        </svg>
+
+
+
+
+
+                                        <div className="space-y-6">
+                                            {/* FEATURED CATEGORIES */}
+                                            {([...productTypes.filter(p => p.is_featured).map(p => ({ ...p, type: 'product_type' as const })), ...occasions.filter(o => o.is_featured).map(o => ({ ...o, type: 'occasion' as const }))].length > 0) && (
+                                                <div>
+                                                    <h3 className="font-bold mb-3 text-xs tracking-wider text-gray-500">FEATURED CATEGORIES</h3>
+                                                    <div className="space-y-2">
+                                                        {[...productTypes.filter(p => p.is_featured).map(p => ({ ...p, type: 'product_type' as const })), ...occasions.filter(o => o.is_featured).map(o => ({ ...o, type: 'occasion' as const }))]
+                                                            .sort((a, b) => a.name.localeCompare(b.name)) // Optional sort by name
+                                                            .map((item) => (
+                                                                <button
+                                                                    key={`${item.type}-${item.id}`}
+                                                                    onClick={() => handleCategoryClick(item.type, item.id, item.name)}
+                                                                    className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                                                                >
+                                                                    <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                                        {item.image_url ? (
+                                                                            <Image
+                                                                                src={item.image_url}
+                                                                                alt={item.name}
+                                                                                fill
+                                                                                className="object-cover"
+                                                                                sizes="64px"
+                                                                                unoptimized
+                                                                                onError={(e) => {
+                                                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                                                }}
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                                <span className="text-gray-400 text-xs">No Image</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <span className="font-bold text-left flex-1">{item.name.toUpperCase()}</span>
+                                                                </button>
+                                                            ))}
                                                     </div>
                                                 </div>
-                                                <span className="font-bold text-left flex-1">BESTSELLERS</span>
-                                            </button>
+                                            )}
 
-                                            {/* NEW - Show newest products */}
-                                            <button
-                                                onClick={() => {
-                                                    clearCategoryFilter();
-                                                    setActiveTag("NEW");
-                                                    setSortBy("newest");
-                                                }}
-                                                className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                            >
-                                                <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500">
-                                                        <span className="text-white font-bold text-lg">N</span>
+                                            {/* PRODUCT TYPES (Remaining) */}
+                                            {productTypes.filter(p => !p.is_featured).length > 0 && (
+                                                <div>
+                                                    <h3 className="font-bold mb-3 text-xs tracking-wider text-gray-500">PRODUCT TYPES</h3>
+                                                    <div className="space-y-2">
+                                                        {productTypes.filter(p => !p.is_featured).map((type) => (
+                                                            <button
+                                                                key={type.id}
+                                                                onClick={() => handleCategoryClick('product_type', type.id, type.name)}
+                                                                className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                                            >
+                                                                <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                                    {type.image_url ? (
+                                                                        <Image
+                                                                            src={type.image_url}
+                                                                            alt={type.name}
+                                                                            fill
+                                                                            className="object-cover"
+                                                                            sizes="64px"
+                                                                            unoptimized
+                                                                            onError={(e) => {
+                                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                            <span className="text-gray-400 text-xs">No Image</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-bold text-left flex-1">{type.name.toUpperCase()}</span>
+                                                            </button>
+                                                        ))}
                                                     </div>
                                                 </div>
-                                                <span className="font-bold text-left flex-1">NEW</span>
-                                            </button>
+                                            )}
 
-                                            {/* Product Types from Database */}
-                                            {productTypes.slice(0, 8).map((type) => (
-                                                <button
-                                                    key={type.id}
-                                                    onClick={() => handleCategoryClick('product_type', type.id, type.name)}
-                                                    className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                                                        {type.image_url ? (
-                                                            <Image
-                                                                src={type.image_url}
-                                                                alt={type.name}
-                                                                fill
-                                                                className="object-cover"
-                                                                sizes="64px"
-                                                                unoptimized
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                                                                <span className="text-gray-400 text-xs">No Image</span>
-                                                            </div>
-                                                        )}
+                                            {/* OCCASIONS (Remaining) */}
+                                            {occasions.filter(o => !o.is_featured).length > 0 && (
+                                                <div>
+                                                    <h3 className="font-bold mb-3 text-xs tracking-wider text-gray-500">OCCASIONS</h3>
+                                                    <div className="space-y-2">
+                                                        {occasions.filter(o => !o.is_featured).map((occasion) => (
+                                                            <button
+                                                                key={occasion.id}
+                                                                onClick={() => handleCategoryClick('occasion', occasion.id, occasion.name)}
+                                                                className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                                            >
+                                                                <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                                    {occasion.image_url ? (
+                                                                        <Image
+                                                                            src={occasion.image_url}
+                                                                            alt={occasion.name}
+                                                                            fill
+                                                                            className="object-cover"
+                                                                            sizes="64px"
+                                                                            unoptimized
+                                                                            onError={(e) => {
+                                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                                                            <span className="text-gray-400 text-xs">No Image</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <span className="font-bold text-left flex-1">{occasion.name.toUpperCase()}</span>
+                                                            </button>
+                                                        ))}
                                                     </div>
-                                                    <span className="font-bold text-left flex-1">{type.name.toUpperCase()}</span>
-                                                </button>
-                                            ))}
-
-                                            {/* Occasions from Database */}
-                                            {occasions.slice(0, 3).map((occasion) => (
-                                                <button
-                                                    key={occasion.id}
-                                                    onClick={() => handleCategoryClick('occasion', occasion.id, occasion.name)}
-                                                    className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                                                >
-                                                    <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
-                                                        {occasion.image_url ? (
-                                                            <Image
-                                                                src={occasion.image_url}
-                                                                alt={occasion.name}
-                                                                fill
-                                                                className="object-cover"
-                                                                sizes="64px"
-                                                                unoptimized
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                                                                <span className="text-gray-400 text-xs">No Image</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    <span className="font-bold text-left flex-1">{occasion.name.toUpperCase()}</span>
-                                                </button>
-                                            ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Selected Category Header */}
-                                {categoryName && (
-                                    <div className="mb-4 flex items-center justify-between">
-                                        <div>
-                                            <h2 className="text-xl font-bold">{categoryName.toUpperCase()}</h2>
-                                            <button
-                                                onClick={clearCategoryFilter}
-                                                className="text-sm text-gray-600 hover:text-black mt-1"
-                                            >
-                                                Clear filter
-                                            </button>
-                                        </div>
-                                        <span className="text-sm text-gray-600">
-                                            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
-                                        </span>
-                                    </div>
-                                )}
+                                {/* Selected Category Header Removed as per user request */}
 
                                 {/* Product Count - When no category selected */}
                                 {!categoryName && (
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="text-sm text-gray-600">
-                                        {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
-                                    </span>
-                                </div>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-sm text-gray-600">
+                                            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
+                                        </span>
+                                    </div>
                                 )}
                             </div>
 
@@ -1168,7 +1219,7 @@ export default function ProductsPage() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                                <div className={`${showCategories ? 'hidden md:grid' : 'grid'} ${viewMode === 'list' ? 'grid-cols-1' : 'grid-cols-2'} md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6`}>
                                     {filteredProducts.map((product) => (
                                         <ProductCard key={product.id} product={product} />
                                     ))}
@@ -1180,6 +1231,31 @@ export default function ProductsPage() {
             </main>
             <Footer />
             <BottomNav />
+            <MobileFilterSheet
+                isOpen={isFilterOpen}
+                onClose={() => setIsFilterOpen(false)}
+                filterSections={filterSections}
+                toggleFilterSection={toggleFilterSection}
+                productTypes={productTypes}
+                occasions={occasions}
+                colors={colors}
+                materials={materials}
+                cities={cities}
+                maxPrice={maxPrice}
+                pendingProductTypes={pendingProductTypes}
+                pendingOccasions={pendingOccasions}
+                pendingColors={pendingColors}
+                pendingMaterials={pendingMaterials}
+                pendingCities={pendingCities}
+                pendingPriceRange={pendingPriceRange}
+                sortBy={sortBy}
+                toggleFilter={toggleFilter}
+                setPendingPriceRange={setPendingPriceRange}
+                setSortBy={setSortBy}
+                onApply={handleMobileApply}
+                onClear={handleMobileClear}
+                appliedCount={getFilterCount()}
+            />
         </>
     );
 }
