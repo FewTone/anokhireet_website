@@ -31,7 +31,7 @@ export default function ManageProductsPage() {
     const params = useParams();
     const router = useRouter();
     const userId = params?.userId as string;
-    
+
     const [user, setUser] = useState<User | null>(null);
     const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
     const [loading, setLoading] = useState(true);
@@ -45,7 +45,17 @@ export default function ManageProductsPage() {
         message: "",
         type: "info",
     });
-    
+
+    const [deleteConfirmation, setDeleteConfirmation] = useState<{
+        isOpen: boolean;
+        productId: string | null;
+        productName: string;
+    }>({
+        isOpen: false,
+        productId: null,
+        productName: "",
+    });
+
 
     useEffect(() => {
         if (userId) {
@@ -54,28 +64,28 @@ export default function ManageProductsPage() {
             testSupabaseConnection();
         }
     }, [userId]);
-    
+
     const testSupabaseConnection = async () => {
         try {
             console.log("🔍 Testing Supabase connection...");
             console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
             console.log("Supabase Key exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-            
+
             // Test basic connection
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
             console.log("Session test:", { session: !!session, sessionError });
-            
+
             // Test products table access
             const { data: testData, error: testError, count } = await supabase
                 .from("products")
                 .select("*", { count: 'exact', head: true });
-            
-            console.log("Products table test:", { 
-                count, 
+
+            console.log("Products table test:", {
+                count,
                 error: testError,
-                canRead: !testError 
+                canRead: !testError
             });
-            
+
             if (testError) {
                 console.error("❌ Cannot access products table:", testError);
             } else {
@@ -94,7 +104,7 @@ export default function ManageProductsPage() {
                 loadUserProducts();
             }
         };
-        
+
         window.addEventListener('focus', handleFocus);
         return () => window.removeEventListener('focus', handleFocus);
     }, [userId]);
@@ -109,17 +119,23 @@ export default function ManageProductsPage() {
 
     const loadUser = async () => {
         try {
+            console.log("Loading user for ID:", userId);
             const { data, error } = await supabase
                 .from("users")
                 .select("id, name, phone, email")
                 .eq("id", userId)
-                .single();
+                .maybeSingle();
 
             if (error) throw error;
-            if (data) setUser(data);
-        } catch (error) {
+            if (data) {
+                setUser(data);
+            } else {
+                console.warn("User not found for ID:", userId);
+                showPopup("User not found", "warning", "Warning");
+            }
+        } catch (error: any) {
             console.error("Error loading user:", error);
-            showPopup("Failed to load user information", "error", "Error");
+            showPopup(`Failed to load user: ${error.message || JSON.stringify(error)}`, "error", "Error");
         }
     };
 
@@ -172,7 +188,7 @@ export default function ManageProductsPage() {
                     if (!citiesMap.has(assoc.product_id)) citiesMap.set(assoc.product_id, []);
                     if (assoc.cities?.name) citiesMap.get(assoc.product_id)?.push(assoc.cities.name);
                 });
-                
+
                 const mapped = data.map((p: any) => {
                     const facets = {
                         productTypes: productTypesMap.get(p.id) || [],
@@ -181,7 +197,7 @@ export default function ManageProductsPage() {
                         materials: materialsMap.get(p.id) || [],
                         cities: citiesMap.get(p.id) || []
                     };
-                    
+
                     return {
                         id: p.id,
                         user_id: p.owner_user_id,
@@ -196,7 +212,7 @@ export default function ManageProductsPage() {
                         created_at: p.created_at,
                     } as UserProduct & { category: typeof facets };
                 });
-                
+
                 setUserProducts(mapped);
             }
         } catch (error) {
@@ -207,8 +223,19 @@ export default function ManageProductsPage() {
         }
     };
 
-    const handleDeleteProduct = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    const handleDeleteProduct = (id: string, name: string) => {
+        setDeleteConfirmation({
+            isOpen: true,
+            productId: id,
+            productName: name,
+        });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirmation.productId) return;
+
+        const id = deleteConfirmation.productId;
+        setDeleteConfirmation({ isOpen: false, productId: null, productName: "" });
 
         try {
             const { error } = await supabase
@@ -223,6 +250,10 @@ export default function ManageProductsPage() {
             showPopup(error.message || "Failed to delete product", "error", "Error");
             console.error("Error deleting product:", error);
         }
+    };
+
+    const cancelDelete = () => {
+        setDeleteConfirmation({ isOpen: false, productId: null, productName: "" });
     };
 
 
@@ -452,21 +483,21 @@ export default function ManageProductsPage() {
                                             const facets = (product.category && typeof product.category === 'object' && !Array.isArray(product.category))
                                                 ? product.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
                                                 : { productTypes: [], occasions: [], colors: [], materials: [], cities: [] };
-                                            const createdDate = product.created_at 
-                                                ? new Date(product.created_at).toLocaleDateString('en-US', { 
-                                                    year: 'numeric', 
-                                                    month: 'short', 
+                                            const createdDate = product.created_at
+                                                ? new Date(product.created_at).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
                                                     day: 'numeric'
                                                 })
                                                 : 'N/A';
-                                            const createdTime = product.created_at 
-                                                ? new Date(product.created_at).toLocaleTimeString('en-US', { 
+                                            const createdTime = product.created_at
+                                                ? new Date(product.created_at).toLocaleTimeString('en-US', {
                                                     hour: '2-digit',
                                                     minute: '2-digit',
                                                     hour12: true
                                                 })
                                                 : 'N/A';
-                                            
+
                                             return (
                                                 <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
                                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -507,7 +538,7 @@ export default function ManageProductsPage() {
                                                             )}
                                                         </div>
                                                     </td>
-                                                    
+
                                                     {/* Types Column */}
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col gap-1">
@@ -522,7 +553,7 @@ export default function ManageProductsPage() {
                                                             )}
                                                         </div>
                                                     </td>
-                                                    
+
                                                     {/* Occasions Column */}
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col gap-1">
@@ -537,7 +568,7 @@ export default function ManageProductsPage() {
                                                             )}
                                                         </div>
                                                     </td>
-                                                    
+
                                                     {/* Colors Column */}
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col gap-1">
@@ -552,7 +583,7 @@ export default function ManageProductsPage() {
                                                             )}
                                                         </div>
                                                     </td>
-                                                    
+
                                                     {/* Materials Column */}
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col gap-1">
@@ -567,7 +598,7 @@ export default function ManageProductsPage() {
                                                             )}
                                                         </div>
                                                     </td>
-                                                    
+
                                                     {/* Cities Column */}
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col gap-1">
@@ -589,8 +620,8 @@ export default function ManageProductsPage() {
                                                             </div>
                                                             {product.original_price && (
                                                                 <div className="text-xs text-gray-500">
-                                                                    ₹{typeof product.original_price === 'number' 
-                                                                        ? product.original_price.toLocaleString() 
+                                                                    ₹{typeof product.original_price === 'number'
+                                                                        ? product.original_price.toLocaleString()
                                                                         : parseFloat(product.original_price).toLocaleString()}
                                                                 </div>
                                                             )}
@@ -600,12 +631,12 @@ export default function ManageProductsPage() {
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-2 text-xs text-gray-700">
                                                             <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                </svg>
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            </svg>
                                                             <span className="font-semibold text-gray-900">{images.length} {images.length === 1 ? 'image' : 'images'}</span>
-                                                            </div>
+                                                        </div>
                                                     </td>
-                                                    
+
                                                     {/* Uploaded Column */}
                                                     <td className="px-6 py-4">
                                                         <div className="space-y-1.5 text-xs">
@@ -660,6 +691,39 @@ export default function ManageProductsPage() {
                 type={popup.type}
                 title={popup.title}
             />
+
+            {/* Custom Delete Confirmation Modal */}
+            {deleteConfirmation.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 animate-scaleIn">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Product?</h3>
+                            <p className="text-gray-600 mb-6">
+                                Are you sure you want to delete <span className="font-semibold text-gray-900">"{deleteConfirmation.productName}"</span>? This action cannot be undone.
+                            </p>
+                            <div className="flex gap-3 w-full">
+                                <button
+                                    onClick={cancelDelete}
+                                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

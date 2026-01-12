@@ -43,9 +43,10 @@ export default function ProductCard({ product, hideDetails = false }: ProductPro
         e.stopPropagation();
 
         // Check authentication first
-        const { data: { session } } = await supabase.auth.getSession();
+        // Check authentication first (getUser is safer than getSession)
+        const { data: { user } } = await supabase.auth.getUser();
 
-        if (!session) {
+        if (!user) {
             // Not logged in - redirect to login page with return URL
             const returnUrl = encodeURIComponent(window.location.pathname);
             router.push(`/profile?returnUrl=${returnUrl}`);

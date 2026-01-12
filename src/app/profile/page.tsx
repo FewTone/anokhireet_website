@@ -29,13 +29,12 @@ export default function Profile() {
     const searchParams = useSearchParams();
 
     // Helper function to get return URL and redirect
+    // Helper function to get return URL and redirect
     const getReturnUrlAndRedirect = () => {
         const returnUrl = searchParams.get('returnUrl');
-        if (returnUrl) {
-            router.push(decodeURIComponent(returnUrl));
-        } else {
-            router.push("/user");
-        }
+        const target = returnUrl ? decodeURIComponent(returnUrl) : "/user";
+        console.log("🚀 Hard Redirecting to:", target);
+        window.location.href = target;
     };
 
     useEffect(() => {
@@ -120,9 +119,9 @@ export default function Profile() {
             const phoneNumber = `+91${normalizedPhone}`;
 
             console.log("🔍 Checking for existing user...");
-            console.log("[LoginDebug] Starting login flow with phone:", phone);
-            console.log("Input phone (normalized):", normalizedPhone);
-            console.log("Input phone (with +91):", phoneNumber);
+            // console.log("[LoginDebug] Starting login flow with phone:", phone);
+            // console.log("Input phone (normalized):", normalizedPhone);
+            // console.log("Input phone (with +91):", phoneNumber);
 
             // ========== NORMAL USER FLOW ==========
             // Check regular users table - try multiple phone formats
@@ -140,13 +139,13 @@ export default function Profile() {
             }
 
             if (allUsers && allUsers.length > 0) {
-                console.log(`📋 Checking ${allUsers.length} users in database...`);
+                // console.log(`📋 Checking ${allUsers.length} users in database...`);
 
                 // Find user by matching normalized phone (last 10 digits)
                 // This works regardless of how phone is stored (+91 prefix, without prefix, etc.)
                 const foundUser = allUsers.find(u => {
                     if (!u.phone) {
-                        console.log(`  ⚠️ User ${u.id} has no phone number`);
+                        // console.log(`  ⚠️ User ${u.id} has no phone number`);
                         return false;
                     }
 
@@ -158,25 +157,25 @@ export default function Profile() {
 
                     const matches = storedLast10 === inputLast10;
 
-                    if (matches) {
-                        console.log(`  ✅ MATCH FOUND!`);
-                        console.log(`     Stored phone: ${u.phone} (normalized: ${storedDigits}, last 10: ${storedLast10})`);
-                        console.log(`     Input phone: ${normalizedPhone} (last 10: ${inputLast10})`);
-                        console.log(`     User: ${u.name} (ID: ${u.id})`);
-                    } else {
-                        console.log(`  ❌ No match: ${u.phone} (last 10: ${storedLast10}) vs input (last 10: ${inputLast10})`);
-                    }
+                    // if (matches) {
+                    //     console.log(`  ✅ MATCH FOUND!`);
+                    //     console.log(`     Stored phone: ${u.phone} (normalized: ${storedDigits}, last 10: ${storedLast10})`);
+                    //     console.log(`     Input phone: ${normalizedPhone} (last 10: ${inputLast10})`);
+                    //     console.log(`     User: ${u.name} (ID: ${u.id})`);
+                    // } else {
+                    //     console.log(`  ❌ No match: ${u.phone} (last 10: ${storedLast10}) vs input (last 10: ${inputLast10})`);
+                    // }
 
                     return matches;
                 });
 
                 existingUser = foundUser || null;
             } else {
-                console.log("📋 No users found in database");
+                // console.log("📋 No users found in database");
             }
 
-            console.log("🎯 Final existingUser result:", existingUser ? `${existingUser.name} (${existingUser.phone})` : "NOT FOUND");
-            console.log("[LoginDebug] Existing user check result:", existingUser ? "Found" : "Not Found", existingUser);
+            // console.log("🎯 Final existingUser result:", existingUser ? `${existingUser.name} (${existingUser.phone})` : "NOT FOUND");
+            // console.log("[LoginDebug] Existing user check result:", existingUser ? "Found" : "Not Found", existingUser);
 
             // Case 1: User found in users table (admin-created or self-registered)
             if (existingUser) {
@@ -197,7 +196,7 @@ export default function Profile() {
                 }
 
                 // User exists in user table - show OTP screen (OTP required for all users)
-                console.log("✅ User found in database, showing OTP screen...");
+                // console.log("✅ User found in database, showing OTP screen...");
 
                 // Store user info in state for after OTP verification (not localStorage)
                 // We'll use this to link auth_user_id if it's admin-created user
@@ -221,7 +220,7 @@ export default function Profile() {
                 if (otpError) {
                     // OTP sending failed - show helpful error message
                     console.error("❌ OTP sending failed:", otpError.message);
-                    console.error("[LoginDebug] ❌ OTP sending failed:", otpError.message);
+                    // console.error("[LoginDebug] ❌ OTP sending failed:", otpError.message);
 
                     // Provide helpful error messages based on the error
                     if (otpError.message.includes("whatsapp") || otpError.message.includes("WhatsApp")) {
@@ -763,7 +762,13 @@ export default function Profile() {
                                     inputMode="numeric"
                                     value={phone}
                                     onChange={(e) => {
-                                        setPhone(e.target.value.replace(/\D/g, ""));
+                                        let val = e.target.value.replace(/\D/g, "");
+                                        // Handle paste with 91 prefix
+                                        if (val.length > 10 && val.startsWith("91")) {
+                                            val = val.substring(2);
+                                        }
+                                        if (val.length > 10) val = val.slice(0, 10);
+                                        setPhone(val);
                                         setError(""); // Clear error when user starts typing
                                     }}
                                     onKeyPress={(e) => {

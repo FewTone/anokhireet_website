@@ -66,9 +66,9 @@ export default function UserPage() {
         try {
             // ========== NORMAL USER FLOW ==========
             // Check Supabase Auth session only (no localStorage)
-            console.log("🔍 loadUserData: Checking Supabase session");
+            // console.log("🔍 loadUserData: Checking Supabase session");
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            console.log("session check result", { session: !!session, error: sessionError });
+            // console.log("session check result", { session: !!session, error: sessionError });
 
             if (!session?.user || sessionError) {
                 // No active session - redirect to login

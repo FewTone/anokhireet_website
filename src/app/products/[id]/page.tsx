@@ -668,55 +668,113 @@ export default function ProductDetailPage() {
 
 
                                 {/* Desktop Image Gallery (Hidden on mobile) */}
-                                <div className="hidden md:flex flex-1 gap-4">
-                                    {/* Left Side - Small Thumbnail Images (Vertical Column) */}
-                                    <div className="flex flex-col gap-3 w-20 flex-shrink-0">
-                                        {displayImages.map((img, index) => (
-                                            <button
-                                                key={index}
-                                                onClick={() => setSelectedImage(img)}
-                                                className={`relative w-full aspect-[4/5] border-2 transition-all overflow-hidden bg-gray-50 ${selectedImage === img
-                                                    ? "border-black"
-                                                    : "border-gray-300 hover:border-gray-500"
-                                                    }`}
-                                            >
+                                <div className="hidden md:flex flex-1 w-full flex-col gap-4">
+                                    {/* Back Button */}
+                                    <button
+                                        onClick={handleBack}
+                                        className="self-start flex items-center gap-2 text-gray-600 hover:text-black transition-colors mb-2"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M19 12H5" />
+                                            <path d="M12 19l-7-7 7-7" />
+                                        </svg>
+                                        Back
+                                    </button>
+
+                                    <div className="flex gap-6 justify-center items-start">
+                                        {/* Left Side - Small Thumbnail Images (Vertical Column) */}
+                                        <div className="flex flex-col gap-3 w-20 flex-shrink-0 pt-2">
+                                            {displayImages.map((img, index) => (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => setSelectedImage(img)}
+                                                    className={`relative w-full aspect-[4/5] border-2 transition-all overflow-hidden bg-gray-50 ${selectedImage === img
+                                                        ? "border-black"
+                                                        : "border-gray-300 hover:border-gray-500"
+                                                        }`}
+                                                >
+                                                    <Image
+                                                        src={img}
+                                                        alt={`${product.name} - View ${index + 1}`}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="80px"
+                                                        unoptimized
+                                                        onError={(e) => {
+                                                            console.error("Image load error:", img);
+                                                            e.currentTarget.style.display = 'none';
+                                                        }}
+                                                    />
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Center - Main Product Image */}
+                                        <div className="relative w-full max-w-[400px] aspect-[4/5] bg-gray-100 shadow-sm">
+                                            {selectedImage ? (
                                                 <Image
-                                                    src={img}
-                                                    alt={`${product.name} - View ${index + 1}`}
+                                                    src={selectedImage}
+                                                    alt={product.name}
                                                     fill
                                                     className="object-cover"
-                                                    sizes="80px"
+                                                    sizes="(max-width: 1024px) 50vw, 400px"
+                                                    priority
                                                     unoptimized
                                                     onError={(e) => {
-                                                        console.error("Image load error:", img);
+                                                        console.error("Image load error:", selectedImage);
                                                         e.currentTarget.style.display = 'none';
                                                     }}
                                                 />
-                                            </button>
-                                        ))}
-                                    </div>
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                                                    <span>No Image</span>
+                                                </div>
+                                            )}
+                                        </div>
 
-                                    {/* Center - Main Product Image */}
-                                    <div className="flex-1 relative max-w-md w-full aspect-[4/5] bg-gray-100 mx-auto">
-                                        {selectedImage ? (
-                                            <Image
-                                                src={selectedImage}
-                                                alt={product.name}
-                                                fill
-                                                className="object-cover"
-                                                sizes="(max-width: 1024px) 50vw, 400px"
-                                                priority
-                                                unoptimized
-                                                onError={(e) => {
-                                                    console.error("Image load error:", selectedImage);
-                                                    e.currentTarget.style.display = 'none';
+                                        {/* Right Side - Action Buttons (Outside Image) */}
+                                        <div className="flex flex-col gap-3 pt-4 sticky top-24">
+                                            {/* Wishlist Button */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    toggleWishlist();
                                                 }}
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
-                                                <span>No Image</span>
-                                            </div>
-                                        )}
+                                                disabled={wishlistLoading}
+                                                className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm group"
+                                                title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                                            >
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill={isInWishlist ? "red" : "none"}
+                                                    stroke={isInWishlist ? "red" : "currentColor"}
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className="text-gray-900 group-hover:text-black"
+                                                >
+                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Share Button */}
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleShare();
+                                                }}
+                                                className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm group"
+                                                title="Share Product"
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900 group-hover:text-black">
+                                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                                    <polyline points="16 6 12 2 8 6" />
+                                                    <line x1="12" y1="2" x2="12" y2="15" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
