@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 interface ProductProps {
     product: {
@@ -18,6 +20,7 @@ interface ProductProps {
 
 export default function ProductCard({ product }: ProductProps) {
     const [isFavorite, setIsFavorite] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         // Check if product is in wishlist
@@ -34,9 +37,19 @@ export default function ProductCard({ product }: ProductProps) {
         }
     }, [product.productId, product.id]);
 
-    const toggleFavorite = (e: React.MouseEvent) => {
+    const toggleFavorite = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // Check authentication first
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+            // Not logged in - redirect to login page with return URL
+            const returnUrl = encodeURIComponent(window.location.pathname);
+            router.push(`/profile?returnUrl=${returnUrl}`);
+            return;
+        }
 
         const productId = product.productId || product.id;
         const wishlist = localStorage.getItem("wishlist");
@@ -107,7 +120,7 @@ export default function ProductCard({ product }: ProductProps) {
                         <span className="text-sm">No Image</span>
                     </div>
                 )}
-                
+
                 {/* Favorite Button */}
                 <button
                     onClick={toggleFavorite}
@@ -130,7 +143,7 @@ export default function ProductCard({ product }: ProductProps) {
                 </button>
             </div>
 
-            <div>
+            <div className="px-2 pb-2">
                 <div className="flex justify-between items-start mb-1">
                     <div className="flex-1 pr-2">
                         <h4 className="text-sm md:text-base font-medium tracking-tight text-neutral-900 line-clamp-2">
@@ -146,8 +159,8 @@ export default function ProductCard({ product }: ProductProps) {
                         </p>
                         {product.original_price && (
                             <p className="text-xs text-neutral-500 mt-0.5">
-                                ₹{typeof product.original_price === 'number' 
-                                    ? product.original_price.toLocaleString() 
+                                ₹{typeof product.original_price === 'number'
+                                    ? product.original_price.toLocaleString()
                                     : parseFloat(String(product.original_price)).toLocaleString()}
                             </p>
                         )}

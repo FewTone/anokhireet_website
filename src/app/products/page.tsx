@@ -1062,7 +1062,20 @@ export default function ProductsPage() {
                                             {/* FEATURED CATEGORIES */}
                                             {([...productTypes.filter(p => p.is_featured).map(p => ({ ...p, type: 'product_type' as const })), ...occasions.filter(o => o.is_featured).map(o => ({ ...o, type: 'occasion' as const }))].length > 0) && (
                                                 <div>
-                                                    <h3 className="font-bold mb-3 text-xs tracking-wider text-gray-500">FEATURED CATEGORIES</h3>
+                                                    {/* Title Removed */}
+                                                    {/* ALL PRODUCTS Option */}
+                                                    <button
+                                                        onClick={() => {
+                                                            clearCategoryFilter();
+                                                            setShowCategories(false);
+                                                        }}
+                                                        className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm mb-2"
+                                                    >
+                                                        <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-black flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold text-center leading-tight px-1">ALL</span>
+                                                        </div>
+                                                        <span className="font-bold text-left flex-1">ALL PRODUCTS</span>
+                                                    </button>
                                                     <div className="space-y-2">
                                                         {[...productTypes.filter(p => p.is_featured).map(p => ({ ...p, type: 'product_type' as const })), ...occasions.filter(o => o.is_featured).map(o => ({ ...o, type: 'occasion' as const }))]
                                                             .sort((a, b) => a.name.localeCompare(b.name)) // Optional sort by name
@@ -1101,7 +1114,7 @@ export default function ProductsPage() {
                                             {/* PRODUCT TYPES (Remaining) */}
                                             {productTypes.filter(p => !p.is_featured).length > 0 && (
                                                 <div>
-                                                    <h3 className="font-bold mb-3 text-xs tracking-wider text-gray-500">PRODUCT TYPES</h3>
+                                                    {/* Title Removed */}
                                                     <div className="space-y-2">
                                                         {productTypes.filter(p => !p.is_featured).map((type) => (
                                                             <button
@@ -1138,7 +1151,7 @@ export default function ProductsPage() {
                                             {/* OCCASIONS (Remaining) */}
                                             {occasions.filter(o => !o.is_featured).length > 0 && (
                                                 <div>
-                                                    <h3 className="font-bold mb-3 text-xs tracking-wider text-gray-500">OCCASIONS</h3>
+                                                    {/* Title Removed */}
                                                     <div className="space-y-2">
                                                         {occasions.filter(o => !o.is_featured).map((occasion) => (
                                                             <button
@@ -1179,13 +1192,7 @@ export default function ProductsPage() {
                                 {/* Selected Category Header Removed as per user request */}
 
                                 {/* Product Count - When no category selected */}
-                                {!categoryName && (
-                                    <div className="flex items-center justify-between mb-4">
-                                        <span className="text-sm text-gray-600">
-                                            {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
-                                        </span>
-                                    </div>
-                                )}
+                                {/* Product Count removed as per user request */}
                             </div>
 
                             {/* Products Grid */}
