@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import { formatUserDisplayName } from "@/lib/utils";
 
 export default function UserPage() {
     const [userName, setUserName] = useState("");
@@ -145,7 +146,7 @@ export default function UserPage() {
                                     <div className="w-24 h-24 bg-black text-white rounded-full flex items-center justify-center text-3xl font-light mx-auto mb-6 shadow-lg">
                                         {getInitials(userName)}
                                     </div>
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-1">{userName || "User"}</h2>
+                                    <h2 className="text-xl font-semibold text-gray-900 mb-1">{formatUserDisplayName(userName) || "User"}</h2>
                                     <p className="text-sm text-gray-500 mb-8 font-mono">{userPhone}</p>
 
                                     <button

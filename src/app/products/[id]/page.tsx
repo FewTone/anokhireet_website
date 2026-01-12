@@ -6,6 +6,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
+import { formatUserDisplayName } from "@/lib/utils";
 
 interface Product {
     id: number | string;
@@ -22,6 +23,7 @@ interface Product {
     colors?: { name: string; hex?: string }[];
     materials?: string[];
     cities?: string[];
+    ownerName?: string;
 }
 
 export default function ProductDetailPage() {
@@ -225,6 +227,17 @@ export default function ProductDetailPage() {
                     productImages = [p.image];
                 }
 
+                // Fetch owner name if owner_user_id exists
+                let fetchedOwnerName = "";
+                if (p.owner_user_id) {
+                    const { data: ownerNameStr } = await supabase
+                        .rpc('get_public_user_name', { user_uuid: p.owner_user_id });
+
+                    if (ownerNameStr) {
+                        fetchedOwnerName = ownerNameStr;
+                    }
+                }
+
                 productData = {
                     id: typeof p.id === 'string' ? p.id : 0,
                     productId: p.product_id,
@@ -234,6 +247,7 @@ export default function ProductDetailPage() {
                     category: p.category || p.category_id,
                     original_price: p.original_price,
                     owner_user_id: p.owner_user_id,
+                    ownerName: fetchedOwnerName,
                     db_id: p.id,
                 };
             } else {
@@ -253,6 +267,17 @@ export default function ProductDetailPage() {
                         productImages = [p.image];
                     }
 
+                    // Fetch owner name if owner_user_id exists
+                    let fetchedOwnerName = "";
+                    if (p.owner_user_id) {
+                        const { data: ownerNameStr } = await supabase
+                            .rpc('get_public_user_name', { user_uuid: p.owner_user_id });
+
+                        if (ownerNameStr) {
+                            fetchedOwnerName = ownerNameStr;
+                        }
+                    }
+
                     productData = {
                         id: typeof p.id === 'string' ? p.id : 0,
                         productId: p.product_id || p.id,
@@ -262,6 +287,7 @@ export default function ProductDetailPage() {
                         category: p.category || p.category_id,
                         original_price: p.original_price,
                         owner_user_id: p.owner_user_id,
+                        ownerName: fetchedOwnerName,
                         db_id: p.id,
                     };
                 }
@@ -807,6 +833,16 @@ export default function ProductDetailPage() {
 
                                         {/* Product Details */}
                                         <div className="space-y-4 border-t border-gray-200 pt-6">
+                                            {product.ownerName && (
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium tracking-wide">
+                                                        {product.ownerName.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <div className="text-lg font-medium text-gray-900">
+                                                        {formatUserDisplayName(product.ownerName)}
+                                                    </div>
+                                                </div>
+                                            )}
                                             <div>
                                                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Product Information</h3>
                                                 <div className="space-y-3 text-sm text-gray-600">
@@ -816,6 +852,7 @@ export default function ProductDetailPage() {
                                                             <p className="mt-1">{product.productId}</p>
                                                         </div>
                                                     )}
+
                                                     {product.category && (
                                                         <div>
                                                             <span className="font-medium text-gray-700">Category:</span>

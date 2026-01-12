@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
+import { capitalizeFirstLetter } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import Popup from "@/components/Popup";
 import Image from "next/image";
@@ -245,8 +246,10 @@ function AdminContent() {
     const [isManageProductsModalOpen, setIsManageProductsModalOpen] = useState(false);
     const [editingUserProduct, setEditingUserProduct] = useState<UserProduct | null>(null);
     const [editingUser, setEditingUser] = useState<{ id: string; name: string; phone: string; email: string | null } | null>(null);
+    const [userFirstName, setUserFirstName] = useState("");
+    const [userLastName, setUserLastName] = useState("");
     const [userFormData, setUserFormData] = useState({
-        name: "",
+        name: "", // Will be constructed from firstName + lastName
         phone: "+91",
         email: "",
         cities: [] as string[], // Array of city IDs
@@ -871,18 +874,9 @@ To get these values:
                 .select("*")
                 .order("display_order", { ascending: true });
 
-            if (error) {
-                console.error("Error loading hero slides:", error);
-                setHeroSlides([]);
-                return;
-            }
-
-            if (data) {
-                setHeroSlides(data);
-            } else {
-                setHeroSlides([]);
-            }
-        } catch (error) {
+            if (error) throw error;
+            setHeroSlides(data || []);
+        } catch (error: any) {
             console.error("Error loading hero slides:", error);
             setHeroSlides([]);
         }
@@ -2136,6 +2130,14 @@ To get these values:
 
         const userCityIds = userCitiesData?.map((uc: any) => uc.city_id).filter(Boolean) || [];
 
+        // Split name into first and last
+        const nameParts = user.name.trim().split(/\s+/);
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
+        setUserFirstName(firstName);
+        setUserLastName(lastName);
+
         setUserFormData({
             name: user.name,
             phone: user.phone,
@@ -2167,10 +2169,12 @@ To get these values:
         }
 
         // Validate name
-        if (!userFormData.name || !userFormData.name.trim()) {
-            showPopup("Name is required", "error", "Validation Error");
+        if (!userFirstName.trim() || !userLastName.trim()) {
+            showPopup("First Name and Surname are required", "error", "Validation Error");
             return;
         }
+
+        const fullName = `${userFirstName.trim()} ${userLastName.trim()}`;
 
         // Email is optional, but if provided, validate format
         if (userFormData.email && userFormData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userFormData.email.trim())) {
@@ -2205,7 +2209,7 @@ To get these values:
                 }
 
                 const userData = {
-                    name: userFormData.name.trim(),
+                    name: fullName,
                     phone: userFormData.phone,
                     email: userEmail,
                 };
@@ -2246,7 +2250,7 @@ To get these values:
             if (existingUserByPhone) {
                 // User exists, update them in Supabase
                 const userData = {
-                    name: userFormData.name.trim(),
+                    name: fullName,
                     phone: userFormData.phone,
                     email: userEmail,
                 };
@@ -2288,7 +2292,7 @@ To get these values:
             // Create user in Supabase users table (no authentication yet - user will log in with phone OTP later)
             const userData = {
                 id: userId,
-                name: userFormData.name.trim(),
+                name: fullName,
                 phone: userFormData.phone,
                 email: userEmail,
             };
@@ -2517,7 +2521,6 @@ To get these values:
                     if (size < bestSize) {
                         bestBlob = blob;
                         bestSize = size;
-                        bestQuality = quality;
                     }
                     if (size < originalSize * 0.7) break;
                 } catch (error) {
@@ -5002,6 +5005,8 @@ To get these values:
                                                 onClick={() => {
                                                     setIsUserModalOpen(false);
                                                     setEditingUser(null);
+                                                    setUserFirstName("");
+                                                    setUserLastName("");
                                                     setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
                                                     setShowAddCity(false);
                                                     setNewCityName("");
@@ -5025,19 +5030,33 @@ To get these values:
                                         </div>
 
                                         <form onSubmit={handleCreateUser} className="space-y-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Name *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={userFormData.name}
-                                                    onChange={(e) =>
-                                                        setUserFormData({ ...userFormData, name: e.target.value })
-                                                    }
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                                />
+                                            <div className="flex gap-4">
+                                                <div className="flex-1">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Name *
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={userFirstName}
+                                                        onChange={(e) => setUserFirstName(capitalizeFirstLetter(e.target.value))}
+                                                        placeholder="First Name"
+                                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Surname *
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={userLastName}
+                                                        onChange={(e) => setUserLastName(capitalizeFirstLetter(e.target.value))}
+                                                        placeholder="Surname"
+                                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                                                        required
+                                                    />
+                                                </div>
                                             </div>
 
                                             <div>

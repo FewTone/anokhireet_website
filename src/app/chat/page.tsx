@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
+import { formatUserDisplayName } from "@/lib/utils";
 
 interface Chat {
     id: string;
@@ -561,7 +562,7 @@ export default function ChatPage() {
                                                             {/* Mobile: Stack name and timestamp vertically, Desktop: Side by side */}
                                                             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-1">
                                                                 <h3 className="text-base md:text-sm font-semibold text-gray-800 break-words md:truncate">
-                                                                    {chat.other_user?.name || "Unknown User"}
+                                                                    {formatUserDisplayName(chat.other_user?.name) || "Unknown User"}
                                                                 </h3>
                                                                 {chat.last_message && (
                                                                     <span className="text-xs text-gray-500 md:ml-2 md:flex-shrink-0 mt-0.5 md:mt-0">
@@ -769,7 +770,7 @@ export default function ChatPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-base font-semibold">
-                                            {selectedChat.other_user?.name || "Unknown User"}
+                                            {formatUserDisplayName(selectedChat.other_user?.name) || "Unknown User"}
                                         </h3>
                                         <p className="text-xs text-white/80">Online</p>
                                     </div>
@@ -813,7 +814,7 @@ export default function ChatPage() {
                                                                 }`}>
                                                                 {!isSent && showAvatar && (
                                                                     <p className="text-xs font-semibold text-[#128c7e] mb-1">
-                                                                        {message.sender?.name || "Unknown"}
+                                                                        {formatUserDisplayName(message.sender?.name) || "Unknown"}
                                                                     </p>
                                                                 )}
                                                                 <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">

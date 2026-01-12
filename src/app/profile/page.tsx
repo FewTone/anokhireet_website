@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { capitalizeFirstLetter } from "@/lib/utils";
 import { getOtpChannel } from "@/lib/devConfig";
 
 interface PendingUserData {
@@ -19,7 +20,8 @@ export default function Profile() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [isNewUser, setIsNewUser] = useState(false);
-    const [newUserName, setNewUserName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [newUserEmail, setNewUserEmail] = useState("");
     const [otpSent, setOtpSent] = useState(false);
     const [otp, setOtp] = useState("");
@@ -501,10 +503,17 @@ export default function Profile() {
     };
 
     const handleCreateNewUser = async () => {
-        if (!newUserName.trim()) {
+        if (!firstName.trim()) {
             setError("Please enter your name");
             return;
         }
+
+        if (!lastName.trim()) {
+            setError("Please enter your surname");
+            return;
+        }
+
+        const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
         setLoading(true);
         setError("");
@@ -558,7 +567,7 @@ export default function Profile() {
                 .from("users")
                 .insert([{
                     id: authUserId,
-                    name: newUserName.trim(),
+                    name: fullName,
                     phone: phoneNumber,
                     email: newUserEmail.trim() || null,
                     auth_user_id: authUserId, // Link to Supabase Auth (required for RLS policy)
@@ -806,23 +815,40 @@ export default function Profile() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs text-[#4d5563] text-left mb-1">
-                                        Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={newUserName}
-                                        onChange={(e) => setNewUserName(e.target.value)}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter' && newUserName.trim()) {
-                                                handleCreateNewUser();
-                                            }
-                                        }}
-                                        className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none"
-                                        placeholder="Enter your name"
-                                        autoFocus
-                                    />
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="block text-xs text-[#4d5563] text-left mb-1">
+                                                Name *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={firstName}
+                                                onChange={(e) => setFirstName(e.target.value)}
+                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none"
+                                                placeholder="First Name"
+                                                autoFocus
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="block text-xs text-[#4d5563] text-left mb-1">
+                                                Surname *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={lastName}
+                                                onChange={(e) => setLastName(e.target.value)}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter' && firstName.trim() && lastName.trim()) {
+                                                        handleCreateNewUser();
+                                                    }
+                                                }}
+                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none"
+                                                placeholder="Surname"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div>
@@ -850,7 +876,8 @@ export default function Profile() {
                                         // Go back to phone input screen
                                         setIsNewUser(false);
                                         setOtpSent(false);
-                                        setNewUserName("");
+                                        setFirstName("");
+                                        setLastName("");
                                         setNewUserEmail("");
                                         setOtp("");
                                         setPhone("");
@@ -863,7 +890,7 @@ export default function Profile() {
                                 </button>
                                 <button
                                     onClick={handleCreateNewUser}
-                                    disabled={loading || !newUserName.trim()}
+                                    disabled={loading || !firstName.trim() || !lastName.trim()}
                                     className="flex-1 px-4 py-2 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? "CREATING..." : "CREATE ACCOUNT"}
