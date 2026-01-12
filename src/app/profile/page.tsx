@@ -228,20 +228,19 @@ export default function Profile() {
                             "WhatsApp OTP not configured. Please:\n" +
                             "1. Set up Twilio Verify WhatsApp in Supabase Dashboard\n" +
                             "2. Configure WhatsApp Sender in Twilio\n" +
-                            "3. Or change OTP_CHANNEL to 'sms' in src/lib/devConfig.ts for SMS delivery\n\n" +
-                            "You can still enter OTP if you received it.\n" +
-                            "💡 DEV MODE: Try '000000' to bypass."
+                            "3. Or use a TEST PHONE NUMBER from Supabase Dashboard > Auth > Providers > Phone\n\n" +
+                            "If you use a Test Number, the OTP is always the one you set (e.g., 000000)."
                         );
                     } else if (otpError.message.includes("Twilio") || otpError.message.includes("provider")) {
                         setError(
-                            "Twilio not configured. Please:\n" +
-                            "1. Configure Twilio in Supabase Dashboard → Authentication → Providers → Phone\n" +
-                            "2. Enter Twilio Account SID, Auth Token, and Verify Service SID\n" +
-                            "3. Or use SMS channel by setting OTP_CHANNEL = 'sms' in src/lib/devConfig.ts\n\n" +
-                            "You can still enter OTP if you received it."
+                            "Twilio not configured. For development:\n" +
+                            "1. Go to Supabase Dashboard > Authentication > Providers > Phone\n" +
+                            "2. Add your number to 'Phone Numbers for Testing'\n" +
+                            "3. Use that number and the fixed OTP (e.g., 000000).\n\n" +
+                            "Real SMS requires a paid Twilio account."
                         );
                     } else {
-                        setError(`Failed to send OTP: ${otpError.message}. Check Twilio configuration in Supabase Dashboard.\n\nYou can still enter OTP if you received it.`);
+                        setError(`Failed to send OTP: ${otpError.message}. Check Twilio configuration or use Test Numbers in Supabase Dashboard.`);
                     }
                     // Still show OTP screen even if sending failed - user might have received OTP
                     setOtpSent(true);
@@ -284,19 +283,19 @@ export default function Profile() {
                         "WhatsApp OTP not configured. Please:\n" +
                         "1. Set up Twilio Verify WhatsApp in Supabase Dashboard\n" +
                         "2. Configure WhatsApp Sender in Twilio\n" +
-                        "3. Or change OTP_CHANNEL to 'sms' in src/lib/devConfig.ts for SMS delivery\n\n" +
-                        "You can still enter OTP if you received it."
+                        "3. Or use a TEST PHONE NUMBER from Supabase Dashboard > Auth > Providers > Phone\n\n" +
+                        "If you use a Test Number, the OTP is always the one you set (e.g., 000000)."
                     );
                 } else if (otpError.message.includes("Twilio") || otpError.message.includes("provider")) {
                     setError(
-                        "Twilio not configured. Please:\n" +
-                        "1. Configure Twilio in Supabase Dashboard → Authentication → Providers → Phone\n" +
-                        "2. Enter Twilio Account SID, Auth Token, and Verify Service SID\n" +
-                        "3. Or use SMS channel by setting OTP_CHANNEL = 'sms' in src/lib/devConfig.ts\n\n" +
-                        "You can still enter OTP if you received it."
+                        "Twilio not configured. For development:\n" +
+                        "1. Go to Supabase Dashboard > Authentication > Providers > Phone\n" +
+                        "2. Add your number to 'Phone Numbers for Testing'\n" +
+                        "3. Use that number and the fixed OTP (e.g., 000000).\n\n" +
+                        "Real SMS requires a paid Twilio account."
                     );
                 } else {
-                    setError(`Failed to send OTP: ${otpError.message}. Check Twilio configuration in Supabase Dashboard.\n\nYou can still enter OTP if you received it.`);
+                    setError(`Failed to send OTP: ${otpError.message}. Check Twilio configuration or use Test Numbers in Supabase Dashboard.`);
                 }
                 // Still show OTP screen even if sending failed - user might have received OTP
                 setOtpSent(true);

@@ -118,14 +118,22 @@ export default function LoginPopup({ isOpen, onClose, onLoginSuccess }: LoginPop
                 // Provide helpful error messages
                 if (otpError.message.includes("whatsapp") || otpError.message.includes("WhatsApp")) {
                     setError(
-                        "WhatsApp OTP not configured. Please set up Twilio Verify WhatsApp or use SMS channel."
+                        "WhatsApp OTP not configured. Please:\n" +
+                        "1. Set up Twilio Verify WhatsApp in Supabase Dashboard\n" +
+                        "2. Configure WhatsApp Sender in Twilio\n" +
+                        "3. Or use a TEST PHONE NUMBER (e.g., +91 1234567890) from Supabase Dashboard > Auth > Providers > Phone\n\n" +
+                        "If you use a Test Number, the OTP is always the one you set (e.g., 000000)."
                     );
                 } else if (otpError.message.includes("Twilio") || otpError.message.includes("provider")) {
                     setError(
-                        "Twilio not configured. Please configure Twilio in Supabase Dashboard or use SMS channel."
+                        "Twilio not configured. For development:\n" +
+                        "1. Go to Supabase Dashboard > Authentication > Providers > Phone\n" +
+                        "2. Add your number to 'Phone Numbers for Testing'\n" +
+                        "3. Use that number and the fixed OTP (e.g., 000000) you configured.\n\n" +
+                        "Real SMS requires a paid Twilio account."
                     );
                 } else {
-                    setError(`Failed to send OTP: ${otpError.message}`);
+                    setError(`Failed to send OTP: ${otpError.message}\n\nHint: Use a Test Phone Number in Supabase Dashboard for development.`);
                 }
                 setLoading(false);
                 return;
