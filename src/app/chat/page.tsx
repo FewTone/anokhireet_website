@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName } from "@/lib/utils";
+import { convertToWebPOptimized } from "@/lib/imageUtils";
 
 interface Chat {
     id: string;
@@ -28,7 +29,10 @@ interface Chat {
     last_message?: {
         message: string;
         created_at: string;
+        sender_user_id: string;
+        is_read: boolean;
     };
+    unread_count: number;
 }
 
 interface Message {
@@ -37,6 +41,10 @@ interface Message {
     sender_user_id: string;
     message: string;
     created_at: string;
+    is_read: boolean;
+    read_at?: string;
+    media_url?: string;
+    media_type?: string;
     sender?: {
         name: string;
     };
@@ -52,8 +60,12 @@ export default function ChatPage() {
     const [messageInput, setMessageInput] = useState("");
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
+    const [otherUserTyping, setOtherUserTyping] = useState(false);
+    const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const chatChannelRef = useRef<any>(null);
 
     // Check login status and load chats
     useEffect(() => {
@@ -88,9 +100,48 @@ export default function ChatPage() {
         return () => {
             if (selectedChat) {
                 unsubscribeFromMessages();
+                if (chatChannelRef.current) {
+                    chatChannelRef.current.unsubscribe();
+                }
             }
         };
     }, [selectedChat]);
+
+    // Handle typing status broadcast
+    useEffect(() => {
+        if (!selectedChat || !currentUser || !chatChannelRef.current) return;
+
+        const broadcastTyping = async (status: boolean) => {
+            if (chatChannelRef.current) {
+                await chatChannelRef.current.track({
+                    id: currentUser.id,
+                    typing: status,
+                    last_seen: new Date().toISOString()
+                });
+            }
+        };
+
+        if (messageInput.trim().length > 0) {
+            if (!isTyping) {
+                setIsTyping(true);
+                broadcastTyping(true);
+            }
+
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                setIsTyping(false);
+                broadcastTyping(false);
+            }, 3000);
+        } else if (isTyping) {
+            setIsTyping(false);
+            broadcastTyping(false);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        }
+
+        return () => {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+        };
+    }, [messageInput, selectedChat, currentUser]);
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
@@ -122,7 +173,6 @@ export default function ChatPage() {
                 if (userData && !error) {
                     setCurrentUser({ id: userData.id, name: userData.name || "User" });
                 } else {
-                    // Fallback if user record not found but auth exists
                     setCurrentUser({ id: session.user.id, name: "User" });
                 }
             } else {
@@ -140,15 +190,9 @@ export default function ChatPage() {
         if (!currentUser) return;
 
         try {
-            // Get all inquiries where user is owner or renter
             const { data: inquiries, error: inquiriesError } = await supabase
                 .from("inquiries")
-                .select(`
-                    id,
-                    owner_user_id,
-                    renter_user_id,
-                    product_id
-                `)
+                .select(`id, owner_user_id, renter_user_id, product_id`)
                 .or(`owner_user_id.eq.${currentUser.id},renter_user_id.eq.${currentUser.id}`)
                 .order("created_at", { ascending: false });
 
@@ -161,7 +205,6 @@ export default function ChatPage() {
 
             const inquiryIds = inquiries.map((i: any) => i.id);
 
-            // Get all chats for these inquiries
             const { data: chatsData, error: chatsError } = await supabase
                 .from("chats")
                 .select("*")
@@ -175,25 +218,21 @@ export default function ChatPage() {
                 return;
             }
 
-            // Get the other user, product, and last message for each chat
             const chatsWithDetails = await Promise.all(
                 chatsData.map(async (chat: any) => {
                     const inquiry = inquiries.find((i: any) => i.id === chat.inquiry_id);
                     if (!inquiry) return null;
 
-                    const otherUserId =
-                        inquiry.owner_user_id === currentUser.id
-                            ? inquiry.renter_user_id
-                            : inquiry.owner_user_id;
+                    const otherUserId = inquiry.owner_user_id === currentUser.id
+                        ? inquiry.renter_user_id
+                        : inquiry.owner_user_id;
 
-                    // Get other user details
                     const { data: otherUser } = await supabase
                         .from("users")
                         .select("id, name, phone")
                         .eq("id", otherUserId)
                         .single();
 
-                    // Get product details
                     let product = null;
                     if (inquiry.product_id) {
                         const { data: productData } = await supabase
@@ -204,14 +243,20 @@ export default function ChatPage() {
                         product = productData;
                     }
 
-                    // Get last message
                     const { data: lastMessages } = await supabase
                         .from("messages")
-                        .select("message, created_at")
+                        .select("message, created_at, sender_user_id, is_read")
                         .eq("chat_id", chat.id)
                         .order("created_at", { ascending: false })
                         .limit(1)
-                        .single();
+                        .maybeSingle();
+
+                    const { count: unreadCount } = await supabase
+                        .from("messages")
+                        .select("*", { count: 'exact', head: true })
+                        .eq("chat_id", chat.id)
+                        .eq("is_read", false)
+                        .neq("sender_user_id", currentUser.id);
 
                     return {
                         ...chat,
@@ -221,6 +266,7 @@ export default function ChatPage() {
                         },
                         other_user: otherUser || { id: otherUserId, name: "Unknown User" },
                         last_message: lastMessages || undefined,
+                        unread_count: unreadCount || 0,
                     };
                 })
             );
@@ -229,6 +275,27 @@ export default function ChatPage() {
         } catch (error) {
             console.error("Error loading chats:", error);
             setChats([]);
+        }
+    };
+
+    const markAsRead = async (chatId: string) => {
+        if (!currentUser) return;
+
+        try {
+            const { error } = await supabase
+                .from("messages")
+                .update({ is_read: true, read_at: new Date().toISOString() })
+                .eq("chat_id", chatId)
+                .eq("is_read", false)
+                .neq("sender_user_id", currentUser.id);
+
+            if (error) throw error;
+
+            setChats(prev => prev.map(chat =>
+                chat.id === chatId ? { ...chat, unread_count: 0 } : chat
+            ));
+        } catch (error) {
+            console.error("Error marking messages as read:", error);
         }
     };
 
@@ -242,7 +309,6 @@ export default function ChatPage() {
 
             if (error) throw error;
 
-            // Fetch sender information for each message
             if (messagesData && messagesData.length > 0) {
                 const uniqueSenderIds = [...new Set(messagesData.map((m: any) => m.sender_user_id))];
                 const { data: sendersData } = await supabase
@@ -260,6 +326,7 @@ export default function ChatPage() {
                 }));
 
                 setMessages(messagesWithSenders);
+                markAsRead(chatId);
             } else {
                 setMessages([]);
             }
@@ -269,9 +336,31 @@ export default function ChatPage() {
         }
     };
 
+    const handleMessageRead = (chatId: string, messageId: string) => {
+        setMessages(prev => prev.map(m =>
+            m.id === messageId ? { ...m, is_read: true } : m
+        ));
+
+        setChats(prev => prev.map(chat => {
+            if (chat.id === chatId && chat.last_message) {
+                return {
+                    ...chat,
+                    last_message: { ...chat.last_message, is_read: true }
+                };
+            }
+            return chat;
+        }));
+    };
+
     const subscribeToMessages = (chatId: string) => {
         const channel = supabase
-            .channel(`messages:${chatId}`)
+            .channel(`chat:${chatId}`, {
+                config: {
+                    presence: {
+                        key: currentUser?.id,
+                    },
+                },
+            })
             .on(
                 "postgres_changes",
                 {
@@ -280,32 +369,22 @@ export default function ChatPage() {
                     table: "messages",
                     filter: `chat_id=eq.${chatId}`,
                 },
-                async (payload) => {
+                async (payload: any) => {
                     if (payload.eventType === "INSERT") {
                         const newMessage = payload.new as Message;
 
-                        // Check if message already exists
-                        // Optimistically add message with unknown sender (will update later)
-                        // Or just wait for the fetch?
-                        // Let's just remove the no-op and let the async fetch handle it, OR add a fallback immediately ?
-                        // Better: Check if sender is me, if so add immediately with my details.
-                        // Actually, let's just delete the no-op block. The catch block handles the fallback.
-                        // But wait! If we delete lines 275-280, the code proceeds to fetch. 
-                        // If fetch hangs, user waits.
-                        // Best UX: Add immediately. 
+                        if (newMessage.sender_user_id !== currentUser?.id) {
+                            markAsRead(chatId);
+                        }
 
                         setMessages((prev) => {
                             if (prev.some((m) => m.id === newMessage.id)) return prev;
-
-                            // If sender is me, I know who I am
                             const senderName = newMessage.sender_user_id === currentUser?.id
                                 ? currentUser?.name
                                 : "Loading...";
-
                             return [...prev, { ...newMessage, sender: { name: senderName || "Unknown" } }];
                         });
 
-                        // Fetch sender information for the new message
                         try {
                             const { data: senderData } = await supabase
                                 .from("users")
@@ -319,7 +398,6 @@ export default function ChatPage() {
                             };
 
                             setMessages((prev) => {
-                                // If exists, update it with sender info
                                 if (prev.some((m) => m.id === newMessage.id)) {
                                     return prev.map(m => m.id === newMessage.id ? messageWithSender : m);
                                 }
@@ -327,21 +405,27 @@ export default function ChatPage() {
                             });
                         } catch (error) {
                             console.error("Error fetching sender info:", error);
-                            // Add message without sender info if fetch fails
-                            // Update or add with Unknown if fetch fails
-                            setMessages((prev) => {
-                                const fallbackMessage = { ...newMessage, sender: { name: "Unknown" } };
-                                if (prev.some((m) => m.id === newMessage.id)) {
-                                    return prev.map(m => m.id === newMessage.id ? fallbackMessage : m);
-                                }
-                                return [...prev, fallbackMessage];
-                            });
+                        }
+                    } else if (payload.eventType === "UPDATE") {
+                        const updatedMessage = payload.new as Message;
+                        if (updatedMessage.is_read) {
+                            handleMessageRead(chatId, updatedMessage.id);
                         }
                     }
                 }
             )
+            .on("presence", { event: "sync" }, () => {
+                const state = channel.presenceState();
+                const otherUsers = Object.keys(state).filter(id => id !== currentUser?.id);
+                const isAnyTyping = otherUsers.some(id => {
+                    const presence = state[id] as any;
+                    return presence[0]?.typing === true;
+                });
+                setOtherUserTyping(isAnyTyping);
+            })
             .subscribe();
 
+        chatChannelRef.current = channel;
         return channel;
     };
 
@@ -349,47 +433,91 @@ export default function ChatPage() {
         supabase.removeAllChannels();
     };
 
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !selectedChat || !currentUser) return;
+
+        setSending(true);
+        try {
+            // Optimize image
+            const { blob } = await convertToWebPOptimized(file);
+            const optimizedFile = new File([blob], "image.webp", { type: "image/webp" });
+
+            const fileName = `chat_media/${selectedChat.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
+
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from("product-images")
+                .upload(fileName, optimizedFile, {
+                    contentType: "image/webp",
+                    upsert: false,
+                });
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from("product-images")
+                .getPublicUrl(fileName);
+
+            // Send message with media
+            const { data: msgData, error: msgError } = await supabase
+                .from("messages")
+                .insert([{
+                    chat_id: selectedChat.id,
+                    sender_user_id: currentUser.id,
+                    message: "",
+                    media_url: publicUrl,
+                    media_type: "image",
+                    is_read: false
+                }])
+                .select()
+                .single();
+
+            if (msgError) throw msgError;
+
+            if (msgData) {
+                const newMessage = { ...msgData, sender: { name: currentUser.name || "Me" } };
+                setMessages((prev) => [...prev, newMessage]);
+            }
+            loadChats();
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            alert("Failed to upload image. Please try again.");
+        } finally {
+            setSending(false);
+            // Clear input
+            e.target.value = '';
+        }
+    };
+
     const sendMessage = async () => {
         if (!selectedChat || !currentUser || !messageInput.trim()) {
-            if (!currentUser) {
-                alert("Please log in to send messages");
-            }
+            if (!currentUser) alert("Please log in to send messages");
             return;
         }
 
         setSending(true);
-
         try {
             const { data, error } = await supabase
                 .from("messages")
-                .insert([
-                    {
-                        chat_id: selectedChat.id,
-                        sender_user_id: currentUser.id,
-                        message: messageInput.trim(),
-                    },
-                ])
+                .insert([{
+                    chat_id: selectedChat.id,
+                    sender_user_id: currentUser.id,
+                    message: messageInput.trim(),
+                }])
                 .select()
                 .single();
 
             if (error) throw error;
-
             setMessageInput("");
 
-            // Manually add message to UI immediately for better responsiveness
             if (data) {
-                const newMessage = {
-                    ...data,
-                    sender: { name: currentUser.name || "Me" }
-                };
+                const newMessage = { ...data, sender: { name: currentUser.name || "Me" } };
                 setMessages((prev) => [...prev, newMessage]);
             }
-
-            // Reload chats to update last message
             loadChats();
         } catch (error) {
             console.error("Error sending message:", error);
-            alert("Failed to send message. Please try again.");
+            alert("Failed to send message.");
         } finally {
             setSending(false);
         }
@@ -399,14 +527,56 @@ export default function ChatPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
+    const formatTime = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    const formatChatTimestamp = (dateString: string) => {
+        const date = new Date(dateString);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
+        if (date.toDateString() === yesterday.toDateString()) {
+            return "Yesterday";
+        }
+        return date.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
+    };
+
+    const formatDateSeparator = (dateString: string) => {
+        const date = new Date(dateString);
+        const today = new Date();
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.toDateString() === today.toDateString()) return "Today";
+        if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
+
+        return date.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
     };
 
     const renderMessageContent = (msg: Message) => {
+        if (msg.media_url && msg.media_type === "image") {
+            return (
+                <div className="mb-1 max-w-[300px] overflow-hidden rounded-lg">
+                    <img
+                        src={msg.media_url}
+                        alt="Media"
+                        className="w-full h-auto object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                        onClick={() => window.open(msg.media_url, '_blank')}
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Expired';
+                        }}
+                    />
+                    {msg.message && <p className="text-[14.5px] leading-[19px] text-[#111b21] whitespace-pre-wrap break-words mt-1">{msg.message}</p>}
+                </div>
+            );
+        }
+
         let messageContent = msg.message;
         let isInquiryCard = false;
         let cardData = null;
@@ -420,9 +590,7 @@ export default function ChatPage() {
                     messageContent = parsed.text;
                 }
             }
-        } catch (e) {
-            // Not JSON
-        }
+        } catch (e) { /* ignore */ }
 
         if (isInquiryCard && cardData) {
             return (
@@ -430,453 +598,173 @@ export default function ChatPage() {
                     <div className="bg-gray-50 rounded p-2 mb-2 flex gap-3 border border-gray-200 overflow-hidden w-full max-w-[300px]">
                         {cardData.product.image && (
                             <div className="w-16 h-20 relative flex-shrink-0 bg-gray-200 rounded overflow-hidden">
-                                { /* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={cardData.product.image}
-                                    alt={cardData.product.name}
-                                    className="w-full h-full object-cover"
-                                />
+                                <img src={cardData.product.image} alt={cardData.product.name} className="w-full h-full object-cover" />
                             </div>
                         )}
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                             <h4 className="font-semibold text-sm truncate text-gray-900 leading-tight">{cardData.product.name}</h4>
-                            <p className="text-xs text-gray-500 mt-1">
-                                {cardData.dates.start} - {cardData.dates.end}
-                            </p>
-
-                            {/* Product ID Display */}
-                            <p className="text-[10px] text-gray-400 mt-0.5" title="Product ID">
-                                ID: {cardData.product.productId}
-                            </p>
-
-                            {cardData.product.price && (
-                                <p className="text-xs font-medium mt-1 text-gray-900">Price: {cardData.product.price}</p>
-                            )}
+                            <p className="text-[10px] text-gray-400 mt-0.5">ID: {cardData.product.productId}</p>
+                            {cardData.product.price && <p className="text-xs font-medium mt-1 text-gray-900">Price: {cardData.product.price}</p>}
                         </div>
                     </div>
                 </div>
             );
         }
 
-        return (
-            <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
-                {messageContent}
-            </p>
-        );
-    };
-
-    const formatTime = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffMs = now.getTime() - date.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-
-        if (diffMins < 1) return "Just now";
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-
-        return date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-        });
+        return <p className="text-[14.5px] leading-[19px] text-[#111b21] whitespace-pre-wrap break-words">{messageContent}</p>;
     };
 
     if (loading) {
         return (
-            <>
+            <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#25d366]"></div>
+            </div>
+        );
+    }
+
+    if (!currentUser) {
+        return (
+            <div className="min-h-screen flex flex-col pt-20">
                 <Navbar />
-                <main className="fixed inset-0 top-[95px] md:top-[70px] bg-gray-100">
-                    <div className="flex items-center justify-center h-full">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-                    </div>
-                </main>
-            </>
+                <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                    <h2 className="text-2xl font-bold mb-4">Please log in to chat</h2>
+                    <button onClick={() => router.push("/profile")} className="bg-[#25d366] text-white px-6 py-2 rounded-full font-semibold hover:bg-green-600">
+                        Log In
+                    </button>
+                </div>
+                <Footer />
+                <BottomNav />
+            </div>
         );
     }
 
     return (
-        <>
+        <div className="flex flex-col h-screen bg-[#f0f2f5]">
             <Navbar />
-            <style jsx global>{`
-                @media (max-width: 767px) {
-                    body.chat-selected nav .md\\:hidden > div:last-child form {
-                        display: none !important;
-                    }
-                }
-            `}</style>
-            <main className="fixed inset-0 top-[95px] md:top-[70px] bg-gray-100">
-                <div className="h-full w-full">
-                    <div className="flex h-full bg-white overflow-hidden relative">
-                        {/* Chat List Sidebar */}
-                        <div className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
-                            {/* Chat List */}
-                            <div className="flex-1 overflow-y-auto bg-white">
-                                {chats.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                                        <svg
-                                            width="64"
-                                            height="64"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="text-gray-300 mb-4"
-                                        >
-                                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                                        </svg>
-                                        <p className="text-gray-500 text-sm">No chats yet</p>
-                                        <p className="text-gray-400 text-xs mt-1">Start a conversation by making an inquiry</p>
-                                    </div>
-                                ) : (
+            <div className="flex-1 flex flex-col overflow-hidden max-w-[1600px] mx-auto w-full md:p-5">
+                <div className="flex-1 flex bg-white shadow-lg overflow-hidden md:rounded-lg">
+                    {/* Chat List Sidebar */}
+                    <div className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+                        <div className="bg-[#f0f2f5] px-4 py-3 flex items-center justify-between border-b border-gray-200">
+                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                <span className="text-gray-600 font-semibold">{currentUser.name.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <h2 className="text-xl font-bold text-[#111b21]">Chats</h2>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                            {chats.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-full p-6 text-center">
+                                    <p className="text-gray-500">No chats yet</p>
+                                </div>
+                            ) : (
+                                chats.map((chat) => {
+                                    const isSelected = selectedChat?.id === chat.id;
+                                    const productName = chat.inquiry?.product?.title || chat.inquiry?.product?.name || "Product";
+                                    return (
+                                        <div key={chat.id} onClick={() => setSelectedChat(chat)} className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? "bg-[#f0f2f5]" : "bg-white hover:bg-gray-50"}`}>
+                                            <div className="flex items-start gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-[#25d366] flex items-center justify-center text-white font-semibold text-lg">{chat.other_user?.name?.charAt(0).toUpperCase()}</div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between">
+                                                        <h3 className="text-[15px] font-semibold text-gray-900 truncate">{chat.other_user?.name}</h3>
+                                                        {chat.last_message && <span className={`text-[12px] ${chat.unread_count > 0 ? "text-[#25d366]" : "text-gray-500"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
+                                                    </div>
+                                                    <div className="flex items-center justify-between">
+                                                        <p className="text-[13.5px] text-gray-500 truncate">{chat.last_message?.message || productName}</p>
+                                                        {chat.unread_count > 0 && <div className="bg-[#25d366] text-white text-[11px] font-bold min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1">{chat.unread_count}</div>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Chat View */}
+                    <div className={`flex-1 flex flex-col ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                        {selectedChat ? (
+                            <>
+                                <div className="bg-[#f0f2f5] px-4 py-3 border-b border-gray-200 flex items-center gap-3">
+                                    <button onClick={() => setSelectedChat(null)} className="md:hidden p-2 -ml-2 text-gray-600"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg></button>
+                                    <div className="w-10 h-10 rounded-full bg-[#25d366] flex items-center justify-center text-white font-semibold">{selectedChat.other_user?.name?.charAt(0).toUpperCase()}</div>
                                     <div>
-                                        {chats.map((chat, index) => {
-                                            const isSelected = selectedChat?.id === chat.id;
-                                            const isFirstItem = index === 0;
-                                            const productName =
-                                                chat.inquiry?.product?.title ||
-                                                chat.inquiry?.product?.name ||
-                                                "Product";
+                                        <h3 className="text-[15px] font-semibold text-gray-900">{selectedChat.other_user?.name}</h3>
+                                        <p className="text-[12px] text-gray-500">
+                                            {otherUserTyping ? (
+                                                <span className="text-[#00a884] font-medium animate-pulse">typing...</span>
+                                            ) : "Online"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex-1 overflow-y-auto p-4 bg-[#efeae2] relative" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundRepeat: "repeat" }}>
+                                    <div className="space-y-1">
+                                        {messages.map((message, index) => {
+                                            const isSent = message.sender_user_id === currentUser.id;
+                                            const showAvatar = index === 0 || messages[index - 1].sender_user_id !== message.sender_user_id;
+                                            const showDateSeparator = index === 0 ||
+                                                new Date(messages[index - 1].created_at).toDateString() !== new Date(message.created_at).toDateString();
 
                                             return (
-                                                <div
-                                                    key={chat.id}
-                                                    onClick={() => setSelectedChat(chat)}
-                                                    className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${isSelected
-                                                        ? "bg-[#e9edef]"
-                                                        : "bg-white hover:bg-gray-50"
-                                                        }`}
-                                                >
-                                                    <div className="flex items-start gap-3">
-                                                        {/* Avatar */}
-                                                        <div className="w-12 h-12 rounded-full bg-[#25d366] flex items-center justify-center flex-shrink-0">
-                                                            <span className="text-white font-semibold text-lg">
-                                                                {chat.other_user?.name?.charAt(0).toUpperCase() || "U"}
+                                                <div key={message.id}>
+                                                    {showDateSeparator && (
+                                                        <div className="flex justify-center my-4">
+                                                            <span className="bg-[#d1d7db] text-[#54656f] text-[12.5px] px-3 py-1 rounded-md shadow-sm uppercase font-medium">
+                                                                {formatDateSeparator(message.created_at)}
                                                             </span>
                                                         </div>
-
-                                                        {/* Chat Info */}
-                                                        <div className="flex-1 min-w-0">
-                                                            {/* Mobile: Stack name and timestamp vertically, Desktop: Side by side */}
-                                                            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-1">
-                                                                <h3 className="text-base md:text-sm font-semibold text-gray-800 break-words md:truncate">
-                                                                    {formatUserDisplayName(chat.other_user?.name) || "Unknown User"}
-                                                                </h3>
-                                                                {chat.last_message && (
-                                                                    <span className="text-xs text-gray-500 md:ml-2 md:flex-shrink-0 mt-0.5 md:mt-0">
-                                                                        {formatTime(chat.last_message.created_at)}
+                                                    )}
+                                                    <div className={`flex ${isSent ? "justify-end" : "justify-start"}`}>
+                                                        <div className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 shadow-sm ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-1"} ${isSent ? "bg-[#dcf8c6] rounded-lg rounded-tr-none" : "bg-white rounded-lg rounded-tl-none"}`}>
+                                                            {showAvatar && (
+                                                                <div className={`absolute top-0 w-2 h-2.5 ${isSent ? "-right-1.5 bg-[#dcf8c6]" : "-left-1.5 bg-white"}`} style={{ clipPath: isSent ? "polygon(0 0, 0 100%, 100% 0)" : "polygon(100% 0, 0 0, 100% 100%)" }} />
+                                                            )}
+                                                            {renderMessageContent(message)}
+                                                            <div className="flex items-center justify-end gap-1 mt-0.5">
+                                                                <span className="text-[10px] text-gray-500 uppercase">{formatTime(message.created_at)}</span>
+                                                                {isSent && (
+                                                                    <span className={message.is_read ? "text-[#53bdeb]" : "text-gray-400"}>
+                                                                        <svg width="16" height="15" viewBox="0 0 16 15" fill="none"><path d="M15 4.31802L14.0533 3.37134L6.96 10.4647L3.48333 6.98801L2.53667 7.93467L6.96 12.358L15 4.31802ZM11.2267 4.31802L10.28 3.37134L6.96 6.69134L7.90667 7.63801L11.2267 4.31802ZM0.646667 7.93467L5.07 12.358L6.01667 11.4113L1.59333 6.98801L0.646667 7.93467Z" fill="currentColor" /></svg>
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <p className="text-xs text-gray-500 truncate mb-1">
-                                                                {productName}
-                                                            </p>
-                                                            {chat.last_message && (
-                                                                <p className="text-sm text-gray-600 truncate">
-                                                                    {(() => {
-                                                                        const msg = chat.last_message.message.trim();
-                                                                        if (msg.startsWith('{') && msg.endsWith('}')) {
-                                                                            try {
-                                                                                const parsed = JSON.parse(msg);
-                                                                                if (parsed.type === 'inquiry_card') {
-                                                                                    return `Inquiry: ${parsed.product.name}`;
-                                                                                }
-                                                                            } catch (e) {
-                                                                                // ignore
-                                                                            }
-                                                                        }
-                                                                        return msg;
-                                                                    })()}
-                                                                </p>
-                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
                                             );
                                         })}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Chat View */}
-                        <div className="hidden md:flex md:w-2/3 flex-col">
-                            {selectedChat ? (
-                                <>
-                                    {/* Chat Header */}
-                                    <div className="bg-[#f0f2f5] px-6 py-3 border-b border-gray-200">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-[#25d366] flex items-center justify-center">
-                                                <span className="text-white font-semibold">
-                                                    {selectedChat.other_user?.name?.charAt(0).toUpperCase() || "U"}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-base font-semibold text-gray-800">
-                                                    {selectedChat.other_user?.name || "Unknown User"}
-                                                </h3>
-                                                <p className="text-xs text-gray-500">Online</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Messages Area */}
-                                    <div
-                                        ref={messagesContainerRef}
-                                        className="flex-1 overflow-y-auto bg-[#efeae2] p-4"
-                                        style={{
-                                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='%23efeae2'/%3E%3Cpath d='M0 0l50 50L100 0v50H0z' fill='%23dddad5' opacity='0.4'/%3E%3C/svg%3E")`,
-                                            backgroundSize: "100px 100px",
-                                        }}
-                                    >
-                                        {messages.length === 0 ? (
-                                            <div className="flex items-center justify-center h-full">
-                                                <p className="text-gray-500 text-sm">No messages yet. Start the conversation!</p>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                {messages.map((message, index) => {
-                                                    const isSent = message.sender_user_id === currentUser?.id;
-                                                    const showAvatar = index === 0 || messages[index - 1].sender_user_id !== message.sender_user_id;
-                                                    const showTime = index === messages.length - 1 ||
-                                                        new Date(message.created_at).getTime() - new Date(messages[index + 1].created_at).getTime() > 300000; // 5 minutes
-
-                                                    return (
-                                                        <div key={message.id} className={`flex mb-1 ${isSent ? "justify-end" : "justify-start"}`}>
-                                                            <div className={`flex items-end gap-2 max-w-[70%] ${isSent ? "flex-row-reverse" : "flex-row"}`}>
-                                                                {/* Avatar for received messages */}
-                                                                {!isSent && (
-                                                                    <div className={`w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0 ${showAvatar ? "visible" : "invisible"}`}>
-                                                                        <span className="text-gray-600 text-xs font-semibold">
-                                                                            {message.sender?.name?.charAt(0).toUpperCase() || "U"}
-                                                                        </span>
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Message Bubble */}
-                                                                <div className={`rounded-lg px-3 py-2 ${isSent
-                                                                    ? "bg-[#dcf8c6] rounded-tr-none"
-                                                                    : "bg-white rounded-tl-none"
-                                                                    }`}>
-                                                                    {!isSent && showAvatar && (
-                                                                        <p className="text-xs font-semibold text-[#128c7e] mb-1">
-                                                                            {message.sender?.name || "Unknown"}
-                                                                        </p>
-                                                                    )}
-                                                                    {renderMessageContent(message)}
-                                                                    {showTime && (
-                                                                        <p className={`text-xs mt-1 ${isSent ? "text-gray-500" : "text-gray-400"}`}>
-                                                                            {formatTime(message.created_at)}
-                                                                        </p>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                                <div ref={messagesEndRef} />
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Input Area */}
-                                    <div className="bg-[#f0f2f5] px-4 py-3 border-t border-gray-200">
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="text"
-                                                value={messageInput}
-                                                onChange={(e) => setMessageInput(e.target.value)}
-                                                onKeyPress={handleKeyPress}
-                                                placeholder="Type a message..."
-                                                className="flex-1 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-gray-400 bg-white text-sm"
-                                                disabled={sending}
-                                            />
-                                            <button
-                                                onClick={sendMessage}
-                                                disabled={!messageInput.trim() || sending}
-                                                className="w-10 h-10 rounded-full bg-[#25d366] flex items-center justify-center text-white hover:bg-[#20ba5a] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                                            >
-                                                {sending ? (
-                                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                                ) : (
-                                                    <svg
-                                                        width="20"
-                                                        height="20"
-                                                        viewBox="0 0 24 24"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        strokeWidth="2"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                    >
-                                                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                                    </svg>
-                                                )}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="flex-1 flex items-center justify-center bg-[#efeae2]">
-                                    <div className="text-center">
-                                        <svg
-                                            width="96"
-                                            height="96"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="text-gray-300 mx-auto mb-4"
-                                        >
-                                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                                        </svg>
-                                        <p className="text-gray-500 text-lg">Select a chat to start messaging</p>
+                                        <div ref={messagesEndRef} />
                                     </div>
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Mobile Chat View - Show when chat is selected */}
-                        {selectedChat && (
-                            <div className="md:hidden fixed inset-0 top-[95px] bottom-0 bg-white z-20 flex flex-col">
-                                {/* Mobile Header */}
-                                <div className="bg-[#075e54] px-4 py-3 flex items-center gap-3 text-white">
-                                    <button
-                                        onClick={() => setSelectedChat(null)}
-                                        className="mr-2"
-                                    >
-                                        <svg
-                                            width="24"
-                                            height="24"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        >
-                                            <polyline points="15 18 9 12 15 6"></polyline>
-                                        </svg>
-                                    </button>
-                                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
-                                        <span className="text-[#075e54] font-semibold">
-                                            {selectedChat.other_user?.name?.charAt(0).toUpperCase() || "U"}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <h3 className="text-base font-semibold">
-                                            {formatUserDisplayName(selectedChat.other_user?.name) || "Unknown User"}
-                                        </h3>
-                                        <p className="text-xs text-white/80">Online</p>
-                                    </div>
-                                </div>
-
-                                {/* Mobile Messages Area */}
-                                <div
-                                    ref={messagesContainerRef}
-                                    className="flex-1 overflow-y-auto bg-[#efeae2] p-4"
-                                    style={{
-                                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h100v100H0z' fill='%23efeae2'/%3E%3Cpath d='M0 0l50 50L100 0v50H0z' fill='%23dddad5' opacity='0.4'/%3E%3C/svg%3E")`,
-                                        backgroundSize: "100px 100px",
-                                    }}
-                                >
-                                    {messages.length === 0 ? (
-                                        <div className="flex items-center justify-center h-full">
-                                            <p className="text-gray-500 text-sm">No messages yet. Start the conversation!</p>
-                                        </div>
-                                    ) : (
-                                        <>
-                                            {messages.map((message, index) => {
-                                                const isSent = message.sender_user_id === currentUser?.id;
-                                                const showAvatar = index === 0 || messages[index - 1].sender_user_id !== message.sender_user_id;
-                                                const showTime = index === messages.length - 1 ||
-                                                    new Date(message.created_at).getTime() - new Date(messages[index + 1].created_at).getTime() > 300000;
-
-                                                return (
-                                                    <div key={message.id} className={`flex mb-1 ${isSent ? "justify-end" : "justify-start"}`}>
-                                                        <div className={`flex items-end gap-2 max-w-[75%] ${isSent ? "flex-row-reverse" : "flex-row"}`}>
-                                                            {!isSent && (
-                                                                <div className={`w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0 ${showAvatar ? "visible" : "invisible"}`}>
-                                                                    <span className="text-gray-600 text-xs font-semibold">
-                                                                        {message.sender?.name?.charAt(0).toUpperCase() || "U"}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-
-                                                            <div className={`rounded-lg px-3 py-2 ${isSent
-                                                                ? "bg-[#dcf8c6] rounded-tr-none"
-                                                                : "bg-white rounded-tl-none"
-                                                                }`}>
-                                                                {!isSent && showAvatar && (
-                                                                    <p className="text-xs font-semibold text-[#128c7e] mb-1">
-                                                                        {formatUserDisplayName(message.sender?.name) || "Unknown"}
-                                                                    </p>
-                                                                )}
-                                                                <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
-                                                                    {message.message}
-                                                                </p>
-                                                                {showTime && (
-                                                                    <p className={`text-xs mt-1 ${isSent ? "text-gray-500" : "text-gray-400"}`}>
-                                                                        {formatTime(message.created_at)}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                            <div ref={messagesEndRef} />
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* Mobile Input Area */}
-                                <div className="bg-[#f0f2f5] px-3 py-2 border-t border-gray-200">
-                                    <div className="flex items-center gap-2">
+                                <div className="bg-[#f0f2f5] p-3 flex items-center gap-3">
+                                    <label className={`cursor-pointer p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors ${sending ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                         <input
-                                            type="text"
-                                            value={messageInput}
-                                            onChange={(e) => setMessageInput(e.target.value)}
-                                            onKeyPress={handleKeyPress}
-                                            placeholder="Type a message..."
-                                            className="flex-1 px-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:border-gray-400 bg-white text-sm"
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={handleImageUpload}
                                             disabled={sending}
                                         />
-                                        <button
-                                            onClick={sendMessage}
-                                            disabled={!messageInput.trim() || sending}
-                                            className="w-10 h-10 rounded-full bg-[#25d366] flex items-center justify-center text-white hover:bg-[#20ba5a] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            {sending ? (
-                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                            ) : (
-                                                <svg
-                                                    width="20"
-                                                    height="20"
-                                                    viewBox="0 0 24 24"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                    strokeWidth="2"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                >
-                                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                                </svg>
-                                            )}
-                                        </button>
-                                    </div>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                    </label>
+                                    <input type="text" value={messageInput} onChange={(e) => setMessageInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 bg-white px-4 py-2 rounded-full text-[15px] outline-none border-none shadow-sm" />
+                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className="bg-[#00a884] text-white p-2.5 rounded-full hover:bg-[#008f6f] disabled:opacity-50 transition-colors">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                                    </button>
                                 </div>
+                            </>
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center bg-[#f8f9fa] border-b-[6px] border-[#25d366]">
+                                <img src="https://wallpapers.com/images/hd/whatsapp-background-py66k8a9ue4ue4ue.jpg" alt="WhatsApp" className="w-[300px] opacity-20 grayscale mb-8" />
+                                <h2 className="text-3xl font-light text-[#41525d] mb-2">WhatsApp Web</h2>
+                                <p className="text-[#667781] text-sm">Send and receive messages without keeping your phone online.</p>
                             </div>
                         )}
                     </div>
                 </div>
-            </main>
-        </>
+            </div>
+            <BottomNav />
+        </div>
     );
 }

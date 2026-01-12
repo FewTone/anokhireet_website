@@ -27,6 +27,10 @@ export default function Profile() {
     const [otp, setOtp] = useState("");
     const [verifyingOtp, setVerifyingOtp] = useState(false);
     const [pendingUserData, setPendingUserData] = useState<PendingUserData | null>(null);
+    const [cities, setCities] = useState<any[]>([]);
+    const [selectedCities, setSelectedCities] = useState<string[]>([]);
+    const [showAddCity, setShowAddCity] = useState(false);
+    const [newCityName, setNewCityName] = useState("");
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -45,7 +49,54 @@ export default function Profile() {
             console.error("Error in checkSession:", error);
             // Don't block the UI if checkSession fails
         });
+        loadCities();
     }, []);
+
+    const loadCities = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("cities")
+                .select("*")
+                .order("display_order", { ascending: true });
+            if (error) throw error;
+            setCities(data || []);
+        } catch (error) {
+            console.error("Error loading cities:", error);
+        }
+    };
+
+    const handleAddNewCity = async () => {
+        if (!newCityName.trim()) {
+            setError("Please enter a city name");
+            return;
+        }
+
+        if (cities.some(c => c.name.toLowerCase() === newCityName.trim().toLowerCase())) {
+            setError("This city already exists");
+            return;
+        }
+
+        try {
+            const { data, error } = await supabase
+                .from("cities")
+                .insert([{
+                    name: newCityName.trim(),
+                    display_order: cities.length
+                }])
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            setCities(prev => [...prev, data]);
+            setSelectedCities(prev => [...prev, data.id]);
+            setNewCityName("");
+            setShowAddCity(false);
+        } catch (error: any) {
+            console.error("Error adding city:", error);
+            setError(error.message || "Failed to add city");
+        }
+    };
 
     const checkSession = async () => {
         // Check Supabase Auth session only
@@ -540,10 +591,14 @@ export default function Profile() {
                 }
             }
 
+            if (selectedCities.length === 0) {
+                setError("Please select at least one city");
+                setLoading(false);
+                return;
+            }
+
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
-
-
 
             // ========== NORMAL FLOW (OTP REQUIRED) ==========
             // Get current auth session (user already verified OTP)
@@ -580,31 +635,6 @@ export default function Profile() {
                 if (createError.code === "23505") { // duplicate key value violates unique constraint
                     console.warn("⚠️ User already exists (duplicate phone), linking account...", createError);
 
-                    // The user exists, but we couldn't find them earlier (likely due to RLS).
-                    // Now we are authenticated as 'authUserId', so we try to claim the existing user record.
-
-                    // We need to find the user by phone to get their ID, but RLS might block SELECT.
-                    // However, we can try to Update directly using phone match.
-                    // RLS policy usually allows "update own record", but we are not 'own' yet until auth_user_id is set.
-                    // If RLS allows Authenticated users to Update rows where phone = their phone? Unlikely default.
-
-                    // BEST EFFORT: Service Role would be ideal here, but we are client-side.
-                    // Let's assume the user IS the owner and try to update based on phone number.
-                    // Note: This query might fail if RLS prevents UPDATE.
-
-                    /* 
-                       Workaround:
-                       If we are here, it means:
-                       1. Auth Session is Active (authUserId)
-                       2. Users Table row exists (phone conflict)
-                       3. Request failed.
-                       
-                       If RLS blocks us from updating the row to set auth_user_id, we are stuck without server-side help.
-                       However, often admins create the user and leave auth_user_id NULL.
-                       
-                       Let's try to update the user record where phone matches.
-                    */
-
                     const { data: linkedUser, error: linkError } = await supabase
                         .from("users")
                         .update({ auth_user_id: authUserId })
@@ -614,19 +644,30 @@ export default function Profile() {
 
                     if (linkError) {
                         console.error("❌ Failed to link existing user:", linkError);
-                        // Fallback: If we can't link, we can't proceed safely.
-                        // But maybe the UPDATE worked despite error? (Policy violation vs not found)
-
                         throw new Error("This phone number is already registered but could not be linked. Please contact support.");
                     }
 
-                    // Linked successfully!
+                    // Update cities for linked user
+                    await supabase.from("user_cities").delete().eq("user_id", linkedUser.id);
+                    if (selectedCities.length > 0) {
+                        await supabase.from("user_cities").insert(
+                            selectedCities.map(cityId => ({ user_id: linkedUser.id, city_id: cityId }))
+                        );
+                    }
+
                     console.log("✅ Successfully linked existing user:", linkedUser);
                     router.push("/user");
                     return;
                 }
 
                 throw createError;
+            }
+
+            // Insert user cities
+            if (selectedCities.length > 0) {
+                await supabase.from("user_cities").insert(
+                    selectedCities.map(cityId => ({ user_id: authUserId, city_id: cityId }))
+                );
             }
 
             // User created - auth session already exists
@@ -673,7 +714,7 @@ export default function Profile() {
 
                 {/* Right Form Section */}
                 <div className="w-full md:w-[50%] p-8 md:p-12 text-center flex flex-col justify-center">
-                    <h2 className="text-[1.2rem] font-black mt-4 md:mt-0 text-[#333]">
+                    <h2 className="text-[1.2rem] font-black mt-4 md:mt-0 text-[#333] uppercase">
                         {otpSent ? "VERIFY OTP" : isNewUser ? "CREATE ACCOUNT" : "LOGIN"}
                     </h2>
                     <p className="mt-3 text-[#4d5563] text-[0.8rem]">
@@ -824,8 +865,8 @@ export default function Profile() {
                                                 type="text"
                                                 required
                                                 value={firstName}
-                                                onChange={(e) => setFirstName(e.target.value)}
-                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none"
+                                                onChange={(e) => setFirstName(capitalizeFirstLetter(e.target.value))}
+                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
                                                 placeholder="First Name"
                                                 autoFocus
                                             />
@@ -838,13 +879,13 @@ export default function Profile() {
                                                 type="text"
                                                 required
                                                 value={lastName}
-                                                onChange={(e) => setLastName(e.target.value)}
+                                                onChange={(e) => setLastName(capitalizeFirstLetter(e.target.value))}
                                                 onKeyPress={(e) => {
                                                     if (e.key === 'Enter' && firstName.trim() && lastName.trim()) {
                                                         handleCreateNewUser();
                                                     }
                                                 }}
-                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none"
+                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
                                                 placeholder="Surname"
                                             />
                                         </div>
@@ -859,9 +900,90 @@ export default function Profile() {
                                         type="email"
                                         value={newUserEmail}
                                         onChange={(e) => setNewUserEmail(e.target.value)}
-                                        className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none"
-                                        placeholder="Enter your email"
+                                        className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
+                                        placeholder="user@example.com (optional)"
                                     />
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="block text-[10px] uppercase font-bold text-[#4d5563]">
+                                            From Where (Cities) *
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAddCity(!showAddCity)}
+                                            className="text-[10px] text-blue-600 hover:text-blue-800 font-bold uppercase"
+                                        >
+                                            {showAddCity ? "Cancel" : "+ Add New"}
+                                        </button>
+                                    </div>
+
+                                    {showAddCity && (
+                                        <div className="mb-3 p-2 bg-gray-50 border border-gray-200 rounded">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newCityName}
+                                                    onChange={(e) => setNewCityName(e.target.value)}
+                                                    onKeyPress={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            e.preventDefault();
+                                                            handleAddNewCity();
+                                                        }
+                                                    }}
+                                                    placeholder="City name"
+                                                    className="flex-1 px-3 py-1.5 border border-gray-300 rounded outline-none focus:ring-1 focus:ring-black text-[0.8rem]"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddNewCity}
+                                                    className="px-3 py-1.5 bg-black text-white font-bold rounded hover:opacity-90 transition-all text-[0.8rem]"
+                                                >
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="border border-[#4d5563] rounded max-h-32 overflow-y-auto p-2 bg-white">
+                                        {cities.length === 0 ? (
+                                            <p className="text-[10px] text-gray-500 uppercase">Loading cities...</p>
+                                        ) : (
+                                            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                                                {cities.map(city => {
+                                                    const isChecked = selectedCities.includes(city.id);
+                                                    return (
+                                                        <label
+                                                            key={city.id}
+                                                            className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-1 rounded transition-colors group"
+                                                        >
+                                                            <div className={`w-3.5 h-3.5 border border-gray-400 rounded-sm flex items-center justify-center transition-colors ${isChecked ? 'bg-black border-black' : 'bg-white group-hover:border-gray-600'}`}>
+                                                                {isChecked && (
+                                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                                    </svg>
+                                                                )}
+                                                            </div>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="hidden"
+                                                                checked={isChecked}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedCities(prev => [...prev, city.id]);
+                                                                    } else {
+                                                                        setSelectedCities(prev => prev.filter(id => id !== city.id));
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <span className="text-[0.8rem] text-gray-700 truncate">{city.name}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -890,7 +1012,7 @@ export default function Profile() {
                                 </button>
                                 <button
                                     onClick={handleCreateNewUser}
-                                    disabled={loading || !firstName.trim() || !lastName.trim()}
+                                    disabled={loading || !firstName.trim() || !lastName.trim() || selectedCities.length === 0}
                                     className="flex-1 px-4 py-2 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loading ? "CREATING..." : "CREATE ACCOUNT"}
