@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -833,15 +834,18 @@ export default function ProductDetailPage() {
 
                                         {/* Product Details */}
                                         <div className="space-y-4 border-t border-gray-200 pt-6">
-                                            {product.ownerName && (
-                                                <div className="flex items-center gap-3 mb-4">
-                                                    <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center text-lg font-medium tracking-wide">
+                                            {product.ownerName && product.owner_user_id && (
+                                                <Link
+                                                    href={`/products?owner_id=${product.owner_user_id}`}
+                                                    className="flex items-center gap-3 mb-4 group hover:opacity-80 transition-opacity w-fit"
+                                                >
+                                                    <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-base font-medium tracking-wide">
                                                         {getUserInitials(product.ownerName)}
                                                     </div>
-                                                    <div className="text-lg font-medium text-gray-900">
+                                                    <div className="text-lg font-medium text-gray-900 group-hover:underline decoration-black/50 underline-offset-4">
                                                         {formatUserDisplayName(product.ownerName)}
                                                     </div>
-                                                </div>
+                                                </Link>
                                             )}
                                             <div>
                                                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Product Information</h3>

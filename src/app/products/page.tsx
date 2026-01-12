@@ -20,6 +20,7 @@ interface Product {
     category?: string;
     original_price?: number | string;
     created_at?: string; // Add created_at to preserve sorting
+    owner_user_id?: string;
 }
 
 interface FilterSection {
@@ -52,6 +53,7 @@ export default function ProductsPage() {
     const [appliedMaterials, setAppliedMaterials] = useState<string[]>([]);
     const [appliedCities, setAppliedCities] = useState<string[]>([]);
     const [appliedPriceRange, setAppliedPriceRange] = useState<[number, number]>([0, 5000]);
+    const [appliedOwnerId, setAppliedOwnerId] = useState<string>("");
 
     // Removed aliases - use applied states directly throughout the code
 
@@ -121,6 +123,9 @@ export default function ProductsPage() {
         if (searchQuery.trim()) {
             params.set("search", searchQuery.trim());
         }
+        if (appliedOwnerId) {
+            params.set("owner_id", appliedOwnerId);
+        }
         const newUrl = params.toString() ? `/products?${params.toString()}` : '/products';
         const currentUrl = window.location.pathname + window.location.search;
 
@@ -128,7 +133,7 @@ export default function ProductsPage() {
         if (newUrl !== currentUrl) {
             router.replace(newUrl);
         }
-    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, maxPrice, router]);
+    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, maxPrice, router]);
 
     // Check URL params for auto-filtering (runs after filter options are loaded)
     useEffect(() => {
@@ -140,6 +145,7 @@ export default function ProductsPage() {
         const priceMinParam = searchParams.get("price_min");
         const priceMaxParam = searchParams.get("price_max");
         const sortParam = searchParams.get("sort");
+        const ownerIdParam = searchParams.get("owner_id");
 
         if (productTypeParam && productTypes.length > 0) {
             const type = productTypes.find(pt => pt.id === productTypeParam);
@@ -259,6 +265,12 @@ export default function ProductsPage() {
         } else {
             setSearchQuery("");
         }
+
+        if (ownerIdParam) {
+            setAppliedOwnerId(ownerIdParam);
+        } else {
+            setAppliedOwnerId("");
+        }
     }, [searchParams, productTypes, occasions, maxPrice]);
 
     // Filter products when applied filters, products, sort, or search query change
@@ -272,7 +284,7 @@ export default function ProductsPage() {
                 setIsInitialLoad(false); // Mark initial load complete
             }
         }
-    }, [products, appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, loading, maxPrice, isInitialLoad, updateURLParams]);
+    }, [products, appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, loading, maxPrice, isInitialLoad, updateURLParams]);
 
     const loadFilterOptions = async () => {
         try {
@@ -350,6 +362,7 @@ export default function ProductsPage() {
                         category: p.category || p.category_id,
                         original_price: p.original_price || undefined,
                         created_at: p.created_at, // Preserve created_at for sorting
+                        owner_user_id: p.owner_user_id,
                     } as Product & { created_at?: string };
                 });
 
@@ -544,6 +557,11 @@ export default function ProductsPage() {
 
             // Apply sorting
             filtered = sortProducts(filtered, sortBy);
+
+            // Filter by Owner ID
+            if (appliedOwnerId) {
+                filtered = filtered.filter(p => p.owner_user_id === appliedOwnerId);
+            }
 
             setFilteredProducts(filtered);
         } catch (error) {
