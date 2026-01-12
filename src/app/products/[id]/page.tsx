@@ -710,14 +710,14 @@ export default function ProductDetailPage() {
                                         </div>
 
                                         {/* Center - Main Product Image */}
-                                        <div className="relative w-full max-w-[400px] aspect-[4/5] bg-gray-100 shadow-sm">
+                                        <div className="relative w-full max-w-[500px] aspect-[4/5] bg-gray-100 shadow-sm">
                                             {selectedImage ? (
                                                 <Image
                                                     src={selectedImage}
                                                     alt={product.name}
                                                     fill
                                                     className="object-cover"
-                                                    sizes="(max-width: 1024px) 50vw, 400px"
+                                                    sizes="(max-width: 1024px) 50vw, 500px"
                                                     priority
                                                     unoptimized
                                                     onError={(e) => {
@@ -733,7 +733,7 @@ export default function ProductDetailPage() {
                                         </div>
 
                                         {/* Right Side - Action Buttons (Outside Image) */}
-                                        <div className="flex flex-col gap-3 pt-4 sticky top-24">
+                                        <div className="flex flex-col gap-3 pt-4">
                                             {/* Wishlist Button */}
                                             <button
                                                 onClick={(e) => {
@@ -879,67 +879,69 @@ export default function ProductDetailPage() {
                             </div>
                         </div>
                     </div>
-                </div>
-            </main>
+                </div >
+            </main >
             <Footer />
 
             {/* Inquiry Modal */}
-            {showInquiryModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
-                        <button
-                            onClick={() => {
-                                setShowInquiryModal(false);
-                                setInquiryForm({ start_date: "", end_date: "" });
-                            }}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                        </button>
-
-                        <h2 className="text-2xl font-bold mb-6">Make an Inquiry</h2>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Start Date <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    value={inquiryForm.start_date}
-                                    onChange={(e) => setInquiryForm({ ...inquiryForm, start_date: e.target.value })}
-                                    min={new Date().toISOString().split('T')[0]}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    End Date <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    value={inquiryForm.end_date}
-                                    onChange={(e) => setInquiryForm({ ...inquiryForm, end_date: e.target.value })}
-                                    min={inquiryForm.start_date || new Date().toISOString().split('T')[0]}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
-                                />
-                            </div>
-
+            {
+                showInquiryModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
                             <button
-                                onClick={handleSubmitInquiry}
-                                disabled={submittingInquiry || !inquiryForm.start_date || !inquiryForm.end_date}
-                                className="w-full bg-black text-white font-semibold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                                onClick={() => {
+                                    setShowInquiryModal(false);
+                                    setInquiryForm({ start_date: "", end_date: "" });
+                                }}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
                             >
-                                {submittingInquiry ? "Submitting..." : "Submit Inquiry"}
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
                             </button>
+
+                            <h2 className="text-2xl font-bold mb-6">Make an Inquiry</h2>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Start Date <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={inquiryForm.start_date}
+                                        onChange={(e) => setInquiryForm({ ...inquiryForm, start_date: e.target.value })}
+                                        min={new Date().toISOString().split('T')[0]}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        End Date <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={inquiryForm.end_date}
+                                        onChange={(e) => setInquiryForm({ ...inquiryForm, end_date: e.target.value })}
+                                        min={inquiryForm.start_date || new Date().toISOString().split('T')[0]}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={handleSubmitInquiry}
+                                    disabled={submittingInquiry || !inquiryForm.start_date || !inquiryForm.end_date}
+                                    className="w-full bg-black text-white font-semibold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                                >
+                                    {submittingInquiry ? "Submitting..." : "Submit Inquiry"}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 }
