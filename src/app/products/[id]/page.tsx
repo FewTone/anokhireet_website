@@ -519,7 +519,7 @@ export default function ProductDetailPage() {
             setInquiryForm({ start_date: "", end_date: "" });
 
             // Redirect to chat
-            // router.push('/chat'); // Optional: redirect user to chat page to see their message
+            router.push(`/chat?id=${chatId}`);
         } catch (error: any) {
             console.error("Error submitting inquiry:", error);
             alert(error.message || "Failed to submit inquiry. Please try again.");
@@ -886,7 +886,7 @@ export default function ProductDetailPage() {
             {/* Inquiry Modal */}
             {
                 showInquiryModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                         <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
                             <button
                                 onClick={() => {

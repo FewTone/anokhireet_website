@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
@@ -43,6 +43,7 @@ interface Message {
 
 export default function ChatPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
     const [chats, setChats] = useState<Chat[]>([]);
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -64,6 +65,17 @@ export default function ChatPage() {
             loadChats();
         }
     }, [currentUser]);
+
+    // Auto-select chat from URL parameter
+    useEffect(() => {
+        const chatId = searchParams.get('id');
+        if (chatId && chats.length > 0 && !selectedChat) {
+            const chatToSelect = chats.find(c => c.id === chatId);
+            if (chatToSelect) {
+                setSelectedChat(chatToSelect);
+            }
+        }
+    }, [chats, searchParams, selectedChat]);
 
     // Load messages when chat is selected
     useEffect(() => {
