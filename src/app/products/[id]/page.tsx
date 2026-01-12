@@ -6,7 +6,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
-import { formatUserDisplayName } from "@/lib/utils";
+import { formatUserDisplayName, getUserInitials } from "@/lib/utils";
 
 interface Product {
     id: number | string;
@@ -835,8 +835,8 @@ export default function ProductDetailPage() {
                                         <div className="space-y-4 border-t border-gray-200 pt-6">
                                             {product.ownerName && (
                                                 <div className="flex items-center gap-3 mb-4">
-                                                    <div className="w-10 h-10 bg-black text-white flex items-center justify-center text-lg font-medium tracking-wide">
-                                                        {product.ownerName.charAt(0).toUpperCase()}
+                                                    <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center text-lg font-medium tracking-wide">
+                                                        {getUserInitials(product.ownerName)}
                                                     </div>
                                                     <div className="text-lg font-medium text-gray-900">
                                                         {formatUserDisplayName(product.ownerName)}

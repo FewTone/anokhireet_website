@@ -26,3 +26,15 @@ export function capitalizeFirstLetter(string: string): string {
     if (!string) return "";
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+export function getUserInitials(name: string | null | undefined): string {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 0) return "";
+
+    const firstInitial = parts[0].charAt(0).toUpperCase();
+    if (parts.length === 1) return firstInitial;
+
+    const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+    return `${firstInitial}${lastInitial}`;
+}
