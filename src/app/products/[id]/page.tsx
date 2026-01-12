@@ -906,13 +906,23 @@ export default function ProductDetailPage() {
                                             </div>
 
                                             {/* Make Inquiry Button */}
+                                            {/* Make Inquiry Button */}
                                             <div className="border-t border-gray-200 pt-4">
-                                                <button
-                                                    onClick={handleMakeInquiry}
-                                                    className="w-full bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity"
-                                                >
-                                                    Make Inquiry
-                                                </button>
+                                                {currentUser && product.owner_user_id && currentUser.id === product.owner_user_id ? (
+                                                    <button
+                                                        disabled
+                                                        className="w-full bg-gray-200 text-gray-500 font-semibold py-4 px-6 cursor-not-allowed"
+                                                    >
+                                                        Your Product
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={handleMakeInquiry}
+                                                        className="w-full bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity"
+                                                    >
+                                                        Make Inquiry
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

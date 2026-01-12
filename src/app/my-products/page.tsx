@@ -23,6 +23,7 @@ export default function MyProductsPage() {
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<string | null>(null);
     const [userName, setUserName] = useState<string>("");
+    const [totalInquiries, setTotalInquiries] = useState<number>(0);
 
     useEffect(() => {
         // Add timeout to prevent infinite loading
@@ -101,7 +102,9 @@ export default function MyProductsPage() {
             setUserName(userData.name || "");
 
             // Load products using the actual users.id
+            // Load products using the actual users.id
             loadProducts(actualUserId);
+            loadInquiryStats(actualUserId);
         } catch (error) {
             console.error("Error loading user:", error);
             setLoading(false);
@@ -185,6 +188,21 @@ export default function MyProductsPage() {
         }
     };
 
+    const loadInquiryStats = async (uid: string) => {
+        try {
+            const { count, error } = await supabase
+                .from("inquiries")
+                .select("*", { count: 'exact', head: true })
+                .eq("owner_user_id", uid);
+
+            if (error) throw error;
+
+            setTotalInquiries(count || 0);
+        } catch (error) {
+            console.error("Error loading inquiry stats:", error);
+        }
+    };
+
     return (
         <>
             <Navbar />
@@ -198,6 +216,26 @@ export default function MyProductsPage() {
                             View your products. Only admins can add, edit, or delete products.
                         </p>
                     </div>
+
+                    {/* Analytics Section */}
+                    {userId && !loading && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wider mb-2">Total Products</h3>
+                                <p className="text-3xl font-bold text-gray-900">{myProducts.length}</p>
+                            </div>
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wider mb-2">Total Inquiries</h3>
+                                <p className="text-3xl font-bold text-gray-900">{totalInquiries}</p>
+                            </div>
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                                <h3 className="text-gray-500 text-sm font-medium uppercase tracking-wider mb-2">Performance Information</h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                    Updates in real-time. Keep active to receive more inquiries.
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
 
 
@@ -238,7 +276,7 @@ export default function MyProductsPage() {
                         </div>
                     )}
                 </div>
-            </main>
+            </main >
             <Footer />
         </>
     );
