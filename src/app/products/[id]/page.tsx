@@ -838,7 +838,7 @@ export default function ProductDetailPage() {
                                             {product.ownerName && product.owner_user_id && (
                                                 <Link
                                                     href={`/products?owner_id=${product.owner_user_id}`}
-                                                    className="flex items-center gap-3 mb-4 group hover:opacity-80 transition-opacity w-fit"
+                                                    className="flex items-center gap-3 mb-4 group hover:opacity-80 transition-opacity w-fit relative z-10 pointer-events-auto"
                                                 >
                                                     <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-base font-medium tracking-wide">
                                                         {getUserInitials(product.ownerName)}

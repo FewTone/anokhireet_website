@@ -203,6 +203,9 @@ function AdminContent() {
     const [draggedHeroId, setDraggedHeroId] = useState<string | null>(null);
     const [dragOverHeroId, setDragOverHeroId] = useState<string | null>(null);
 
+    // Contact Requests state
+    const [contactRequests, setContactRequests] = useState<any[]>([]);
+
     // Facet modal states
     const [isFacetModalOpen, setIsFacetModalOpen] = useState(false);
     const [editingFacet, setEditingFacet] = useState<any>(null);
@@ -235,7 +238,7 @@ function AdminContent() {
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured" | "contact">("dashboard");
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminEmail, setAdminEmail] = useState("");
@@ -342,7 +345,8 @@ function AdminContent() {
                 loadTotalViews(),
                 loadWebsiteSetting(),
                 loadAllFacets(),
-                loadHeroSlides()
+                loadHeroSlides(),
+                loadContactRequests()
             ]).catch((error) => {
                 console.error("Error loading admin data:", error);
             });
@@ -879,6 +883,20 @@ To get these values:
         } catch (error: any) {
             console.error("Error loading hero slides:", error);
             setHeroSlides([]);
+        }
+    };
+
+    // Load contact requests
+    const loadContactRequests = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("contact_requests")
+                .select("*")
+                .order("created_at", { ascending: false });
+            if (error) throw error;
+            setContactRequests(data || []);
+        } catch (error) {
+            console.error("Error loading contact requests:", error);
         }
     };
 
@@ -3420,6 +3438,28 @@ To get these values:
                                         <line x1="9" y1="21" x2="9" y2="9"></line>
                                     </svg>
                                     <span>Hero Section</span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        const currentScrollY = window.scrollY;
+                                        setActiveTab("contact");
+                                        localStorage.setItem("adminActiveTab", "contact");
+                                        router.replace("/admin?tab=contact");
+                                        requestAnimationFrame(() => {
+                                            window.scrollTo(0, currentScrollY);
+                                        });
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "contact"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        }`}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                        <polyline points="22,6 12,13 2,6"></polyline>
+                                    </svg>
+                                    <span>Messages</span>
                                 </button>
                             </nav>
 
@@ -5966,1263 +6006,1323 @@ To get these values:
                                 </div>
                             </div>
                         )}
-                    </div>
-                </div>
-            </main>
-            <Popup
-                isOpen={popup.isOpen}
-                onClose={closePopup}
-                message={popup.message}
-                type={popup.type}
-                title={popup.title}
-            />
 
-            {/* Facet Add/Edit Modal */}
-            {isFacetModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-bold">
-                                    {editingFacet ? `Edit ${activeFacetTab === "product_types" ? "Product Type" : activeFacetTab === "occasions" ? "Occasion" : activeFacetTab === "colors" ? "Color" : activeFacetTab === "materials" ? "Material" : "City"}` : `Add ${activeFacetTab === "product_types" ? "Product Type" : activeFacetTab === "occasions" ? "Occasion" : activeFacetTab === "colors" ? "Color" : activeFacetTab === "materials" ? "Material" : "City"}`}
-                                </h2>
-                                <button
-                                    onClick={() => {
-                                        setIsFacetModalOpen(false);
-                                        setEditingFacet(null);
-                                        setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                    }}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                </button>
-                            </div>
+                        <Popup
+                            isOpen={popup.isOpen}
+                            onClose={closePopup}
+                            message={popup.message}
+                            type={popup.type}
+                            title={popup.title}
+                        />
 
-                            <form onSubmit={(e) => {
-                                e.preventDefault();
-                                if (activeFacetTab === "product_types") handleSaveProductType();
-                                else if (activeFacetTab === "occasions") handleSaveOccasion();
-                                else if (activeFacetTab === "colors") handleSaveColor();
-                                else if (activeFacetTab === "materials") handleSaveMaterial();
-                                else if (activeFacetTab === "cities") handleSaveCity();
-                            }} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={facetFormData.name}
-                                        onChange={(e) => setFacetFormData({ ...facetFormData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                        placeholder={activeFacetTab === "product_types" ? "e.g., Choly, Western, Sari" : activeFacetTab === "occasions" ? "e.g., Navratri, Marriage" : activeFacetTab === "colors" ? "e.g., Red, Blue, Green" : activeFacetTab === "materials" ? "e.g., Cotton, Silk, Linen" : "e.g., Rajkot, Surat, Ahmedabad"}
-                                    />
-                                </div>
-
-                                {activeFacetTab === "colors" && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Hex Color Code (optional)
-                                        </label>
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="text"
-                                                value={facetFormData.hex}
-                                                onChange={(e) => setFacetFormData({ ...facetFormData, hex: e.target.value })}
-                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                                placeholder="#FF0000"
-                                            />
-                                            {facetFormData.hex && (
-                                                <div
-                                                    className="w-12 h-12 rounded border border-gray-300"
-                                                    style={{ backgroundColor: facetFormData.hex }}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeFacetTab === "cities" && (
-                                    <>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                State (optional)
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={facetFormData.state}
-                                                onChange={(e) => setFacetFormData({ ...facetFormData, state: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                                placeholder="e.g., Gujarat"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Country (optional)
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={facetFormData.country}
-                                                onChange={(e) => setFacetFormData({ ...facetFormData, country: e.target.value })}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                                placeholder="e.g., India"
-                                            />
-                                        </div>
-                                    </>
-                                )}
-
-                                {(activeFacetTab === "product_types" || activeFacetTab === "occasions") && (
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                            Image (optional)
-                                        </label>
-                                        <label
-                                            htmlFor="facet-image-input"
-                                            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
-                                        >
-                                            {facetImagePreview || (editingFacet && editingFacet.image_url) ? (
-                                                <div className="relative w-full h-full">
-                                                    <Image
-                                                        src={facetImagePreview || editingFacet.image_url}
-                                                        alt="Facet image preview"
-                                                        fill
-                                                        className="object-cover rounded-lg"
-                                                        unoptimized
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                    <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <p className="mb-2 text-sm text-gray-500">
-                                                        <span className="font-semibold">Click to upload</span> or drag and drop
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
-                                                </div>
-                                            )}
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleFacetImageChange}
-                                                className="hidden"
-                                                id="facet-image-input"
-                                            />
-                                        </label>
-                                        {facetImageFile && (
-                                            <p className="text-xs text-gray-500 text-center mt-2">
-                                                Selected: {facetImageFile.name} ({(facetImageFile.size / 1024 / 1024).toFixed(2)} MB)
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
-
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={isUploadingFacetImage}
-                                        className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isUploadingFacetImage ? "Uploading..." : editingFacet ? "Update" : "Add"}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsFacetModalOpen(false);
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                        }}
-                                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Category Add/Edit Modal */}
-            {isCategoryModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-bold">
-                                    {editingCategory ? "Edit Category" : "Add Category"}
-                                </h2>
-                                <button
-                                    onClick={() => {
-                                        setIsCategoryModalOpen(false);
-                                        setEditingCategory(null);
-                                        setCategoryFormData({ name: "", image_url: "" });
-                                        setCategoryImageFile(null);
-                                        setCategoryImagePreview("");
-                                    }}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleSaveCategory} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Category Name *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={categoryFormData.name}
-                                        onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                        placeholder="e.g., Shirts, Jeans, Dresses"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Category Image *
-                                    </label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleCategoryImageChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black text-sm"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Select an image file (max 10MB)</p>
-
-                                    {/* Show preview of selected image or existing image */}
-                                    {((categoryImagePreview && categoryImagePreview.trim()) || (editingCategory && categoryFormData.image_url && typeof categoryFormData.image_url === 'string' && categoryFormData.image_url.trim().length > 0)) && (
-                                        <div className="mt-3 relative w-32 h-40 border border-gray-300 rounded overflow-hidden">
-                                            {(categoryImagePreview && categoryImagePreview.trim()) || (categoryFormData.image_url && typeof categoryFormData.image_url === 'string' && categoryFormData.image_url.trim().length > 0) ? (
-                                                <Image
-                                                    src={categoryImagePreview || categoryFormData.image_url}
-                                                    alt="Preview"
-                                                    fill
-                                                    className="object-cover"
-                                                    unoptimized
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = "none";
-                                                    }}
-                                                />
-                                            ) : null}
-                                            {categoryImageFile && (
-                                                <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                                                    New
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {categoryImageFile && (
-                                        <p className="text-xs text-gray-600 mt-1">
-                                            Selected: {categoryImageFile.name} ({(categoryImageFile.size / 1024 / 1024).toFixed(2)} MB)
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="flex gap-4 pt-4">
-                                    <button
-                                        type="submit"
-                                        disabled={isUploadingCategoryImage}
-                                        className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isUploadingCategoryImage
-                                            ? "Uploading..."
-                                            : editingCategory
-                                                ? "Update Category"
-                                                : "Add Category"}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsCategoryModalOpen(false);
-                                            setEditingCategory(null);
-                                            setCategoryFormData({ name: "", image_url: "" });
-                                            setCategoryImageFile(null);
-                                            setCategoryImagePreview("");
-                                        }}
-                                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Delete User Confirmation Modal */}
-            {deleteConfirmUser && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg border border-gray-200 max-w-md w-full">
-                        <div className="p-6">
-                            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
-                                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
-                                Delete User?
-                            </h3>
-                            <p className="text-sm text-gray-600 text-center mb-6">
-                                Are you sure you want to delete <strong>{deleteConfirmUser.name}</strong>?
-                            </p>
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                                <p className="text-sm text-red-800 font-medium mb-2">This will:</p>
-                                <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
-                                    <li>Delete the user account</li>
-                                    <li>Delete all products belonging to this user</li>
-                                    <li>Remove products from the home page immediately</li>
-                                </ul>
-                                <p className="text-sm text-red-800 font-medium mt-3">This action cannot be undone.</p>
-                            </div>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => setDeleteConfirmUser(null)}
-                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmDeleteUser}
-                                    className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
-                                >
-                                    Delete User
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Hero Slide Add/Edit Modal */}
-            {isHeroModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-bold">
-                                    {editingHeroSlide ? "Edit Hero Slide" : "Add Hero Slide"}
-                                </h2>
-                                <button
-                                    onClick={() => {
-                                        setIsHeroModalOpen(false);
-                                        setEditingHeroSlide(null);
-                                        setHeroFormData({ title: "", subtitle: "", image_url: "" });
-                                        setHeroImageFile(null);
-                                        setHeroImagePreview("");
-                                    }}
-                                    className="text-gray-400 hover:text-gray-600"
-                                >
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleSaveHeroSlide} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Image *
-                                    </label>
-                                    <div className="space-y-3">
-                                        <label
-                                            htmlFor="hero-image-input"
-                                            className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:border-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
-                                        >
-                                            {heroImagePreview ? (
-                                                <div className="relative w-full h-full">
-                                                    <Image
-                                                        src={heroImagePreview}
-                                                        alt="Hero slide preview"
-                                                        fill
-                                                        className="object-cover rounded-lg"
-                                                        unoptimized
-                                                    />
-                                                </div>
-                                            ) : (
-                                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                                    <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <p className="mb-2 text-sm text-gray-500">
-                                                        <span className="font-semibold">Click to upload</span> or drag and drop
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
-                                                </div>
-                                            )}
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleHeroImageChange}
-                                                className="hidden"
-                                                id="hero-image-input"
-                                            />
-                                        </label>
-                                        {heroImageFile && (
-                                            <p className="text-xs text-gray-500 text-center">
-                                                Selected: {heroImageFile.name} ({(heroImageFile.size / 1024 / 1024).toFixed(2)} MB)
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-4 pt-4 border-t border-gray-200">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setIsHeroModalOpen(false);
-                                            setEditingHeroSlide(null);
-                                            setHeroFormData({ title: "", subtitle: "", image_url: "" });
-                                            setHeroImageFile(null);
-                                            setHeroImagePreview("");
-                                        }}
-                                        className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={isUploadingHeroImage}
-                                        className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isUploadingHeroImage ? "Uploading..." : editingHeroSlide ? "Update Slide" : "Add Slide"}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Featured Categories Tab */}
-            {activeTab === "featured" && (
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <div>
-                            <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
-                            <p className="text-sm text-gray-600 mt-1">Pin items from Product Types, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
-                        </div>
-                    </div>
-
-                    {/* Top Section: All Featured Items Combined */}
-                    {(() => {
-                        // Combine all featured items from all facet types
-                        const featuredItems: Array<{ id: string; name: string; image_url: string | null; type: string; typeLabel: string; display_order: number; productCount?: number }> = [];
-
-                        // Add featured product types
-                        productTypes.filter(pt => pt.is_featured).forEach(pt => {
-                            featuredItems.push({
-                                id: pt.id,
-                                name: pt.name,
-                                image_url: pt.image_url,
-                                type: 'product_type',
-                                typeLabel: 'Product Type',
-                                display_order: pt.display_order,
-                                productCount: facetProductCounts.get(`product_type_${pt.id}`) || 0
-                            });
-                        });
-
-                        // Add featured occasions
-                        occasions.filter(oc => oc.is_featured).forEach(oc => {
-                            featuredItems.push({
-                                id: oc.id,
-                                name: oc.name,
-                                image_url: oc.image_url,
-                                type: 'occasion',
-                                typeLabel: 'Occasion',
-                                display_order: oc.display_order,
-                                productCount: facetProductCounts.get(`occasion_${oc.id}`) || 0
-                            });
-                        });
-
-                        // Sort by display_order
-                        featuredItems.sort((a, b) => a.display_order - b.display_order);
-
-                        return featuredItems.length > 0 ? (
-                            <div className="mb-8 border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                            <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-medium rounded">★</span>
-                                            Featured Items - Reorder Here
-                                        </h3>
-                                        <p className="text-sm text-gray-600 mt-1">Drag and drop to reorder featured items across all types. This order will be used on the home page.</p>
-                                    </div>
-                                    <span className="text-sm text-gray-500">{featuredItems.length} featured items</span>
-                                </div>
-                                <div className="space-y-3">
-                                    {featuredItems.map((item, index) => {
-                                        const itemKey = `${item.type}:${item.id}`;
-                                        return (
-                                            <div
-                                                key={itemKey}
-                                                draggable
-                                                onDragStart={(e) => {
-                                                    setDraggedFeaturedItem(itemKey);
-                                                    e.dataTransfer.effectAllowed = "move";
-                                                    e.dataTransfer.setData("text/html", itemKey);
+                        {/* Facet Add/Edit Modal */}
+                        {isFacetModalOpen && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+                                    <div className="p-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h2 className="text-2xl font-bold">
+                                                {editingFacet ? `Edit ${activeFacetTab === "product_types" ? "Product Type" : activeFacetTab === "occasions" ? "Occasion" : activeFacetTab === "colors" ? "Color" : activeFacetTab === "materials" ? "Material" : "City"}` : `Add ${activeFacetTab === "product_types" ? "Product Type" : activeFacetTab === "occasions" ? "Occasion" : activeFacetTab === "colors" ? "Color" : activeFacetTab === "materials" ? "Material" : "City"}`}
+                                            </h2>
+                                            <button
+                                                onClick={() => {
+                                                    setIsFacetModalOpen(false);
+                                                    setEditingFacet(null);
+                                                    setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
                                                 }}
-                                                onDragOver={(e) => {
-                                                    e.preventDefault();
-                                                    e.dataTransfer.dropEffect = "move";
-                                                    if (draggedFeaturedItem && draggedFeaturedItem !== itemKey) {
-                                                        setDragOverFeaturedItem(itemKey);
-                                                    }
-                                                }}
-                                                onDragLeave={() => setDragOverFeaturedItem(null)}
-                                                onDrop={async (e) => {
-                                                    e.preventDefault();
-                                                    setDragOverFeaturedItem(null);
-
-                                                    if (!draggedFeaturedItem || draggedFeaturedItem === itemKey) {
-                                                        setDraggedFeaturedItem(null);
-                                                        return;
-                                                    }
-
-                                                    const draggedIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === draggedFeaturedItem);
-                                                    const targetIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === itemKey);
-
-                                                    if (draggedIndex === -1 || targetIndex === -1) {
-                                                        setDraggedFeaturedItem(null);
-                                                        return;
-                                                    }
-
-                                                    // Reorder array
-                                                    const newItems = [...featuredItems];
-                                                    const [removed] = newItems.splice(draggedIndex, 1);
-                                                    newItems.splice(targetIndex, 0, removed);
-
-                                                    // Update display_order for all featured items globally
-                                                    try {
-                                                        const updatePromises = newItems.map(async (it, idx) => {
-                                                            const tableName = it.type === 'product_type' ? 'product_types' : it.type === 'occasion' ? 'occasions' : null;
-                                                            if (!tableName) return Promise.resolve();
-
-                                                            return supabase
-                                                                .from(tableName)
-                                                                .update({
-                                                                    display_order: idx,
-                                                                    updated_at: new Date().toISOString()
-                                                                })
-                                                                .eq("id", it.id);
-                                                        });
-
-                                                        await Promise.all(updatePromises);
-                                                        showPopup("Featured items reordered successfully! The order will be reflected on the home page.", "success");
-                                                        await Promise.all([loadProductTypes(), loadOccasions()]);
-                                                    } catch (error: any) {
-                                                        showPopup(error.message || "Failed to reorder featured items", "error", "Error");
-                                                        console.error("Error reordering featured items:", error);
-                                                    }
-
-                                                    setDraggedFeaturedItem(null);
-                                                }}
-                                                onDragEnd={() => {
-                                                    setDraggedFeaturedItem(null);
-                                                    setDragOverFeaturedItem(null);
-                                                }}
-                                                className={`flex items-center gap-4 p-4 rounded-lg border transition-all cursor-move ${draggedFeaturedItem === itemKey
-                                                    ? "opacity-50 border-gray-300 bg-white"
-                                                    : dragOverFeaturedItem === itemKey
-                                                        ? "border-yellow-400 bg-yellow-100 shadow-md"
-                                                        : "bg-white border-yellow-200 hover:shadow-md"
-                                                    }`}
+                                                className="text-gray-400 hover:text-gray-600"
                                             >
-                                                <div className="flex items-center gap-3 flex-shrink-0">
-                                                    <div className="text-yellow-600 font-bold text-sm w-6">{index + 1}</div>
-                                                    <div>
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                        </svg>
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <form onSubmit={(e) => {
+                                            e.preventDefault();
+                                            if (activeFacetTab === "product_types") handleSaveProductType();
+                                            else if (activeFacetTab === "occasions") handleSaveOccasion();
+                                            else if (activeFacetTab === "colors") handleSaveColor();
+                                            else if (activeFacetTab === "materials") handleSaveMaterial();
+                                            else if (activeFacetTab === "cities") handleSaveCity();
+                                        }} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Name *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={facetFormData.name}
+                                                    onChange={(e) => setFacetFormData({ ...facetFormData, name: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                    placeholder={activeFacetTab === "product_types" ? "e.g., Choly, Western, Sari" : activeFacetTab === "occasions" ? "e.g., Navratri, Marriage" : activeFacetTab === "colors" ? "e.g., Red, Blue, Green" : activeFacetTab === "materials" ? "e.g., Cotton, Silk, Linen" : "e.g., Rajkot, Surat, Ahmedabad"}
+                                                />
+                                            </div>
+
+                                            {activeFacetTab === "colors" && (
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Hex Color Code (optional)
+                                                    </label>
+                                                    <div className="flex items-center gap-3">
+                                                        <input
+                                                            type="text"
+                                                            value={facetFormData.hex}
+                                                            onChange={(e) => setFacetFormData({ ...facetFormData, hex: e.target.value })}
+                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                            placeholder="#FF0000"
+                                                        />
+                                                        {facetFormData.hex && (
+                                                            <div
+                                                                className="w-12 h-12 rounded border border-gray-300"
+                                                                style={{ backgroundColor: facetFormData.hex }}
+                                                            />
+                                                        )}
                                                     </div>
                                                 </div>
-                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                                    {item.image_url ? (
-                                                        <Image
-                                                            src={item.image_url}
-                                                            alt={item.name}
-                                                            fill
-                                                            className="object-cover"
-                                                            unoptimized
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                            }}
+                                            )}
+
+                                            {activeFacetTab === "cities" && (
+                                                <>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                            State (optional)
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={facetFormData.state}
+                                                            onChange={(e) => setFacetFormData({ ...facetFormData, state: e.target.value })}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                            placeholder="e.g., Gujarat"
                                                         />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                            No Image
-                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                            Country (optional)
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={facetFormData.country}
+                                                            onChange={(e) => setFacetFormData({ ...facetFormData, country: e.target.value })}
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                            placeholder="e.g., India"
+                                                        />
+                                                    </div>
+                                                </>
+                                            )}
+
+                                            {(activeFacetTab === "product_types" || activeFacetTab === "occasions") && (
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Image (optional)
+                                                    </label>
+                                                    <label
+                                                        htmlFor="facet-image-input"
+                                                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                                                    >
+                                                        {facetImagePreview || (editingFacet && editingFacet.image_url) ? (
+                                                            <div className="relative w-full h-full">
+                                                                <Image
+                                                                    src={facetImagePreview || editingFacet.image_url}
+                                                                    alt="Facet image preview"
+                                                                    fill
+                                                                    className="object-cover rounded-lg"
+                                                                    unoptimized
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                                <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                                <p className="mb-2 text-sm text-gray-500">
+                                                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                                                </p>
+                                                                <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
+                                                            </div>
+                                                        )}
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={handleFacetImageChange}
+                                                            className="hidden"
+                                                            id="facet-image-input"
+                                                        />
+                                                    </label>
+                                                    {facetImageFile && (
+                                                        <p className="text-xs text-gray-500 text-center mt-2">
+                                                            Selected: {facetImageFile.name} ({(facetImageFile.size / 1024 / 1024).toFixed(2)} MB)
+                                                        </p>
                                                     )}
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                                                            {item.typeLabel}
-                                                        </span>
+                                            )}
+
+                                            <div className="flex gap-4 pt-4">
+                                                <button
+                                                    type="submit"
+                                                    disabled={isUploadingFacetImage}
+                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {isUploadingFacetImage ? "Uploading..." : editingFacet ? "Update" : "Add"}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsFacetModalOpen(false);
+                                                        setEditingFacet(null);
+                                                        setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                        setFacetImageFile(null);
+                                                        setFacetImagePreview("");
+                                                    }}
+                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Category Add/Edit Modal */}
+                        {isCategoryModalOpen && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+                                    <div className="p-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h2 className="text-2xl font-bold">
+                                                {editingCategory ? "Edit Category" : "Add Category"}
+                                            </h2>
+                                            <button
+                                                onClick={() => {
+                                                    setIsCategoryModalOpen(false);
+                                                    setEditingCategory(null);
+                                                    setCategoryFormData({ name: "", image_url: "" });
+                                                    setCategoryImageFile(null);
+                                                    setCategoryImagePreview("");
+                                                }}
+                                                className="text-gray-400 hover:text-gray-600"
+                                            >
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <form onSubmit={handleSaveCategory} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Category Name *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={categoryFormData.name}
+                                                    onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                    placeholder="e.g., Shirts, Jeans, Dresses"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Category Image *
+                                                </label>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={handleCategoryImageChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black text-sm"
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">Select an image file (max 10MB)</p>
+
+                                                {/* Show preview of selected image or existing image */}
+                                                {((categoryImagePreview && categoryImagePreview.trim()) || (editingCategory && categoryFormData.image_url && typeof categoryFormData.image_url === 'string' && categoryFormData.image_url.trim().length > 0)) && (
+                                                    <div className="mt-3 relative w-32 h-40 border border-gray-300 rounded overflow-hidden">
+                                                        {(categoryImagePreview && categoryImagePreview.trim()) || (categoryFormData.image_url && typeof categoryFormData.image_url === 'string' && categoryFormData.image_url.trim().length > 0) ? (
+                                                            <Image
+                                                                src={categoryImagePreview || categoryFormData.image_url}
+                                                                alt="Preview"
+                                                                fill
+                                                                className="object-cover"
+                                                                unoptimized
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).style.display = "none";
+                                                                }}
+                                                            />
+                                                        ) : null}
+                                                        {categoryImageFile && (
+                                                            <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                                                New
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <p className="text-xs text-gray-600 mb-1">
-                                                        /products?{item.type === 'product_type' ? 'product_type' : item.type === 'occasion' ? 'occasion' : item.type}={item.id}
+                                                )}
+
+                                                {categoryImageFile && (
+                                                    <p className="text-xs text-gray-600 mt-1">
+                                                        Selected: {categoryImageFile.name} ({(categoryImageFile.size / 1024 / 1024).toFixed(2)} MB)
                                                     </p>
-                                                    {item.productCount !== undefined && (
-                                                        <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                            onClick={() => {
-                                                                setActiveTab("products");
-                                                                localStorage.setItem("adminActiveTab", "products");
-                                                                setFilterCategory(item.id);
-                                                                router.push(`/admin?tab=products`);
-                                                            }}
-                                                        >
-                                                            View {item.productCount} products →
+                                                )}
+                                            </div>
+
+                                            <div className="flex gap-4 pt-4">
+                                                <button
+                                                    type="submit"
+                                                    disabled={isUploadingCategoryImage}
+                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {isUploadingCategoryImage
+                                                        ? "Uploading..."
+                                                        : editingCategory
+                                                            ? "Update Category"
+                                                            : "Add Category"}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsCategoryModalOpen(false);
+                                                        setEditingCategory(null);
+                                                        setCategoryFormData({ name: "", image_url: "" });
+                                                        setCategoryImageFile(null);
+                                                        setCategoryImagePreview("");
+                                                    }}
+                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Delete User Confirmation Modal */}
+                        {deleteConfirmUser && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-lg border border-gray-200 max-w-md w-full">
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                                            <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+                                            Delete User?
+                                        </h3>
+                                        <p className="text-sm text-gray-600 text-center mb-6">
+                                            Are you sure you want to delete <strong>{deleteConfirmUser.name}</strong>?
+                                        </p>
+                                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                                            <p className="text-sm text-red-800 font-medium mb-2">This will:</p>
+                                            <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                                                <li>Delete the user account</li>
+                                                <li>Delete all products belonging to this user</li>
+                                                <li>Remove products from the home page immediately</li>
+                                            </ul>
+                                            <p className="text-sm text-red-800 font-medium mt-3">This action cannot be undone.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setDeleteConfirmUser(null)}
+                                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={confirmDeleteUser}
+                                                className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                                            >
+                                                Delete User
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Hero Slide Add/Edit Modal */}
+                        {isHeroModalOpen && (
+                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                    <div className="p-6">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h2 className="text-2xl font-bold">
+                                                {editingHeroSlide ? "Edit Hero Slide" : "Add Hero Slide"}
+                                            </h2>
+                                            <button
+                                                onClick={() => {
+                                                    setIsHeroModalOpen(false);
+                                                    setEditingHeroSlide(null);
+                                                    setHeroFormData({ title: "", subtitle: "", image_url: "" });
+                                                    setHeroImageFile(null);
+                                                    setHeroImagePreview("");
+                                                }}
+                                                className="text-gray-400 hover:text-gray-600"
+                                            >
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        <form onSubmit={handleSaveHeroSlide} className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Image *
+                                                </label>
+                                                <div className="space-y-3">
+                                                    <label
+                                                        htmlFor="hero-image-input"
+                                                        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:border-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                                                    >
+                                                        {heroImagePreview ? (
+                                                            <div className="relative w-full h-full">
+                                                                <Image
+                                                                    src={heroImagePreview}
+                                                                    alt="Hero slide preview"
+                                                                    fill
+                                                                    className="object-cover rounded-lg"
+                                                                    unoptimized
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                                                <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                </svg>
+                                                                <p className="mb-2 text-sm text-gray-500">
+                                                                    <span className="font-semibold">Click to upload</span> or drag and drop
+                                                                </p>
+                                                                <p className="text-xs text-gray-500">PNG, JPG, WEBP (MAX. 5MB)</p>
+                                                            </div>
+                                                        )}
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={handleHeroImageChange}
+                                                            className="hidden"
+                                                            id="hero-image-input"
+                                                        />
+                                                    </label>
+                                                    {heroImageFile && (
+                                                        <p className="text-xs text-gray-500 text-center">
+                                                            Selected: {heroImageFile.name} ({(heroImageFile.size / 1024 / 1024).toFixed(2)} MB)
                                                         </p>
                                                     )}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="mb-8 border-2 border-gray-200 border-dashed rounded-lg p-8 bg-gray-50 text-center">
-                                <p className="text-sm text-gray-500">No featured items yet. Pin items from the sections below to add them here.</p>
-                            </div>
-                        );
-                    })()}
 
-                    {/* Vertical List Layout */}
-                    <div className="space-y-8">
-                        {/* Section 1: Product Types */}
-                        <div className="border border-gray-200 rounded-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-bold text-gray-900">Product Types</h3>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-sm text-gray-500">{productTypes.length} items</span>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("product_types");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {productTypes.length === 0 ? (
-                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                        <p className="text-sm text-gray-500">No items</p>
+                                            <div className="flex gap-4 pt-4 border-t border-gray-200">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsHeroModalOpen(false);
+                                                        setEditingHeroSlide(null);
+                                                        setHeroFormData({ title: "", subtitle: "", image_url: "" });
+                                                        setHeroImageFile(null);
+                                                        setHeroImagePreview("");
+                                                    }}
+                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    disabled={isUploadingHeroImage}
+                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {isUploadingHeroImage ? "Uploading..." : editingHeroSlide ? "Update Slide" : "Add Slide"}
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
-                                ) : (
-                                    productTypes.map((pt, index) => {
-                                        const productCount = facetProductCounts.get(`product_type_${pt.id}`) || 0;
+                                </div>
+                            </div>
+                        )}
 
-                                        return (
-                                            <div
-                                                key={pt.id}
-                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                            >
-                                                <div className="flex items-center gap-3 flex-shrink-0">
-                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                    <div className="cursor-move">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                        </svg>
-                                                    </div>
+                        {/* Featured Categories Tab */}
+                        {activeTab === "featured" && (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
+                                        <p className="text-sm text-gray-600 mt-1">Pin items from Product Types, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
+                                    </div>
+                                </div>
+
+                                {/* Top Section: All Featured Items Combined */}
+                                {(() => {
+                                    // Combine all featured items from all facet types
+                                    const featuredItems: Array<{ id: string; name: string; image_url: string | null; type: string; typeLabel: string; display_order: number; productCount?: number }> = [];
+
+                                    // Add featured product types
+                                    productTypes.filter(pt => pt.is_featured).forEach(pt => {
+                                        featuredItems.push({
+                                            id: pt.id,
+                                            name: pt.name,
+                                            image_url: pt.image_url,
+                                            type: 'product_type',
+                                            typeLabel: 'Product Type',
+                                            display_order: pt.display_order,
+                                            productCount: facetProductCounts.get(`product_type_${pt.id}`) || 0
+                                        });
+                                    });
+
+                                    // Add featured occasions
+                                    occasions.filter(oc => oc.is_featured).forEach(oc => {
+                                        featuredItems.push({
+                                            id: oc.id,
+                                            name: oc.name,
+                                            image_url: oc.image_url,
+                                            type: 'occasion',
+                                            typeLabel: 'Occasion',
+                                            display_order: oc.display_order,
+                                            productCount: facetProductCounts.get(`occasion_${oc.id}`) || 0
+                                        });
+                                    });
+
+                                    // Sort by display_order
+                                    featuredItems.sort((a, b) => a.display_order - b.display_order);
+
+                                    return featuredItems.length > 0 ? (
+                                        <div className="mb-8 border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                                        <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-medium rounded">★</span>
+                                                        Featured Items - Reorder Here
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600 mt-1">Drag and drop to reorder featured items across all types. This order will be used on the home page.</p>
                                                 </div>
-                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                                    {pt.image_url ? (
-                                                        <Image
-                                                            src={pt.image_url}
-                                                            alt={pt.name}
-                                                            fill
-                                                            className="object-cover"
-                                                            unoptimized
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                <span className="text-sm text-gray-500">{featuredItems.length} featured items</span>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {featuredItems.map((item, index) => {
+                                                    const itemKey = `${item.type}:${item.id}`;
+                                                    return (
+                                                        <div
+                                                            key={itemKey}
+                                                            draggable
+                                                            onDragStart={(e) => {
+                                                                setDraggedFeaturedItem(itemKey);
+                                                                e.dataTransfer.effectAllowed = "move";
+                                                                e.dataTransfer.setData("text/html", itemKey);
                                                             }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                            No Image
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <h4 className="font-semibold text-gray-900">{pt.name}</h4>
-                                                        {pt.is_featured && (
-                                                            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                                                                ★ Featured
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-xs text-gray-600 mb-1">/products?product_type={pt.id}</p>
-                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                        onClick={() => {
-                                                            setActiveTab("products");
-                                                            localStorage.setItem("adminActiveTab", "products");
-                                                            setFilterCategory(pt.id);
-                                                            router.push(`/admin?tab=products`);
-                                                        }}
-                                                    >
-                                                        View {productCount} products →
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                    <button
-                                                        onClick={async () => {
-                                                            const newFeatured = !pt.is_featured;
-                                                            try {
-                                                                const { error } = await supabase
-                                                                    .from("product_types")
-                                                                    .update({ is_featured: newFeatured })
-                                                                    .eq("id", pt.id);
-                                                                if (error) throw error;
-                                                                loadProductTypes();
-                                                                showPopup(newFeatured ? "Product type pinned!" : "Product type unpinned!", "success");
-                                                            } catch (error: any) {
-                                                                showPopup(error.message || "Failed to update", "error");
-                                                            }
-                                                        }}
-                                                        className={`p-2 rounded transition-colors ${pt.is_featured
-                                                            ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
-                                                            : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
-                                                            }`}
-                                                        title={pt.is_featured ? "Unpin" : "Pin"}
-                                                    >
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                                        </svg>
-                                                    </button>
-                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                    <button
-                                                        onClick={() => {
-                                                            setActiveFacetTab("product_types");
-                                                            setEditingFacet(pt);
-                                                            setFacetFormData({
-                                                                name: pt.name,
-                                                                hex: "",
-                                                                state: "",
-                                                                country: "",
-                                                                image_url: pt.image_url || ""
-                                                            });
-                                                            setFacetImageFile(null);
-                                                            setFacetImagePreview(pt.image_url || "");
-                                                            setIsFacetModalOpen(true);
-                                                        }}
-                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteProductType(pt.id, pt.name)}
-                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Section 2: Occasions */}
-                        <div className="border border-gray-200 rounded-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-bold text-gray-900">Occasions</h3>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-sm text-gray-500">{occasions.length} items</span>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("occasions");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {occasions.length === 0 ? (
-                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                        <p className="text-sm text-gray-500">No items</p>
-                                    </div>
-                                ) : (
-                                    occasions.map((oc, index) => {
-                                        const productCount = facetProductCounts.get(`occasion_${oc.id}`) || 0;
-
-                                        return (
-                                            <div
-                                                key={oc.id}
-                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                            >
-                                                <div className="flex items-center gap-3 flex-shrink-0">
-                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                    <div className="cursor-move">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                                    {oc.image_url ? (
-                                                        <Image
-                                                            src={oc.image_url}
-                                                            alt={oc.name}
-                                                            fill
-                                                            className="object-cover"
-                                                            unoptimized
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            onDragOver={(e) => {
+                                                                e.preventDefault();
+                                                                e.dataTransfer.dropEffect = "move";
+                                                                if (draggedFeaturedItem && draggedFeaturedItem !== itemKey) {
+                                                                    setDragOverFeaturedItem(itemKey);
+                                                                }
                                                             }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                            No Image
+                                                            onDragLeave={() => setDragOverFeaturedItem(null)}
+                                                            onDrop={async (e) => {
+                                                                e.preventDefault();
+                                                                setDragOverFeaturedItem(null);
+
+                                                                if (!draggedFeaturedItem || draggedFeaturedItem === itemKey) {
+                                                                    setDraggedFeaturedItem(null);
+                                                                    return;
+                                                                }
+
+                                                                const draggedIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === draggedFeaturedItem);
+                                                                const targetIndex = featuredItems.findIndex(i => `${i.type}:${i.id}` === itemKey);
+
+                                                                if (draggedIndex === -1 || targetIndex === -1) {
+                                                                    setDraggedFeaturedItem(null);
+                                                                    return;
+                                                                }
+
+                                                                // Reorder array
+                                                                const newItems = [...featuredItems];
+                                                                const [removed] = newItems.splice(draggedIndex, 1);
+                                                                newItems.splice(targetIndex, 0, removed);
+
+                                                                // Update display_order for all featured items globally
+                                                                try {
+                                                                    const updatePromises = newItems.map(async (it, idx) => {
+                                                                        const tableName = it.type === 'product_type' ? 'product_types' : it.type === 'occasion' ? 'occasions' : null;
+                                                                        if (!tableName) return Promise.resolve();
+
+                                                                        return supabase
+                                                                            .from(tableName)
+                                                                            .update({
+                                                                                display_order: idx,
+                                                                                updated_at: new Date().toISOString()
+                                                                            })
+                                                                            .eq("id", it.id);
+                                                                    });
+
+                                                                    await Promise.all(updatePromises);
+                                                                    showPopup("Featured items reordered successfully! The order will be reflected on the home page.", "success");
+                                                                    await Promise.all([loadProductTypes(), loadOccasions()]);
+                                                                } catch (error: any) {
+                                                                    showPopup(error.message || "Failed to reorder featured items", "error", "Error");
+                                                                    console.error("Error reordering featured items:", error);
+                                                                }
+
+                                                                setDraggedFeaturedItem(null);
+                                                            }}
+                                                            onDragEnd={() => {
+                                                                setDraggedFeaturedItem(null);
+                                                                setDragOverFeaturedItem(null);
+                                                            }}
+                                                            className={`flex items-center gap-4 p-4 rounded-lg border transition-all cursor-move ${draggedFeaturedItem === itemKey
+                                                                ? "opacity-50 border-gray-300 bg-white"
+                                                                : dragOverFeaturedItem === itemKey
+                                                                    ? "border-yellow-400 bg-yellow-100 shadow-md"
+                                                                    : "bg-white border-yellow-200 hover:shadow-md"
+                                                                }`}
+                                                        >
+                                                            <div className="flex items-center gap-3 flex-shrink-0">
+                                                                <div className="text-yellow-600 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div>
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                                {item.image_url ? (
+                                                                    <Image
+                                                                        src={item.image_url}
+                                                                        alt={item.name}
+                                                                        fill
+                                                                        className="object-cover"
+                                                                        unoptimized
+                                                                        onError={(e) => {
+                                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                                        No Image
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <h4 className="font-semibold text-gray-900">{item.name}</h4>
+                                                                    <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                        {item.typeLabel}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="text-xs text-gray-600 mb-1">
+                                                                    /products?{item.type === 'product_type' ? 'product_type' : item.type === 'occasion' ? 'occasion' : item.type}={item.id}
+                                                                </p>
+                                                                {item.productCount !== undefined && (
+                                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                                        onClick={() => {
+                                                                            setActiveTab("products");
+                                                                            localStorage.setItem("adminActiveTab", "products");
+                                                                            setFilterCategory(item.id);
+                                                                            router.push(`/admin?tab=products`);
+                                                                        }}
+                                                                    >
+                                                                        View {item.productCount} products →
+                                                                    </p>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    )}
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="mb-8 border-2 border-gray-200 border-dashed rounded-lg p-8 bg-gray-50 text-center">
+                                            <p className="text-sm text-gray-500">No featured items yet. Pin items from the sections below to add them here.</p>
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Vertical List Layout */}
+                                <div className="space-y-8">
+                                    {/* Section 1: Product Types */}
+                                    <div className="border border-gray-200 rounded-lg p-6">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-lg font-bold text-gray-900">Product Types</h3>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-sm text-gray-500">{productTypes.length} items</span>
+                                                <button
+                                                    onClick={() => {
+                                                        setActiveFacetTab("product_types");
+                                                        setEditingFacet(null);
+                                                        setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                        setFacetImageFile(null);
+                                                        setFacetImagePreview("");
+                                                        setIsFacetModalOpen(true);
+                                                    }}
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    </svg>
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {productTypes.length === 0 ? (
+                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                    <p className="text-sm text-gray-500">No items</p>
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <h4 className="font-semibold text-gray-900">{oc.name}</h4>
-                                                        {oc.is_featured && (
-                                                            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
-                                                                ★ Featured
+                                            ) : (
+                                                productTypes.map((pt, index) => {
+                                                    const productCount = facetProductCounts.get(`product_type_${pt.id}`) || 0;
+
+                                                    return (
+                                                        <div
+                                                            key={pt.id}
+                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                        >
+                                                            <div className="flex items-center gap-3 flex-shrink-0">
+                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="cursor-move">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                                {pt.image_url ? (
+                                                                    <Image
+                                                                        src={pt.image_url}
+                                                                        alt={pt.name}
+                                                                        fill
+                                                                        className="object-cover"
+                                                                        unoptimized
+                                                                        onError={(e) => {
+                                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                                        No Image
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <h4 className="font-semibold text-gray-900">{pt.name}</h4>
+                                                                    {pt.is_featured && (
+                                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                            ★ Featured
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-xs text-gray-600 mb-1">/products?product_type={pt.id}</p>
+                                                                <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                                    onClick={() => {
+                                                                        setActiveTab("products");
+                                                                        localStorage.setItem("adminActiveTab", "products");
+                                                                        setFilterCategory(pt.id);
+                                                                        router.push(`/admin?tab=products`);
+                                                                    }}
+                                                                >
+                                                                    View {productCount} products →
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        const newFeatured = !pt.is_featured;
+                                                                        try {
+                                                                            const { error } = await supabase
+                                                                                .from("product_types")
+                                                                                .update({ is_featured: newFeatured })
+                                                                                .eq("id", pt.id);
+                                                                            if (error) throw error;
+                                                                            loadProductTypes();
+                                                                            showPopup(newFeatured ? "Product type pinned!" : "Product type unpinned!", "success");
+                                                                        } catch (error: any) {
+                                                                            showPopup(error.message || "Failed to update", "error");
+                                                                        }
+                                                                    }}
+                                                                    className={`p-2 rounded transition-colors ${pt.is_featured
+                                                                        ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                                        : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                                        }`}
+                                                                    title={pt.is_featured ? "Unpin" : "Pin"}
+                                                                >
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                                    </svg>
+                                                                </button>
+                                                                <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setActiveFacetTab("product_types");
+                                                                        setEditingFacet(pt);
+                                                                        setFacetFormData({
+                                                                            name: pt.name,
+                                                                            hex: "",
+                                                                            state: "",
+                                                                            country: "",
+                                                                            image_url: pt.image_url || ""
+                                                                        });
+                                                                        setFacetImageFile(null);
+                                                                        setFacetImagePreview(pt.image_url || "");
+                                                                        setIsFacetModalOpen(true);
+                                                                    }}
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteProductType(pt.id, pt.name)}
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Section 2: Occasions */}
+                                    <div className="border border-gray-200 rounded-lg p-6">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-lg font-bold text-gray-900">Occasions</h3>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-sm text-gray-500">{occasions.length} items</span>
+                                                <button
+                                                    onClick={() => {
+                                                        setActiveFacetTab("occasions");
+                                                        setEditingFacet(null);
+                                                        setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                        setFacetImageFile(null);
+                                                        setFacetImagePreview("");
+                                                        setIsFacetModalOpen(true);
+                                                    }}
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    </svg>
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {occasions.length === 0 ? (
+                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                    <p className="text-sm text-gray-500">No items</p>
+                                                </div>
+                                            ) : (
+                                                occasions.map((oc, index) => {
+                                                    const productCount = facetProductCounts.get(`occasion_${oc.id}`) || 0;
+
+                                                    return (
+                                                        <div
+                                                            key={oc.id}
+                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                        >
+                                                            <div className="flex items-center gap-3 flex-shrink-0">
+                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="cursor-move">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                                {oc.image_url ? (
+                                                                    <Image
+                                                                        src={oc.image_url}
+                                                                        alt={oc.name}
+                                                                        fill
+                                                                        className="object-cover"
+                                                                        unoptimized
+                                                                        onError={(e) => {
+                                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                                        }}
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                                        No Image
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2 mb-1">
+                                                                    <h4 className="font-semibold text-gray-900">{oc.name}</h4>
+                                                                    {oc.is_featured && (
+                                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                            ★ Featured
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-xs text-gray-600 mb-1">/products?occasion={oc.id}</p>
+                                                                <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                                    onClick={() => {
+                                                                        setActiveTab("products");
+                                                                        localStorage.setItem("adminActiveTab", "products");
+                                                                        setFilterCategory(oc.id);
+                                                                        router.push(`/admin?tab=products`);
+                                                                    }}
+                                                                >
+                                                                    View {productCount} products →
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        const newFeatured = !oc.is_featured;
+                                                                        try {
+                                                                            const { error } = await supabase
+                                                                                .from("occasions")
+                                                                                .update({ is_featured: newFeatured })
+                                                                                .eq("id", oc.id);
+                                                                            if (error) throw error;
+                                                                            loadOccasions();
+                                                                            showPopup(newFeatured ? "Occasion pinned!" : "Occasion unpinned!", "success");
+                                                                        } catch (error: any) {
+                                                                            showPopup(error.message || "Failed to update", "error");
+                                                                        }
+                                                                    }}
+                                                                    className={`p-2 rounded transition-colors ${oc.is_featured
+                                                                        ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
+                                                                        : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
+                                                                        }`}
+                                                                    title={oc.is_featured ? "Unpin" : "Pin"}
+                                                                >
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                                                    </svg>
+                                                                </button>
+                                                                <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setActiveFacetTab("occasions");
+                                                                        setEditingFacet(oc);
+                                                                        setFacetFormData({
+                                                                            name: oc.name,
+                                                                            hex: "",
+                                                                            state: "",
+                                                                            country: "",
+                                                                            image_url: oc.image_url || ""
+                                                                        });
+                                                                        setFacetImageFile(null);
+                                                                        setFacetImagePreview(oc.image_url || "");
+                                                                        setIsFacetModalOpen(true);
+                                                                    }}
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteOccasion(oc.id, oc.name)}
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Section 3: Colors */}
+                                    <div className="border border-gray-200 rounded-lg p-6">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-lg font-bold text-gray-900">Colors</h3>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-sm text-gray-500">{colors.length} items</span>
+                                                <button
+                                                    onClick={() => {
+                                                        setActiveFacetTab("colors");
+                                                        setEditingFacet(null);
+                                                        setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                        setFacetImageFile(null);
+                                                        setFacetImagePreview("");
+                                                        setIsFacetModalOpen(true);
+                                                    }}
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    </svg>
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {colors.length === 0 ? (
+                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                    <p className="text-sm text-gray-500">No items</p>
+                                                </div>
+                                            ) : (
+                                                colors.map((c, index) => {
+                                                    const productCount = facetProductCounts.get(`color_${c.id}`) || 0;
+
+                                                    return (
+                                                        <div
+                                                            key={c.id}
+                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                        >
+                                                            <div className="flex items-center gap-3 flex-shrink-0">
+                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="cursor-move">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                                {c.hex ? (
+                                                                    <div className="w-full h-full rounded-lg border border-gray-300" style={{ backgroundColor: c.hex }}></div>
+                                                                ) : (
+                                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs rounded-lg">
+                                                                        No Color
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-semibold text-gray-900 mb-1">{c.name}</h4>
+                                                                <p className="text-xs text-gray-600 mb-1">/products?color={c.id}</p>
+                                                                <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                                    onClick={() => {
+                                                                        setActiveTab("products");
+                                                                        localStorage.setItem("adminActiveTab", "products");
+                                                                        setFilterCategory(c.id);
+                                                                        router.push(`/admin?tab=products`);
+                                                                    }}
+                                                                >
+                                                                    View {productCount} products →
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                                <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setActiveFacetTab("colors");
+                                                                        setEditingFacet(c);
+                                                                        setFacetFormData({
+                                                                            name: c.name,
+                                                                            hex: c.hex || "",
+                                                                            state: "",
+                                                                            country: "",
+                                                                            image_url: ""
+                                                                        });
+                                                                        setFacetImageFile(null);
+                                                                        setFacetImagePreview("");
+                                                                        setIsFacetModalOpen(true);
+                                                                    }}
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteColor(c.id, c.name)}
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Section 4: Materials */}
+                                    <div className="border border-gray-200 rounded-lg p-6">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-lg font-bold text-gray-900">Materials</h3>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-sm text-gray-500">{materials.length} items</span>
+                                                <button
+                                                    onClick={() => {
+                                                        setActiveFacetTab("materials");
+                                                        setEditingFacet(null);
+                                                        setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                        setFacetImageFile(null);
+                                                        setFacetImagePreview("");
+                                                        setIsFacetModalOpen(true);
+                                                    }}
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    </svg>
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {materials.length === 0 ? (
+                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                    <p className="text-sm text-gray-500">No items</p>
+                                                </div>
+                                            ) : (
+                                                materials.map((m, index) => {
+                                                    const productCount = facetProductCounts.get(`material_${m.id}`) || 0;
+
+                                                    return (
+                                                        <div
+                                                            key={m.id}
+                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                        >
+                                                            <div className="flex items-center gap-3 flex-shrink-0">
+                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="cursor-move">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                                <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                                    No Image
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-semibold text-gray-900 mb-1">{m.name}</h4>
+                                                                <p className="text-xs text-gray-600 mb-1">/products?material={m.id}</p>
+                                                                <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                                    onClick={() => {
+                                                                        setActiveTab("products");
+                                                                        localStorage.setItem("adminActiveTab", "products");
+                                                                        setFilterCategory(m.id);
+                                                                        router.push(`/admin?tab=products`);
+                                                                    }}
+                                                                >
+                                                                    View {productCount} products →
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                                <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setActiveFacetTab("materials");
+                                                                        setEditingFacet(m);
+                                                                        setFacetFormData({
+                                                                            name: m.name,
+                                                                            hex: "",
+                                                                            state: "",
+                                                                            country: "",
+                                                                            image_url: ""
+                                                                        });
+                                                                        setFacetImageFile(null);
+                                                                        setFacetImagePreview("");
+                                                                        setIsFacetModalOpen(true);
+                                                                    }}
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteMaterial(m.id, m.name)}
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Section 5: Cities */}
+                                    <div className="border border-gray-200 rounded-lg p-6">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h3 className="text-lg font-bold text-gray-900">Cities</h3>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-sm text-gray-500">{cities.length} items</span>
+                                                <button
+                                                    onClick={() => {
+                                                        setActiveFacetTab("cities");
+                                                        setEditingFacet(null);
+                                                        setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
+                                                        setFacetImageFile(null);
+                                                        setFacetImagePreview("");
+                                                        setIsFacetModalOpen(true);
+                                                    }}
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                >
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    </svg>
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            {cities.length === 0 ? (
+                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                    <p className="text-sm text-gray-500">No items</p>
+                                                </div>
+                                            ) : (
+                                                cities.map((city, index) => {
+                                                    const productCount = facetProductCounts.get(`city_${city.id}`) || 0;
+
+                                                    return (
+                                                        <div
+                                                            key={city.id}
+                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                        >
+                                                            <div className="flex items-center gap-3 flex-shrink-0">
+                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="cursor-move">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                                                    </svg>
+                                                                </div>
+                                                            </div>
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                                <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
+                                                                    No Image
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-semibold text-gray-900 mb-1">{city.name}</h4>
+                                                                {city.state && (
+                                                                    <p className="text-xs text-gray-600 mb-1">{city.state}</p>
+                                                                )}
+                                                                <p className="text-xs text-gray-600 mb-1">/products?city={city.id}</p>
+                                                                <p className="text-xs text-blue-600 cursor-pointer hover:underline"
+                                                                    onClick={() => {
+                                                                        setActiveTab("products");
+                                                                        localStorage.setItem("adminActiveTab", "products");
+                                                                        setFilterCategory(city.id);
+                                                                        router.push(`/admin?tab=products`);
+                                                                    }}
+                                                                >
+                                                                    View {productCount} products →
+                                                                </p>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                                <span className="text-xs text-gray-400">Drag to reorder</span>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setActiveFacetTab("cities");
+                                                                        setEditingFacet(city);
+                                                                        setFacetFormData({
+                                                                            name: city.name,
+                                                                            hex: "",
+                                                                            state: city.state || "",
+                                                                            country: city.country || "",
+                                                                            image_url: ""
+                                                                        });
+                                                                        setFacetImageFile(null);
+                                                                        setFacetImagePreview("");
+                                                                        setIsFacetModalOpen(true);
+                                                                    }}
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteCity(city.id, city.name)}
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === "contact" && (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h1 className="text-2xl font-bold text-gray-900">Contact Requests</h1>
+                                    <span className="text-sm text-gray-500">{contactRequests.length} messages</span>
+                                </div>
+
+                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email/Phone</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {contactRequests.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                                                        No messages found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                contactRequests.map((req) => (
+                                                    <tr key={req.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {new Date(req.created_at).toLocaleDateString()}
+                                                            <div className="text-xs text-gray-400">{new Date(req.created_at).toLocaleTimeString()}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm font-medium text-gray-900">{req.name}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm text-gray-900">{req.email}</div>
+                                                            <div className="text-sm text-gray-500">{req.phone || "-"}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm text-gray-900 line-clamp-2">{req.message}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${req.status === 'new' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                                                                }`}>
+                                                                {req.status}
                                                             </span>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-xs text-gray-600 mb-1">/products?occasion={oc.id}</p>
-                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                        onClick={() => {
-                                                            setActiveTab("products");
-                                                            localStorage.setItem("adminActiveTab", "products");
-                                                            setFilterCategory(oc.id);
-                                                            router.push(`/admin?tab=products`);
-                                                        }}
-                                                    >
-                                                        View {productCount} products →
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                    <button
-                                                        onClick={async () => {
-                                                            const newFeatured = !oc.is_featured;
-                                                            try {
-                                                                const { error } = await supabase
-                                                                    .from("occasions")
-                                                                    .update({ is_featured: newFeatured })
-                                                                    .eq("id", oc.id);
-                                                                if (error) throw error;
-                                                                loadOccasions();
-                                                                showPopup(newFeatured ? "Occasion pinned!" : "Occasion unpinned!", "success");
-                                                            } catch (error: any) {
-                                                                showPopup(error.message || "Failed to update", "error");
-                                                            }
-                                                        }}
-                                                        className={`p-2 rounded transition-colors ${oc.is_featured
-                                                            ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
-                                                            : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
-                                                            }`}
-                                                        title={oc.is_featured ? "Unpin" : "Pin"}
-                                                    >
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                                        </svg>
-                                                    </button>
-                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                    <button
-                                                        onClick={() => {
-                                                            setActiveFacetTab("occasions");
-                                                            setEditingFacet(oc);
-                                                            setFacetFormData({
-                                                                name: oc.name,
-                                                                hex: "",
-                                                                state: "",
-                                                                country: "",
-                                                                image_url: oc.image_url || ""
-                                                            });
-                                                            setFacetImageFile(null);
-                                                            setFacetImagePreview(oc.image_url || "");
-                                                            setIsFacetModalOpen(true);
-                                                        }}
-                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteOccasion(oc.id, oc.name)}
-                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Section 3: Colors */}
-                        <div className="border border-gray-200 rounded-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-bold text-gray-900">Colors</h3>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-sm text-gray-500">{colors.length} items</span>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("colors");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-                            <div className="space-y-3">
-                                {colors.length === 0 ? (
-                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                        <p className="text-sm text-gray-500">No items</p>
-                                    </div>
-                                ) : (
-                                    colors.map((c, index) => {
-                                        const productCount = facetProductCounts.get(`color_${c.id}`) || 0;
 
-                                        return (
-                                            <div
-                                                key={c.id}
-                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                            >
-                                                <div className="flex items-center gap-3 flex-shrink-0">
-                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                    <div className="cursor-move">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                    {c.hex ? (
-                                                        <div className="w-full h-full rounded-lg border border-gray-300" style={{ backgroundColor: c.hex }}></div>
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs rounded-lg">
-                                                            No Color
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-semibold text-gray-900 mb-1">{c.name}</h4>
-                                                    <p className="text-xs text-gray-600 mb-1">/products?color={c.id}</p>
-                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                        onClick={() => {
-                                                            setActiveTab("products");
-                                                            localStorage.setItem("adminActiveTab", "products");
-                                                            setFilterCategory(c.id);
-                                                            router.push(`/admin?tab=products`);
-                                                        }}
-                                                    >
-                                                        View {productCount} products →
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                    <button
-                                                        onClick={() => {
-                                                            setActiveFacetTab("colors");
-                                                            setEditingFacet(c);
-                                                            setFacetFormData({
-                                                                name: c.name,
-                                                                hex: c.hex || "",
-                                                                state: "",
-                                                                country: "",
-                                                                image_url: ""
-                                                            });
-                                                            setFacetImageFile(null);
-                                                            setFacetImagePreview("");
-                                                            setIsFacetModalOpen(true);
-                                                        }}
-                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteColor(c.id, c.name)}
-                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
+                        )}
 
-                        {/* Section 4: Materials */}
-                        <div className="border border-gray-200 rounded-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-bold text-gray-900">Materials</h3>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-sm text-gray-500">{materials.length} items</span>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("materials");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {materials.length === 0 ? (
-                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                        <p className="text-sm text-gray-500">No items</p>
-                                    </div>
-                                ) : (
-                                    materials.map((m, index) => {
-                                        const productCount = facetProductCounts.get(`material_${m.id}`) || 0;
-
-                                        return (
-                                            <div
-                                                key={m.id}
-                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                            >
-                                                <div className="flex items-center gap-3 flex-shrink-0">
-                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                    <div className="cursor-move">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                        No Image
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-semibold text-gray-900 mb-1">{m.name}</h4>
-                                                    <p className="text-xs text-gray-600 mb-1">/products?material={m.id}</p>
-                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                        onClick={() => {
-                                                            setActiveTab("products");
-                                                            localStorage.setItem("adminActiveTab", "products");
-                                                            setFilterCategory(m.id);
-                                                            router.push(`/admin?tab=products`);
-                                                        }}
-                                                    >
-                                                        View {productCount} products →
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                    <button
-                                                        onClick={() => {
-                                                            setActiveFacetTab("materials");
-                                                            setEditingFacet(m);
-                                                            setFacetFormData({
-                                                                name: m.name,
-                                                                hex: "",
-                                                                state: "",
-                                                                country: "",
-                                                                image_url: ""
-                                                            });
-                                                            setFacetImageFile(null);
-                                                            setFacetImagePreview("");
-                                                            setIsFacetModalOpen(true);
-                                                        }}
-                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteMaterial(m.id, m.name)}
-                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Section 5: Cities */}
-                        <div className="border border-gray-200 rounded-lg p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-lg font-bold text-gray-900">Cities</h3>
-                                <div className="flex items-center gap-4">
-                                    <span className="text-sm text-gray-500">{cities.length} items</span>
-                                    <button
-                                        onClick={() => {
-                                            setActiveFacetTab("cities");
-                                            setEditingFacet(null);
-                                            setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
-                                            setFacetImageFile(null);
-                                            setFacetImagePreview("");
-                                            setIsFacetModalOpen(true);
-                                        }}
-                                        className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                                        </svg>
-                                        Add
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {cities.length === 0 ? (
-                                    <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
-                                        <p className="text-sm text-gray-500">No items</p>
-                                    </div>
-                                ) : (
-                                    cities.map((city, index) => {
-                                        const productCount = facetProductCounts.get(`city_${city.id}`) || 0;
-
-                                        return (
-                                            <div
-                                                key={city.id}
-                                                className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
-                                            >
-                                                <div className="flex items-center gap-3 flex-shrink-0">
-                                                    <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
-                                                    <div className="cursor-move">
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
-                                                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                                                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                        No Image
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h4 className="font-semibold text-gray-900 mb-1">{city.name}</h4>
-                                                    {city.state && (
-                                                        <p className="text-xs text-gray-600 mb-1">{city.state}</p>
-                                                    )}
-                                                    <p className="text-xs text-gray-600 mb-1">/products?city={city.id}</p>
-                                                    <p className="text-xs text-blue-600 cursor-pointer hover:underline"
-                                                        onClick={() => {
-                                                            setActiveTab("products");
-                                                            localStorage.setItem("adminActiveTab", "products");
-                                                            setFilterCategory(city.id);
-                                                            router.push(`/admin?tab=products`);
-                                                        }}
-                                                    >
-                                                        View {productCount} products →
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                    <span className="text-xs text-gray-400">Drag to reorder</span>
-                                                    <button
-                                                        onClick={() => {
-                                                            setActiveFacetTab("cities");
-                                                            setEditingFacet(city);
-                                                            setFacetFormData({
-                                                                name: city.name,
-                                                                hex: "",
-                                                                state: city.state || "",
-                                                                country: city.country || "",
-                                                                image_url: ""
-                                                            });
-                                                            setFacetImageFile(null);
-                                                            setFacetImagePreview("");
-                                                            setIsFacetModalOpen(true);
-                                                        }}
-                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteCity(city.id, city.name)}
-                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        );
-                                    })
-                                )}
-                            </div>
-                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                </div >
+            </main >
+        </div >
     );
 }
 
