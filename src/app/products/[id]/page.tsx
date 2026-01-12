@@ -606,57 +606,58 @@ export default function ProductDetailPage() {
                             <div className="flex flex-col md:flex-row gap-4">
                                 {/* Mobile Image Carousel (Visible only on mobile) */}
                                 <div className="md:hidden w-full relative">
+                                    {/* Overlay Buttons for Mobile - Moved outside scroll container */}
+                                    <div className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-start pointer-events-none">
+                                        {/* Back Button */}
+                                        <button
+                                            onClick={handleBack}
+                                            className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white rounded-full shadow-md z-30"
+                                        >
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M15 18l-6-6 6-6" />
+                                            </svg>
+                                        </button>
+
+                                        {/* Right Action Buttons */}
+                                        <div className="flex flex-col gap-4 pointer-events-auto items-center">
+                                            {/* Wishlist Button */}
+                                            <button
+                                                onClick={toggleWishlist}
+                                                disabled={wishlistLoading}
+                                                className="w-10 h-10 flex items-center justify-center transition-transform active:scale-95 bg-white rounded-full shadow-md"
+                                            >
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill={isInWishlist ? "red" : "none"}
+                                                    stroke={isInWishlist ? "red" : "black"}
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                >
+                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Share Button */}
+                                            <button
+                                                onClick={handleShare}
+                                                className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-md"
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                                    <polyline points="16 6 12 2 8 6" />
+                                                    <line x1="12" y1="2" x2="12" y2="15" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
                                     <div
                                         className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-[4/5] w-full bg-gray-100 relative"
                                         onScroll={handleScroll}
                                     >
-                                        {/* Overlay Buttons for Mobile */}
-                                        <div className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-start pointer-events-none">
-                                            {/* Back Button */}
-                                            <button
-                                                onClick={handleBack}
-                                                className="w-10 h-10 flex items-center justify-center pointer-events-auto drop-shadow-sm"
-                                            >
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M15 18l-6-6 6-6" />
-                                                </svg>
-                                            </button>
-
-                                            {/* Right Action Buttons */}
-                                            <div className="flex flex-col gap-4 pointer-events-auto items-center">
-                                                {/* Wishlist Button */}
-                                                <button
-                                                    onClick={toggleWishlist}
-                                                    disabled={wishlistLoading}
-                                                    className="w-10 h-10 flex items-center justify-center drop-shadow-sm transition-transform active:scale-95"
-                                                >
-                                                    <svg
-                                                        width="24"
-                                                        height="24"
-                                                        viewBox="0 0 24 24"
-                                                        fill={isInWishlist ? "red" : "none"}
-                                                        stroke={isInWishlist ? "red" : "black"}
-                                                        strokeWidth="1"
-                                                        strokeLinecap="round"
-                                                        strokeLinejoin="round"
-                                                    >
-                                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                                    </svg>
-                                                </button>
-
-                                                {/* Share Button */}
-                                                <button
-                                                    onClick={handleShare}
-                                                    className="w-10 h-10 flex items-center justify-center drop-shadow-sm"
-                                                >
-                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                                                        <polyline points="16 6 12 2 8 6" />
-                                                        <line x1="12" y1="2" x2="12" y2="15" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        </div>
                                         {displayImages.map((img, index) => (
                                             <div
                                                 key={index}
