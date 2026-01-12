@@ -916,20 +916,21 @@ export default function ProductsPage() {
                                     {filterSections.find(s => s.id === "price")?.isOpen && (
                                         <div className="mt-4">
                                             {/* Dual Range Slider */}
+                                            {/* Dual Range Slider - Ported from Mobile for Perfect Alignment */}
                                             <div className="relative h-8 mb-2">
                                                 {/* Background track (gray) */}
-                                                <div className="absolute top-1/2 left-0 right-0 h-1.5 bg-gray-200 rounded transform -translate-y-1/2"></div>
+                                                <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gray-200 rounded transform -translate-y-1/2"></div>
 
                                                 {/* Active range track (thick black line between thumbs) */}
                                                 <div
-                                                    className="absolute top-1/2 h-2 bg-black rounded transform -translate-y-1/2"
+                                                    className="absolute top-1/2 h-[2px] bg-black rounded transform -translate-y-1/2"
                                                     style={{
                                                         left: `${(pendingPriceRange[0] / maxPrice) * 100}%`,
                                                         width: `${((pendingPriceRange[1] - pendingPriceRange[0]) / maxPrice) * 100}%`
                                                     }}
                                                 ></div>
 
-                                                {/* Min price slider */}
+                                                {/* Invisible Inputs for Interaction */}
                                                 <input
                                                     type="range"
                                                     min="0"
@@ -940,10 +941,8 @@ export default function ProductsPage() {
                                                         const minValue = Math.min(Number(e.target.value), pendingPriceRange[1]);
                                                         setPendingPriceRange([minValue, pendingPriceRange[1]]);
                                                     }}
-                                                    className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10 min-slider"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
                                                 />
-
-                                                {/* Max price slider */}
                                                 <input
                                                     type="range"
                                                     min="0"
@@ -954,43 +953,18 @@ export default function ProductsPage() {
                                                         const maxValue = Math.max(Number(e.target.value), pendingPriceRange[0]);
                                                         setPendingPriceRange([pendingPriceRange[0], maxValue]);
                                                     }}
-                                                    className="absolute top-1/2 left-0 right-0 w-full h-0 appearance-none cursor-pointer transform -translate-y-1/2 z-10 max-slider"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
                                                 />
 
-                                                <style jsx>{`
-                                                    .min-slider::-webkit-slider-thumb,
-                                                    .max-slider::-webkit-slider-thumb {
-                                                        appearance: none;
-                                                        width: 16px;
-                                                        height: 16px;
-                                                        background: #4b5563;
-                                                        border-radius: 50%;
-                                                        cursor: pointer;
-                                                        position: relative;
-                                                        z-index: 20;
-                                                    }
-                                                    .min-slider::-moz-range-thumb,
-                                                    .max-slider::-moz-range-thumb {
-                                                        width: 16px;
-                                                        height: 16px;
-                                                        background: #4b5563;
-                                                        border-radius: 50%;
-                                                        cursor: pointer;
-                                                        border: none;
-                                                        position: relative;
-                                                        z-index: 20;
-                                                    }
-                                                    .min-slider::-webkit-slider-runnable-track,
-                                                    .max-slider::-webkit-slider-runnable-track {
-                                                        background: transparent;
-                                                        height: 0;
-                                                    }
-                                                    .min-slider::-moz-range-track,
-                                                    .max-slider::-moz-range-track {
-                                                        background: transparent;
-                                                        height: 0;
-                                                    }
-                                                `}</style>
+                                                {/* Visual Thumbs - Premium Black Style */}
+                                                <div
+                                                    className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                                    style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
+                                                />
+                                                <div
+                                                    className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                                    style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
+                                                />
                                             </div>
 
                                             {/* Price labels below slider */}

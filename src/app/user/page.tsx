@@ -152,7 +152,7 @@ export default function UserPage() {
             localStorage.removeItem("userPhone");
             localStorage.removeItem("userEmail");
             localStorage.removeItem("pendingUserData");
-            router.push("/profile");
+            router.push("/");
         } catch (error) {
             console.error("Error signing out:", error);
             // Still clear localStorage and redirect even if signOut fails
@@ -161,7 +161,7 @@ export default function UserPage() {
             localStorage.removeItem("userPhone");
             localStorage.removeItem("userEmail");
             localStorage.removeItem("pendingUserData");
-            router.push("/profile");
+            router.push("/");
         }
     };
 

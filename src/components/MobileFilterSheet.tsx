@@ -349,7 +349,7 @@ export default function MobileFilterSheet({
                         >
                             <div className="overflow-hidden">
                                 <div className="mt-8 px-2 pb-4">
-                                    <div className="relative h-1 bg-gray-200 rounded">
+                                    <div className="relative h-[2px] bg-gray-200 rounded">
                                         <div
                                             className="absolute h-full bg-black rounded"
                                             style={{
@@ -382,11 +382,11 @@ export default function MobileFilterSheet({
                                         />
                                         {/* Visual Thumbs matching desktop style */}
                                         <div
-                                            className="absolute w-4 h-4 bg-[#4b5563] rounded-full top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
                                         />
                                         <div
-                                            className="absolute w-4 h-4 bg-[#4b5563] rounded-full top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
                                         />
                                     </div>
