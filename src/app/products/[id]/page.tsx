@@ -34,6 +34,7 @@ export default function ProductDetailPage() {
     const [loading, setLoading] = useState(true);
     const [selectedImage, setSelectedImage] = useState<string>("");
     const [productImages, setProductImages] = useState<string[]>([]);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
     // Removed expandedSections - no longer needed
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -246,6 +247,16 @@ export default function ProductDetailPage() {
     };
 
     // Removed toggleSection - no longer needed
+
+    // Handle mobile carousel scroll
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const container = e.currentTarget;
+        const scrollPosition = container.scrollLeft;
+        const width = container.clientWidth;
+        // Calculate active index based on scroll position - simple snap logic
+        const index = Math.round(scrollPosition / width);
+        setActiveImageIndex(index);
+    };
 
     const handleMakeInquiry = () => {
         if (!isLoggedIn) {
@@ -461,67 +472,115 @@ export default function ProductDetailPage() {
 
     return (
         <>
-            <Navbar />
-            <main className="min-h-screen pt-20 pb-12">
-                <div className="max-w-[1400px] mx-auto px-4">
+            <div className="hidden md:block">
+                <Navbar />
+            </div>
+            <main className="min-h-screen pt-0 md:pt-20 pb-12">
+                <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
                         {/* Main Content - Product Images with Thumbnails on Left */}
                         <div className="lg:col-span-8">
-                            <div className="flex gap-4">
-                                {/* Left Side - Small Thumbnail Images (Vertical Column) */}
-                                <div className="hidden md:flex flex-col gap-3 w-20 flex-shrink-0">
-                                    {displayImages.map((img, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => setSelectedImage(img)}
-                                            className={`relative w-full aspect-[4/5] border-2 transition-all overflow-hidden bg-gray-50 ${selectedImage === img
-                                                ? "border-black"
-                                                : "border-gray-300 hover:border-gray-500"
-                                                }`}
-                                        >
+                            <div className="flex flex-col md:flex-row gap-4">
+                                {/* Mobile Image Carousel (Visible only on mobile) */}
+                                <div className="md:hidden w-full relative">
+                                    <div
+                                        className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar aspect-[4/5] w-full bg-gray-100"
+                                        onScroll={handleScroll}
+                                    >
+                                        {displayImages.map((img, index) => (
+                                            <div
+                                                key={index}
+                                                className="w-full flex-shrink-0 snap-center snap-always relative"
+                                                style={{ scrollSnapStop: 'always' }}
+                                            >
+                                                <Image
+                                                    src={img}
+                                                    alt={`${product.name} - View ${index + 1}`}
+                                                    fill
+                                                    className="object-cover"
+                                                    sizes="100vw"
+                                                    priority={index === 0}
+                                                    unoptimized
+                                                />
+                                            </div>
+                                        ))}
+                                        {displayImages.length === 0 && (
+                                            <div className="w-full flex-shrink-0 snap-center relative flex items-center justify-center text-gray-400">
+                                                No Image
+                                            </div>
+                                        )}
+                                    </div>
+                                    {/* Mobile Dots Indicator - Overlay on Image or below */}
+                                    {displayImages.length > 1 && (
+                                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10 pointer-events-none">
+                                            {displayImages.map((_, index) => (
+                                                <div
+                                                    key={index}
+                                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 shadow-sm ${index === activeImageIndex ? 'bg-black w-4' : 'bg-white/70 backdrop-blur-sm'}`}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+
+                                {/* Desktop Image Gallery (Hidden on mobile) */}
+                                <div className="hidden md:flex flex-1 gap-4">
+                                    {/* Left Side - Small Thumbnail Images (Vertical Column) */}
+                                    <div className="flex flex-col gap-3 w-20 flex-shrink-0">
+                                        {displayImages.map((img, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => setSelectedImage(img)}
+                                                className={`relative w-full aspect-[4/5] border-2 transition-all overflow-hidden bg-gray-50 ${selectedImage === img
+                                                    ? "border-black"
+                                                    : "border-gray-300 hover:border-gray-500"
+                                                    }`}
+                                            >
+                                                <Image
+                                                    src={img}
+                                                    alt={`${product.name} - View ${index + 1}`}
+                                                    fill
+                                                    className="object-cover"
+                                                    sizes="80px"
+                                                    unoptimized
+                                                    onError={(e) => {
+                                                        console.error("Image load error:", img);
+                                                        e.currentTarget.style.display = 'none';
+                                                    }}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Center - Main Product Image */}
+                                    <div className="flex-1 relative max-w-md w-full aspect-[4/5] bg-gray-100 mx-auto">
+                                        {selectedImage ? (
                                             <Image
-                                                src={img}
-                                                alt={`${product.name} - View ${index + 1}`}
+                                                src={selectedImage}
+                                                alt={product.name}
                                                 fill
                                                 className="object-cover"
-                                                sizes="80px"
+                                                sizes="(max-width: 1024px) 50vw, 400px"
+                                                priority
                                                 unoptimized
                                                 onError={(e) => {
-                                                    console.error("Image load error:", img);
+                                                    console.error("Image load error:", selectedImage);
                                                     e.currentTarget.style.display = 'none';
                                                 }}
                                             />
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Center - Main Product Image */}
-                                <div className="flex-1 relative max-w-md w-full aspect-[4/5] bg-gray-100 mx-auto">
-                                    {selectedImage ? (
-                                        <Image
-                                            src={selectedImage}
-                                            alt={product.name}
-                                            fill
-                                            className="object-cover"
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 400px"
-                                            priority
-                                            unoptimized
-                                            onError={(e) => {
-                                                console.error("Image load error:", selectedImage);
-                                                e.currentTarget.style.display = 'none';
-                                            }}
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
-                                            <span>No Image</span>
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                                                <span>No Image</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Right Sidebar - Product Information */}
-                        <div className="lg:col-span-4">
+                        <div className="lg:col-span-4 px-4 md:px-0">
                             <div className="sticky top-24">
                                 <div className="bg-white space-y-6">
                                     <div>

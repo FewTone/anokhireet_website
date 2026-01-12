@@ -82,7 +82,7 @@ export default function ProductsPage() {
     // Category tags (can be made dynamic later)
     const categoryTags = ["ALL", "NEW", "FORMAL", "BLACK", "LUXE", "PLUS SIZE", "SLIM", "LINEN", "KOREAN", "CHINOS", "GURKHA", "BEIGE", "RELAXED", "BAGGY", "DENIM"];
     const [activeTag, setActiveTag] = useState("ALL");
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid'); // 'grid' = 2 cols, 'list' = 1 col
+    const [viewMode, setViewMode] = useState<'grid' | 'grid3'>('grid'); // 'grid' = 2 cols, 'grid3' = 3 cols
 
     // Load filter options and products
     useEffect(() => {
@@ -687,7 +687,7 @@ export default function ProductsPage() {
         <>
             <Navbar />
             <main className="min-h-screen pt-24 md:pt-20 pb-12">
-                <div className="max-w-[1400px] mx-auto px-4">
+                <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Left Sidebar - Filters */}
                         <aside className="hidden lg:block w-64 flex-shrink-0">
@@ -703,31 +703,38 @@ export default function ProductsPage() {
                                         <span>SORT</span>
                                         <span>{filterSections.find(s => s.id === "sort")?.isOpen ? "−" : "+"}</span>
                                     </button>
-                                    {filterSections.find(s => s.id === "sort")?.isOpen && (
-                                        <div className="mt-2 space-y-2">
-                                            {[
-                                                { value: "newest", label: "Newest First" },
-                                                { value: "oldest", label: "Oldest First" },
-                                                { value: "price_low", label: "Price: Low to High" },
-                                                { value: "price_high", label: "Price: High to Low" },
-                                            ].map((option) => (
-                                                <label key={option.value} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="sort"
-                                                        value={option.value}
-                                                        checked={sortBy === option.value}
-                                                        onChange={() => {
-                                                            setSortBy(option.value);
-                                                            setFilteredProducts(sortProducts(filteredProducts, option.value));
-                                                        }}
-                                                        className="w-4 h-4 border-gray-300 text-black focus:ring-black"
-                                                    />
-                                                    <span className="text-sm">{option.label}</span>
-                                                </label>
-                                            ))}
+                                    <div
+                                        className={`grid transition-all duration-300 ease-in-out ${filterSections.find(s => s.id === "sort")?.isOpen
+                                            ? 'grid-rows-[1fr] opacity-100'
+                                            : 'grid-rows-[0fr] opacity-0'
+                                            }`}
+                                    >
+                                        <div className="overflow-hidden">
+                                            <div className="mt-2 space-y-2">
+                                                {[
+                                                    { value: "newest", label: "Newest First" },
+                                                    { value: "oldest", label: "Oldest First" },
+                                                    { value: "price_low", label: "Price: Low to High" },
+                                                    { value: "price_high", label: "Price: High to Low" },
+                                                ].map((option) => (
+                                                    <label key={option.value} className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="radio"
+                                                            name="sort"
+                                                            value={option.value}
+                                                            checked={sortBy === option.value}
+                                                            onChange={() => {
+                                                                setSortBy(option.value);
+                                                                setFilteredProducts(sortProducts(filteredProducts, option.value));
+                                                            }}
+                                                            className="w-4 h-4 border-gray-300 text-black focus:ring-black"
+                                                        />
+                                                        <span className="text-sm">{option.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 {/* PRODUCT TYPE */}
@@ -739,21 +746,28 @@ export default function ProductsPage() {
                                         <span>PRODUCT TYPE</span>
                                         <span>{filterSections.find(s => s.id === "product_type")?.isOpen ? "−" : "+"}</span>
                                     </button>
-                                    {filterSections.find(s => s.id === "product_type")?.isOpen && (
-                                        <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                                            {productTypes.map(type => (
-                                                <label key={type.id} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={pendingProductTypes.includes(type.id)}
-                                                        onChange={() => toggleFilter('productType', type.id)}
-                                                        className="w-4 h-4 border-gray-300 rounded"
-                                                    />
-                                                    <span className="text-sm">{type.name}</span>
-                                                </label>
-                                            ))}
+                                    <div
+                                        className={`grid transition-all duration-300 ease-in-out ${filterSections.find(s => s.id === "product_type")?.isOpen
+                                            ? 'grid-rows-[1fr] opacity-100'
+                                            : 'grid-rows-[0fr] opacity-0'
+                                            }`}
+                                    >
+                                        <div className="overflow-hidden">
+                                            <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                                                {productTypes.map(type => (
+                                                    <label key={type.id} className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={pendingProductTypes.includes(type.id)}
+                                                            onChange={() => toggleFilter('productType', type.id)}
+                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                        />
+                                                        <span className="text-sm">{type.name}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 {/* OCCASION */}
@@ -765,21 +779,28 @@ export default function ProductsPage() {
                                         <span>OCCASION</span>
                                         <span>{filterSections.find(s => s.id === "occasion")?.isOpen ? "−" : "+"}</span>
                                     </button>
-                                    {filterSections.find(s => s.id === "occasion")?.isOpen && (
-                                        <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                                            {occasions.map(occasion => (
-                                                <label key={occasion.id} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={pendingOccasions.includes(occasion.id)}
-                                                        onChange={() => toggleFilter('occasion', occasion.id)}
-                                                        className="w-4 h-4 border-gray-300 rounded"
-                                                    />
-                                                    <span className="text-sm">{occasion.name}</span>
-                                                </label>
-                                            ))}
+                                    <div
+                                        className={`grid transition-all duration-300 ease-in-out ${filterSections.find(s => s.id === "occasion")?.isOpen
+                                            ? 'grid-rows-[1fr] opacity-100'
+                                            : 'grid-rows-[0fr] opacity-0'
+                                            }`}
+                                    >
+                                        <div className="overflow-hidden">
+                                            <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                                                {occasions.map(occasion => (
+                                                    <label key={occasion.id} className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={pendingOccasions.includes(occasion.id)}
+                                                            onChange={() => toggleFilter('occasion', occasion.id)}
+                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                        />
+                                                        <span className="text-sm">{occasion.name}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 {/* COLOR */}
@@ -791,29 +812,36 @@ export default function ProductsPage() {
                                         <span>COLOR</span>
                                         <span>{filterSections.find(s => s.id === "color")?.isOpen ? "−" : "+"}</span>
                                     </button>
-                                    {filterSections.find(s => s.id === "color")?.isOpen && (
-                                        <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                                            {colors.map(color => (
-                                                <label key={color.id} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={pendingColors.includes(color.id)}
-                                                        onChange={() => toggleFilter('color', color.id)}
-                                                        className="w-4 h-4 border-gray-300 rounded"
-                                                    />
-                                                    <div className="flex items-center gap-2">
-                                                        {color.hex && (
-                                                            <div
-                                                                className="w-4 h-4 rounded border border-gray-300"
-                                                                style={{ backgroundColor: color.hex }}
-                                                            />
-                                                        )}
-                                                        <span className="text-sm">{color.name}</span>
-                                                    </div>
-                                                </label>
-                                            ))}
+                                    <div
+                                        className={`grid transition-all duration-300 ease-in-out ${filterSections.find(s => s.id === "color")?.isOpen
+                                            ? 'grid-rows-[1fr] opacity-100'
+                                            : 'grid-rows-[0fr] opacity-0'
+                                            }`}
+                                    >
+                                        <div className="overflow-hidden">
+                                            <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                                                {colors.map(color => (
+                                                    <label key={color.id} className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={pendingColors.includes(color.id)}
+                                                            onChange={() => toggleFilter('color', color.id)}
+                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                        />
+                                                        <div className="flex items-center gap-2">
+                                                            {color.hex && (
+                                                                <div
+                                                                    className="w-4 h-4 rounded border border-gray-300"
+                                                                    style={{ backgroundColor: color.hex }}
+                                                                />
+                                                            )}
+                                                            <span className="text-sm">{color.name}</span>
+                                                        </div>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 {/* MATERIAL */}
@@ -825,21 +853,28 @@ export default function ProductsPage() {
                                         <span>MATERIAL</span>
                                         <span>{filterSections.find(s => s.id === "material")?.isOpen ? "−" : "+"}</span>
                                     </button>
-                                    {filterSections.find(s => s.id === "material")?.isOpen && (
-                                        <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                                            {materials.map(material => (
-                                                <label key={material.id} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={pendingMaterials.includes(material.id)}
-                                                        onChange={() => toggleFilter('material', material.id)}
-                                                        className="w-4 h-4 border-gray-300 rounded"
-                                                    />
-                                                    <span className="text-sm">{material.name}</span>
-                                                </label>
-                                            ))}
+                                    <div
+                                        className={`grid transition-all duration-300 ease-in-out ${filterSections.find(s => s.id === "material")?.isOpen
+                                            ? 'grid-rows-[1fr] opacity-100'
+                                            : 'grid-rows-[0fr] opacity-0'
+                                            }`}
+                                    >
+                                        <div className="overflow-hidden">
+                                            <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                                                {materials.map(material => (
+                                                    <label key={material.id} className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={pendingMaterials.includes(material.id)}
+                                                            onChange={() => toggleFilter('material', material.id)}
+                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                        />
+                                                        <span className="text-sm">{material.name}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 {/* AVAILABLE CITY */}
@@ -996,20 +1031,30 @@ export default function ProductsPage() {
                                         {/* View Toggles */}
                                         <div className="flex items-center gap-4">
                                             <button
-                                                onClick={() => setViewMode('list')}
-                                                className={`p-1 ${viewMode === 'list' ? 'opacity-100' : 'opacity-40'}`}
-                                            >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                                </svg>
-                                            </button>
-                                            <button
                                                 onClick={() => setViewMode('grid')}
                                                 className={`p-1 ${viewMode === 'grid' ? 'opacity-100' : 'opacity-40'}`}
                                             >
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                                    <line x1="12" y1="3" x2="12" y2="21"></line>
+                                                    <rect x="3" y="3" width="8" height="8" rx="1"></rect>
+                                                    <rect x="13" y="3" width="8" height="8" rx="1"></rect>
+                                                    <rect x="3" y="13" width="8" height="8" rx="1"></rect>
+                                                    <rect x="13" y="13" width="8" height="8" rx="1"></rect>
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={() => setViewMode('grid3')}
+                                                className={`p-1 ${viewMode === 'grid3' ? 'opacity-100' : 'opacity-40'}`}
+                                            >
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <rect x="2" y="2" width="6" height="6" rx="1"></rect>
+                                                    <rect x="9" y="2" width="6" height="6" rx="1"></rect>
+                                                    <rect x="16" y="2" width="6" height="6" rx="1"></rect>
+                                                    <rect x="2" y="9" width="6" height="6" rx="1"></rect>
+                                                    <rect x="9" y="9" width="6" height="6" rx="1"></rect>
+                                                    <rect x="16" y="9" width="6" height="6" rx="1"></rect>
+                                                    <rect x="2" y="16" width="6" height="6" rx="1"></rect>
+                                                    <rect x="9" y="16" width="6" height="6" rx="1"></rect>
+                                                    <rect x="16" y="16" width="6" height="6" rx="1"></rect>
                                                 </svg>
                                             </button>
                                         </div>
@@ -1058,7 +1103,7 @@ export default function ProductsPage() {
 
 
 
-                                        <div className="space-y-6">
+                                        <div className="space-y-0">
                                             {/* FEATURED CATEGORIES */}
                                             {([...productTypes.filter(p => p.is_featured).map(p => ({ ...p, type: 'product_type' as const })), ...occasions.filter(o => o.is_featured).map(o => ({ ...o, type: 'occasion' as const }))].length > 0) && (
                                                 <div>
@@ -1069,42 +1114,44 @@ export default function ProductsPage() {
                                                             clearCategoryFilter();
                                                             setShowCategories(false);
                                                         }}
-                                                        className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm mb-2"
+                                                        className="w-full flex items-center gap-4 px-4 py-3 bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors"
                                                     >
-                                                        <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-black flex items-center justify-center">
-                                                            <span className="text-white text-xs font-bold text-center leading-tight px-1">ALL</span>
+                                                        <div className="relative w-[72px] h-[96px] flex-shrink-0 bg-black flex items-center justify-center">
+                                                            <span className="text-white text-xs font-bold text-center leading-tight px-1 uppercase tracking-widest">ALL</span>
                                                         </div>
-                                                        <span className="font-bold text-left flex-1">ALL PRODUCTS</span>
+                                                        <span className="font-bold text-[13px] uppercase tracking-widest text-left flex-1">ALL PRODUCTS</span>
                                                     </button>
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-0">
                                                         {[...productTypes.filter(p => p.is_featured).map(p => ({ ...p, type: 'product_type' as const })), ...occasions.filter(o => o.is_featured).map(o => ({ ...o, type: 'occasion' as const }))]
                                                             .sort((a, b) => a.name.localeCompare(b.name)) // Optional sort by name
                                                             .map((item) => (
                                                                 <button
                                                                     key={`${item.type}-${item.id}`}
                                                                     onClick={() => handleCategoryClick(item.type, item.id, item.name)}
-                                                                    className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+                                                                    className="w-full flex items-center gap-4 px-4 py-3 bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors"
                                                                 >
-                                                                    <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                                    <div className="relative w-[72px] h-[96px] flex-shrink-0 overflow-hidden bg-gray-100">
                                                                         {item.image_url ? (
                                                                             <Image
                                                                                 src={item.image_url}
                                                                                 alt={item.name}
                                                                                 fill
                                                                                 className="object-cover"
-                                                                                sizes="64px"
+                                                                                sizes="72px"
                                                                                 unoptimized
                                                                                 onError={(e) => {
                                                                                     (e.target as HTMLImageElement).style.display = 'none';
                                                                                 }}
                                                                             />
                                                                         ) : (
-                                                                            <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                                                                                <span className="text-gray-400 text-xs">No Image</span>
+                                                                            <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                                                                <svg className="w-8 h-8 opacity-50 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                                </svg>
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    <span className="font-bold text-left flex-1">{item.name.toUpperCase()}</span>
+                                                                    <span className="font-bold text-[13px] uppercase tracking-widest text-left flex-1">{item.name}</span>
                                                                 </button>
                                                             ))}
                                                     </div>
@@ -1115,33 +1162,35 @@ export default function ProductsPage() {
                                             {productTypes.filter(p => !p.is_featured).length > 0 && (
                                                 <div>
                                                     {/* Title Removed */}
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-0">
                                                         {productTypes.filter(p => !p.is_featured).map((type) => (
                                                             <button
                                                                 key={type.id}
                                                                 onClick={() => handleCategoryClick('product_type', type.id, type.name)}
-                                                                className="w-full flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                                                                className="w-full flex items-center gap-4 px-4 py-3 bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors"
                                                             >
-                                                                <div className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100">
+                                                                <div className="relative w-[72px] h-[96px] flex-shrink-0 overflow-hidden bg-gray-100">
                                                                     {type.image_url ? (
                                                                         <Image
                                                                             src={type.image_url}
                                                                             alt={type.name}
                                                                             fill
                                                                             className="object-cover"
-                                                                            sizes="64px"
+                                                                            sizes="72px"
                                                                             unoptimized
                                                                             onError={(e) => {
                                                                                 (e.target as HTMLImageElement).style.display = 'none';
                                                                             }}
                                                                         />
                                                                     ) : (
-                                                                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                                                                            <span className="text-gray-400 text-xs">No Image</span>
+                                                                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                                                            <svg className="w-8 h-8 opacity-50 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                            </svg>
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                <span className="font-bold text-left flex-1">{type.name.toUpperCase()}</span>
+                                                                <span className="font-bold text-[13px] uppercase tracking-widest text-left flex-1">{type.name}</span>
                                                             </button>
                                                         ))}
                                                     </div>
@@ -1226,9 +1275,13 @@ export default function ProductsPage() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className={`${showCategories ? 'hidden md:grid' : 'grid'} ${viewMode === 'list' ? 'grid-cols-1' : 'grid-cols-2'} md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6`}>
+                                <div className={`${showCategories ? 'hidden md:grid' : 'grid'} ${viewMode === 'grid3' ? 'grid-cols-3 gap-1 md:gap-4' : 'grid-cols-2 gap-4 md:gap-6'} md:grid-cols-3 lg:grid-cols-4`}>
                                     {filteredProducts.map((product) => (
-                                        <ProductCard key={product.id} product={product} />
+                                        <ProductCard
+                                            key={product.id}
+                                            product={product}
+                                            hideDetails={viewMode === 'grid3'}
+                                        />
                                     ))}
                                 </div>
                             )}

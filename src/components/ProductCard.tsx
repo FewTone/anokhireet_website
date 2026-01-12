@@ -16,9 +16,10 @@ interface ProductProps {
         category?: string;
         original_price?: number | string;
     };
+    hideDetails?: boolean;
 }
 
-export default function ProductCard({ product }: ProductProps) {
+export default function ProductCard({ product, hideDetails = false }: ProductProps) {
     const [isFavorite, setIsFavorite] = useState(false);
     const router = useRouter();
 
@@ -101,7 +102,7 @@ export default function ProductCard({ product }: ProductProps) {
 
     return (
         <Link href={`/products/${product.productId || product.id}`} className="block bg-white group relative">
-            <div className="relative w-full aspect-[4/5] overflow-hidden mb-3 bg-gray-100">
+            <div className={`relative w-full aspect-[4/5] overflow-hidden bg-gray-100 ${hideDetails ? 'mb-0' : 'mb-3'}`}>
                 {product.image ? (
                     <Image
                         src={product.image}
@@ -143,30 +144,32 @@ export default function ProductCard({ product }: ProductProps) {
                 </button>
             </div>
 
-            <div className="px-2 pb-2">
-                <div className="flex justify-between items-start mb-1">
-                    <div className="flex-1 pr-2">
-                        <h4 className="text-sm md:text-base font-medium tracking-tight text-neutral-900 line-clamp-2">
-                            {product.name}
-                        </h4>
-                        <p className="text-xs text-neutral-500 mt-1">
-                            #{product.productId || product.id}
-                        </p>
-                    </div>
-                    <div className="text-right">
-                        <p className="text-sm md:text-base font-normal text-neutral-900 whitespace-nowrap">
-                            {formatPrice(product.price)}
-                        </p>
-                        {product.original_price && (
-                            <p className="text-xs text-neutral-500 mt-0.5">
-                                ₹{typeof product.original_price === 'number'
-                                    ? product.original_price.toLocaleString()
-                                    : parseFloat(String(product.original_price)).toLocaleString()}
+            {!hideDetails && (
+                <div className="px-2 pb-2">
+                    <div className="flex justify-between items-start mb-1">
+                        <div className="flex-1 pr-2">
+                            <h4 className="text-sm md:text-base font-medium tracking-tight text-neutral-900 line-clamp-2">
+                                {product.name}
+                            </h4>
+                            <p className="text-xs text-neutral-500 mt-1">
+                                #{product.productId || product.id}
                             </p>
-                        )}
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm md:text-base font-normal text-neutral-900 whitespace-nowrap">
+                                {formatPrice(product.price)}
+                            </p>
+                            {product.original_price && (
+                                <p className="text-xs text-neutral-500 mt-0.5">
+                                    ₹{typeof product.original_price === 'number'
+                                        ? product.original_price.toLocaleString()
+                                        : parseFloat(String(product.original_price)).toLocaleString()}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </Link>
     );
 }
