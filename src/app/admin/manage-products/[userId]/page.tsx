@@ -694,7 +694,7 @@ export default function ManageProductsPage() {
 
             {/* Custom Delete Confirmation Modal */}
             {deleteConfirmation.isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
                     <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 animate-scaleIn">
                         <div className="flex flex-col items-center text-center">
                             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">

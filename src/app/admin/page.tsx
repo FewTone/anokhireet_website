@@ -5036,7 +5036,7 @@ To get these values:
 
                         {/* Create/Edit User Modal */}
                         {isUserModalOpen && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                                 <div className="bg-white rounded-lg max-w-md w-full">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
@@ -5288,7 +5288,7 @@ To get these values:
 
                         {/* Manage Products Modal */}
                         {isManageProductsModalOpen && selectedUserId && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                                 <div className="bg-white rounded-lg border border-gray-200 max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
                                     {/* Modal Header */}
                                     <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
@@ -5462,7 +5462,7 @@ To get these values:
 
                         {/* User Product Modal */}
                         {isUserProductModalOpen && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                                 <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
@@ -6017,7 +6017,7 @@ To get these values:
 
                         {/* Facet Add/Edit Modal */}
                         {isFacetModalOpen && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                                 <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
@@ -6189,7 +6189,7 @@ To get these values:
 
                         {/* Category Add/Edit Modal */}
                         {isCategoryModalOpen && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                                 <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
@@ -6304,7 +6304,7 @@ To get these values:
 
                         {/* Delete User Confirmation Modal */}
                         {deleteConfirmUser && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                                 <div className="bg-white rounded-lg border border-gray-200 max-w-md w-full">
                                     <div className="p-6">
                                         <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
@@ -6348,7 +6348,7 @@ To get these values:
 
                         {/* Hero Slide Add/Edit Modal */}
                         {isHeroModalOpen && (
-                            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                                 <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">

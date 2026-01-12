@@ -61,7 +61,7 @@ export default function MobileFilterSheet({
         <div className="fixed inset-0 z-[2000] lg:hidden">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black/50 transition-opacity"
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
                 onClick={onClose}
             />
 

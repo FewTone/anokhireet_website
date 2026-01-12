@@ -965,7 +965,8 @@ export default function ProductDetailPage() {
                                         value={inquiryForm.start_date}
                                         onChange={(e) => setInquiryForm({ ...inquiryForm, start_date: e.target.value })}
                                         min={new Date().toISOString().split('T')[0]}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                        onClick={(e) => (e.target as any).showPicker?.()}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
                                     />
                                 </div>
 
@@ -978,7 +979,8 @@ export default function ProductDetailPage() {
                                         value={inquiryForm.end_date}
                                         onChange={(e) => setInquiryForm({ ...inquiryForm, end_date: e.target.value })}
                                         min={inquiryForm.start_date || new Date().toISOString().split('T')[0]}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                                        onClick={(e) => (e.target as any).showPicker?.()}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
                                     />
                                 </div>
 
