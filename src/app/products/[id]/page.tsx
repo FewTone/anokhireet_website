@@ -44,8 +44,14 @@ export default function ProductDetailPage() {
         end_date: "",
     });
     const [submittingInquiry, setSubmittingInquiry] = useState(false);
+    const [isInWishlist, setIsInWishlist] = useState(false);
+    const [wishlistLoading, setWishlistLoading] = useState(false);
+    const [hasHistory, setHasHistory] = useState(false);
 
     useEffect(() => {
+        // specific check for history availability
+        setHasHistory(window.history.length > 1);
+
         if (productId) {
             loadProduct();
             checkLoginStatus();
@@ -61,6 +67,84 @@ export default function ProductDetailPage() {
             }, 500);
         }
     }, [productId, isLoggedIn, searchParams]);
+
+    // Check wishlist status
+    useEffect(() => {
+        const checkWishlist = async () => {
+            if (!isLoggedIn || !currentUser || !product?.db_id) return;
+
+            try {
+                const { data } = await supabase
+                    .from('wishlist')
+                    .select('id')
+                    .eq('user_id', currentUser.id)
+                    .eq('product_id', product.db_id)
+                    .maybeSingle(); // Use maybeSingle to avoid error if 0 rows
+
+                setIsInWishlist(!!data);
+            } catch (error) {
+                console.error('Error checking wishlist:', error);
+            }
+        };
+
+        checkWishlist();
+    }, [isLoggedIn, currentUser, product]);
+
+    const handleShare = async () => {
+        const shareData = {
+            title: product?.name || 'Snitch Product',
+            text: `Check out this product: ${product?.name}`,
+            url: window.location.href,
+        };
+
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                console.log('Error sharing:', err);
+            }
+        } else {
+            // Fallback
+            navigator.clipboard.writeText(window.location.href);
+            alert('Link copied to clipboard!');
+        }
+    };
+
+    const toggleWishlist = async () => {
+        if (!isLoggedIn) {
+            router.push(`/profile?returnUrl=${encodeURIComponent(window.location.pathname)}`);
+            return;
+        }
+
+        if (!product?.db_id || !currentUser?.id) return;
+
+        setWishlistLoading(true);
+        const newStatus = !isInWishlist;
+        // Optimistic update
+        setIsInWishlist(newStatus);
+
+        try {
+            if (newStatus) {
+                // Add to wishlist
+                await supabase.from('wishlist').insert({
+                    user_id: currentUser.id,
+                    product_id: product.db_id
+                });
+            } else {
+                // Remove from wishlist
+                await supabase.from('wishlist')
+                    .delete()
+                    .eq('user_id', currentUser.id)
+                    .eq('product_id', product.db_id);
+            }
+        } catch (error) {
+            console.error('Error toggling wishlist:', error);
+            // Revert on error
+            setIsInWishlist(!newStatus);
+        } finally {
+            setWishlistLoading(false);
+        }
+    };
 
     const checkLoginStatus = async () => {
         try {
@@ -86,6 +170,18 @@ export default function ProductDetailPage() {
         } catch (error) {
             console.error("Error checking login status:", error);
             setIsLoggedIn(false);
+        }
+    };
+
+    const handleBack = () => {
+        // Safer back navigation:
+        // 1. If we have history, try to go back
+        // 2. If referrer is from our own site, go back
+        // 3. Fallback to home
+        if (hasHistory || document.referrer.includes(window.location.host)) {
+            router.back();
+        } else {
+            router.push('/');
         }
     };
 
@@ -484,9 +580,56 @@ export default function ProductDetailPage() {
                                 {/* Mobile Image Carousel (Visible only on mobile) */}
                                 <div className="md:hidden w-full relative">
                                     <div
-                                        className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar aspect-[4/5] w-full bg-gray-100"
+                                        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-[4/5] w-full bg-gray-100 relative"
                                         onScroll={handleScroll}
                                     >
+                                        {/* Overlay Buttons for Mobile */}
+                                        <div className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-start pointer-events-none">
+                                            {/* Back Button */}
+                                            <button
+                                                onClick={handleBack}
+                                                className="w-10 h-10 flex items-center justify-center pointer-events-auto drop-shadow-sm"
+                                            >
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M15 18l-6-6 6-6" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Right Action Buttons */}
+                                            <div className="flex flex-col gap-4 pointer-events-auto items-center">
+                                                {/* Wishlist Button */}
+                                                <button
+                                                    onClick={toggleWishlist}
+                                                    disabled={wishlistLoading}
+                                                    className="w-10 h-10 flex items-center justify-center drop-shadow-sm transition-transform active:scale-95"
+                                                >
+                                                    <svg
+                                                        width="24"
+                                                        height="24"
+                                                        viewBox="0 0 24 24"
+                                                        fill={isInWishlist ? "red" : "none"}
+                                                        stroke={isInWishlist ? "red" : "black"}
+                                                        strokeWidth="1"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    >
+                                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                                    </svg>
+                                                </button>
+
+                                                {/* Share Button */}
+                                                <button
+                                                    onClick={handleShare}
+                                                    className="w-10 h-10 flex items-center justify-center drop-shadow-sm"
+                                                >
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                                        <polyline points="16 6 12 2 8 6" />
+                                                        <line x1="12" y1="2" x2="12" y2="15" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </div>
                                         {displayImages.map((img, index) => (
                                             <div
                                                 key={index}

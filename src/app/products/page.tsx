@@ -147,7 +147,7 @@ export default function ProductsPage() {
             if (type && !appliedProductTypes.includes(productTypeParam)) {
                 setPendingProductTypes([productTypeParam]);
                 setAppliedProductTypes([productTypeParam]);
-                // Don't set categoryName - always show "PRODUCTS"
+                setShowCategories(false); // Hide categories list to show filtered results
             }
         } else if (productTypeParam && appliedProductTypes.length === 0) {
             // Wait for product types to load
@@ -160,7 +160,7 @@ export default function ProductsPage() {
                     if (data) {
                         setPendingProductTypes([data.id]);
                         setAppliedProductTypes([data.id]);
-                        // Don't set categoryName - always show "PRODUCTS"
+                        setShowCategories(false); // Hide categories list to show filtered results
                     }
                 });
         }
@@ -171,7 +171,7 @@ export default function ProductsPage() {
             if (occasion && !appliedOccasions.includes(occasionParam)) {
                 setPendingOccasions([occasionParam]);
                 setAppliedOccasions([occasionParam]);
-                // Don't set categoryName - always show "PRODUCTS"
+                setShowCategories(false); // Hide categories list to show filtered results
             }
         } else if (occasionParam && appliedOccasions.length === 0) {
             // Wait for occasions to load
@@ -184,7 +184,7 @@ export default function ProductsPage() {
                     if (data) {
                         setPendingOccasions([data.id]);
                         setAppliedOccasions([data.id]);
-                        // Don't set categoryName - always show "PRODUCTS"
+                        setShowCategories(false); // Hide categories list to show filtered results
                     }
                 });
         }
@@ -637,6 +637,7 @@ export default function ProductsPage() {
     const handleMobileApply = () => {
         handleApplyFilters();
         setIsFilterOpen(false);
+        setShowCategories(false); // Switch to product view to see results
     };
 
     const handleMobileClear = () => {

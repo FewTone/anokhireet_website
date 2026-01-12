@@ -43,7 +43,6 @@ export default function Navbar() {
             <nav
                 className={`
                     top-0 left-0 w-full z-[1000] transition-all duration-300
-                    md:fixed md:bg-white md:shadow-[0.1rem_0.1rem_0.2rem_rgb(119,118,118)]
                     ${isHomePage
                         ? 'absolute bg-transparent shadow-none'
                         : 'fixed bg-white shadow-[0.1rem_0.1rem_0.2rem_rgb(119,118,118)]'
@@ -64,7 +63,7 @@ export default function Navbar() {
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
-                                strokeWidth="1.5"
+                                strokeWidth="1"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                             >
@@ -84,7 +83,7 @@ export default function Navbar() {
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
-                                strokeWidth="1.5"
+                                strokeWidth="1"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                             >
@@ -122,14 +121,10 @@ export default function Navbar() {
                     <div className="flex flex-1 justify-end items-center gap-4">
                         {!pathname?.startsWith("/chat") && (
                             <form onSubmit={handleSearch} className="flex max-w-[250px] h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
-                                <Image
-                                    src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
-                                    alt="search"
-                                    width={18}
-                                    height={18}
-                                    className="opacity-60"
-                                    suppressHydrationWarning
-                                />
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 text-gray-500">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
                                 <input
                                     type="search"
                                     placeholder="Search by Product ID or Name"
@@ -143,13 +138,10 @@ export default function Navbar() {
                         )}
                         <button className="bg-transparent border-none cursor-pointer">
                             <Link href="/profile">
-                                <Image
-                                    src="https://cdn-icons-png.flaticon.com/128/9308/9308008.png"
-                                    alt="profile"
-                                    width={24}
-                                    height={24}
-                                    suppressHydrationWarning
-                                />
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-black">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
                             </Link>
                         </button>
                         {!pathname?.startsWith("/chat") && (
@@ -160,7 +152,7 @@ export default function Navbar() {
                                     viewBox="0 0 24 24"
                                     fill="none"
                                     stroke="currentColor"
-                                    strokeWidth="1.5"
+                                    strokeWidth="1"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                     className="text-black"
@@ -178,8 +170,8 @@ export default function Navbar() {
                 {isHomePage || pathname?.startsWith("/products") ? (
                     // Home Page Overlay Layout OR Products Page Layout (Same structure, diff style)
                     <div className={`md:hidden pt-4 px-4 ${isHomePage
-                            ? "pb-24 bg-gradient-to-b from-black via-black/70 to-transparent"
-                            : "pb-2 bg-white border-b border-gray-100" // Reduced padding, no shadow
+                        ? "pb-24 bg-gradient-to-b from-black via-black/70 to-transparent"
+                        : "pb-2 bg-white border-b border-gray-100" // Reduced padding, no shadow
                         }`}>
                         {!pathname?.startsWith("/chat") && (
                             <div className="flex items-center gap-3">
@@ -198,14 +190,10 @@ export default function Navbar() {
                                     ? "border-white/30 backdrop-blur-sm bg-white/10"
                                     : "border-gray-200 bg-gray-50"
                                     }`}>
-                                    <Image
-                                        src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
-                                        alt="search"
-                                        width={18}
-                                        height={18}
-                                        className={`opacity-70 ${isHomePage ? "invert" : ""}`}
-                                        suppressHydrationWarning
-                                    />
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`opacity-70 ${isHomePage ? "text-white" : "text-gray-500"}`}>
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
                                     <input
                                         type="search"
                                         placeholder="Search"
@@ -224,7 +212,7 @@ export default function Navbar() {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         stroke="currentColor"
-                                        strokeWidth="1.5"
+                                        strokeWidth="1"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                     >
@@ -262,14 +250,10 @@ export default function Navbar() {
                         {!pathname?.startsWith("/chat") && (
                             <div className="flex items-center gap-2">
                                 <form onSubmit={handleSearch} className="flex flex-1 h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
-                                    <Image
-                                        src="https://cdn-icons-png.flaticon.com/128/54/54481.png"
-                                        alt="search"
-                                        width={18}
-                                        height={18}
-                                        className="opacity-60"
-                                        suppressHydrationWarning
-                                    />
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 text-black">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
                                     <input
                                         type="search"
                                         placeholder="Search by Product ID or Name"
@@ -287,7 +271,7 @@ export default function Navbar() {
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         stroke="currentColor"
-                                        strokeWidth="1.5"
+                                        strokeWidth="1"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                     >
