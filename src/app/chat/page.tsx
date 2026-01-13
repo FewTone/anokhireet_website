@@ -736,10 +736,7 @@ export default function ChatPage() {
                                                         </div>
                                                     )}
                                                     <div className={`flex ${isSent ? "justify-end" : "justify-start"}`}>
-                                                        <div className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 shadow-sm ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-1"} ${isSent ? "bg-black text-white rounded-lg rounded-tr-none" : "bg-white border border-gray-100 rounded-lg rounded-tl-none"}`}>
-                                                            {showAvatar && (
-                                                                <div className={`absolute top-0 w-2 h-2.5 ${isSent ? "-right-1.5 bg-black" : "-left-1.5 bg-white border-l border-t border-gray-100"}`} style={{ clipPath: isSent ? "polygon(0 0, 0 100%, 100% 0)" : "polygon(100% 0, 0 0, 100% 100%)" }} />
-                                                            )}
+                                                        <div className={`relative min-w-[100px] max-w-[85%] md:max-w-[65%] px-4 py-2 shadow-sm ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-1"} ${isSent ? "bg-gray-100 text-gray-900 rounded-2xl rounded-tr-sm" : "bg-white border border-gray-100 rounded-2xl rounded-tl-sm"}`}>
                                                             {renderMessageContent(message)}
                                                             <div className="flex items-center justify-end gap-1 mt-0.5">
                                                                 <span className="text-[10px] text-gray-500 uppercase">{formatTime(message.created_at)}</span>

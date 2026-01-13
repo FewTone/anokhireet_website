@@ -396,7 +396,7 @@ export default function Home() {
                                 className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap 
                   ${activeTab === tab
                                         ? "bg-black text-white"
-                                        : "bg-white hover:bg-[#f0f0f0]"
+                                        : "bg-white"
                                     }`}
                             >
                                 {tab}

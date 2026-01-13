@@ -1274,6 +1274,7 @@ export default function ProductsPage() {
                                             key={product.id}
                                             product={product}
                                             hideDetails={viewMode === 'grid3'}
+                                            disableHover={true}
                                         />
                                     ))}
                                 </div>

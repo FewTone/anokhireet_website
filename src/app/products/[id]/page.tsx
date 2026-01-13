@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -38,10 +38,15 @@ export default function ProductDetailPage() {
     const [selectedImage, setSelectedImage] = useState<string>("");
     const [productImages, setProductImages] = useState<string[]>([]);
     const [activeImageIndex, setActiveImageIndex] = useState(0);
-    // Removed expandedSections - no longer needed
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+        availability: false,
+        details: false,
+        occasion: false
+    });
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
+    const endDateInputRef = useRef<HTMLInputElement>(null);
     const [inquiryForm, setInquiryForm] = useState({
         start_date: "",
         end_date: "",
@@ -416,6 +421,12 @@ export default function ProductDetailPage() {
         setShowInquiryModal(true);
     };
 
+    const getMaxEndDate = (startDate: string) => {
+        if (!startDate) return undefined;
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + 6);
+        return date.toISOString().split('T')[0];
+    };
 
     const handleSubmitInquiry = async () => {
         if (!product || !currentUser || !product.db_id || !product.owner_user_id) {
@@ -433,6 +444,17 @@ export default function ProductDetailPage() {
 
         if (endDate <= startDate) {
             alert("End date must be after start date");
+            return;
+        }
+
+        // Check max duration (6 days)
+        const start = new Date(inquiryForm.start_date);
+        const end = new Date(inquiryForm.end_date);
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 6) {
+            alert("Maximum rental duration is 6 days.");
             return;
         }
 
@@ -626,7 +648,7 @@ export default function ProductDetailPage() {
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6">
                         {/* Main Content - Product Images with Thumbnails on Left */}
-                        <div className="lg:col-span-8">
+                        <div className="lg:col-span-7">
                             <div className="flex flex-col md:flex-row gap-4">
                                 {/* Mobile Image Carousel (Visible only on mobile) */}
                                 <div className="md:hidden w-full relative">
@@ -733,7 +755,7 @@ export default function ProductDetailPage() {
                                         {backLabel}
                                     </button>
 
-                                    <div className="flex gap-6 justify-center items-start">
+                                    <div className="flex gap-6 justify-end items-start px-4">
                                         {/* Left Side - Small Thumbnail Images (Vertical Column) */}
                                         <div className="flex flex-col gap-3 w-20 flex-shrink-0 pt-2">
                                             {displayImages.map((img, index) => (
@@ -833,7 +855,7 @@ export default function ProductDetailPage() {
                         </div>
 
                         {/* Right Sidebar - Product Information */}
-                        <div className="lg:col-span-4 px-4 md:px-0 mt-0 lg:mt-12">
+                        <div className="lg:col-span-5 px-4 md:px-0 mt-0 lg:mt-12">
                             <div className="sticky top-24">
                                 <div className="bg-white space-y-6">
                                     <div>
@@ -847,14 +869,42 @@ export default function ProductDetailPage() {
                                                     {product.price && !product.price.startsWith('₹') ? `₹${product.price.replace(/[₹,]/g, '')}` : product.price}
                                                 </span>
                                             </div>
-                                            {product.original_price && (
-                                                <div className="flex items-baseline gap-2">
-                                                    <span className="text-sm text-gray-500">Original Price</span>
-                                                    <span className="text-xl text-gray-600">
-                                                        ₹{typeof product.original_price === 'number' ? product.original_price.toLocaleString() : parseFloat(String(product.original_price)).toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            )}
+                                            <div className="flex flex-col gap-2">
+                                                {product.original_price && (
+                                                    <div className="flex items-baseline gap-2">
+                                                        <span className="text-sm text-gray-500">Original Price</span>
+                                                        <span className="text-xl text-gray-600">
+                                                            ₹{typeof product.original_price === 'number' ? product.original_price.toLocaleString() : parseFloat(String(product.original_price)).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {currentUser && product.owner_user_id && currentUser.id === product.owner_user_id ? (
+                                                    <div className="mt-4">
+                                                        <button
+                                                            disabled
+                                                            className="w-full bg-gray-100 text-gray-500 font-semibold py-4 px-6 cursor-not-allowed border border-gray-200"
+                                                        >
+                                                            Your Product
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="grid grid-cols-2 gap-3 mt-4">
+                                                        <button
+                                                            onClick={handleMakeInquiry}
+                                                            className="bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity text-center text-sm md:text-base"
+                                                        >
+                                                            Make Inquiry
+                                                        </button>
+                                                        <button
+                                                            onClick={handleMakeInquiry}
+                                                            className="bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity text-center text-sm md:text-base"
+                                                        >
+                                                            Send Msg
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Product Details */}
@@ -872,82 +922,146 @@ export default function ProductDetailPage() {
                                                     </div>
                                                 </Link>
                                             )}
-                                            <div>
-                                                <h3 className="text-sm font-semibold text-gray-700 mb-3">Product Information</h3>
-                                                <div className="space-y-3 text-sm text-gray-600">
-                                                    {product.productId && (
-                                                        <div>
-                                                            <span className="font-medium text-gray-700">Product ID:</span>
-                                                            <p className="mt-1">{product.productId}</p>
-                                                        </div>
-                                                    )}
-
-                                                    {product.category && (
-                                                        <div>
-                                                            <span className="font-medium text-gray-700">Category:</span>
-                                                            <p className="mt-1">{product.category}</p>
-                                                        </div>
-                                                    )}
-                                                    {product.productTypes && product.productTypes.length > 0 && (
-                                                        <div>
-                                                            <span className="font-medium text-gray-700">Product Type:</span>
-                                                            <p className="mt-1">{product.productTypes.join(", ")}</p>
-                                                        </div>
-                                                    )}
-                                                    {product.occasions && product.occasions.length > 0 && (
-                                                        <div>
-                                                            <span className="font-medium text-gray-700">Occasion:</span>
-                                                            <p className="mt-1">{product.occasions.join(", ")}</p>
-                                                        </div>
-                                                    )}
-                                                    {product.colors && product.colors.length > 0 && (
-                                                        <div>
-                                                            <span className="font-medium text-gray-700">Color:</span>
-                                                            <div className="flex gap-2 mt-1">
-                                                                {product.colors.map((color, index) => (
-                                                                    <div
-                                                                        key={index}
-                                                                        className="w-6 h-6 rounded border border-gray-300"
-                                                                        style={{ backgroundColor: color.hex || color.name }}
-                                                                        title={color.name}
-                                                                    />
-                                                                ))}
+                                            {/* Product Information Accordion */}
+                                            <div className="space-y-0 border-t border-gray-200 pt-2">
+                                                {/* Availability Section */}
+                                                <div className="border-b border-gray-100">
+                                                    <button
+                                                        onClick={() => setExpandedSections(prev => ({ ...prev, availability: !prev.availability }))}
+                                                        className="w-full flex items-center justify-between py-4 text-left group"
+                                                    >
+                                                        <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Availability</span>
+                                                        <svg
+                                                            width="20"
+                                                            height="20"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.5"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.availability ? 'rotate-180' : ''}`}
+                                                        >
+                                                            <path d="M6 9l6 6 6-6" />
+                                                        </svg>
+                                                    </button>
+                                                    {expandedSections.availability && product.cities && product.cities.length > 0 && (
+                                                        <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                            <div className="space-y-3 text-sm text-gray-600">
+                                                                <div>
+                                                                    <span className="font-medium text-gray-700">Available City:</span>
+                                                                    <p className="mt-1">{product.cities.join(", ")}</p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     )}
-                                                    {product.materials && product.materials.length > 0 && (
-                                                        <div>
-                                                            <span className="font-medium text-gray-700">Material:</span>
-                                                            <p className="mt-1">{product.materials.join(", ")}</p>
+                                                </div>
+
+                                                {/* Product Details Section */}
+                                                <div className="border-b border-gray-100">
+                                                    <button
+                                                        onClick={() => setExpandedSections(prev => ({ ...prev, details: !prev.details }))}
+                                                        className="w-full flex items-center justify-between py-4 text-left group"
+                                                    >
+                                                        <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Product Details</span>
+                                                        <svg
+                                                            width="20"
+                                                            height="20"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.5"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.details ? 'rotate-180' : ''}`}
+                                                        >
+                                                            <path d="M6 9l6 6 6-6" />
+                                                        </svg>
+                                                    </button>
+                                                    {expandedSections.details && (
+                                                        <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                            <div className="space-y-4 text-sm text-gray-600">
+                                                                {product.productId && (
+                                                                    <div>
+                                                                        <span className="font-medium text-gray-700">Product ID:</span>
+                                                                        <p className="mt-1 font-mono text-[12px]">{product.productId}</p>
+                                                                    </div>
+                                                                )}
+
+                                                                {product.category && (
+                                                                    <div>
+                                                                        <span className="font-medium text-gray-700">Category:</span>
+                                                                        <p className="mt-1">{product.category}</p>
+                                                                    </div>
+                                                                )}
+                                                                {product.productTypes && product.productTypes.length > 0 && (
+                                                                    <div>
+                                                                        <span className="font-medium text-gray-700">Product Type:</span>
+                                                                        <p className="mt-1">{product.productTypes.join(", ")}</p>
+                                                                    </div>
+                                                                )}
+                                                                {product.colors && product.colors.length > 0 && (
+                                                                    <div>
+                                                                        <span className="font-medium text-gray-700">Color:</span>
+                                                                        <div className="flex gap-2 mt-1">
+                                                                            {product.colors.map((color, index) => (
+                                                                                <div
+                                                                                    key={index}
+                                                                                    className="w-6 h-6 rounded border border-gray-300"
+                                                                                    style={{ backgroundColor: color.hex || color.name }}
+                                                                                    title={color.name}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                                {product.materials && product.materials.length > 0 && (
+                                                                    <div>
+                                                                        <span className="font-medium text-gray-700">Material:</span>
+                                                                        <p className="mt-1">{product.materials.join(", ")}</p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     )}
-                                                    {product.cities && product.cities.length > 0 && (
-                                                        <div>
-                                                            <span className="font-medium text-gray-700">Available City:</span>
-                                                            <p className="mt-1">{product.cities.join(", ")}</p>
+                                                </div>
+
+                                                {/* Occasion Section */}
+                                                <div className="border-b border-gray-100">
+                                                    <button
+                                                        onClick={() => setExpandedSections(prev => ({ ...prev, occasion: !prev.occasion }))}
+                                                        className="w-full flex items-center justify-between py-4 text-left group"
+                                                    >
+                                                        <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Occasion</span>
+                                                        <svg
+                                                            width="20"
+                                                            height="20"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.5"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.occasion ? 'rotate-180' : ''}`}
+                                                        >
+                                                            <path d="M6 9l6 6 6-6" />
+                                                        </svg>
+                                                    </button>
+                                                    {expandedSections.occasion && product.occasions && product.occasions.length > 0 && (
+                                                        <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                            <div className="space-y-3 text-sm text-gray-600">
+                                                                <div>
+                                                                    <p className="mt-1">{product.occasions.join(", ")}</p>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            {/* Make Inquiry Button */}
-                                            {/* Make Inquiry Button */}
-                                            <div className="border-t border-gray-200 pt-4">
-                                                {currentUser && product.owner_user_id && currentUser.id === product.owner_user_id ? (
-                                                    <button
-                                                        disabled
-                                                        className="w-full bg-gray-200 text-gray-500 font-semibold py-4 px-6 cursor-not-allowed"
-                                                    >
-                                                        Your Product
-                                                    </button>
-                                                ) : (
-                                                    <button
-                                                        onClick={handleMakeInquiry}
-                                                        className="w-full bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity"
-                                                    >
-                                                        Make Inquiry
-                                                    </button>
-                                                )}
+                                            {/* Bottom bar space removed per user request to move buttons up */}
+                                            <div className="pt-2">
+                                                {/* Clean space below accordions */}
                                             </div>
                                         </div>
                                     </div>
@@ -963,7 +1077,7 @@ export default function ProductDetailPage() {
             {
                 showInquiryModal && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-lg max-w-md w-full p-6 relative">
+                        <div className="bg-white rounded-none max-w-md w-full p-6 relative">
                             <button
                                 onClick={() => {
                                     setShowInquiryModal(false);
@@ -987,10 +1101,21 @@ export default function ProductDetailPage() {
                                     <input
                                         type="date"
                                         value={inquiryForm.start_date}
-                                        onChange={(e) => setInquiryForm({ ...inquiryForm, start_date: e.target.value })}
+                                        onChange={(e) => {
+                                            const newDate = e.target.value;
+                                            setInquiryForm({ ...inquiryForm, start_date: newDate });
+                                            // Auto open end date picker after a short delay to allow state update
+                                            if (newDate) {
+                                                setTimeout(() => {
+                                                    if (endDateInputRef.current) {
+                                                        (endDateInputRef.current as any).showPicker?.();
+                                                    }
+                                                }, 100);
+                                            }
+                                        }}
                                         min={new Date().toISOString().split('T')[0]}
                                         onClick={(e) => (e.target as any).showPicker?.()}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-none focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
                                     />
                                 </div>
 
@@ -999,19 +1124,27 @@ export default function ProductDetailPage() {
                                         End Date <span className="text-red-500">*</span>
                                     </label>
                                     <input
+                                        ref={endDateInputRef}
                                         type="date"
                                         value={inquiryForm.end_date}
                                         onChange={(e) => setInquiryForm({ ...inquiryForm, end_date: e.target.value })}
                                         min={inquiryForm.start_date || new Date().toISOString().split('T')[0]}
+                                        max={getMaxEndDate(inquiryForm.start_date)}
                                         onClick={(e) => (e.target as any).showPicker?.()}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-none focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
                                     />
                                 </div>
+
+                                {inquiryForm.start_date && (
+                                    <p className="text-[12px] text-gray-500 mt-[-10px] mb-4">
+                                        * Maximum 6 days allowed (Max: {new Date(getMaxEndDate(inquiryForm.start_date)!).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })})
+                                    </p>
+                                )}
 
                                 <button
                                     onClick={handleSubmitInquiry}
                                     disabled={submittingInquiry || !inquiryForm.start_date || !inquiryForm.end_date}
-                                    className="w-full bg-black text-white font-semibold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+                                    className="w-full bg-black text-white font-semibold py-3 px-4 rounded-none hover:opacity-90 transition-opacity disabled:opacity-50"
                                 >
                                     {submittingInquiry ? "Submitting..." : "Submit Inquiry"}
                                 </button>
