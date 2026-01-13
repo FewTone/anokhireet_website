@@ -176,6 +176,31 @@ export default function ProductDetailPage() {
         }
     };
 
+    const [backLabel, setBackLabel] = useState("Back");
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const referrer = document.referrer;
+            if (referrer.includes(window.location.host)) {
+                if (referrer.endsWith('/')) {
+                    setBackLabel("Home");
+                } else if (referrer.includes('/profile')) {
+                    setBackLabel("Profile");
+                } else if (referrer.includes('/user')) {
+                    setBackLabel("Dashboard");
+                } else if (referrer.includes('/products')) {
+                    setBackLabel("Collection");
+                } else if (referrer.includes('/wishlist')) {
+                    setBackLabel("Wishlist");
+                } else if (referrer.includes('/cart')) {
+                    setBackLabel("Cart");
+                } else if (referrer.includes('/search')) {
+                    setBackLabel("Search");
+                }
+            }
+        }
+    }, [productId]);
+
     const handleBack = () => {
         // Safer back navigation:
         // 1. If we have history, try to go back
@@ -560,7 +585,7 @@ export default function ProductDetailPage() {
         return (
             <>
                 <Navbar />
-                <main className="min-h-screen pt-20 pb-12">
+                <main className="min-h-screen pb-12">
                     <div className="text-center py-12">
                         <p className="text-gray-500">Loading product...</p>
                     </div>
@@ -574,7 +599,7 @@ export default function ProductDetailPage() {
         return (
             <>
                 <Navbar />
-                <main className="min-h-screen pt-20 pb-12">
+                <main className="min-h-screen pb-12">
                     <div className="text-center py-12">
                         <p className="text-gray-500 mb-4">Product not found</p>
                         <button
@@ -598,9 +623,9 @@ export default function ProductDetailPage() {
             <div className="hidden md:block">
                 <Navbar />
             </div>
-            <main className="min-h-screen pt-0 md:pt-20 pb-12">
+            <main className="min-h-screen pt-0 pb-12">
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6">
                         {/* Main Content - Product Images with Thumbnails on Left */}
                         <div className="lg:col-span-8">
                             <div className="flex flex-col md:flex-row gap-4">
@@ -706,7 +731,7 @@ export default function ProductDetailPage() {
                                             <path d="M19 12H5" />
                                             <path d="M12 19l-7-7 7-7" />
                                         </svg>
-                                        Back
+                                        {backLabel}
                                     </button>
 
                                     <div className="flex gap-6 justify-center items-start">
@@ -809,7 +834,7 @@ export default function ProductDetailPage() {
                         </div>
 
                         {/* Right Sidebar - Product Information */}
-                        <div className="lg:col-span-4 px-4 md:px-0">
+                        <div className="lg:col-span-4 px-4 md:px-0 mt-0 lg:mt-12">
                             <div className="sticky top-24">
                                 <div className="bg-white space-y-6">
                                     <div>

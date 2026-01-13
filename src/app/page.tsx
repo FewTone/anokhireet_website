@@ -410,7 +410,7 @@ export default function Home() {
                             <p className="text-gray-500">Loading products...</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6 w-full">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full">
                             {filteredProducts.map((product) => (
                                 <ProductCard key={product.id} product={product} disableHover={true} />
                             ))}
