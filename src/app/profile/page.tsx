@@ -760,6 +760,7 @@ export default function Profile() {
                                                 name={`otp-${index}`}
                                                 type="text"
                                                 maxLength={1}
+                                                autoComplete="off"
                                                 value={otp[index] || ""}
                                                 onChange={(e) => {
                                                     const value = e.target.value.replace(/\D/g, "");
