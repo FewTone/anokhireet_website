@@ -27,6 +27,7 @@ export default function ProfileView({
 }: ProfileViewProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [formData, setFormData] = useState({
         location: userLocation || "",
         gender: userGender || "",
@@ -41,9 +42,20 @@ export default function ProfileView({
         });
     }, [userLocation, userGender, userBirthdate]);
 
+    // Clear status message after 3 seconds
+    useEffect(() => {
+        if (statusMessage) {
+            const timer = setTimeout(() => {
+                setStatusMessage(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [statusMessage]);
+
     const handleSave = async () => {
         if (!userId) return;
         setLoading(true);
+        setStatusMessage(null);
 
         try {
             const { error } = await supabase
@@ -59,10 +71,10 @@ export default function ProfileView({
 
             setIsEditing(false);
             if (onUpdate) onUpdate();
-            alert("Profile updated successfully!");
+            setStatusMessage({ type: 'success', text: 'Profile updated successfully!' });
         } catch (error) {
             console.error("Error updating profile:", error);
-            alert("Failed to update profile.");
+            setStatusMessage({ type: 'error', text: 'Failed to update profile.' });
         } finally {
             setLoading(false);
         }
@@ -74,8 +86,10 @@ export default function ProfileView({
 
             <div className="bg-white border border-gray-100 rounded-lg p-8 max-w-xl">
                 <div className="space-y-6">
+                    {/* ... (existing fields) ... */}
                     {/* Read-only Fields */}
                     <div className="grid md:grid-cols-2 gap-6">
+                        {/* ... */}
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
                                 Full Name
@@ -179,38 +193,46 @@ export default function ProfileView({
                         </div>
                     </div>
 
-                    <div className="pt-4 flex gap-4">
-                        {!isEditing ? (
-                            <button
-                                onClick={() => setIsEditing(true)}
-                                className="px-8 py-3 bg-black text-white text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
-                            >
-                                Edit Profile
-                            </button>
-                        ) : (
-                            <>
+                    <div className="pt-4 flex flex-col gap-4">
+                        <div className="flex gap-4">
+                            {!isEditing ? (
                                 <button
-                                    onClick={handleSave}
-                                    disabled={loading}
-                                    className="px-8 py-3 bg-black text-white text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                    onClick={() => setIsEditing(true)}
+                                    className="px-8 py-3 bg-black text-white text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
                                 >
-                                    {loading ? "Saving..." : "Save Changes"}
+                                    Edit Profile
                                 </button>
-                                <button
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setFormData({
-                                            location: userLocation || "",
-                                            gender: userGender || "",
-                                            birthdate: userBirthdate || ""
-                                        });
-                                    }}
-                                    disabled={loading}
-                                    className="px-8 py-3 bg-gray-200 text-gray-900 text-sm font-bold uppercase tracking-wide hover:bg-gray-300 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                            </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={loading}
+                                        className="px-8 py-3 bg-black text-white text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                    >
+                                        {loading ? "Saving..." : "Save Changes"}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsEditing(false);
+                                            setFormData({
+                                                location: userLocation || "",
+                                                gender: userGender || "",
+                                                birthdate: userBirthdate || ""
+                                            });
+                                            setStatusMessage(null);
+                                        }}
+                                        disabled={loading}
+                                        className="px-8 py-3 bg-gray-200 text-gray-900 text-sm font-bold uppercase tracking-wide hover:bg-gray-300 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                        {statusMessage && (
+                            <div className={`text-sm ${statusMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                                {statusMessage.text}
+                            </div>
                         )}
                     </div>
                 </div>
