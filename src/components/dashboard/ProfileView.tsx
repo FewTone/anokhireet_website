@@ -152,15 +152,27 @@ export default function ProfileView({
                             )}
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                        <div
+                            onClick={() => {
+                                if (isEditing) {
+                                    const input = document.getElementById('birthdate-input') as HTMLInputElement;
+                                    if (input && 'showPicker' in input) {
+                                        input.showPicker();
+                                    }
+                                }
+                            }}
+                            className={isEditing ? "cursor-pointer" : ""}
+                        >
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 pointer-events-none">
                                 Birthdate
                             </label>
                             <input
+                                id="birthdate-input"
                                 type="date"
                                 value={formData.birthdate}
                                 onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
                                 disabled={!isEditing}
+                                max={new Date().toISOString().split("T")[0]}
                                 className={`w-full text-gray-900 border-b pb-2 focus:outline-none transition-colors h-9 ${isEditing ? "border-black bg-white" : "border-gray-100 bg-transparent"
                                     }`}
                             />

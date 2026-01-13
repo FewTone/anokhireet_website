@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -26,6 +26,15 @@ export default function UserPage() {
     const [loading, setLoading] = useState(true);
     const [activeView, setActiveView] = useState<View>("my-products");
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Effect for active view from URL
+    useEffect(() => {
+        const viewParam = searchParams.get("view");
+        if (viewParam) {
+            setActiveView(viewParam as View);
+        }
+    }, [searchParams]);
 
     // Effect for handling loading timeout
     useEffect(() => {
@@ -181,7 +190,10 @@ export default function UserPage() {
                             {navItems.map((item, index) => (
                                 <button
                                     key={index}
-                                    onClick={() => setActiveView(item.id)}
+                                    onClick={() => {
+                                        setActiveView(item.id);
+                                        router.push(`/user?view=${item.id}`, { scroll: false });
+                                    }}
                                     className={`flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors w-full text-left ${activeView === item.id
                                         ? "bg-white text-black shadow-sm"
                                         : "text-gray-600 hover:bg-gray-100"
