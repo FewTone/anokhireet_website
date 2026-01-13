@@ -566,7 +566,6 @@ export default function ProductDetailPage() {
                 // Don't fail the inquiry if message creation fails
             }
 
-            alert("Inquiry submitted successfully! You can now chat with the owner.");
             setShowInquiryModal(false);
             setInquiryForm({ start_date: "", end_date: "" });
 

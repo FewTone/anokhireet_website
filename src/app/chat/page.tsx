@@ -417,15 +417,20 @@ export default function ChatPage() {
             .on("presence", { event: "sync" }, () => {
                 const state = channel.presenceState();
                 const otherUsers = Object.keys(state).filter(id => id !== currentUser?.id);
+                // Check if any presence state for other users has typing: true
                 const isAnyTyping = otherUsers.some(id => {
-                    const presence = state[id] as any;
-                    return presence[0]?.typing === true;
+                    const presences = state[id] as any[];
+                    return presences.some(p => p.typing === true);
                 });
                 setOtherUserTyping(isAnyTyping);
             })
-            .subscribe();
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    // Start tracking ONLY after subscribed
+                    chatChannelRef.current = channel;
+                }
+            });
 
-        chatChannelRef.current = channel;
         return channel;
     };
 
@@ -572,7 +577,7 @@ export default function ChatPage() {
                             (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Expired';
                         }}
                     />
-                    {msg.message && <p className="text-[14.5px] leading-[19px] text-[#111b21] whitespace-pre-wrap break-words mt-1">{msg.message}</p>}
+                    {msg.message && <p className="text-[14.5px] leading-[19px] whitespace-pre-wrap break-words mt-1">{msg.message}</p>}
                 </div>
             );
         }
@@ -611,13 +616,13 @@ export default function ChatPage() {
             );
         }
 
-        return <p className="text-[14.5px] leading-[19px] text-[#111b21] whitespace-pre-wrap break-words">{messageContent}</p>;
+        return <p className="text-[14.5px] leading-[19px] whitespace-pre-wrap break-words">{messageContent}</p>;
     };
 
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-50">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#25d366]"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
             </div>
         );
     }
@@ -628,7 +633,7 @@ export default function ChatPage() {
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
                     <h2 className="text-2xl font-bold mb-4">Please log in to chat</h2>
-                    <button onClick={() => router.push("/profile")} className="bg-[#25d366] text-white px-6 py-2 rounded-full font-semibold hover:bg-green-600">
+                    <button onClick={() => router.push("/profile")} className="bg-black text-white px-6 py-2 rounded-full font-semibold hover:opacity-90">
                         Log In
                     </button>
                 </div>
@@ -639,13 +644,13 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-[#f0f2f5]">
+        <div className="flex-1 flex flex-col h-screen bg-white">
             <Navbar />
-            <div className="flex-1 flex flex-col overflow-hidden max-w-[1600px] mx-auto w-full md:p-5">
-                <div className="flex-1 flex bg-white shadow-lg overflow-hidden md:rounded-lg">
+            <div className="flex-1 flex flex-col overflow-hidden w-full">
+                <div className="flex-1 flex bg-white overflow-hidden">
                     {/* Chat List Sidebar */}
                     <div className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
-                        <div className="bg-[#f0f2f5] px-4 py-3 flex items-center justify-between border-b border-gray-200">
+                        <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
                             <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
                                 <span className="text-gray-600 font-semibold">{currentUser.name.charAt(0).toUpperCase()}</span>
                             </div>
@@ -661,17 +666,32 @@ export default function ChatPage() {
                                     const isSelected = selectedChat?.id === chat.id;
                                     const productName = chat.inquiry?.product?.title || chat.inquiry?.product?.name || "Product";
                                     return (
-                                        <div key={chat.id} onClick={() => setSelectedChat(chat)} className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? "bg-[#f0f2f5]" : "bg-white hover:bg-gray-50"}`}>
+                                        <div key={chat.id} onClick={() => setSelectedChat(chat)} className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? "bg-gray-50" : "bg-white hover:bg-gray-50"}`}>
                                             <div className="flex items-start gap-3">
-                                                <div className="w-12 h-12 rounded-full bg-[#25d366] flex items-center justify-center text-white font-semibold text-lg">{chat.other_user?.name?.charAt(0).toUpperCase()}</div>
+                                                <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white font-semibold text-lg">{chat.other_user?.name?.charAt(0).toUpperCase()}</div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between">
                                                         <h3 className="text-[15px] font-semibold text-gray-900 truncate">{chat.other_user?.name}</h3>
-                                                        {chat.last_message && <span className={`text-[12px] ${chat.unread_count > 0 ? "text-[#25d366]" : "text-gray-500"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
+                                                        {chat.last_message && <span className={`text-[12px] ${chat.unread_count > 0 ? "text-black" : "text-gray-500"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
                                                     </div>
                                                     <div className="flex items-center justify-between">
-                                                        <p className="text-[13.5px] text-gray-500 truncate">{chat.last_message?.message || productName}</p>
-                                                        {chat.unread_count > 0 && <div className="bg-[#25d366] text-white text-[11px] font-bold min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1">{chat.unread_count}</div>}
+                                                        <p className="text-[13.5px] text-gray-500 truncate">
+                                                            {(() => {
+                                                                const msg = chat.last_message?.message;
+                                                                if (!msg) return productName;
+                                                                try {
+                                                                    if (msg.trim().startsWith('{') && msg.trim().endsWith('}')) {
+                                                                        const parsed = JSON.parse(msg);
+                                                                        if (parsed.type === 'inquiry_card') {
+                                                                            return `Inquiry for ${parsed.product.name}`;
+                                                                        }
+                                                                        return parsed.text || "Sent an attachment";
+                                                                    }
+                                                                } catch (e) { }
+                                                                return msg;
+                                                            })()}
+                                                        </p>
+                                                        {chat.unread_count > 0 && <div className="bg-black text-white text-[11px] font-bold min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1">{chat.unread_count}</div>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -686,19 +706,19 @@ export default function ChatPage() {
                     <div className={`flex-1 flex flex-col ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
                         {selectedChat ? (
                             <>
-                                <div className="bg-[#f0f2f5] px-4 py-3 border-b border-gray-200 flex items-center gap-3">
+                                <div className="bg-white px-4 py-3 border-b border-gray-200 flex items-center gap-3">
                                     <button onClick={() => setSelectedChat(null)} className="md:hidden p-2 -ml-2 text-gray-600"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg></button>
-                                    <div className="w-10 h-10 rounded-full bg-[#25d366] flex items-center justify-center text-white font-semibold">{selectedChat.other_user?.name?.charAt(0).toUpperCase()}</div>
+                                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-semibold">{selectedChat.other_user?.name?.charAt(0).toUpperCase()}</div>
                                     <div>
                                         <h3 className="text-[15px] font-semibold text-gray-900">{selectedChat.other_user?.name}</h3>
                                         <p className="text-[12px] text-gray-500">
                                             {otherUserTyping ? (
-                                                <span className="text-[#00a884] font-medium animate-pulse">typing...</span>
+                                                <span className="text-black font-medium animate-pulse">typing...</span>
                                             ) : "Online"}
                                         </p>
                                     </div>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-4 bg-[#efeae2] relative" style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundRepeat: "repeat" }}>
+                                <div className="flex-1 overflow-y-auto p-4 bg-gray-50 relative">
                                     <div className="space-y-1">
                                         {messages.map((message, index) => {
                                             const isSent = message.sender_user_id === currentUser.id;
@@ -716,16 +736,28 @@ export default function ChatPage() {
                                                         </div>
                                                     )}
                                                     <div className={`flex ${isSent ? "justify-end" : "justify-start"}`}>
-                                                        <div className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 shadow-sm ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-1"} ${isSent ? "bg-[#dcf8c6] rounded-lg rounded-tr-none" : "bg-white rounded-lg rounded-tl-none"}`}>
+                                                        <div className={`relative max-w-[85%] md:max-w-[65%] px-3 py-1.5 shadow-sm ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-1"} ${isSent ? "bg-black text-white rounded-lg rounded-tr-none" : "bg-white border border-gray-100 rounded-lg rounded-tl-none"}`}>
                                                             {showAvatar && (
-                                                                <div className={`absolute top-0 w-2 h-2.5 ${isSent ? "-right-1.5 bg-[#dcf8c6]" : "-left-1.5 bg-white"}`} style={{ clipPath: isSent ? "polygon(0 0, 0 100%, 100% 0)" : "polygon(100% 0, 0 0, 100% 100%)" }} />
+                                                                <div className={`absolute top-0 w-2 h-2.5 ${isSent ? "-right-1.5 bg-black" : "-left-1.5 bg-white border-l border-t border-gray-100"}`} style={{ clipPath: isSent ? "polygon(0 0, 0 100%, 100% 0)" : "polygon(100% 0, 0 0, 100% 100%)" }} />
                                                             )}
                                                             {renderMessageContent(message)}
                                                             <div className="flex items-center justify-end gap-1 mt-0.5">
                                                                 <span className="text-[10px] text-gray-500 uppercase">{formatTime(message.created_at)}</span>
                                                                 {isSent && (
-                                                                    <span className={message.is_read ? "text-[#53bdeb]" : "text-gray-400"}>
-                                                                        <svg width="16" height="15" viewBox="0 0 16 15" fill="none"><path d="M15 4.31802L14.0533 3.37134L6.96 10.4647L3.48333 6.98801L2.53667 7.93467L6.96 12.358L15 4.31802ZM11.2267 4.31802L10.28 3.37134L6.96 6.69134L7.90667 7.63801L11.2267 4.31802ZM0.646667 7.93467L5.07 12.358L6.01667 11.4113L1.59333 6.98801L0.646667 7.93467Z" fill="currentColor" /></svg>
+                                                                    <span className={message.is_read ? "text-blue-500" : "text-gray-400"}>
+                                                                        {message.is_read ? (
+                                                                            <svg width="16" height="11" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                <path d="M10.0001 0.5L6.00006 4.5L4.50006 3L3.50006 4L6.00006 6.5L11.0001 1.5L10.0001 0.5Z" fill="currentColor" />
+                                                                                <path d="M15.0001 0.5L7.50006 8L4.50006 5L3.50006 6L7.50006 10L16.0001 1.5L15.0001 0.5Z" fill="currentColor" />
+                                                                                <path d="M6.00006 6.5L3.50006 4L2.00006 5.5L6.00006 9.5L6.00006 6.5Z" fill="currentColor" />
+                                                                                <path d="M6.00006 6.5L3.50006 4L2.00006 5.5L6.00006 9.5L6.00006 6.5Z" fill="currentColor" />
+                                                                                <path d="M1.35339 6.146L0.646729 6.853L5.07006 11.276L6.01673 10.33L1.35339 6.146Z" fill="currentColor" />
+                                                                            </svg>
+                                                                        ) : (
+                                                                            <svg width="12" height="11" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                <path d="M11.0001 0.5L3.50006 8L0.500061 5L-0.499939 6L3.50006 10L12.0001 1.5L11.0001 0.5Z" fill="currentColor" />
+                                                                            </svg>
+                                                                        )}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -737,7 +769,7 @@ export default function ChatPage() {
                                         <div ref={messagesEndRef} />
                                     </div>
                                 </div>
-                                <div className="bg-[#f0f2f5] p-3 flex items-center gap-3">
+                                <div className="bg-white p-3 flex items-center gap-3 border-t border-gray-200">
                                     <label className={`cursor-pointer p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors ${sending ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                         <input
                                             type="file"
@@ -748,17 +780,21 @@ export default function ChatPage() {
                                         />
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                                     </label>
-                                    <input type="text" value={messageInput} onChange={(e) => setMessageInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 bg-white px-4 py-2 rounded-full text-[15px] outline-none border-none shadow-sm" />
-                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className="bg-[#00a884] text-white p-2.5 rounded-full hover:bg-[#008f6f] disabled:opacity-50 transition-colors">
+                                    <input type="text" value={messageInput} onChange={(e) => setMessageInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 bg-gray-100 px-4 py-2 rounded-full text-[15px] outline-none border-none shadow-sm focus:ring-1 focus:ring-black" />
+                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className="bg-black text-white p-2.5 rounded-full hover:opacity-90 disabled:opacity-50 transition-all">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
                                     </button>
                                 </div>
                             </>
                         ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center bg-[#f8f9fa] border-b-[6px] border-[#25d366]">
-                                <img src="https://wallpapers.com/images/hd/whatsapp-background-py66k8a9ue4ue4ue.jpg" alt="WhatsApp" className="w-[300px] opacity-20 grayscale mb-8" />
-                                <h2 className="text-3xl font-light text-[#41525d] mb-2">WhatsApp Web</h2>
-                                <p className="text-[#667781] text-sm">Send and receive messages without keeping your phone online.</p>
+                            <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
+                                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+                                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                                    </svg>
+                                </div>
+                                <h2 className="text-2xl font-semibold text-gray-900 mb-2">Your Chats</h2>
+                                <p className="text-gray-500 text-sm max-w-[300px] text-center">Select a conversation from the sidebar to start messaging.</p>
                             </div>
                         )}
                     </div>
