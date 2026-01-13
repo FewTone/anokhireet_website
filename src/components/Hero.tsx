@@ -55,7 +55,7 @@ export default function Hero() {
         setCurrentSlideIndex(0);
         setIsTransitioning(true);
 
-        const slideDuration = 4500; // 3s pause + 1.5s transition
+        const slideDuration = 3500; // Continuous loop (equal to transition)
 
         const startInterval = () => {
             // Clear existing interval to avoid duplicates
@@ -87,7 +87,7 @@ export default function Hero() {
         // We let the transition happen (visual move from N-1 to N)
         // Then we silently jump back to 0
         if (currentSlideIndex === heroSlides.length) {
-            const transitionTime = 1500; // Must match CSS transition duration
+            const transitionTime = 3000; // Must match CSS transition duration
 
             const timeout = setTimeout(() => {
                 setIsTransitioning(false); // Turn off transition for instant jump
@@ -105,7 +105,7 @@ export default function Hero() {
         }
     }, [currentSlideIndex, heroSlides.length]);
 
-    const transitionDuration = 1500; // ms
+    const transitionDuration = 3000; // ms
 
     const loadHeroSlides = async () => {
         try {
@@ -145,7 +145,7 @@ export default function Hero() {
             intervalRef.current = setInterval(() => {
                 setCurrentSlideIndex(prev => prev + 1);
                 setIsTransitioning(true);
-            }, 4500);
+            }, 3000);
         }
     };
 
@@ -168,7 +168,7 @@ export default function Hero() {
         <div className="hero-container relative w-full overflow-hidden bg-white mt-4 md:mt-0">
             {/* Hero Slides Track */}
             <div
-                className="hero-scroll-track flex items-start gap-4"
+                className="hero-scroll-track flex items-start gap-[10px]"
                 style={{
                     '--current-index': currentSlideIndex,
                     transition: isTransitioning
@@ -220,7 +220,7 @@ export default function Hero() {
                 @media (min-width: 768px) {
                     .hero-container {
                         /* Desktop height logic */
-                        height: calc((100vw - 32px) / 2.5 * 1.25);
+                        height: calc((100vw - 32px) / 2.7 * 1.25);
                     }
                 }
                 .hero-slide {
@@ -233,7 +233,7 @@ export default function Hero() {
                 }
                 @media (min-width: 768px) {
                     .hero-slide {
-                        width: calc((100vw - 32px) / 2.5); /* Desktop width */
+                        width: calc((100vw - 32px) / 2.7); /* Desktop width */
                         aspect-ratio: 4 / 5;
                     }
                 }
@@ -247,8 +247,8 @@ export default function Hero() {
                 @media (min-width: 768px) {
                     .hero-scroll-track {
                         /* Desktop Transform Calculation */
-                        /* width = (100vw - 32px)/2.5, gap = 16px */
-                        transform: translateX(calc(-1 * ((100vw - 32px) / 2.5 + 16px) * var(--current-index)));
+                        /* width = (100vw - 32px)/2.7, gap = 10px */
+                        transform: translateX(calc(-1 * ((100vw - 32px) / 2.7 + 10px) * var(--current-index)));
                     }
                 }
             `}</style>

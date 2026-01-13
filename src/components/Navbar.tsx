@@ -46,7 +46,7 @@ export default function Navbar() {
                     top-0 left-0 w-full z-[1000] transition-all duration-300
                     ${isHomePage
                         ? 'absolute bg-transparent shadow-none'
-                        : 'fixed bg-white shadow-[0.1rem_0.1rem_0.2rem_rgb(119,118,118)]'
+                        : 'fixed bg-white shadow-sm border-b border-gray-100'
                     }
                 `}
             >
