@@ -17,9 +17,10 @@ interface ProductProps {
         original_price?: number | string;
     };
     hideDetails?: boolean;
+    disableHover?: boolean;
 }
 
-export default function ProductCard({ product, hideDetails = false }: ProductProps) {
+export default function ProductCard({ product, hideDetails = false, disableHover = false }: ProductProps) {
     const [isFavorite, setIsFavorite] = useState(false);
     const router = useRouter();
 
@@ -110,7 +111,7 @@ export default function ProductCard({ product, hideDetails = false }: ProductPro
                         alt={product.name}
                         fill
                         sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                        className={`object-cover object-center transition-transform duration-300 ${!disableHover ? 'group-hover:scale-105' : ''}`}
                         unoptimized
                         onError={(e) => {
                             console.error("Image load error for product:", product.name, product.image);

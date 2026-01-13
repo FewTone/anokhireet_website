@@ -55,7 +55,7 @@ export default function Hero() {
         setCurrentSlideIndex(0);
         setIsTransitioning(true);
 
-        const slideDuration = 4000; // 3s pause + 1s transition
+        const slideDuration = 4500; // 3s pause + 1.5s transition
 
         const startInterval = () => {
             // Clear existing interval to avoid duplicates
@@ -87,7 +87,7 @@ export default function Hero() {
         // We let the transition happen (visual move from N-1 to N)
         // Then we silently jump back to 0
         if (currentSlideIndex === heroSlides.length) {
-            const transitionTime = 1000; // Must match CSS transition duration
+            const transitionTime = 1500; // Must match CSS transition duration
 
             const timeout = setTimeout(() => {
                 setIsTransitioning(false); // Turn off transition for instant jump
@@ -105,7 +105,7 @@ export default function Hero() {
         }
     }, [currentSlideIndex, heroSlides.length]);
 
-    const transitionDuration = 1000; // ms
+    const transitionDuration = 1500; // ms
 
     const loadHeroSlides = async () => {
         try {
@@ -145,7 +145,7 @@ export default function Hero() {
             intervalRef.current = setInterval(() => {
                 setCurrentSlideIndex(prev => prev + 1);
                 setIsTransitioning(true);
-            }, 4000);
+            }, 4500);
         }
     };
 
@@ -172,7 +172,7 @@ export default function Hero() {
                 style={{
                     '--current-index': currentSlideIndex,
                     transition: isTransitioning
-                        ? `transform ${transitionDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`
+                        ? `transform ${transitionDuration}ms cubic-bezier(0.25, 1, 0.5, 1)`
                         : 'none',
                 } as React.CSSProperties}
             >
@@ -220,7 +220,7 @@ export default function Hero() {
                 @media (min-width: 768px) {
                     .hero-container {
                         /* Desktop height logic */
-                        height: calc((100vw - 32px) / 3 * 1.25);
+                        height: calc((100vw - 32px) / 2.5 * 1.25);
                     }
                 }
                 .hero-slide {
@@ -233,7 +233,7 @@ export default function Hero() {
                 }
                 @media (min-width: 768px) {
                     .hero-slide {
-                        width: calc((100vw - 32px) / 3); /* Desktop width */
+                        width: calc((100vw - 32px) / 2.5); /* Desktop width */
                         aspect-ratio: 4 / 5;
                     }
                 }
@@ -247,8 +247,8 @@ export default function Hero() {
                 @media (min-width: 768px) {
                     .hero-scroll-track {
                         /* Desktop Transform Calculation */
-                        /* width = (100vw - 32px)/3, gap = 16px */
-                        transform: translateX(calc(-1 * ((100vw - 32px) / 3 + 16px) * var(--current-index)));
+                        /* width = (100vw - 32px)/2.5, gap = 16px */
+                        transform: translateX(calc(-1 * ((100vw - 32px) / 2.5 + 16px) * var(--current-index)));
                     }
                 }
             `}</style>

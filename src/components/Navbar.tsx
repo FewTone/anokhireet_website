@@ -11,7 +11,7 @@ export default function Navbar() {
     const pathname = usePathname();
     const isHomePage = pathname === "/";
     const [searchQuery, setSearchQuery] = useState("");
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
 
     // Initialize search query from URL if on products page
     useEffect(() => {
@@ -52,9 +52,26 @@ export default function Navbar() {
             >
                 {/* Desktop Layout */}
                 <div className="hidden md:flex h-[70px] px-4 items-center justify-between relative">
-                    {/* Left Section: Empty to balance center logo */}
+                    {/* Left Section: Profile, Products, Wishlist */}
                     <div className="flex flex-1 items-center gap-6">
-                        {/* Links removed as per redesign */}
+                        <Link href="/profile" className="text-black hover:opacity-70 transition-opacity" title="My Profile">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </Link>
+                        <Link href="/my-products" className="text-black hover:opacity-70 transition-opacity" title="My Products">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            </svg>
+                        </Link>
+                        <Link href="/wishlist" className="text-black hover:opacity-70 transition-opacity" title="Wishlist">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </Link>
                     </div>
 
                     {/* Center: Logo */}
@@ -82,10 +99,10 @@ export default function Navbar() {
                         </Link>
                     </div>
 
-                    {/* Right: Search & Menu */}
+                    {/* Right: Search & Chat */}
                     <div className="flex flex-1 justify-end items-center gap-4 relative">
                         {!pathname?.startsWith("/chat") && (
-                            <form onSubmit={handleSearch} className="flex max-w-[250px] h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
+                            <form onSubmit={handleSearch} className="flex w-full max-w-[300px] h-[38px] border border-[#ccc] rounded text-sm items-center pl-2 bg-white">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 text-gray-500">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -100,57 +117,6 @@ export default function Navbar() {
                                 />
                                 <button type="submit" className="hidden" aria-label="Search" />
                             </form>
-                        )}
-
-                        {/* Menu Button */}
-                        <button
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="bg-transparent border-none cursor-pointer p-1"
-                        >
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black">
-                                <line x1="3" y1="12" x2="21" y2="12"></line>
-                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                <line x1="3" y1="18" x2="21" y2="18"></line>
-                            </svg>
-                        </button>
-
-                        {/* Dropdown Menu */}
-                        {isMenuOpen && (
-                            <div className="absolute top-12 right-0 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-2 flex flex-col z-50">
-                                <Link
-                                    href="/profile"
-                                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black transition-colors flex items-center gap-2"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                        <circle cx="12" cy="7" r="4"></circle>
-                                    </svg>
-                                    My Profile
-                                </Link>
-                                <Link
-                                    href="/my-products"
-                                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black transition-colors flex items-center gap-2"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                                        <path d="M16 10a4 4 0 0 1-8 0"></path>
-                                    </svg>
-                                    My Products
-                                </Link>
-                                <Link
-                                    href="/wishlist"
-                                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-black transition-colors flex items-center gap-2"
-                                    onClick={() => setIsMenuOpen(false)}
-                                >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                    </svg>
-                                    Wish List
-                                </Link>
-                            </div>
                         )}
 
                         {!pathname?.startsWith("/chat") && (
