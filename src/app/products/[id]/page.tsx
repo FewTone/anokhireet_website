@@ -54,12 +54,17 @@ export default function ProductDetailPage() {
     const [submittingInquiry, setSubmittingInquiry] = useState(false);
     const [isInWishlist, setIsInWishlist] = useState(false);
     const [wishlistLoading, setWishlistLoading] = useState(false);
+    const [referrerPath, setReferrerPath] = useState('');
     const [hasHistory, setHasHistory] = useState(false);
 
     useEffect(() => {
-        // specific check for history availability
-        setHasHistory(window.history.length > 1);
+        if (typeof window !== 'undefined') {
+            setReferrerPath(document.referrer);
+            setHasHistory(window.history.length > 1);
+        }
+    }, []);
 
+    useEffect(() => {
         if (productId) {
             loadProduct();
             checkLoginStatus();
@@ -181,37 +186,9 @@ export default function ProductDetailPage() {
         }
     };
 
-    const [backLabel, setBackLabel] = useState("Back");
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const referrer = document.referrer;
-            if (referrer.includes(window.location.host)) {
-                if (referrer.endsWith('/')) {
-                    setBackLabel("Home");
-                } else if (referrer.includes('/profile')) {
-                    setBackLabel("Profile");
-                } else if (referrer.includes('/user')) {
-                    setBackLabel("Dashboard");
-                } else if (referrer.includes('/products')) {
-                    setBackLabel("Collection");
-                } else if (referrer.includes('/wishlist')) {
-                    setBackLabel("Wishlist");
-                } else if (referrer.includes('/cart')) {
-                    setBackLabel("Cart");
-                } else if (referrer.includes('/search')) {
-                    setBackLabel("Search");
-                }
-            }
-        }
-    }, [productId]);
 
     const handleBack = () => {
-        // Safer back navigation:
-        // 1. If we have history, try to go back
-        // 2. If referrer is from our own site, go back
-        // 3. Fallback to home
-        if (hasHistory || document.referrer.includes(window.location.host)) {
+        if (hasHistory) {
             router.back();
         } else {
             router.push('/');
@@ -743,17 +720,24 @@ export default function ProductDetailPage() {
 
                                 {/* Desktop Image Gallery (Hidden on mobile) */}
                                 <div className="hidden md:flex flex-1 w-full flex-col gap-4">
-                                    {/* Back Button */}
-                                    <button
-                                        onClick={handleBack}
-                                        className="self-start flex items-center gap-2 text-gray-600 hover:text-black transition-colors mb-2"
-                                    >
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M19 12H5" />
-                                            <path d="M12 19l-7-7 7-7" />
-                                        </svg>
-                                        {backLabel}
-                                    </button>
+                                        {/* Breadcrumbs */}
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                                        <Link href="/" className="hover:text-black transition-colors">Home</Link>
+                                        {referrerPath.includes('/products') && (
+                                            <>
+                                                <span>/</span>
+                                                <Link href="/products" className="hover:text-black transition-colors">Products</Link>
+                                            </>
+                                        )}
+                                        {referrerPath.includes('/my-products') && (
+                                            <>
+                                                <span>/</span>
+                                                <Link href="/my-products" className="hover:text-black transition-colors">My Products</Link>
+                                            </>
+                                        )}
+                                        <span>/</span>
+                                        <span className="text-gray-900 font-medium truncate max-w-xs">{product.name}</span>
+                                    </div>
 
                                     <div className="flex gap-6 justify-end items-start px-4">
                                         {/* Left Side - Small Thumbnail Images (Vertical Column) */}
