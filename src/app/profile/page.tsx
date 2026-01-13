@@ -684,7 +684,7 @@ export default function Profile() {
 
     return (
         <div className="flex items-center justify-center w-full h-screen bg-[#959393] p-4 font-sans">
-            <div className="max-w-[750px] w-full md:w-[90vw] flex bg-white rounded-[7px] shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden min-h-[50vh] flex-col md:flex-row">
+            <div className="max-w-[750px] w-full md:w-[90vw] flex bg-white rounded-none shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden min-h-[50vh] flex-col md:flex-row">
 
                 {/* Left Image Section */}
                 <div className="hidden md:flex w-[58%] relative items-center justify-center bg-white">
@@ -742,30 +742,66 @@ export default function Profile() {
                                     <label className="block text-xs text-[#4d5563] text-left mb-2 font-medium">
                                         OTP Code <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        pattern="[0-9]{6}"
-                                        maxLength={6}
-                                        value={otp}
-                                        onChange={(e) => {
-                                            const value = e.target.value.replace(/\D/g, "");
-                                            // Allow up to 6 digits
-                                            if (value.length <= 6) {
-                                                setOtp(value);
-                                                setError("");
-                                            }
-                                        }}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter' && otp.length === 6) {
-                                                handleVerifyOtp();
-                                            }
-                                        }}
-                                        className="w-full border border-[#4d5563] p-4 text-[0.9rem] outline-none text-center text-xl tracking-[0.3em] font-semibold rounded focus:border-black focus:ring-2 focus:ring-black focus:ring-opacity-20"
-                                        placeholder="000000"
-                                        autoFocus
-                                    />
-                                    <p className="text-xs text-[#4d5563] mt-2 text-left">
+                                    <div className="grid grid-cols-6 gap-2 mb-2 w-full" onPaste={(e) => {
+                                        e.preventDefault();
+                                        const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
+                                        if (pasted.length > 0) {
+                                            const newOtp = pasted.slice(0, 6);
+                                            setOtp(newOtp);
+                                            // Focus the appropriate input based on length
+                                            const focusIndex = Math.min(newOtp.length, 5);
+                                            const inputs = document.querySelectorAll('input[name^="otp-"]');
+                                            (inputs[focusIndex] as HTMLInputElement)?.focus();
+                                        }
+                                    }}>
+                                        {[0, 1, 2, 3, 4, 5].map((index) => (
+                                            <input
+                                                key={index}
+                                                name={`otp-${index}`}
+                                                type="text"
+                                                maxLength={1}
+                                                value={otp[index] || ""}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/\D/g, "");
+                                                    if (value) {
+                                                        const newOtpArray = otp.split("");
+                                                        // Pad with spaces if needed
+                                                        while (newOtpArray.length < index) newOtpArray.push("");
+                                                        newOtpArray[index] = value;
+                                                        const newOtp = newOtpArray.join("");
+                                                        setOtp(newOtp);
+                                                        setError("");
+
+                                                        // Auto focus next input
+                                                        if (index < 5) {
+                                                            const nextInput = document.querySelector(`input[name="otp-${index + 1}"]`) as HTMLInputElement;
+                                                            nextInput?.focus();
+                                                        }
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    // Handle Backspace
+                                                    if (e.key === "Backspace") {
+                                                        if (!otp[index] && index > 0) {
+                                                            const prevInput = document.querySelector(`input[name="otp-${index - 1}"]`) as HTMLInputElement;
+                                                            prevInput?.focus();
+                                                        } else {
+                                                            const currentArr = otp.split("");
+                                                            currentArr[index] = ""; // Replace char at index with empty
+                                                            setOtp(currentArr.join(""));
+                                                        }
+                                                    }
+                                                    // Handle Enter
+                                                    if (e.key === "Enter" && otp.length === 6) {
+                                                        handleVerifyOtp();
+                                                    }
+                                                }}
+                                                className="w-full h-14 border border-gray-300 text-center text-xl font-bold rounded focus:border-black focus:ring-1 focus:ring-black outline-none transition-all"
+                                                autoFocus={index === 0}
+                                            />
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-[#4d5563] mt-2 text-center">
                                         Enter the 6-digit code sent to your phone
                                     </p>
                                 </div>

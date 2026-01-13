@@ -2,16 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName } from "@/lib/utils";
+import MyProductsView from "@/components/dashboard/MyProductsView";
+import WishlistView from "@/components/dashboard/WishlistView";
+import ProfileView from "@/components/dashboard/ProfileView";
+import SettingsView from "@/components/dashboard/SettingsView";
+import ReferEarnView from "@/components/dashboard/ReferEarnView";
+
+type View = "my-products" | "wishlist" | "profile" | "settings" | "refer-earn" | "orders" | "addresses" | "refunds" | "gift-cards" | "reviews" | "stores" | "help";
 
 export default function UserPage() {
     const [userName, setUserName] = useState("");
     const [userPhone, setUserPhone] = useState("");
+    const [userEmail, setUserEmail] = useState("");
+    const [userId, setUserId] = useState("");
+    const [userLocation, setUserLocation] = useState("");
+    const [userGender, setUserGender] = useState("");
+    const [userBirthdate, setUserBirthdate] = useState("");
     const [loading, setLoading] = useState(true);
+    const [activeView, setActiveView] = useState<View>("my-products");
     const router = useRouter();
 
     // Effect for handling loading timeout
@@ -77,7 +90,7 @@ export default function UserPage() {
             // Check user
             const { data: userData, error: userError } = await supabase
                 .from("users")
-                .select("id, name, phone, auth_user_id")
+                .select("id, name, phone, auth_user_id, location, gender, birthdate")
                 .eq("auth_user_id", session.user.id)
                 .maybeSingle();
 
@@ -88,8 +101,13 @@ export default function UserPage() {
                 return;
             }
 
+            setUserId(userData.id);
             setUserName(userData.name);
             setUserPhone(userData.phone || "");
+            setUserEmail(session.user.email || "");
+            setUserLocation(userData.location || "");
+            setUserGender(userData.gender || "");
+            setUserBirthdate(userData.birthdate || "");
             setLoading(false);
         } catch (error) {
             console.error("Error loading user data:", error);
@@ -102,127 +120,102 @@ export default function UserPage() {
         }
     };
 
-    const handleLogout = async () => {
-        try {
-            await supabase.auth.signOut();
-            localStorage.clear();
-            router.push("/");
-        } catch (error) {
-            console.error("Error signing out:", error);
-            localStorage.clear();
-            router.push("/");
-        }
-    };
-
     const getInitials = (name: string) => {
         return name
             ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
             : "U";
     };
 
+    const navItems = [
+        { label: "MY PRODUCTS", id: "my-products" as View },
+        { label: "WISHLIST", id: "wishlist" as View },
+        { label: "PROFILE", id: "profile" as View },
+        { label: "SETTINGS", id: "settings" as View },
+        { label: "REFER AND EARN", id: "refer-earn" as View, isNew: true },
+    ];
+
+    const renderContent = () => {
+        switch (activeView) {
+            case "my-products":
+                return <MyProductsView />;
+            case "wishlist":
+                return <WishlistView />;
+            case "profile":
+                return <ProfileView
+                    userName={userName}
+                    userPhone={userPhone}
+                    userEmail={userEmail}
+                    userLocation={userLocation}
+                    userGender={userGender}
+                    userBirthdate={userBirthdate}
+                    userId={userId}
+                    onUpdate={loadUserData}
+                />;
+            case "settings":
+                return <SettingsView />;
+            case "refer-earn":
+                return <ReferEarnView />;
+            default:
+                return <MyProductsView />;
+        }
+    };
+
     return (
         <>
             <Navbar />
-            <main className="min-h-screen bg-gray-50 pt-32 pb-20">
-                <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <main className="min-h-[calc(100vh-70px)] bg-white"> {/* Adjusted to eliminate double spacing */}
+                <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)]">
 
-                    {/* Header Section */}
-                    <div className="mb-12">
-                        <h1 className="text-4xl font-light text-black tracking-tight mb-2">My Account</h1>
-                        <p className="text-gray-500">Manage your profile and view your activity.</p>
+                    {/* Left Sidebar */}
+                    <div className="w-full md:w-[280px] border-r border-gray-100 bg-[#fbfbfb] p-6 hidden md:block">
+                        <div className="flex items-center gap-3 mb-8 px-4">
+                            <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">
+                                {getInitials(userName)}
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">Hello,</p>
+                                <p className="text-sm font-semibold text-gray-900">{formatUserDisplayName(userName)}</p>
+                            </div>
+                        </div>
+                        <nav className="flex flex-col space-y-1">
+                            {navItems.map((item, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setActiveView(item.id)}
+                                    className={`flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors w-full text-left ${activeView === item.id
+                                        ? "bg-white text-black shadow-sm"
+                                        : "text-gray-600 hover:bg-gray-100"
+                                        }`}
+                                >
+                                    <span>{item.label}</span>
+                                    {item.isNew && (
+                                        <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded">NEW</span>
+                                    )}
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                                        <polyline points="9 18 15 12 9 6"></polyline>
+                                    </svg>
+                                </button>
+                            ))}
+                        </nav>
                     </div>
 
-                    {loading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-pulse">
-                            <div className="md:col-span-1 h-64 bg-gray-200 rounded-xl"></div>
-                            <div className="md:col-span-2 h-64 bg-gray-200 rounded-xl"></div>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-
-                            {/* Left Sidebar - Profile Card */}
-                            <div className="md:col-span-4 lg:col-span-3">
-                                <div className="bg-white rounded-2xl p-8 shadow-[0_2px_20px_rgba(0,0,0,0.04)] border border-gray-100 text-center sticky top-32">
-                                    <div className="w-24 h-24 bg-black text-white rounded-full flex items-center justify-center text-3xl font-light mx-auto mb-6 shadow-lg">
-                                        {getInitials(userName)}
-                                    </div>
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-1">{formatUserDisplayName(userName) || "User"}</h2>
-                                    <p className="text-sm text-gray-500 mb-8 font-mono">{userPhone}</p>
-
-                                    <button
-                                        onClick={handleLogout}
-                                        className="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-900 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 group"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
-                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                            <polyline points="16 17 21 12 16 7"></polyline>
-                                            <line x1="21" y1="12" x2="9" y2="12"></line>
-                                        </svg>
-                                        Sign Out
-                                    </button>
+                    {/* Main Content */}
+                    <div className="flex-1 p-6 md:p-12">
+                        {loading ? (
+                            <div className="animate-pulse space-y-8">
+                                <div className="h-48 bg-gray-200 rounded"></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                                        <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                                    ))}
                                 </div>
                             </div>
-
-                            {/* Right Content - Quick Actions */}
-                            <div className="md:col-span-8 lg:col-span-9 space-y-6">
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Links</h3>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    {/* Wishlist Box */}
-                                    <Link href="/wishlist" className="group">
-                                        <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 h-full flex flex-col items-start relative overflow-hidden">
-                                            <div className="bg-red-50 p-4 rounded-full mb-6 group-hover:bg-red-100 transition-colors z-10">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
-                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                                </svg>
-                                            </div>
-                                            <h4 className="text-xl font-medium text-gray-900 mb-2 z-10">Wishlist</h4>
-                                            <p className="text-gray-500 text-sm z-10">View specific items you have saved for later.</p>
-
-                                            <div className="mt-6 flex items-center text-sm font-medium text-black group-hover:underline z-10">
-                                                View Wishlist
-                                                <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                            </div>
-
-                                            {/* Decorative bg element */}
-                                            <div className="absolute -bottom-4 -right-4 text-gray-50 opacity-50 transform rotate-12 group-hover:scale-110 transition-transform duration-500">
-                                                <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </Link>
-
-                                    {/* My Products Box */}
-                                    <Link href="/my-products" className="group">
-                                        <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-[0_2px_20px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 h-full flex flex-col items-start relative overflow-hidden">
-                                            <div className="bg-blue-50 p-4 rounded-full mb-6 group-hover:bg-blue-100 transition-colors z-10">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
-                                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                                                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                                                    <path d="M16 10a4 4 0 0 1-8 0"></path>
-                                                </svg>
-                                            </div>
-                                            <h4 className="text-xl font-medium text-gray-900 mb-2 z-10">My Products</h4>
-                                            <p className="text-gray-500 text-sm z-10">Manage your product collection and additions.</p>
-
-                                            <div className="mt-6 flex items-center text-sm font-medium text-black group-hover:underline z-10">
-                                                Manage Products
-                                                <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                            </div>
-
-                                            {/* Decorative bg element */}
-                                            <div className="absolute -bottom-4 -right-4 text-gray-50 opacity-50 transform rotate-[10deg] group-hover:scale-110 transition-transform duration-500">
-                                                <svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                                                </svg>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                </div>
+                        ) : (
+                            <div className="max-w-6xl mx-auto fade-in">
+                                {renderContent()}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </main>
             <Footer />
