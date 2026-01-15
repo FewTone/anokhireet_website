@@ -268,6 +268,7 @@ export default function ProductsPage() {
 
         if (ownerIdParam) {
             setAppliedOwnerId(ownerIdParam);
+            setShowCategories(false); // Hide categories on mobile to show user products
         } else {
             setAppliedOwnerId("");
         }

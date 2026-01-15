@@ -168,7 +168,7 @@ export default function Hero() {
         <div className="hero-container relative w-full overflow-hidden bg-white mt-4 md:mt-0">
             {/* Hero Slides Track */}
             <div
-                className="hero-scroll-track flex items-start gap-[10px]"
+                className="hero-scroll-track flex items-start gap-0 md:gap-[10px]"
                 style={{
                     '--current-index': currentSlideIndex,
                     transition: isTransitioning
@@ -214,17 +214,19 @@ export default function Hero() {
 
             <style jsx global>{`
                 .hero-container {
-                    /* Mobile height logic */
-                    height: calc(100vw * 1.25);
+                    /* Mobile: Use aspect ratio and 100% width to respect parent container constraints */
+                    width: 100%;
+                    aspect-ratio: 4/5;
                 }
                 @media (min-width: 768px) {
                     .hero-container {
-                        /* Desktop height logic */
+                        /* Desktop: Explicit height calculation based on slide width */
+                        aspect-ratio: auto;
                         height: calc((100vw - 32px) / 2.7 * 1.25);
                     }
                 }
                 .hero-slide {
-                    width: 100vw; /* Mobile width */
+                    width: 100%; /* Mobile: Match parent width exactly */
                     aspect-ratio: 4 / 5;
                     height: auto;
                     flex-shrink: 0;
@@ -240,14 +242,12 @@ export default function Hero() {
                 .hero-scroll-track {
                     width: 100%;
                     will-change: transform;
-                    /* Mobile Transform Calculation */
-                    /* width = 100vw, gap = 16px */
-                    transform: translateX(calc(-1 * (100vw + 16px) * var(--current-index)));
+                    /* Mobile Transform: Move by 100% of container width per index */
+                    transform: translateX(calc(-100% * var(--current-index)));
                 }
                 @media (min-width: 768px) {
                     .hero-scroll-track {
-                        /* Desktop Transform Calculation */
-                        /* width = (100vw - 32px)/2.7, gap = 10px */
+                        /* Desktop Transform: Includes gap calculation */
                         transform: translateX(calc(-1 * ((100vw - 32px) / 2.7 + 10px) * var(--current-index)));
                     }
                 }

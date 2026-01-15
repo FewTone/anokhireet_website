@@ -721,7 +721,7 @@ export default function ProductDetailPage() {
                                 {/* Desktop Image Gallery (Hidden on mobile) */}
                                 <div className="hidden md:flex flex-1 w-full flex-col gap-4">
                                         {/* Breadcrumbs */}
-                                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 mt-8">
                                         <Link href="/" className="hover:text-black transition-colors">Home</Link>
                                         {referrerPath.includes('/products') && (
                                             <>

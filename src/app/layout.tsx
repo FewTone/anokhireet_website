@@ -34,7 +34,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body suppressHydrationWarning className={`${inter.variable} ${playfairDisplay.variable} ${inter.className} antialiased w-full max-w-[480px] md:max-w-none mx-auto bg-gray-100 md:bg-white h-dvh overflow-hidden overscroll-none`}>
+            <body suppressHydrationWarning className={`${inter.variable} ${playfairDisplay.variable} ${inter.className} antialiased w-full mx-auto bg-gray-100 md:bg-white h-dvh overflow-hidden overscroll-none`}>
                 <div id="app-shell-scroll" className="w-full h-full overflow-y-auto overflow-x-hidden scrollbar-hide overscroll-y-none relative">
                     <ErrorBoundary>
                         <WebsiteGuard>
