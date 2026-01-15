@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import MobileFilterSheet from "@/components/MobileFilterSheet";
 import { supabase } from "@/lib/supabase";
 
@@ -1240,9 +1241,10 @@ export default function ProductsPage() {
 
                             {/* Products Grid */}
                             {loading ? (
-                                <div className="text-center py-12">
-                                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
-                                    <p className="text-gray-500">Loading products...</p>
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-6 w-full">
+                                    {Array.from({ length: 8 }).map((_, i) => (
+                                        <ProductCardSkeleton key={i} />
+                                    ))}
                                 </div>
                             ) : filteredProducts.length === 0 ? (
                                 <div className="text-center py-16">

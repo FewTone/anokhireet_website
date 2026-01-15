@@ -113,8 +113,21 @@ export default function Navbar() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyPress={handleSearchKeyPress}
-                                    className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent"
+                                    className="h-full flex-1 text-[0.9rem] pl-2 border-none outline-none bg-transparent min-w-0"
                                 />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery("")}
+                                        className="p-2 text-gray-500 hover:text-black transition-colors focus:outline-none"
+                                        aria-label="Clear search"
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                        </svg>
+                                    </button>
+                                )}
                                 <button type="submit" className="hidden" aria-label="Search" />
                             </form>
                         )}
@@ -175,9 +188,22 @@ export default function Navbar() {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onKeyPress={handleSearchKeyPress}
-                                        className={`h-full w-full text-[0.95rem] pl-3 border-none outline-none bg-transparent ${isHomePage ? "text-white placeholder-white/70" : "text-black placeholder-gray-500"
+                                        className={`h-full flex-1 text-[0.95rem] pl-3 border-none outline-none bg-transparent min-w-0 ${isHomePage ? "text-white placeholder-white/70" : "text-black placeholder-gray-500"
                                             }`}
                                     />
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSearchQuery("")}
+                                            className={`p-2 transition-colors focus:outline-none ${isHomePage ? "text-white/70 hover:text-white" : "text-gray-400 hover:text-gray-600"}`}
+                                            aria-label="Clear search"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                    )}
                                     <button type="submit" className="hidden" aria-label="Search" />
                                 </form>
                                 <Link href="/chat" className={`flex-shrink-0 p-2 ${isHomePage ? "text-white" : "text-black"}`}>
@@ -236,8 +262,21 @@ export default function Navbar() {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onKeyPress={handleSearchKeyPress}
-                                        className="h-full w-full text-[0.9rem] pl-2 border-none outline-none bg-transparent text-black"
+                                        className="h-full flex-1 text-[0.9rem] pl-2 border-none outline-none bg-transparent text-black min-w-0"
                                     />
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSearchQuery("")}
+                                            className="p-2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                            aria-label="Clear search"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                    )}
                                     <button type="submit" className="hidden" aria-label="Search" />
                                 </form>
                                 <Link href="/chat" className="flex-shrink-0 p-2 text-black">

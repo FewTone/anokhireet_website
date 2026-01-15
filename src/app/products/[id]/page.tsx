@@ -7,6 +7,8 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
+import ProductDetailSkeleton from "@/components/ProductDetailSkeleton";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName, getUserInitials } from "@/lib/utils";
 import DatePicker from "react-datepicker";
@@ -62,7 +64,7 @@ export default function ProductDetailPage() {
     const [referrerPath, setReferrerPath] = useState('');
     const [hasHistory, setHasHistory] = useState(false);
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-    const [loadingRelated, setLoadingRelated] = useState(false);
+    const [loadingRelated, setLoadingRelated] = useState(true);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -722,13 +724,10 @@ export default function ProductDetailPage() {
     if (loading) {
         return (
             <>
-                <Navbar />
-                <main className="min-h-screen pb-12">
-                    <div className="text-center py-12">
-                        <p className="text-gray-500">Loading product...</p>
-                    </div>
-                </main>
-                <Footer />
+                <div className="hidden md:block">
+                    <Navbar />
+                </div>
+                <ProductDetailSkeleton />
             </>
         );
     }
@@ -863,18 +862,8 @@ export default function ProductDetailPage() {
                                     {/* Breadcrumbs */}
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 mt-8">
                                         <Link href="/" className="hover:text-black transition-colors">Home</Link>
-                                        {referrerPath.includes('/products') && (
-                                            <>
-                                                <span>/</span>
-                                                <Link href="/products" className="hover:text-black transition-colors">Products</Link>
-                                            </>
-                                        )}
-                                        {referrerPath.includes('/my-products') && (
-                                            <>
-                                                <span>/</span>
-                                                <Link href="/my-products" className="hover:text-black transition-colors">My Products</Link>
-                                            </>
-                                        )}
+                                        <span>/</span>
+                                        <Link href="/products" className="hover:text-black transition-colors">Products</Link>
                                         <span>/</span>
                                         <span className="text-gray-900 font-medium truncate max-w-xs">{product.name}</span>
                                     </div>
@@ -1192,13 +1181,19 @@ export default function ProductDetailPage() {
                 </div >
 
                 {/* Related Products Section */}
-                {relatedProducts.length > 0 && (
+                {(relatedProducts.length > 0 || loadingRelated) && (
                     <div className="w-full pb-12 mt-8 border-t border-gray-100 pt-8">
                         <h3 className="text-lg font-bold mb-4 px-4 uppercase tracking-wide text-center">You Might Also Like</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                            {relatedProducts.map((p) => (
-                                <ProductCard key={p.id} product={p} disableHover={true} />
-                            ))}
+                            {loadingRelated ? (
+                                Array.from({ length: 6 }).map((_, i) => (
+                                    <ProductCardSkeleton key={i} />
+                                ))
+                            ) : (
+                                relatedProducts.map((p) => (
+                                    <ProductCard key={p.id} product={p} disableHover={true} />
+                                ))
+                            )}
                         </div>
                     </div>
                 )}

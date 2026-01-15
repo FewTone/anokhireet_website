@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 // import { isOtpBypassEnabled } from "@/lib/devConfig";
@@ -311,8 +312,10 @@ export default function MyProductsPage() {
 
 
                     {loading ? (
-                        <div className="text-center py-12">
-                            <p className="text-gray-500">Loading products...</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <ProductCardSkeleton key={i} />
+                            ))}
                         </div>
                     ) : !userId ? (
                         <div className="text-center py-12">

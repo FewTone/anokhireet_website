@@ -1,3 +1,10 @@
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+    return twMerge(clsx(inputs));
+}
+
 export function formatUserDisplayName(fullName: string | null | undefined): string {
     if (!fullName) return "User";
 
@@ -5,6 +12,7 @@ export function formatUserDisplayName(fullName: string | null | undefined): stri
     const parts = fullName.trim().split(/\s+/);
 
     if (parts.length === 0) return "";
+
 
     // If only one name, return it
     if (parts.length === 1) return parts[0];

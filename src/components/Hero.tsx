@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { Skeleton } from "@/components/Skeleton";
 
 interface HeroSlide {
     image: string;
@@ -151,7 +152,33 @@ export default function Hero() {
 
     if (loading) {
         return (
-            <div className="hero-container relative w-full overflow-hidden bg-white mt-[-64px] md:mt-0 pt-[64px] md:pt-0 flex items-center justify-center">
+            <div className="hero-container relative w-full overflow-hidden bg-white mt-4 md:mt-0">
+                <div className="flex items-start gap-0 md:gap-[10px] w-full">
+                    {/* Desktop: Show multiple skeletons */}
+                    {/* Mobile: Show one skeleton */}
+                    <div className="hero-slide relative flex-shrink-0 aspect-[4/5] w-full md:w-[calc((100vw-32px)/2.7)]">
+                        <Skeleton className="w-full h-full rounded-none" />
+                    </div>
+                    <div className="hidden md:block hero-slide relative flex-shrink-0 aspect-[4/5] w-[calc((100vw-32px)/2.7)]">
+                        <Skeleton className="w-full h-full rounded-none" />
+                    </div>
+                    <div className="hidden md:block hero-slide relative flex-shrink-0 aspect-[4/5] w-[calc((100vw-32px)/2.7)]">
+                        <Skeleton className="w-full h-full rounded-none" />
+                    </div>
+                </div>
+                {/* Reusing styles from below for consistency */}
+                <style jsx global>{`
+                .hero-container {
+                    width: 100%;
+                    aspect-ratio: 4/5;
+                }
+                @media (min-width: 768px) {
+                    .hero-container {
+                        aspect-ratio: auto;
+                        height: calc((100vw - 32px) / 2.7 * 1.25);
+                    }
+                }
+            `}</style>
             </div>
         );
     }

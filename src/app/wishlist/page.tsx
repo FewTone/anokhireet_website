@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 interface WishlistProduct {
     id: number;
     productId?: string;
@@ -16,6 +17,7 @@ interface WishlistProduct {
 
 export default function WishListPage() {
     const [wishlist, setWishlist] = useState<WishlistProduct[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         // Load wishlist from localStorage
@@ -26,8 +28,10 @@ export default function WishListPage() {
                 setWishlist(parsed);
             } catch (error) {
                 console.error("Error parsing wishlist:", error);
+                console.error("Error parsing wishlist:", error);
             }
         }
+        setLoading(false);
     }, []);
 
     const removeFromWishlist = (productId: number) => {
@@ -43,7 +47,13 @@ export default function WishListPage() {
                 <div className="max-w-[1400px] mx-auto px-4">
                     <h1 className="text-3xl font-bold mb-8">Wish List</h1>
 
-                    {wishlist.length === 0 ? (
+                    {loading ? (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <ProductCardSkeleton key={i} />
+                            ))}
+                        </div>
+                    ) : wishlist.length === 0 ? (
                         <div className="text-center py-12">
                             <svg
                                 width="64"

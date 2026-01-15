@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import Hero from "@/components/Hero";
 import ProductCard from "@/components/ProductCard";
+import ProductCardSkeleton from "@/components/ProductCardSkeleton";
+import { Skeleton } from "@/components/Skeleton";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
@@ -39,6 +41,7 @@ export default function Home() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [featuredCategories, setFeaturedCategories] = useState<Array<{ img: string; link_url?: string; name?: string }>>([]);
+    const [categoriesLoading, setCategoriesLoading] = useState(true);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -53,7 +56,7 @@ export default function Home() {
         loadProducts(true); // Initial load
         loadCategories().catch((error) => {
             console.error("Error loading categories:", error);
-            setLoading(false);
+            setCategoriesLoading(false);
         }); // Load categories from database
 
         // Set up Supabase Realtime subscriptions for instant updates
@@ -222,6 +225,8 @@ export default function Home() {
         } catch (error) {
             console.error("Error loading featured items:", error);
             setFeaturedCategories([]);
+        } finally {
+            setCategoriesLoading(false);
         }
     };
 
@@ -359,6 +364,20 @@ export default function Home() {
                             })}
                         </div>
                     </div>
+
+                ) : categoriesLoading ? (
+                    <div className="mt-2 md:mt-8 mb-8 md:mb-8">
+                        <h2 className="text-[16px] leading-[24px] font-bold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>FEATURED CATEGORIES</h2>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-[6px] w-full">
+                            {Array.from({ length: 6 }).map((_, i) => (
+                                <div key={i} className="block">
+                                    <div className="relative w-full aspect-[4/5] overflow-hidden bg-gray-100">
+                                        <Skeleton className="w-full h-full rounded-none" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 ) : (
                     <div className="mt-12 text-center px-4">
                         <p className="text-gray-500 text-sm">No featured categories available. Pin categories in the admin panel to display them here.</p>
@@ -406,8 +425,10 @@ export default function Home() {
 
                     {/* Product Grid */}
                     {loading ? (
-                        <div className="text-center py-12">
-                            <p className="text-gray-500">Loading products...</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                                <ProductCardSkeleton key={i} />
+                            ))}
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
@@ -420,7 +441,7 @@ export default function Home() {
                         </div>
                     )}
                 </div>
-            </main>
+            </main >
             <Footer />
             <BottomNav />
         </>
