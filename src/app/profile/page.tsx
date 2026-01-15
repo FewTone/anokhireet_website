@@ -997,7 +997,7 @@ export default function Profile() {
                                                         >
                                                             <div className={`w-3.5 h-3.5 border border-gray-400 rounded-sm flex items-center justify-center transition-colors ${isChecked ? 'bg-black border-black' : 'bg-white group-hover:border-gray-600'}`}>
                                                                 {isChecked && (
-                                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                                                         <polyline points="20 6 9 17 4 12"></polyline>
                                                                     </svg>
                                                                 )}

@@ -707,7 +707,7 @@ export default function ChatPage() {
                         {selectedChat ? (
                             <>
                                 <div className="bg-white px-4 py-3 border-b border-gray-200 flex items-center gap-3">
-                                    <button onClick={() => setSelectedChat(null)} className="md:hidden p-2 -ml-2 text-gray-600"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg></button>
+                                    <button onClick={() => setSelectedChat(null)} className="md:hidden p-2 -ml-2 text-gray-600"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M19 12H5M12 19l-7-7 7-7" /></svg></button>
                                     <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-semibold">{selectedChat.other_user?.name?.charAt(0).toUpperCase()}</div>
                                     <div>
                                         <h3 className="text-[15px] font-semibold text-gray-900">{selectedChat.other_user?.name}</h3>
@@ -775,18 +775,18 @@ export default function ChatPage() {
                                             onChange={handleImageUpload}
                                             disabled={sending}
                                         />
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                                     </label>
                                     <input type="text" value={messageInput} onChange={(e) => setMessageInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 bg-gray-100 px-4 py-2 rounded-full text-[15px] outline-none border-none shadow-sm focus:ring-1 focus:ring-black" />
                                     <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className="bg-black text-white p-2.5 rounded-full hover:opacity-90 disabled:opacity-50 transition-all">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
                                     </button>
                                 </div>
                             </>
                         ) : (
                             <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
                                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-gray-400">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                         <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                                     </svg>
                                 </div>

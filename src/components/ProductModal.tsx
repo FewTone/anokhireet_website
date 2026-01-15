@@ -76,7 +76,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="2"
+                        strokeWidth="1"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                     >
@@ -98,7 +98,7 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
                                 sizes="256px"
                             />
                         </div>
-                        
+
                         {/* Product Information Section */}
                         <div className="mt-auto space-y-4">
                             <div>

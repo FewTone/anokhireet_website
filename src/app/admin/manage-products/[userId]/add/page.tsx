@@ -1049,7 +1049,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                 >
                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                         <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                         </svg>
                                         <p className="mb-2 text-sm text-gray-500">
                                             <span className="font-semibold">Click to upload</span> or drag and drop
@@ -1132,7 +1132,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                                 stroke="currentColor"
                                                                 viewBox="0 0 24 24"
                                                             >
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                                             </svg>
                                                         </div>
                                                     </div>
@@ -1153,7 +1153,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
                                                         </svg>
                                                     </div>
                                                 </button>
@@ -1186,23 +1186,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                             src={preview}
                                                             alt={`New image ${index + 1}`}
                                                             fill
-                                                            className="object-cover"
-                                                            unoptimized
-                                                        />
-                                                        <div className="absolute top-2 right-2 z-10">
-                                                            <div className={`${primaryImageIndex === totalIndex ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md`}>
-                                                                <svg
-                                                                    className={`w-5 h-5 ${primaryImageIndex === totalIndex ? 'text-white fill-white' : 'text-gray-400'}`}
-                                                                    fill={primaryImageIndex === totalIndex ? "currentColor" : "none"}
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
-                                                                >
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                        <div
-                                                            role="button"
                                                             aria-label="Remove image"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -1211,7 +1194,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                             className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
                                                             </svg>
                                                         </div>
                                                     </button>
@@ -1325,7 +1308,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                             className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4v16m8-8H4" />
                                             </svg>
                                             {showAddProductType ? "Cancel" : "Add New"}
                                         </button>
@@ -1369,8 +1352,8 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         <label
                                                             key={pt.id}
                                                             className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
-                                                                    ? "bg-blue-50 border border-blue-200"
-                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                                ? "bg-blue-50 border border-blue-200"
+                                                                : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
                                                         >
                                                             <input
@@ -1417,7 +1400,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                             className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4v16m8-8H4" />
                                             </svg>
                                             {showAddOccasion ? "Cancel" : "Add New"}
                                         </button>
@@ -1461,8 +1444,8 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         <label
                                                             key={oc.id}
                                                             className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
-                                                                    ? "bg-blue-50 border border-blue-200"
-                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                                ? "bg-blue-50 border border-blue-200"
+                                                                : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
                                                         >
                                                             <input
@@ -1509,7 +1492,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                             className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4v16m8-8H4" />
                                             </svg>
                                             {showAddColor ? "Cancel" : "Add New"}
                                         </button>
@@ -1553,8 +1536,8 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         <label
                                                             key={c.id}
                                                             className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
-                                                                    ? "bg-blue-50 border border-blue-200"
-                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                                ? "bg-blue-50 border border-blue-200"
+                                                                : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
                                                         >
                                                             <input
@@ -1601,7 +1584,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                             className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4v16m8-8H4" />
                                             </svg>
                                             {showAddMaterial ? "Cancel" : "Add New"}
                                         </button>
@@ -1645,8 +1628,8 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         <label
                                                             key={m.id}
                                                             className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
-                                                                    ? "bg-blue-50 border border-blue-200"
-                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                                ? "bg-blue-50 border border-blue-200"
+                                                                : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
                                                         >
                                                             <input
@@ -1693,7 +1676,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                             className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
                                         >
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4v16m8-8H4" />
                                             </svg>
                                             {showAddCity ? "Cancel" : "Add New"}
                                         </button>
@@ -1737,8 +1720,8 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         <label
                                                             key={city.id}
                                                             className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
-                                                                    ? "bg-blue-50 border border-blue-200"
-                                                                    : "hover:bg-gray-50 border border-transparent"
+                                                                ? "bg-blue-50 border border-blue-200"
+                                                                : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
                                                         >
                                                             <input

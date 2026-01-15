@@ -636,7 +636,7 @@ export default function ProductDetailPage() {
                                             onClick={handleBack}
                                             className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white rounded-full shadow-md z-30"
                                         >
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M15 18l-6-6 6-6" />
                                             </svg>
                                         </button>
@@ -655,7 +655,7 @@ export default function ProductDetailPage() {
                                                     viewBox="0 0 24 24"
                                                     fill={isInWishlist ? "red" : "none"}
                                                     stroke={isInWishlist ? "red" : "black"}
-                                                    strokeWidth="2"
+                                                    strokeWidth="1"
                                                     strokeLinecap="round"
                                                     strokeLinejoin="round"
                                                 >
@@ -668,7 +668,7 @@ export default function ProductDetailPage() {
                                                 onClick={handleShare}
                                                 className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-md"
                                             >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                                                     <polyline points="16 6 12 2 8 6" />
                                                     <line x1="12" y1="2" x2="12" y2="15" />
@@ -808,7 +808,7 @@ export default function ProductDetailPage() {
                                                     viewBox="0 0 24 24"
                                                     fill={isInWishlist ? "red" : "none"}
                                                     stroke={isInWishlist ? "red" : "currentColor"}
-                                                    strokeWidth="1.5"
+                                                    strokeWidth="1"
                                                     strokeLinecap="round"
                                                     strokeLinejoin="round"
                                                     className="text-gray-900 group-hover:text-black"
@@ -826,7 +826,7 @@ export default function ProductDetailPage() {
                                                 className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm group"
                                                 title="Share Product"
                                             >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900 group-hover:text-black">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900 group-hover:text-black">
                                                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                                                     <polyline points="16 6 12 2 8 6" />
                                                     <line x1="12" y1="2" x2="12" y2="15" />
@@ -839,7 +839,7 @@ export default function ProductDetailPage() {
                         </div>
 
                         {/* Right Sidebar - Product Information */}
-                        <div className="lg:col-span-5 px-4 md:px-0 mt-0 lg:mt-12">
+                        <div className="lg:col-span-5 px-4 md:px-0 mt-0 lg:mt-24">
                             <div className="sticky top-24">
                                 <div className="bg-white space-y-6">
                                     <div>
@@ -849,7 +849,7 @@ export default function ProductDetailPage() {
                                         <div className="mb-6 space-y-2">
                                             <div className="flex items-baseline gap-2">
                                                 <span className="text-sm text-gray-500">Rent</span>
-                                                <span className="text-3xl font-bold text-gray-900">
+                                                <span className="text-xl font-medium text-gray-900">
                                                     {product.price && !product.price.startsWith('₹') ? `₹${product.price.replace(/[₹,]/g, '')}` : product.price}
                                                 </span>
                                             </div>
@@ -857,7 +857,7 @@ export default function ProductDetailPage() {
                                                 {product.original_price && (
                                                     <div className="flex items-baseline gap-2">
                                                         <span className="text-sm text-gray-500">MRP</span>
-                                                        <span className="text-xl text-gray-600">
+                                                        <span className="text-base text-gray-600">
                                                             ₹{typeof product.original_price === 'number' ? product.original_price.toLocaleString() : parseFloat(String(product.original_price)).toLocaleString()}
                                                         </span>
                                                     </div>
@@ -921,7 +921,7 @@ export default function ProductDetailPage() {
                                                             viewBox="0 0 24 24"
                                                             fill="none"
                                                             stroke="currentColor"
-                                                            strokeWidth="1.5"
+                                                            strokeWidth="1"
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
                                                             className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.availability ? 'rotate-180' : ''}`}
@@ -954,7 +954,7 @@ export default function ProductDetailPage() {
                                                             viewBox="0 0 24 24"
                                                             fill="none"
                                                             stroke="currentColor"
-                                                            strokeWidth="1.5"
+                                                            strokeWidth="1"
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
                                                             className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.details ? 'rotate-180' : ''}`}
@@ -1023,7 +1023,7 @@ export default function ProductDetailPage() {
                                                             viewBox="0 0 24 24"
                                                             fill="none"
                                                             stroke="currentColor"
-                                                            strokeWidth="1.5"
+                                                            strokeWidth="1"
                                                             strokeLinecap="round"
                                                             strokeLinejoin="round"
                                                             className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.occasion ? 'rotate-180' : ''}`}
@@ -1069,7 +1069,7 @@ export default function ProductDetailPage() {
                                 }}
                                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
                             >
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                     <line x1="18" y1="6" x2="6" y2="18"></line>
                                     <line x1="6" y1="6" x2="18" y2="18"></line>
                                 </svg>

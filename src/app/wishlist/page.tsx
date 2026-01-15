@@ -51,7 +51,7 @@ export default function WishListPage() {
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
-                                strokeWidth="1.5"
+                                strokeWidth="1"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 className="text-gray-300 mx-auto mb-4"
