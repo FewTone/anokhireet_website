@@ -39,6 +39,8 @@ interface UserProduct {
     product_id?: string;
     category?: string;
     created_at: string;
+    status?: string;
+    admin_note?: string;
 }
 
 // Facet Management Section Component
@@ -3168,6 +3170,45 @@ To get these values:
         }
     };
 
+    const handleApproveProduct = async (product: UserProduct) => {
+        if (!confirm(`Are you sure you want to approve "${product.name}"?`)) return;
+
+        try {
+            const { error } = await supabase
+                .from("products")
+                .update({ status: 'approved', is_active: true })
+                .eq("id", product.id);
+
+            if (error) throw error;
+
+            showPopup("Product approved successfully!", "success");
+            loadUserProducts();
+        } catch (error: any) {
+            console.error("Error approving product:", error);
+            showPopup(`Error approving product: ${error.message}`, "error");
+        }
+    };
+
+    const handleRejectProduct = async (product: UserProduct) => {
+        const reason = prompt(`Enter reason for rejecting "${product.name}":`);
+        if (reason === null) return; // Cancelled
+
+        try {
+            const { error } = await supabase
+                .from("products")
+                .update({ status: 'rejected', admin_note: reason, is_active: false })
+                .eq("id", product.id);
+
+            if (error) throw error;
+
+            showPopup("Product rejected successfully!", "success");
+            loadUserProducts();
+        } catch (error: any) {
+            console.error("Error rejecting product:", error);
+            showPopup(`Error rejecting product: ${error.message}`, "error");
+        }
+    };
+
     const handleLogout = async () => {
         try {
             // Sign out from Supabase Auth
@@ -4473,6 +4514,9 @@ To get these values:
                                                                 </div>
                                                             </th>
                                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                Status
+                                                            </th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                                 Actions
                                                             </th>
                                                         </tr>
@@ -4640,7 +4684,40 @@ To get these values:
                                                                             }) : '-'}
                                                                         </div>
                                                                     </td>
+                                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                                        <div className="flex flex-col">
+                                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.status === 'approved'
+                                                                                ? 'bg-green-100 text-green-800'
+                                                                                : product.status === 'rejected'
+                                                                                    ? 'bg-red-100 text-red-800'
+                                                                                    : 'bg-yellow-100 text-yellow-800'
+                                                                                }`}>
+                                                                                {product.status ? capitalizeFirstLetter(product.status) : 'Approved'}
+                                                                            </span>
+                                                                            {product.status === 'rejected' && product.admin_note && (
+                                                                                <span className="text-xs text-gray-500 mt-1 max-w-[150px] truncate" title={product.admin_note}>
+                                                                                    Note: {product.admin_note}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
                                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                                        {product.status === 'draft' && (
+                                                                            <div className="flex gap-2 mb-2">
+                                                                                <button
+                                                                                    onClick={() => handleApproveProduct(product)}
+                                                                                    className="text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs"
+                                                                                >
+                                                                                    Approve
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handleRejectProduct(product)}
+                                                                                    className="text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
+                                                                                >
+                                                                                    Reject
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
                                                                         <button
                                                                             onClick={() => handleEditUserProduct(product as any)}
                                                                             className="text-blue-600 hover:text-blue-900 mr-4"

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { supabase } from "@/lib/supabase";
+import AddProductModal from "./AddProductModal";
 
 interface UserProduct {
     id: string;
@@ -15,7 +16,9 @@ interface UserProduct {
     views?: number;
     wishlist_count?: number;
     inquiries_count?: number;
-    db_id?: number; // Added to help matching
+    db_id?: number;
+    status?: string; // approved, draft, rejected
+    admin_note?: string;
 }
 
 export default function MyProductsView() {
@@ -23,9 +26,13 @@ export default function MyProductsView() {
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<string | null>(null);
     const [userName, setUserName] = useState<string>("");
+    const [listingCredits, setListingCredits] = useState<number>(0);
     const [totalInquiries, setTotalInquiries] = useState<number>(0);
     const [totalViews, setTotalViews] = useState<number>(0);
     const [totalLikes, setTotalLikes] = useState<number>(0);
+
+    // Modal state
+    const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -49,6 +56,7 @@ export default function MyProductsView() {
             } else {
                 setUserId(null);
                 setUserName("");
+                setListingCredits(0);
                 setMyProducts([]);
                 setLoading(false);
             }
@@ -73,7 +81,7 @@ export default function MyProductsView() {
             const authUserId = session.user.id;
             const { data: userData, error: userError } = await supabase
                 .from("users")
-                .select("id, name, auth_user_id")
+                .select("id, name, auth_user_id, listing_credits")
                 .or(`id.eq.${authUserId},auth_user_id.eq.${authUserId}`)
                 .maybeSingle();
 
@@ -86,6 +94,7 @@ export default function MyProductsView() {
             const actualUserId = userData.id;
             setUserId(actualUserId);
             setUserName(userData.name || "");
+            setListingCredits(userData.listing_credits || 0);
 
             loadProducts(actualUserId);
             loadInquiryStats(actualUserId);
@@ -131,64 +140,45 @@ export default function MyProductsView() {
                 const productIds = productsToSet.map(p => p.product_id || p.id);
                 const dbIds = productsToSet.map(p => p.id);
 
-                // Fetch views (Interests)
-                // Note: product_views uses 'product_id' column which stores the string ID (e.g. "PROD-123") usually, 
-                // but sometimes it might be db ID. Let's try to match both.
-
-                // We'll fetch all views for these products
-                // Since we can't easily group-by in client-side query without RPC, we'll fetch raw counts filtered by product IDs
-                // Optimization: If too many rows, this might be slow, but for user products it should be okay.
-
                 const { data: viewsData } = await supabase
                     .from("product_views")
                     .select("product_id")
                     .in("product_id", productIds);
 
-                // Also check if some views are recorded by db_id (numeric)
                 const { data: viewsDataById } = await supabase
                     .from("product_views")
                     .select("product_id")
                     .in("product_id", dbIds.map(String));
 
-                // Fetch wishlist counts (Likes)
                 const { data: wishlistData } = await supabase
                     .from("wishlist")
                     .select("product_id")
                     .in("product_id", dbIds);
 
-
-                // Fetch inquiries (Msgs)
                 const { data: inquiriesData } = await supabase
                     .from("inquiries")
                     .select("product_id")
                     .in("product_id", dbIds);
 
                 // Map counts to products
-                const updatedProducts = productsToSet.map(p => {
-                    // Count views
+                const updatedProducts = productsToSet.map((p: any) => {
                     const pIdStr = String(p.product_id || p.id);
                     const dbIdStr = String(p.id);
 
                     const viewsCount1 = viewsData?.filter(v => v.product_id === pIdStr).length || 0;
                     const viewsCount2 = viewsDataById?.filter(v => v.product_id === dbIdStr).length || 0;
-                    // Take simpler approach: verify which ID is used. Usually product_id (string). 
-                    // To avoid double counting, check if they are same set? 
-                    // Actually, let's just use the primary product_id match if available
                     const views = Math.max(viewsCount1, viewsCount2);
 
-                    // Count wishlist (Likes)
-                    // Wishlist 'product_id' is usually the numeric DB ID
                     const wishlistCount = wishlistData?.filter(w => w.product_id === p.id).length || 0;
-
-                    // Count inquiries
-                    const inquiriesCount = inquiriesData?.filter(i => i.product_id === p.id).length || 0;
+                    const inquiriesCount = inquiriesData?.filter(i => String(i.product_id) === String(p.id)).length || 0;
 
                     return {
                         ...p,
                         views: views,
                         wishlist_count: wishlistCount,
                         inquiries_count: inquiriesCount,
-                        db_id: p.id
+                        db_id: p.id,
+                        status: p.status || 'approved' // Default to approved for old products
                     };
                 });
 
@@ -197,8 +187,10 @@ export default function MyProductsView() {
                 // Calculate totals
                 const totalV = updatedProducts.reduce((sum, p) => sum + (p.views || 0), 0);
                 const totalL = updatedProducts.reduce((sum, p) => sum + (p.wishlist_count || 0), 0);
+                const totalI = updatedProducts.reduce((sum, p) => sum + (p.inquiries_count || 0), 0);
                 setTotalViews(totalV);
                 setTotalLikes(totalL);
+                setTotalInquiries(totalI);
             } else {
                 setMyProducts([]);
             }
@@ -224,15 +216,45 @@ export default function MyProductsView() {
         }
     };
 
+    const handleProductAdded = () => {
+        if (userId) {
+            loadUserAndProducts(); // Reload everything (credits + products)
+        }
+    };
+
     return (
         <div className="w-full">
-            <div className="mb-8">
-                <h2 className="text-2xl font-bold mb-2">
-                    {userName ? `${userName}'s Products` : "My Products"}
-                </h2>
-                <p className="text-gray-600 text-sm">
-                    View your products. Only admins can add, edit, or delete products.
-                </p>
+            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-bold mb-2">
+                        {userName ? `${userName}'s Products` : "My Products"}
+                    </h2>
+                    <p className="text-gray-600 text-sm">
+                        Manage your listed products and check their performance.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                    <div className="text-right px-2">
+                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Credits</p>
+                        <p className="text-lg font-black text-gray-900 leading-none">{listingCredits}</p>
+                    </div>
+                    <button
+                        onClick={() => setIsAddProductOpen(true)}
+                        disabled={listingCredits <= 0}
+                        className={`px-5 py-2.5 rounded-md font-bold text-sm shadow-sm transition-all flex items-center gap-2 ${listingCredits > 0
+                            ? "bg-black text-white hover:bg-gray-800 hover:shadow-md active:scale-95"
+                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            }`}
+                        title={listingCredits <= 0 ? "You need listing credits to add products. Refer friends to earn credits!" : "Add a new product"}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Product
+                    </button>
+                </div>
             </div>
 
             {/* Analytics Section */}
@@ -272,13 +294,35 @@ export default function MyProductsView() {
                     <p className="text-gray-500 text-lg mb-4">Please log in to view your products.</p>
                 </div>
             ) : myProducts.length === 0 ? (
-                <div className="text-center py-12">
-                    <p className="text-gray-500 text-lg mb-4">You don't have any products yet.</p>
+                <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                    <div className="mb-4 text-gray-400">
+                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <p className="text-gray-500 text-lg mb-2">You don't have any products yet.</p>
+                    <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                        Refer friends to earn credits and start listing your products on the platform.
+                    </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {myProducts.map((product) => (
                         <div key={product.id} className="relative group">
+                            {/* Status Badge */}
+                            <div className="absolute top-2 left-2 z-10">
+                                {product.status === 'draft' && (
+                                    <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-md border border-yellow-200 shadow-sm flex items-center gap-1">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
+                                        Pending
+                                    </span>
+                                )}
+                                {product.status === 'rejected' && (
+                                    <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded-md border border-red-200 shadow-sm">
+                                        Rejected
+                                    </span>
+                                )}
+                                {/* Approved products typically don't show a badge to keep UI clean, or maybe a subtle one? */}
+                            </div>
+
                             <ProductCard
                                 product={{
                                     id: parseInt(product.id) || 0,
@@ -323,6 +367,16 @@ export default function MyProductsView() {
                     ))}
                 </div>
             )}
+
+            {/* Modal */}
+            <AddProductModal
+                isOpen={isAddProductOpen}
+                onClose={() => setIsAddProductOpen(false)}
+                userId={userId || ""}
+                listingCredits={listingCredits}
+                onSuccess={handleProductAdded}
+            />
         </div>
     );
 }
+

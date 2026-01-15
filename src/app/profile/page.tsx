@@ -23,10 +23,19 @@ export default function Profile() {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [newUserEmail, setNewUserEmail] = useState("");
+    const [referralCode, setReferralCode] = useState("");
     const [otpSent, setOtpSent] = useState(false);
     const [otp, setOtp] = useState("");
     const [verifyingOtp, setVerifyingOtp] = useState(false);
+
+    // Login Method State
+    const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [useOtpForEmail, setUseOtpForEmail] = useState(false); // Toggle for Forgot Password / OTP Login
     const [pendingUserData, setPendingUserData] = useState<PendingUserData | null>(null);
+
+
     const [cities, setCities] = useState<any[]>([]);
     const [selectedCities, setSelectedCities] = useState<string[]>([]);
     const [showAddCity, setShowAddCity] = useState(false);
@@ -128,6 +137,18 @@ export default function Profile() {
                 if (userData) {
                     getReturnUrlAndRedirect();
                     return; // Don't stop loading, let redirect happen
+                } else {
+                    // User authenticated (e.g. via Google) but no public profile yet
+                    // Show "Create Account" screen and pre-fill data
+                    setIsNewUser(true);
+                    if (session.user.email) setNewUserEmail(session.user.email);
+                    if (session.user.user_metadata?.full_name) {
+                        const names = session.user.user_metadata.full_name.split(' ');
+                        if (names.length > 0) setFirstName(names[0]);
+                        if (names.length > 1) setLastName(names.slice(1).join(' '));
+                    }
+                    setLoading(false);
+                    return;
                 }
             }
         } catch (e) {
@@ -174,6 +195,70 @@ export default function Profile() {
                 }
             }
 
+            // ========== EMAIL FLOW ==========
+            if (loginMethod === 'email') {
+                if (!email) {
+                    setError("Please enter your email");
+                    setLoading(false);
+                    return;
+                }
+
+                // Check if user exists in public DB
+                const { data: publicUser } = await supabase
+                    .from("users")
+                    .select("id")
+                    .eq("email", email)
+                    .maybeSingle();
+
+                if (publicUser) {
+                    setIsNewUser(false);
+                } else {
+                    setIsNewUser(true);
+                    setNewUserEmail(email);
+                }
+
+                // 1. Password Login (Default)
+                if (!useOtpForEmail) {
+                    if (!password) {
+                        setError("Please enter your password");
+                        setLoading(false);
+                        return;
+                    }
+                    const { error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password,
+                    });
+
+                    if (error) {
+                        setError("Invalid credentials. Please try again.");
+                        setLoading(false);
+                        return;
+                    }
+                    // Success -> Session listener handles redirect
+                    return;
+                }
+
+                // 2. OTP Login (Forgot Password Flow)
+                // useOtpForEmail is true
+                const { error } = await supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        shouldCreateUser: true, // Allow creating auth user for new signups
+                    }
+                });
+
+                if (error) {
+                    setError(`Failed to send code: ${error.message}`);
+                    setLoading(false);
+                    return;
+                }
+
+                setOtpSent(true);
+                setLoading(false);
+                return;
+            }
+
+            // ========== PHONE FLOW ==========
             // Normalize phone number - extract only digits
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
@@ -422,11 +507,27 @@ export default function Profile() {
 
             // Normal OTP verification with Supabase
             // Use the same channel type as sending (sms for SMS, sms for WhatsApp too)
-            const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-                phone: phoneNumber,
-                token: otp,
-                type: "sms", // Use 'sms' type for both SMS and WhatsApp OTPs
-            });
+            // Normal OTP verification with Supabase
+            // Use correct channel type based on login method
+            let verifyData, verifyError;
+
+            if (loginMethod === 'email') {
+                const res = await supabase.auth.verifyOtp({
+                    email: email,
+                    token: otp,
+                    type: "email",
+                });
+                verifyData = res.data;
+                verifyError = res.error;
+            } else {
+                const res = await supabase.auth.verifyOtp({
+                    phone: phoneNumber,
+                    token: otp,
+                    type: "sms",
+                });
+                verifyData = res.data;
+                verifyError = res.error;
+            }
 
             if (verifyError) {
                 throw verifyError;
@@ -571,6 +672,11 @@ export default function Profile() {
             return;
         }
 
+        if (loginMethod === 'email' && !password && isNewUser) {
+            setError("Please set a password for your account");
+            return;
+        }
+
         const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
         setLoading(true);
@@ -607,20 +713,42 @@ export default function Profile() {
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
 
-            // ========== NORMAL FLOW (OTP REQUIRED) ==========
-            // Get current auth session (user already verified OTP)
-            // Use getUser() as it is more robust than getSession() for validation
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            let authUserId: string | null = null;
 
-            if (userError || !user) {
-                // Try refresh session
-                const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
-                if (!refreshedSession?.user) {
-                    throw new Error("Authentication session expired. Please login again.");
+            if (loginMethod === 'email' && isNewUser) {
+                // For new email users, we must update their password
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                if (userError || !user) throw new Error("Authentication failed");
+
+                // Update password for the user
+                const { error: passwordError } = await supabase.auth.updateUser({
+                    password: password
+                });
+
+                if (passwordError) throw passwordError;
+
+                authUserId = user.id;
+            } else {
+                // ========== PHONE OTP SIGNUP (OTP ALREADY VERIFIED) ==========
+                // Get current auth session (user already verified OTP)
+                // Use getUser() as it is more robust than getSession() for validation
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                if (userError || !user) {
+                    // Try refresh session
+                    const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+                    if (!refreshedSession?.user) {
+                        throw new Error("Authentication session expired. Please login again.");
+                    }
+                    authUserId = refreshedSession?.user.id || null;
+                } else {
+                    authUserId = user.id;
                 }
             }
 
-            const authUserId = user?.id || (await supabase.auth.getUser()).data.user?.id;
+
+
             if (!authUserId) throw new Error("User ID missing");
 
             // Create user in users table using auth user ID
@@ -630,8 +758,8 @@ export default function Profile() {
                 .insert([{
                     id: authUserId,
                     name: fullName,
-                    phone: phoneNumber,
-                    email: newUserEmail.trim() || null,
+                    phone: loginMethod === 'phone' ? phoneNumber : null,
+                    email: loginMethod === 'email' ? email : (newUserEmail.trim() || null),
                     auth_user_id: authUserId, // Link to Supabase Auth (required for RLS policy)
                 }])
                 .select()
@@ -640,12 +768,15 @@ export default function Profile() {
             if (createError) {
                 // Check for unique key violation (user already exists)
                 if (createError.code === "23505") { // duplicate key value violates unique constraint
-                    console.warn("⚠️ User already exists (duplicate phone), linking account...", createError);
+                    console.warn("⚠️ User already exists (duplicate key), linking account...", createError);
+
+                    const matchField = loginMethod === 'email' ? 'email' : 'phone';
+                    const matchValue = loginMethod === 'email' ? email : phoneNumber;
 
                     const { data: linkedUser, error: linkError } = await supabase
                         .from("users")
                         .update({ auth_user_id: authUserId })
-                        .eq("phone", phoneNumber)
+                        .eq(matchField, matchValue)
                         .select()
                         .single();
 
@@ -679,6 +810,24 @@ export default function Profile() {
 
             // User created - auth session already exists
             // No localStorage needed - session is managed by Supabase
+
+            // Handle referral if code provided
+            if (referralCode.trim()) {
+                try {
+                    const { error: referralError } = await supabase.rpc('handle_referral', {
+                        referral_code: referralCode.trim()
+                    });
+
+                    if (referralError) {
+                        console.error("Referral failed:", referralError);
+                        // Non-blocking error
+                    } else {
+                        console.log("Referral processed successfully");
+                    }
+                } catch (refErr) {
+                    console.error("Error processing referral:", refErr);
+                }
+            }
 
             // Redirect to user page
             router.push("/user");
@@ -737,8 +886,26 @@ export default function Profile() {
                             ? "Enter the OTP sent to your phone"
                             : isNewUser
                                 ? "Enter your details to create an account"
-                                : "Enter your phone number to login"}
+                                : "Choose your preferred login method"}
                     </p>
+
+                    {/* Method Toggle */}
+                    {!otpSent && !isNewUser && (
+                        <div className="flex p-1 bg-gray-100 rounded-lg mb-6 max-w-[300px] mx-auto">
+                            <button
+                                onClick={() => { setLoginMethod('phone'); setError(''); }}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${loginMethod === 'phone' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                PHONE
+                            </button>
+                            <button
+                                onClick={() => { setLoginMethod('email'); setError(''); }}
+                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${loginMethod === 'email' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                EMAIL
+                            </button>
+                        </div>
+                    )}
 
                     {otpSent ? (
                         <>
@@ -854,33 +1021,89 @@ export default function Profile() {
                         </>
                     ) : !isNewUser ? (
                         <>
-                            <div className="border border-[#4d5563] mt-4 p-3 text-[0.8rem] flex items-center">
-                                <span>+91</span>
-                                <input
-                                    type="tel"
-                                    pattern="[0-9]{10}"
-                                    maxLength={10}
-                                    inputMode="numeric"
-                                    value={phone}
-                                    onChange={(e) => {
-                                        let val = e.target.value.replace(/\D/g, "");
-                                        // Handle paste with 91 prefix
-                                        if (val.length > 10 && val.startsWith("91")) {
-                                            val = val.substring(2);
-                                        }
-                                        if (val.length > 10) val = val.slice(0, 10);
-                                        setPhone(val);
-                                        setError(""); // Clear error when user starts typing
-                                    }}
-                                    onKeyPress={(e) => {
-                                        if (e.key === 'Enter' && phone.length === 10) {
-                                            handleLogin();
-                                        }
-                                    }}
-                                    className="w-full outline-none border-none ml-2"
-                                    placeholder="Enter phone number"
-                                />
-                            </div>
+                            {loginMethod === 'phone' ? (
+                                <div className="border border-[#4d5563] mt-4 p-3 text-[0.8rem] flex items-center">
+                                    <span>+91</span>
+                                    <input
+                                        type="tel"
+                                        pattern="[0-9]{10}"
+                                        maxLength={10}
+                                        inputMode="numeric"
+                                        value={phone}
+                                        onChange={(e) => {
+                                            let val = e.target.value.replace(/\D/g, "");
+                                            // Handle paste with 91 prefix
+                                            if (val.length > 10 && val.startsWith("91")) {
+                                                val = val.substring(2);
+                                            }
+                                            if (val.length > 10) val = val.slice(0, 10);
+                                            setPhone(val);
+                                            setError(""); // Clear error when user starts typing
+                                        }}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && phone.length === 10) {
+                                                handleLogin();
+                                            }
+                                        }}
+                                        className="w-full outline-none border-none ml-2"
+                                        placeholder="Enter phone number"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="space-y-3 mt-4">
+                                    <div className="border border-[#4d5563] p-3 text-[0.8rem] flex items-center">
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    if (useOtpForEmail) {
+                                                        handleLogin();
+                                                    } else {
+                                                        document.getElementById('login-password')?.focus();
+                                                    }
+                                                }
+                                            }}
+                                            className="w-full outline-none border-none"
+                                            placeholder="Enter your email"
+                                        />
+                                    </div>
+
+                                    {!useOtpForEmail && (
+                                        <div className="border border-[#4d5563] p-3 text-[0.8rem] flex items-center">
+                                            <input
+                                                id="login-password"
+                                                type="password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        handleLogin();
+                                                    }
+                                                }}
+                                                className="w-full outline-none border-none"
+                                                placeholder="Enter password"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="flex justify-between items-center mt-1">
+                                        <div className="text-[10px] text-gray-500">
+                                            {useOtpForEmail ? "We'll send a one-time code to this email." : ""}
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setUseOtpForEmail(!useOtpForEmail);
+                                                setError("");
+                                            }}
+                                            className="text-[10px] text-gray-500 hover:text-black hover:underline"
+                                        >
+                                            {useOtpForEmail ? "Login with Password" : "Forgot Password? / Login with Code"}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
 
                             {error && (
                                 <p className="mt-2 text-red-500 text-xs text-left">{error}</p>
@@ -888,7 +1111,7 @@ export default function Profile() {
 
                             <button
                                 onClick={handleLogin}
-                                disabled={loading || !phone || phone.length !== 10}
+                                disabled={loading || (loginMethod === 'phone' ? !phone || phone.length !== 10 : !email || (!useOtpForEmail && !password))}
                                 className="mt-4 w-full p-4 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? "LOGGING IN..." : "LOGIN"}
@@ -954,6 +1177,35 @@ export default function Profile() {
                                         onChange={(e) => setNewUserEmail(e.target.value)}
                                         className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
                                         placeholder="user@example.com (optional)"
+                                        disabled={loginMethod === 'email'} // If signed up via email, this is fixed
+                                    />
+                                </div>
+
+                                {loginMethod === 'email' && (
+                                    <div>
+                                        <label className="block text-xs text-[#4d5563] text-left mb-1">
+                                            create Password *
+                                        </label>
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
+                                            placeholder="Set a password"
+                                        />
+                                    </div>
+                                )}
+
+                                <div>
+                                    <label className="block text-xs text-[#4d5563] text-left mb-1">
+                                        Referral Code (Optional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={referralCode}
+                                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                                        className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded uppercase placeholder:normal-case"
+                                        placeholder="Enter referral code"
                                     />
                                 </div>
 
@@ -1053,6 +1305,7 @@ export default function Profile() {
                                         setFirstName("");
                                         setLastName("");
                                         setNewUserEmail("");
+                                        setReferralCode("");
                                         setOtp("");
                                         setPhone("");
                                         setError("");
@@ -1072,8 +1325,54 @@ export default function Profile() {
                             </div>
                         </>
                     )}
+
+                    {/* Social Login Options */}
+                    {!otpSent && !isNewUser && (
+                        <div className="mt-8">
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t border-gray-300"></span>
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={async () => {
+                                    setLoading(true);
+                                    try {
+                                        const { error } = await supabase.auth.signInWithOAuth({
+                                            provider: 'google',
+                                            options: {
+                                                redirectTo: `${window.location.origin}/user`,
+                                                queryParams: {
+                                                    access_type: 'offline',
+                                                    prompt: 'consent',
+                                                },
+                                            },
+                                        });
+                                        if (error) throw error;
+                                    } catch (err: any) {
+                                        setError(err.message);
+                                        setLoading(false);
+                                    }
+                                }}
+                                disabled={loading}
+                                className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                </svg>
+                                Continue with Google
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
