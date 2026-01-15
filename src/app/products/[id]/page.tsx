@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ProductCard from "@/components/ProductCard";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName, getUserInitials } from "@/lib/utils";
 
@@ -56,6 +57,8 @@ export default function ProductDetailPage() {
     const [wishlistLoading, setWishlistLoading] = useState(false);
     const [referrerPath, setReferrerPath] = useState('');
     const [hasHistory, setHasHistory] = useState(false);
+    const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+    const [loadingRelated, setLoadingRelated] = useState(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -63,6 +66,139 @@ export default function ProductDetailPage() {
             setHasHistory(window.history.length > 1);
         }
     }, []);
+
+    useEffect(() => {
+        if (product) {
+            loadRelatedProducts();
+        }
+    }, [product, searchParams]);
+
+    const loadRelatedProducts = async () => {
+        if (!product) return;
+        setLoadingRelated(true);
+
+        try {
+            // Extract filters from URL
+            const productTypeParam = searchParams.get("product_type");
+            const occasionParam = searchParams.get("occasion");
+            const colorsParam = searchParams.get("colors");
+            const materialsParam = searchParams.get("materials");
+            const citiesParam = searchParams.get("cities");
+            const priceMinParam = searchParams.get("price_min");
+            const priceMaxParam = searchParams.get("price_max");
+            // const ownerIdParam = searchParams.get("owner_id"); // Ideally should respect owner filter too if present
+
+            let filteredProductIds: Set<string> | null = null;
+            let hasFilters = false;
+
+            // 1. Filter by Product Type
+            if (productTypeParam) {
+                hasFilters = true;
+                const { data } = await supabase
+                    .from("product_product_types")
+                    .select("product_id")
+                    .eq("type_id", productTypeParam);
+
+                if (data) {
+                    const ids = new Set(data.map(item => String(item.product_id)));
+                    filteredProductIds = ids;
+                } else {
+                    setRelatedProducts([]);
+                    setLoadingRelated(false);
+                    return;
+                }
+            }
+
+            // 2. Filter by Occasion
+            if (occasionParam) {
+                hasFilters = true;
+                const { data } = await supabase
+                    .from("product_occasions")
+                    .select("product_id")
+                    .eq("occasion_id", occasionParam);
+
+                if (data) {
+                    const ids = new Set(data.map(item => String(item.product_id)));
+                    if (filteredProductIds) {
+                        filteredProductIds = new Set([...filteredProductIds].filter(id => ids.has(id)));
+                    } else {
+                        filteredProductIds = ids;
+                    }
+                }
+            }
+
+            // 3. Filter by Colors
+            if (colorsParam) {
+                hasFilters = true;
+                const colorIds = colorsParam.split(',');
+                const { data } = await supabase
+                    .from("product_colors")
+                    .select("product_id")
+                    .in("color_id", colorIds);
+
+                if (data) {
+                    const ids = new Set(data.map(item => String(item.product_id)));
+                    if (filteredProductIds) {
+                        filteredProductIds = new Set([...filteredProductIds].filter(id => ids.has(id)));
+                    } else {
+                        filteredProductIds = ids;
+                    }
+                }
+            }
+
+            // If no filters are applied, showing "related" based on category or type of the CURRENT product might be good, 
+            // but the user specifically asked for "if user filter apply".
+            // So we strictly follow that. If no filters, maybe empty or generic fallback? 
+            // We'll show generic fallback (same category) if no filters, but prioritize filters if present.
+
+            let query = supabase
+                .from("products")
+                .select("*")
+                .neq("id", product.db_id) // Exclude current product using DB ID which is safe
+                .eq("is_active", true)
+                .limit(6); // Show 6 related products
+
+            if (filteredProductIds) {
+                if (filteredProductIds.size === 0) {
+                    setRelatedProducts([]);
+                    setLoadingRelated(false);
+                    return;
+                }
+                query = query.in("id", Array.from(filteredProductIds));
+            } else if (hasFilters) {
+                // Filters were valid but returned no products (e.g. invalid IDs)
+                setRelatedProducts([]);
+                setLoadingRelated(false);
+                return;
+            } else if (product.category) {
+                // Fallback: Same category
+                query = query.eq("category", product.category);
+            }
+
+            if (priceMinParam) query = query.gte("price", priceMinParam);
+            if (priceMaxParam) query = query.lte("price", priceMaxParam);
+
+            const { data, error } = await query;
+
+            if (data) {
+                const formattedProducts: Product[] = data.map((p: any) => ({
+                    id: p.id,
+                    productId: p.product_id,
+                    name: p.title || p.name,
+                    price: p.price,
+                    image: p.image || (p.images && p.images[0]) || "",
+                    category: p.category,
+                    original_price: p.original_price,
+                    owner_user_id: p.owner_user_id,
+                }));
+                setRelatedProducts(formattedProducts);
+            }
+        } catch (error) {
+            console.error("Error loading related products:", error);
+        } finally {
+            setLoadingRelated(false);
+        }
+    };
 
     useEffect(() => {
         if (productId) {
@@ -1050,6 +1186,20 @@ export default function ProductDetailPage() {
                         </div>
                     </div>
                 </div >
+
+                {/* Related Products Section */}
+                {relatedProducts.length > 0 && (
+                    <div className="w-full pb-12 px-4 mt-8 border-t border-gray-100 pt-8">
+                        <h3 className="text-lg font-bold mb-4 uppercase tracking-wide">You Might Also Like</h3>
+                        <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4">
+                            {relatedProducts.map((p) => (
+                                <div key={p.id} className="min-w-[40%] max-w-[45%] snap-start">
+                                    <ProductCard product={p} />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </main >
             <Footer />
 
@@ -1078,41 +1228,77 @@ export default function ProductDetailPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Start Date <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        type="date"
-                                        value={inquiryForm.start_date}
-                                        onChange={(e) => {
-                                            const newDate = e.target.value;
-                                            setInquiryForm({ ...inquiryForm, start_date: newDate });
-                                            // Auto open end date picker after a short delay to allow state update
-                                            if (newDate) {
-                                                setTimeout(() => {
-                                                    if (endDateInputRef.current) {
-                                                        (endDateInputRef.current as any).showPicker?.();
-                                                    }
-                                                }, 100);
-                                            }
-                                        }}
-                                        min={new Date().toISOString().split('T')[0]}
-                                        onClick={(e) => (e.target as any).showPicker?.()}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-none focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
-                                    />
+                                    <div className="relative">
+                                        {/* Display Layer */}
+                                        <div className="w-full px-4 py-2 border border-gray-300 rounded-none bg-white text-gray-900 pointer-events-none flex items-center justify-between h-[42px]">
+                                            <span>
+                                                {inquiryForm.start_date
+                                                    ? new Date(inquiryForm.start_date).toLocaleDateString('en-GB')
+                                                    : <span className="text-gray-400">dd/mm/yyyy</span>}
+                                            </span>
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                                            </svg>
+                                        </div>
+                                        {/* Invisible Interactive Layer */}
+                                        <input
+                                            type="date"
+                                            value={inquiryForm.start_date}
+                                            onChange={(e) => {
+                                                const newDate = e.target.value;
+                                                setInquiryForm({ ...inquiryForm, start_date: newDate });
+
+                                                // Auto open end date picker logic
+                                                if (newDate && endDateInputRef.current) {
+                                                    const endInput = endDateInputRef.current;
+                                                    endInput.min = newDate;
+                                                    // Just focus to highlight the customized container, user clicks to open
+                                                    endInput.focus();
+                                                }
+                                            }}
+                                            min={new Date().toISOString().split('T')[0]}
+                                            onClick={(e) => (e.target as any).showPicker?.()}
+                                            onKeyDown={(e) => e.preventDefault()} // Block typing
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         End Date <span className="text-red-500">*</span>
                                     </label>
-                                    <input
-                                        ref={endDateInputRef}
-                                        type="date"
-                                        value={inquiryForm.end_date}
-                                        onChange={(e) => setInquiryForm({ ...inquiryForm, end_date: e.target.value })}
-                                        min={inquiryForm.start_date || new Date().toISOString().split('T')[0]}
-                                        max={getMaxEndDate(inquiryForm.start_date)}
-                                        onClick={(e) => (e.target as any).showPicker?.()}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-none focus:ring-2 focus:ring-black focus:border-transparent cursor-pointer"
-                                    />
+                                    <div className="relative group">
+                                        {/* Display Layer */}
+                                        <div className={`w-full px-4 py-2 border border-gray-300 rounded-none bg-white text-gray-900 pointer-events-none flex items-center justify-between h-[42px] group-focus-within:border-black group-focus-within:ring-1 group-focus-within:ring-black transition-colors`}>
+                                            <span>
+                                                {inquiryForm.end_date
+                                                    ? new Date(inquiryForm.end_date).toLocaleDateString('en-GB')
+                                                    : <span className="text-gray-400">dd/mm/yyyy</span>}
+                                            </span>
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                                            </svg>
+                                        </div>
+                                        {/* Invisible Interactive Layer */}
+                                        <input
+                                            ref={endDateInputRef}
+                                            type="date"
+                                            value={inquiryForm.end_date}
+                                            onChange={(e) => setInquiryForm({ ...inquiryForm, end_date: e.target.value })}
+                                            min={inquiryForm.start_date || new Date().toISOString().split('T')[0]}
+                                            max={getMaxEndDate(inquiryForm.start_date)}
+                                            onClick={(e) => (e.target as any).showPicker?.()}
+                                            onKeyDown={(e) => e.preventDefault()} // Block typing
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                    </div>
                                 </div>
 
                                 {inquiryForm.start_date && (

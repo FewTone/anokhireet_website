@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 interface ProductProps {
@@ -102,8 +102,12 @@ export default function ProductCard({ product, hideDetails = false, disableHover
         return `₹${cleanPrice}`;
     };
 
+    const searchParams = useSearchParams();
+    const currentParams = searchParams ? searchParams.toString() : "";
+    const href = `/products/${product.productId || product.id}${currentParams ? `?${currentParams}` : ''}`;
+
     return (
-        <Link href={`/products/${product.productId || product.id}`} className="block bg-white group relative">
+        <Link href={href} className="block bg-white group relative">
             <div className={`relative w-full aspect-[4/5] overflow-hidden bg-gray-100 ${hideDetails ? 'mb-0' : 'mb-3'}`}>
                 {product.image ? (
                     <Image
