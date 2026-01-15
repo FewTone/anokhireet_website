@@ -247,7 +247,7 @@ export default function ProductDetailPage() {
 
     const handleShare = async () => {
         const shareData = {
-            title: product?.name || 'Snitch Product',
+            title: product?.name || 'Anokhi Reet Product',
             text: `Check out this product: ${product?.name}`,
             url: window.location.href,
         };

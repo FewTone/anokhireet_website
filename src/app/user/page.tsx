@@ -13,7 +13,7 @@ import ProfileView from "@/components/dashboard/ProfileView";
 import SettingsView from "@/components/dashboard/SettingsView";
 import ReferEarnView from "@/components/dashboard/ReferEarnView";
 
-type View = "my-products" | "wishlist" | "profile" | "settings" | "refer-earn" | "orders" | "addresses" | "refunds" | "gift-cards" | "reviews" | "stores" | "help";
+type View = "my-products" | "wishlist" | "profile" | "settings" | "refer-earn";
 
 export default function UserPage() {
     const [userName, setUserName] = useState("");
@@ -129,12 +129,6 @@ export default function UserPage() {
         }
     };
 
-    const getInitials = (name: string) => {
-        return name
-            ? name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-            : "U";
-    };
-
     const navItems = [
         { label: "MY PRODUCTS", id: "my-products" as View },
         { label: "WISHLIST", id: "wishlist" as View },
@@ -172,47 +166,56 @@ export default function UserPage() {
     return (
         <>
             <Navbar />
-            <main className="min-h-[calc(100vh-70px)] bg-white"> {/* Adjusted to eliminate double spacing */}
-                <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)]">
+            <main className="min-h-[calc(100vh-70px)] bg-white">
+                <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)] max-w-[1400px] mx-auto">
 
                     {/* Left Sidebar */}
-                    <div className="w-full md:w-[280px] border-r border-gray-100 bg-[#fbfbfb] p-6 hidden md:block">
-                        <div className="flex items-center gap-3 mb-8 px-4">
-                            <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">
-                                {getInitials(userName)}
+                    <div className="w-full md:w-[320px] p-6 hidden md:block">
+                        <div className="bg-white border border-gray-200 w-full mb-8">
+                            {/* Header */}
+                            <div className="px-5 py-4 border-b border-gray-100">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">
+                                        {userName ? userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "U"}
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500">Hello,</p>
+                                        <p className="text-sm font-semibold text-gray-900">{userName || "User"}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-xs text-gray-500">Hello,</p>
-                                <p className="text-sm font-semibold text-gray-900">{formatUserDisplayName(userName)}</p>
-                            </div>
+
+                            {/* Navigation Items */}
+                            <nav className="flex flex-col">
+                                {navItems.map((item, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => {
+                                            setActiveView(item.id);
+                                            router.push(`/user?view=${item.id}`, { scroll: false });
+                                        }}
+                                        className={`flex items-center justify-between px-5 py-4 text-[13px] font-semibold tracking-wide uppercase transition-colors w-full text-left border-b border-gray-50 last:border-0 ${activeView === item.id
+                                            ? "bg-gray-100 text-black"
+                                            : "bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                            }`}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <span>{item.label}</span>
+                                            {item.isNew && (
+                                                <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-sm font-bold tracking-tight">NEW</span>
+                                            )}
+                                        </div>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                                            <polyline points="9 18 15 12 9 6"></polyline>
+                                        </svg>
+                                    </button>
+                                ))}
+                            </nav>
                         </div>
-                        <nav className="flex flex-col space-y-1">
-                            {navItems.map((item, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => {
-                                        setActiveView(item.id);
-                                        router.push(`/user?view=${item.id}`, { scroll: false });
-                                    }}
-                                    className={`flex items-center justify-between px-4 py-3 text-sm font-medium transition-colors w-full text-left ${activeView === item.id
-                                        ? "bg-white text-black shadow-sm"
-                                        : "text-gray-600 hover:bg-gray-100"
-                                        }`}
-                                >
-                                    <span>{item.label}</span>
-                                    {item.isNew && (
-                                        <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded">NEW</span>
-                                    )}
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-                                        <polyline points="9 18 15 12 9 6"></polyline>
-                                    </svg>
-                                </button>
-                            ))}
-                        </nav>
                     </div>
 
                     {/* Main Content */}
-                    <div className="flex-1 p-6 md:p-12">
+                    <div className="flex-1 p-6 md:p-12 border-l border-gray-100">
                         {loading ? (
                             <div className="animate-pulse space-y-8">
                                 <div className="h-48 bg-gray-200 rounded"></div>
@@ -223,7 +226,7 @@ export default function UserPage() {
                                 </div>
                             </div>
                         ) : (
-                            <div className="max-w-6xl mx-auto fade-in">
+                            <div className="max-w-4xl mx-auto fade-in">
                                 {renderContent()}
                             </div>
                         )}

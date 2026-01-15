@@ -38,7 +38,7 @@ export default function Footer() {
 
                     {/* Copyright */}
                     <div className="text-center text-xs text-gray-400">
-                        <p>&copy; {new Date().getFullYear()} Snitch. All rights reserved.</p>
+                        <p>&copy; {new Date().getFullYear()} Anokhi Reet. All rights reserved.</p>
                     </div>
                 </div>
             </div>
