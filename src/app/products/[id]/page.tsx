@@ -720,7 +720,7 @@ export default function ProductDetailPage() {
 
                                 {/* Desktop Image Gallery (Hidden on mobile) */}
                                 <div className="hidden md:flex flex-1 w-full flex-col gap-4">
-                                        {/* Breadcrumbs */}
+                                    {/* Breadcrumbs */}
                                     <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 mt-8">
                                         <Link href="/" className="hover:text-black transition-colors">Home</Link>
                                         {referrerPath.includes('/products') && (
@@ -848,7 +848,7 @@ export default function ProductDetailPage() {
                                         {/* Pricing Information */}
                                         <div className="mb-6 space-y-2">
                                             <div className="flex items-baseline gap-2">
-                                                <span className="text-sm text-gray-500">Rental Price</span>
+                                                <span className="text-sm text-gray-500">Rent</span>
                                                 <span className="text-3xl font-bold text-gray-900">
                                                     {product.price && !product.price.startsWith('₹') ? `₹${product.price.replace(/[₹,]/g, '')}` : product.price}
                                                 </span>
@@ -856,7 +856,7 @@ export default function ProductDetailPage() {
                                             <div className="flex flex-col gap-2">
                                                 {product.original_price && (
                                                     <div className="flex items-baseline gap-2">
-                                                        <span className="text-sm text-gray-500">Original Price</span>
+                                                        <span className="text-sm text-gray-500">MRP</span>
                                                         <span className="text-xl text-gray-600">
                                                             ₹{typeof product.original_price === 'number' ? product.original_price.toLocaleString() : parseFloat(String(product.original_price)).toLocaleString()}
                                                         </span>

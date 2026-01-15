@@ -159,10 +159,12 @@ export default function ProductCard({ product, hideDetails = false, disableHover
                         </div>
                         <div className="text-right">
                             <p className="text-sm md:text-base font-normal text-neutral-900 whitespace-nowrap">
+                                <span className="text-xs text-neutral-500 mr-1">Rent</span>
                                 {formatPrice(product.price)}
                             </p>
                             {product.original_price && (
                                 <p className="text-xs text-neutral-500 mt-0.5">
+                                    <span className="mr-1">MRP</span>
                                     ₹{typeof product.original_price === 'number'
                                         ? product.original_price.toLocaleString()
                                         : parseFloat(String(product.original_price)).toLocaleString()}
