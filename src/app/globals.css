@@ -116,3 +116,14 @@ html {
 .bg-radial-brand {
   background: radial-gradient(circle at center, #4a0000 35%, #240000 100%);
 }
+
+/* React DatePicker Customization */
+.custom-datepicker-wrapper .react-datepicker-wrapper,
+.custom-datepicker-wrapper .react-datepicker__input-container {
+  display: block;
+  width: 100%;
+}
+
+.custom-datepicker-wrapper .react-datepicker__triangle {
+  display: none;
+}

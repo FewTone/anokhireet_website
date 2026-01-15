@@ -9,6 +9,8 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName, getUserInitials } from "@/lib/utils";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface Product {
     id: number | string;
@@ -47,7 +49,9 @@ export default function ProductDetailPage() {
     const [showInquiryModal, setShowInquiryModal] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
-    const endDateInputRef = useRef<HTMLInputElement>(null);
+    // const endDateInputRef = useRef<HTMLInputElement>(null); // Removed native ref
+    const startDatePickerRef = useRef<any>(null);
+    const endDatePickerRef = useRef<any>(null);
     const [inquiryForm, setInquiryForm] = useState({
         start_date: "",
         end_date: "",
@@ -1013,15 +1017,15 @@ export default function ProductDetailPage() {
                                                     <div className="grid grid-cols-2 gap-3 mt-4">
                                                         <button
                                                             onClick={handleMakeInquiry}
-                                                            className="bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity text-center text-sm md:text-base"
+                                                            className="bg-white text-black border border-black font-semibold py-4 px-6 hover:bg-gray-50 transition-all text-center text-sm md:text-base"
                                                         >
-                                                            Make Inquiry
+                                                            Send Msg
                                                         </button>
                                                         <button
                                                             onClick={handleMakeInquiry}
                                                             className="bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity text-center text-sm md:text-base"
                                                         >
-                                                            Send Msg
+                                                            Make Inquiry
                                                         </button>
                                                     </div>
                                                 )}
@@ -1189,13 +1193,11 @@ export default function ProductDetailPage() {
 
                 {/* Related Products Section */}
                 {relatedProducts.length > 0 && (
-                    <div className="w-full pb-12 px-4 mt-8 border-t border-gray-100 pt-8">
-                        <h3 className="text-lg font-bold mb-4 uppercase tracking-wide">You Might Also Like</h3>
-                        <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4">
+                    <div className="w-full pb-12 mt-8 border-t border-gray-100 pt-8">
+                        <h3 className="text-lg font-bold mb-4 px-4 uppercase tracking-wide text-center">You Might Also Like</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
                             {relatedProducts.map((p) => (
-                                <div key={p.id} className="min-w-[40%] max-w-[45%] snap-start">
-                                    <ProductCard product={p} />
-                                </div>
+                                <ProductCard key={p.id} product={p} disableHover={true} />
                             ))}
                         </div>
                     </div>
@@ -1228,41 +1230,30 @@ export default function ProductDetailPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Start Date <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="relative">
-                                        {/* Display Layer */}
-                                        <div className="w-full px-4 py-2 border border-gray-300 rounded-none bg-white text-gray-900 pointer-events-none flex items-center justify-between h-[42px]">
-                                            <span>
-                                                {inquiryForm.start_date
-                                                    ? new Date(inquiryForm.start_date).toLocaleDateString('en-GB')
-                                                    : <span className="text-gray-400">dd/mm/yyyy</span>}
-                                            </span>
-                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                                            </svg>
-                                        </div>
-                                        {/* Invisible Interactive Layer */}
-                                        <input
-                                            type="date"
-                                            value={inquiryForm.start_date}
-                                            onChange={(e) => {
-                                                const newDate = e.target.value;
-                                                setInquiryForm({ ...inquiryForm, start_date: newDate });
 
-                                                // Auto open end date picker logic
-                                                if (newDate && endDateInputRef.current) {
-                                                    const endInput = endDateInputRef.current;
-                                                    endInput.min = newDate;
-                                                    // Just focus to highlight the customized container, user clicks to open
-                                                    endInput.focus();
+                                    <div className="relative group custom-datepicker-wrapper">
+                                        <DatePicker
+                                            selected={inquiryForm.start_date ? new Date(inquiryForm.start_date) : null}
+                                            onChange={(date: Date | null) => {
+                                                if (date) {
+                                                    // Normalize to YYYY-MM-DD local time to avoid timezone shifts
+                                                    const dateString = date.toLocaleDateString('en-CA'); // en-CA gives YYYY-MM-DD
+                                                    setInquiryForm(prev => ({ ...prev, start_date: dateString }));
+
+                                                    // Auto open end date picker
+                                                    setTimeout(() => {
+                                                        endDatePickerRef.current?.setOpen(true);
+                                                    }, 50);
+                                                } else {
+                                                    setInquiryForm(prev => ({ ...prev, start_date: "" }));
                                                 }
                                             }}
-                                            min={new Date().toISOString().split('T')[0]}
-                                            onClick={(e) => (e.target as any).showPicker?.()}
+                                            minDate={new Date()}
+                                            dateFormat="dd/MM/yyyy"
+                                            placeholderText="dd/mm/yyyy"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-none text-gray-900 focus:border-black outline-none h-[42px] transition-colors"
+                                            ref={startDatePickerRef}
                                             onKeyDown={(e) => e.preventDefault()} // Block typing
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                         />
                                     </div>
                                 </div>
@@ -1271,32 +1262,24 @@ export default function ProductDetailPage() {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         End Date <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="relative group">
-                                        {/* Display Layer */}
-                                        <div className={`w-full px-4 py-2 border border-gray-300 rounded-none bg-white text-gray-900 pointer-events-none flex items-center justify-between h-[42px] group-focus-within:border-black group-focus-within:ring-1 group-focus-within:ring-black transition-colors`}>
-                                            <span>
-                                                {inquiryForm.end_date
-                                                    ? new Date(inquiryForm.end_date).toLocaleDateString('en-GB')
-                                                    : <span className="text-gray-400">dd/mm/yyyy</span>}
-                                            </span>
-                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                                            </svg>
-                                        </div>
-                                        {/* Invisible Interactive Layer */}
-                                        <input
-                                            ref={endDateInputRef}
-                                            type="date"
-                                            value={inquiryForm.end_date}
-                                            onChange={(e) => setInquiryForm({ ...inquiryForm, end_date: e.target.value })}
-                                            min={inquiryForm.start_date || new Date().toISOString().split('T')[0]}
-                                            max={getMaxEndDate(inquiryForm.start_date)}
-                                            onClick={(e) => (e.target as any).showPicker?.()}
+                                    <div className="relative group custom-datepicker-wrapper">
+                                        <DatePicker
+                                            selected={inquiryForm.end_date ? new Date(inquiryForm.end_date) : null}
+                                            onChange={(date: Date | null) => {
+                                                if (date) {
+                                                    const dateString = date.toLocaleDateString('en-CA');
+                                                    setInquiryForm(prev => ({ ...prev, end_date: dateString }));
+                                                } else {
+                                                    setInquiryForm(prev => ({ ...prev, end_date: "" }));
+                                                }
+                                            }}
+                                            minDate={inquiryForm.start_date ? new Date(inquiryForm.start_date) : new Date()}
+                                            maxDate={inquiryForm.start_date ? new Date(new Date(inquiryForm.start_date).getTime() + (6 * 24 * 60 * 60 * 1000)) : undefined}
+                                            dateFormat="dd/MM/yyyy"
+                                            placeholderText="dd/mm/yyyy"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-none text-gray-900 focus:border-black outline-none h-[42px] transition-colors"
+                                            ref={endDatePickerRef}
                                             onKeyDown={(e) => e.preventDefault()} // Block typing
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                         />
                                     </div>
                                 </div>
