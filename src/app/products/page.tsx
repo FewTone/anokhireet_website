@@ -1269,7 +1269,7 @@ export default function ProductsPage() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className={`${showCategories ? 'hidden md:grid' : 'grid'} ${viewMode === 'grid3' ? 'grid-cols-3 gap-1 md:gap-4' : 'grid-cols-2 gap-4 md:gap-6'} md:grid-cols-3 lg:grid-cols-4`}>
+                                <div className={`${showCategories ? 'hidden md:grid' : 'grid'} ${viewMode === 'grid3' ? 'grid-cols-3 gap-1 md:gap-4' : 'grid-cols-2 gap-2 md:gap-6'} md:grid-cols-3 lg:grid-cols-4`}>
                                     {filteredProducts.map((product) => (
                                         <ProductCard
                                             key={product.id}

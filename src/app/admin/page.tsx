@@ -74,7 +74,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
                     onClick={onAdd}
                     className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2"
                 >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
@@ -85,7 +85,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
             {items.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                     <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     <p className="text-lg font-medium text-gray-900 mb-2">No {title.toLowerCase()} found</p>
                     <p className="text-sm text-gray-600">Add your first {title.slice(0, -1).toLowerCase()} to get started</p>
@@ -3328,7 +3328,7 @@ To get these values:
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                         <rect x="3" y="3" width="7" height="7"></rect>
                                         <rect x="14" y="3" width="7" height="7"></rect>
                                         <rect x="14" y="14" width="7" height="7"></rect>
@@ -3354,7 +3354,7 @@ To get these values:
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                         <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                         <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -3380,7 +3380,7 @@ To get these values:
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                         <circle cx="9" cy="7" r="4"></circle>
                                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -3406,7 +3406,7 @@ To get these values:
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                         <rect x="3" y="3" width="7" height="7"></rect>
                                         <rect x="14" y="3" width="7" height="7"></rect>
                                         <rect x="14" y="14" width="7" height="7"></rect>
@@ -3432,7 +3432,7 @@ To get these values:
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                                         <line x1="3" y1="9" x2="21" y2="9"></line>
                                         <line x1="9" y1="21" x2="9" y2="9"></line>
@@ -3455,7 +3455,7 @@ To get these values:
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                                         <polyline points="22,6 12,13 2,6"></polyline>
                                     </svg>
@@ -3475,7 +3475,7 @@ To get these values:
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         stroke="currentColor"
-                                        strokeWidth="2"
+                                        strokeWidth="1"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                     >
@@ -3512,7 +3512,7 @@ To get these values:
                                             }}
                                             className="px-6 py-3 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                                         >
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                                             </svg>
@@ -3523,7 +3523,7 @@ To get these values:
                                     {categories.length === 0 ? (
                                         <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                                             <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                                             </svg>
                                             <p className="text-lg font-medium text-gray-900 mb-2">No categories found</p>
                                             <p className="text-sm text-gray-600 mb-6">Add your first category to display on the home page</p>
@@ -3558,7 +3558,7 @@ To get these values:
                                                                 stroke="currentColor"
                                                                 viewBox="0 0 24 24"
                                                             >
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 8h16M4 16h16" />
                                                             </svg>
                                                         </div>
                                                         <div className="relative w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
@@ -3602,7 +3602,7 @@ To get these values:
                                                                 </button>
                                                                 {category.is_featured && (
                                                                     <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex items-center gap-1">
-                                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+                                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
                                                                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                                                         </svg>
                                                                         Featured
@@ -3644,7 +3644,7 @@ To get these values:
                                                                 }`}
                                                             title={category.is_featured ? "Unpin from Featured Categories" : "Pin to Featured Categories"}
                                                         >
-                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill={category.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill={category.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1">
                                                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                                             </svg>
                                                         </button>
@@ -3720,7 +3720,7 @@ To get these values:
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Products</h3>
                                             <div className="p-3 bg-blue-100 rounded-lg">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-600">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-blue-600">
                                                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                                     <line x1="3" y1="6" x2="21" y2="6"></line>
                                                     <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -3736,7 +3736,7 @@ To get these values:
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Users</h3>
                                             <div className="p-3 bg-purple-100 rounded-lg">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-600">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-purple-600">
                                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                                     <circle cx="9" cy="7" r="4"></circle>
                                                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -3754,7 +3754,7 @@ To get these values:
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Categories</h3>
                                             <div className="p-3 bg-green-100 rounded-lg">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-600">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-green-600">
                                                     <rect x="3" y="3" width="7" height="7"></rect>
                                                     <rect x="14" y="3" width="7" height="7"></rect>
                                                     <rect x="14" y="14" width="7" height="7"></rect>
@@ -3774,7 +3774,7 @@ To get these values:
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Views</h3>
                                             <div className="p-3 bg-indigo-100 rounded-lg">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-indigo-600">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-indigo-600">
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                                     <circle cx="12" cy="12" r="3"></circle>
                                                 </svg>
@@ -4233,7 +4233,7 @@ To get these values:
                                                                         Name
                                                                         {sortColumn === 'name' && (
                                                                             <svg className={`w-3 h-3 ${sortDirection === 'asc' ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 15l7-7 7 7" />
                                                                             </svg>
                                                                         )}
                                                                     </button>
@@ -4245,7 +4245,7 @@ To get these values:
                                                                         className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.name ? 'opacity-100 text-blue-600' : ''}`}
                                                                     >
                                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                                                                         </svg>
                                                                     </button>
                                                                 </div>
@@ -4286,7 +4286,7 @@ To get these values:
                                                                         className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.user ? 'opacity-100 text-blue-600' : ''}`}
                                                                     >
                                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                                                                         </svg>
                                                                     </button>
                                                                 </div>
@@ -4347,7 +4347,7 @@ To get these values:
                                                                         Product ID
                                                                         {sortColumn === 'productId' && (
                                                                             <svg className={`w-3 h-3 ${sortDirection === 'asc' ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 15l7-7 7 7" />
                                                                             </svg>
                                                                         )}
                                                                     </button>
@@ -4359,7 +4359,7 @@ To get these values:
                                                                         className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.productId ? 'opacity-100 text-blue-600' : ''}`}
                                                                     >
                                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                                                                         </svg>
                                                                     </button>
                                                                 </div>
@@ -4405,7 +4405,7 @@ To get these values:
                                                                         Price
                                                                         {sortColumn === 'price' && (
                                                                             <svg className={`w-3 h-3 ${sortDirection === 'asc' ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 15l7-7 7 7" />
                                                                             </svg>
                                                                         )}
                                                                     </button>
@@ -4417,7 +4417,7 @@ To get these values:
                                                                         className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.price ? 'opacity-100 text-blue-600' : ''}`}
                                                                     >
                                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                                                                         </svg>
                                                                     </button>
                                                                 </div>
@@ -4466,7 +4466,7 @@ To get these values:
                                                                         Created
                                                                         {sortColumn === 'created' && (
                                                                             <svg className={`w-3 h-3 ${sortDirection === 'asc' ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 15l7-7 7 7" />
                                                                             </svg>
                                                                         )}
                                                                     </button>
@@ -4662,7 +4662,7 @@ To get these values:
                                                                 <td colSpan={13} className="px-6 py-12 text-center">
                                                                     <div className="text-gray-500">
                                                                         <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                                                         </svg>
                                                                         <p className="text-lg font-medium">No products found</p>
                                                                         <p className="text-sm mt-1">Add your first product to get started</p>
@@ -4900,7 +4900,7 @@ To get these values:
                                         }}
                                         className="px-5 py-2.5 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                                     >
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                             <line x1="12" y1="5" x2="12" y2="19"></line>
                                             <line x1="5" y1="12" x2="19" y2="12"></line>
                                         </svg>
@@ -4939,8 +4939,8 @@ To get these values:
                                                         <td colSpan={6} className="px-6 py-12 text-center">
                                                             <div className="text-gray-500">
                                                                 <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-3-3H5a3 3 0 00-3 3v2h5m16 0v-7a2 2 0 00-2-2H3a2 2 0 00-2 2v7m16 0H9" />
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-3-3H5a3 3 0 00-3 3v2h5m16 0v-7a2 2 0 00-2-2H3a2 2 0 00-2 2v7m16 0H9" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a3 3 0 11-6 0 3 3 0 016 0z" />
                                                                 </svg>
                                                                 <p className="text-lg font-medium">No users found</p>
                                                                 <p className="text-sm mt-1">Create your first user account to get started</p>
@@ -4992,7 +4992,7 @@ To get these values:
                                                                         className="px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1"
                                                                         title="Edit user details"
                                                                     >
-                                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                                                         </svg>
@@ -5011,7 +5011,7 @@ To get these values:
                                                                         className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1"
                                                                         title="Delete user and all their products"
                                                                     >
-                                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                                                             <polyline points="3 6 5 6 21 6"></polyline>
                                                                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                                                             <line x1="10" y1="11" x2="10" y2="17"></line>
@@ -5059,7 +5059,7 @@ To get these values:
                                                     viewBox="0 0 24 24"
                                                     fill="none"
                                                     stroke="currentColor"
-                                                    strokeWidth="2"
+                                                    strokeWidth="1"
                                                     strokeLinecap="round"
                                                     strokeLinejoin="round"
                                                 >
@@ -5307,7 +5307,7 @@ To get these values:
                                             }}
                                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                         >
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                 <line x1="18" y1="6" x2="6" y2="18"></line>
                                                 <line x1="6" y1="6" x2="18" y2="18"></line>
                                             </svg>
@@ -5319,7 +5319,7 @@ To get these values:
                                         {userProducts.filter((p) => p.user_id === selectedUserId).length === 0 ? (
                                             <div className="text-center py-12">
                                                 <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                                 </svg>
                                                 <p className="text-lg font-medium text-gray-900 mb-2">No products found</p>
                                                 <p className="text-sm text-gray-600">This user doesn't have any products yet.</p>
@@ -5440,7 +5440,7 @@ To get these values:
                                             }}
                                             className="px-5 py-2.5 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                                         >
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                                             </svg>
@@ -5516,7 +5516,7 @@ To get these values:
                                                     viewBox="0 0 24 24"
                                                     fill="none"
                                                     stroke="currentColor"
-                                                    strokeWidth="2"
+                                                    strokeWidth="1"
                                                     strokeLinecap="round"
                                                     strokeLinejoin="round"
                                                 >
@@ -5620,7 +5620,7 @@ To get these values:
                                                 >
                                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                                         <svg className="w-10 h-10 mb-3 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                         </svg>
                                                         <p className="mb-2 text-sm text-gray-500">
                                                             <span className="font-semibold">Click to upload</span> or drag and drop
@@ -5709,7 +5709,7 @@ To get these values:
                                                                                 stroke="currentColor"
                                                                                 viewBox="0 0 24 24"
                                                                             >
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                                                             </svg>
                                                                         </div>
                                                                     </div>
@@ -5729,7 +5729,7 @@ To get these values:
                                                                             stroke="currentColor"
                                                                             viewBox="0 0 24 24"
                                                                         >
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
                                                                         </svg>
                                                                     </button>
                                                                 </button>
@@ -5762,7 +5762,7 @@ To get these values:
                                                                                     stroke="currentColor"
                                                                                     viewBox="0 0 24 24"
                                                                                 >
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                                                                 </svg>
                                                                             </div>
                                                                         </div>
@@ -5782,7 +5782,7 @@ To get these values:
                                                                                 stroke="currentColor"
                                                                                 viewBox="0 0 24 24"
                                                                             >
-                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
                                                                             </svg>
                                                                         </button>
                                                                     </button>
@@ -5894,7 +5894,7 @@ To get these values:
                                             }}
                                             className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2"
                                         >
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                                             </svg>
@@ -5905,7 +5905,7 @@ To get these values:
                                     {heroSlides.length === 0 ? (
                                         <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
                                             <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                             <p className="text-gray-500 text-lg font-medium mb-2">No hero slides yet</p>
                                             <p className="text-gray-400 text-sm">Click "Add Slide" to create your first hero slide</p>
@@ -5933,7 +5933,7 @@ To get these values:
                                                         </div>
                                                         <div className="w-6 h-6 text-gray-400 cursor-move">
                                                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 8h16M4 16h16" />
                                                             </svg>
                                                         </div>
                                                     </div>
@@ -5974,7 +5974,7 @@ To get these values:
                                                                 }`}
                                                             title={slide.is_active ? "Deactivate slide" : "Activate slide"}
                                                         >
-                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill={slide.is_active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill={slide.is_active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1">
                                                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
                                                         </button>
@@ -5983,7 +5983,7 @@ To get these values:
                                                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                             title="Edit slide"
                                                         >
-                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                                             </svg>
@@ -5993,7 +5993,7 @@ To get these values:
                                                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                             title="Delete slide"
                                                         >
-                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                                 <polyline points="3 6 5 6 21 6"></polyline>
                                                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                                             </svg>
@@ -6032,7 +6032,7 @@ To get these values:
                                                 }}
                                                 className="text-gray-400 hover:text-gray-600"
                                             >
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                     <line x1="18" y1="6" x2="6" y2="18"></line>
                                                     <line x1="6" y1="6" x2="18" y2="18"></line>
                                                 </svg>
@@ -6135,7 +6135,7 @@ To get these values:
                                                         ) : (
                                                             <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                                                 <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                                 </svg>
                                                                 <p className="mb-2 text-sm text-gray-500">
                                                                     <span className="font-semibold">Click to upload</span> or drag and drop
@@ -6206,7 +6206,7 @@ To get these values:
                                                 }}
                                                 className="text-gray-400 hover:text-gray-600"
                                             >
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                     <line x1="18" y1="6" x2="6" y2="18"></line>
                                                     <line x1="6" y1="6" x2="18" y2="18"></line>
                                                 </svg>
@@ -6309,7 +6309,7 @@ To get these values:
                                     <div className="p-6">
                                         <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
                                             <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
                                         </div>
                                         <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
@@ -6365,7 +6365,7 @@ To get these values:
                                                 }}
                                                 className="text-gray-400 hover:text-gray-600"
                                             >
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                     <line x1="18" y1="6" x2="6" y2="18"></line>
                                                     <line x1="6" y1="6" x2="18" y2="18"></line>
                                                 </svg>
@@ -6395,7 +6395,7 @@ To get these values:
                                                         ) : (
                                                             <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                                                 <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                                 </svg>
                                                                 <p className="mb-2 text-sm text-gray-500">
                                                                     <span className="font-semibold">Click to upload</span> or drag and drop
@@ -6584,7 +6584,7 @@ To get these values:
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-yellow-600 font-bold text-sm w-6">{index + 1}</div>
                                                                 <div>
-                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
                                                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                                                         <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -6663,7 +6663,7 @@ To get these values:
                                                     }}
                                                     className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                                     </svg>
@@ -6688,7 +6688,7 @@ To get these values:
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
-                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
                                                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                                                         <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -6756,7 +6756,7 @@ To get these values:
                                                                         }`}
                                                                     title={pt.is_featured ? "Unpin" : "Pin"}
                                                                 >
-                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill={pt.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1">
                                                                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                                                     </svg>
                                                                 </button>
@@ -6811,7 +6811,7 @@ To get these values:
                                                     }}
                                                     className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                                     </svg>
@@ -6836,7 +6836,7 @@ To get these values:
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
-                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
                                                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                                                         <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -6904,7 +6904,7 @@ To get these values:
                                                                         }`}
                                                                     title={oc.is_featured ? "Unpin" : "Pin"}
                                                                 >
-                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill={oc.is_featured ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1">
                                                                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                                                     </svg>
                                                                 </button>
@@ -6959,7 +6959,7 @@ To get these values:
                                                     }}
                                                     className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                                     </svg>
@@ -6984,7 +6984,7 @@ To get these values:
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
-                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
                                                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                                                         <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -7066,7 +7066,7 @@ To get these values:
                                                     }}
                                                     className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                                     </svg>
@@ -7091,7 +7091,7 @@ To get these values:
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
-                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
                                                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                                                         <line x1="3" y1="18" x2="21" y2="18"></line>
@@ -7169,7 +7169,7 @@ To get these values:
                                                     }}
                                                     className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
                                                         <line x1="5" y1="12" x2="19" y2="12"></line>
                                                     </svg>
@@ -7194,7 +7194,7 @@ To get these values:
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
-                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
                                                                         <line x1="3" y1="6" x2="21" y2="6"></line>
                                                                         <line x1="3" y1="18" x2="21" y2="18"></line>

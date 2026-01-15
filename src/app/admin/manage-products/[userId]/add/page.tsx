@@ -1186,6 +1186,11 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                             src={preview}
                                                             alt={`New image ${index + 1}`}
                                                             fill
+                                                            className="object-cover"
+                                                            unoptimized
+                                                        />
+                                                        <div
+                                                            role="button"
                                                             aria-label="Remove image"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();

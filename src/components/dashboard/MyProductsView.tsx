@@ -289,28 +289,28 @@ export default function MyProductsView() {
                             <div className="mt-2 grid grid-cols-4 gap-1 bg-gray-50 rounded-md border border-gray-100 p-2 text-xs text-center text-gray-600">
                                 <div className="flex flex-col items-center justify-center p-1" title="Interest">
                                     <div className="flex items-center gap-1 mb-1">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
                                     </div>
                                     <span className="font-semibold">{product.views || 0}</span>
                                     <span className="text-[9px] text-gray-400">Intrst</span>
                                 </div>
                                 <div className="flex flex-col items-center justify-center p-1 border-l border-gray-200" title="Views">
                                     <div className="flex items-center gap-1 mb-1">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                     </div>
                                     <span className="font-semibold">{product.views || 0}</span>
                                     <span className="text-[9px] text-gray-400">Views</span>
                                 </div>
                                 <div className="flex flex-col items-center justify-center p-1 border-l border-gray-200" title="Likes">
                                     <div className="flex items-center gap-1 mb-1">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                                     </div>
                                     <span className="font-semibold">{product.wishlist_count || 0}</span>
                                     <span className="text-[9px] text-gray-400">Likes</span>
                                 </div>
                                 <div className="flex flex-col items-center justify-center p-1 border-l border-gray-200" title="Inquiries">
                                     <div className="flex items-center gap-1 mb-1">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                                     </div>
                                     <span className="font-semibold">{product.inquiries_count || 0}</span>
                                     <span className="text-[9px] text-gray-400">Msgs</span>

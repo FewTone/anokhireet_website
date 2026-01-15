@@ -843,7 +843,8 @@ export default function ProductDetailPage() {
                             <div className="sticky top-24">
                                 <div className="bg-white space-y-6">
                                     <div>
-                                        <h2 className="text-2xl font-bold mb-4">{product.name}</h2>
+                                        <h2 className="text-2xl font-bold mb-1">{product.name}</h2>
+                                        <p className="text-sm text-gray-500 mb-4">Product ID: {product.productId || product.id}</p>
 
                                         {/* Pricing Information */}
                                         <div className="mb-6 space-y-2">
@@ -965,12 +966,7 @@ export default function ProductDetailPage() {
                                                     {expandedSections.details && (
                                                         <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
                                                             <div className="space-y-4 text-sm text-gray-600">
-                                                                {product.productId && (
-                                                                    <div>
-                                                                        <span className="font-medium text-gray-700">Product ID:</span>
-                                                                        <p className="mt-1 font-mono text-[12px]">{product.productId}</p>
-                                                                    </div>
-                                                                )}
+
 
                                                                 {product.category && (
                                                                     <div>
