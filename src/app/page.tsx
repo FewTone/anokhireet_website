@@ -407,7 +407,7 @@ export default function Home() {
                     </h2>
 
                     {/* Filter Tabs */}
-                    <div className="flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-2 mb-6 md:mb-8 px-4 scrollbar-hide">
+                    <div className="sticky top-0 z-40 bg-white py-2 flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-2 mb-6 md:mb-8 px-4 scrollbar-hide border-b border-transparent">
                         {TABS.map((tab) => (
                             <span
                                 key={tab}
