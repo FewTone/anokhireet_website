@@ -140,6 +140,21 @@ input[type="search"]::-webkit-search-results-decoration {
   width: 100%;
 }
 
+
 .custom-datepicker-wrapper .react-datepicker__triangle {
   display: none;
+}
+
+/* Custom Scrollbar for Chat */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background-color: transparent;
 }

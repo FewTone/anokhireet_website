@@ -157,69 +157,82 @@ export default function Navbar() {
                 {/* Mobile Layout */}
                 {isHomePage || pathname?.startsWith("/products") ? (
                     // Home Page Overlay Layout OR Products Page Layout (Same structure, diff style)
-                    <div className={`md:hidden pt-4 px-4 ${isHomePage
-                        ? "pb-24 bg-gradient-to-b from-black via-black/70 to-transparent"
-                        : "pb-2 bg-white border-b border-gray-100" // Reduced padding, no shadow
+                    <div className={`md:hidden px-4 transition-all duration-300 ${isHomePage
+                        ? "bg-gradient-to-b from-black via-black to-transparent pt-3 pb-12" // Reduced bottom padding (shadow length)
+                        : "bg-white border-b border-gray-100 pt-4 pb-2"
                         }`}>
                         {!pathname?.startsWith("/chat") && (
-                            <div className="flex items-center gap-3">
-                                <Link href="/" className="flex-shrink-0">
-                                    <Image
-                                        src="/Anokhi reet Logo.svg"
-                                        alt="Anokhi Reet Logo"
-                                        width={40}
-                                        height={40}
-                                        className={`w-10 h-10 object-contain ${isHomePage ? "brightness-0 invert" : "brightness-0"}`}
-                                        priority
-                                        suppressHydrationWarning
-                                    />
-                                </Link>
-                                <form onSubmit={handleSearch} className={`flex flex-1 h-[42px] border text-sm items-center pl-3 ${isHomePage
-                                    ? "border-white/30 backdrop-blur-sm bg-white/10"
-                                    : "border-gray-200 bg-gray-50"
-                                    }`}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`opacity-70 ${isHomePage ? "text-white" : "text-gray-500"}`}>
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                    </svg>
-                                    <input
-                                        type="search"
-                                        placeholder="Search"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        onKeyPress={handleSearchKeyPress}
-                                        className={`h-full flex-1 text-[0.95rem] pl-3 border-none outline-none bg-transparent min-w-0 ${isHomePage ? "text-white placeholder-white/70" : "text-black placeholder-gray-500"
-                                            }`}
-                                    />
-                                    {searchQuery && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setSearchQuery("")}
-                                            className={`p-2 transition-colors focus:outline-none ${isHomePage ? "text-white/70 hover:text-white" : "text-gray-400 hover:text-gray-600"}`}
-                                            aria-label="Clear search"
+                            <div className="flex flex-col gap-3 w-full">
+                                {/* Top Row: Logo */}
+                                <div className="flex justify-center items-center">
+                                    <Link href="/" className="flex items-center gap-2">
+                                        <Image
+                                            src="/Anokhi reet Logo.svg"
+                                            alt="Anokhi Reet Logo"
+                                            width={40}
+                                            height={40}
+                                            className="w-10 h-10 object-contain cursor-pointer grayscale brightness-0 invert"
+                                            priority
+                                            suppressHydrationWarning
+                                        />
+                                        <Image
+                                            src="/anokhi-reet.svg"
+                                            alt="Anokhi Reet"
+                                            width={120}
+                                            height={18}
+                                            className="h-4 w-auto object-contain cursor-pointer grayscale brightness-0 invert"
+                                            style={{ width: "auto" }}
+                                            priority
+                                            suppressHydrationWarning
+                                        />
+                                    </Link>
+                                </div>
+
+                                {/* Bottom Row: Search & Chat */}
+                                <div className="flex items-center gap-3 w-full">
+                                    <form onSubmit={handleSearch} className="flex flex-1 h-[42px] border text-sm items-center pl-3 border-white/30 backdrop-blur-sm bg-white/10 rounded-none">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 text-white">
+                                            <circle cx="11" cy="11" r="8"></circle>
+                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                        </svg>
+                                        <input
+                                            type="search"
+                                            placeholder="Search"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            onKeyPress={handleSearchKeyPress}
+                                            className="h-full flex-1 text-[0.95rem] pl-3 border-none outline-none bg-transparent min-w-0 text-white placeholder-white/70"
+                                        />
+                                        {searchQuery && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setSearchQuery("")}
+                                                className="p-2 transition-colors focus:outline-none text-white/70 hover:text-white"
+                                                aria-label="Clear search"
+                                            >
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        )}
+                                        <button type="submit" className="hidden" aria-label="Search" />
+                                    </form>
+                                    <Link href="/chat" className="flex-shrink-0 p-2 text-white">
+                                        <svg
+                                            width="28"
+                                            height="28"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="1"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
                                         >
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
-                                        </button>
-                                    )}
-                                    <button type="submit" className="hidden" aria-label="Search" />
-                                </form>
-                                <Link href="/chat" className={`flex-shrink-0 p-2 ${isHomePage ? "text-white" : "text-black"}`}>
-                                    <svg
-                                        width="28"
-                                        height="28"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="1"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    >
-                                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                                    </svg>
-                                </Link>
+                                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                        </svg>
+                                    </Link>
+                                </div>
                             </div>
                         )}
                     </div>

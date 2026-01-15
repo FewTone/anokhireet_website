@@ -6,8 +6,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
-import { formatUserDisplayName } from "@/lib/utils";
 import { convertToWebPOptimized } from "@/lib/imageUtils";
+import dynamic from 'next/dynamic';
+
+const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
 
 interface Chat {
     id: string;
@@ -17,6 +19,8 @@ interface Chat {
         product?: {
             title?: string;
             name?: string;
+            price?: number;
+            image?: string;
         };
         owner_user_id: string;
         renter_user_id: string;
@@ -25,12 +29,15 @@ interface Chat {
         id: string;
         name: string;
         phone?: string;
+        avatar_url?: string;
     };
     last_message?: {
         message: string;
         created_at: string;
         sender_user_id: string;
         is_read: boolean;
+        is_delivered?: boolean;
+        media_url?: string;
     };
     unread_count: number;
 }
@@ -42,12 +49,15 @@ interface Message {
     message: string;
     created_at: string;
     is_read: boolean;
+    is_delivered?: boolean;
     read_at?: string;
     media_url?: string;
     media_type?: string;
+    reply_to_message_id?: string;
     sender?: {
         name: string;
     };
+    reply_message?: Message;
 }
 
 export default function ChatPage() {
@@ -60,16 +70,37 @@ export default function ChatPage() {
     const [messageInput, setMessageInput] = useState("");
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
+    const [otherUserOnline, setOtherUserOnline] = useState(false);
     const [otherUserTyping, setOtherUserTyping] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+    // Pagination state
+    const [hasMoreMessages, setHasMoreMessages] = useState(true);
+    const [page, setPage] = useState(0);
+    const MESSAGES_PER_PAGE = 50;
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const chatChannelRef = useRef<any>(null);
+    const emojiPickerRef = useRef<HTMLDivElement>(null);
+    const isUserAtBottomRef = useRef(true); // Track if user is at bottom
 
     // Check login status and load chats
     useEffect(() => {
         checkLoginStatus();
+
+        // Click outside to close emoji picker
+        const handleClickOutside = (event: MouseEvent) => {
+            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+                setShowEmojiPicker(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     // Load chats when user is loaded
@@ -79,22 +110,43 @@ export default function ChatPage() {
         }
     }, [currentUser]);
 
-    // Auto-select chat from URL parameter
+    // Auto-select chat from URL parameter - Single Source of Truth
     useEffect(() => {
         const chatId = searchParams.get('id');
-        if (chatId && chats.length > 0 && !selectedChat) {
-            const chatToSelect = chats.find(c => c.id === chatId);
-            if (chatToSelect) {
-                setSelectedChat(chatToSelect);
+        if (chatId) {
+            // Only update if we have chats and the selection actually changes or is null
+            if (chats.length > 0 && selectedChat?.id !== chatId) {
+                const chatToSelect = chats.find(c => c.id === chatId);
+                if (chatToSelect) {
+                    setSelectedChat(chatToSelect);
+                }
             }
+        } else if (selectedChat) {
+            // Only clear if we currently have a selection but URL has no ID
+            setSelectedChat(null);
         }
     }, [chats, searchParams, selectedChat]);
+
+    // Handle chat selection (URL driven)
+    const handleChatSelect = (chat: Chat) => {
+        router.push(`/chat?id=${chat.id}`);
+    };
+
+    // Handle back navigation (Mobile)
+    const handleBack = () => {
+        router.push('/chat');
+    };
 
     // Load messages when chat is selected
     useEffect(() => {
         if (selectedChat) {
-            loadMessages(selectedChat.id);
+            setMessages([]); // Clear previous messages
+            setHasMoreMessages(true);
+            setPage(0);
+            loadMessages(selectedChat.id, 0, true); // Initial load
             subscribeToMessages(selectedChat.id);
+            setReplyingTo(null);
+            setMessageInput("");
         }
 
         return () => {
@@ -111,11 +163,12 @@ export default function ChatPage() {
     useEffect(() => {
         if (!selectedChat || !currentUser || !chatChannelRef.current) return;
 
-        const broadcastTyping = async (status: boolean) => {
+        const broadcastStatus = async (typing: boolean) => {
             if (chatChannelRef.current) {
                 await chatChannelRef.current.track({
                     id: currentUser.id,
-                    typing: status,
+                    typing: typing,
+                    online: true,
                     last_seen: new Date().toISOString()
                 });
             }
@@ -124,17 +177,17 @@ export default function ChatPage() {
         if (messageInput.trim().length > 0) {
             if (!isTyping) {
                 setIsTyping(true);
-                broadcastTyping(true);
+                broadcastStatus(true);
             }
 
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
             typingTimeoutRef.current = setTimeout(() => {
                 setIsTyping(false);
-                broadcastTyping(false);
+                broadcastStatus(false);
             }, 3000);
         } else if (isTyping) {
             setIsTyping(false);
-            broadcastTyping(false);
+            broadcastStatus(false);
             if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         }
 
@@ -143,10 +196,39 @@ export default function ChatPage() {
         };
     }, [messageInput, selectedChat, currentUser]);
 
-    // Auto-scroll to bottom when new messages arrive
+    // Smart Auto-scroll
     useEffect(() => {
-        scrollToBottom();
+        // Only scroll if we were at the bottom, OR if it's the very first load (messages just populated)
+        // OR if the last message is from me.
+        if (messages.length === 0) return;
+
+        const lastMessage = messages[messages.length - 1];
+        const isFromMe = lastMessage.sender_user_id === currentUser?.id;
+
+        if (isUserAtBottomRef.current || isFromMe) {
+            scrollToBottom();
+        }
     }, [messages]);
+
+    // Scroll listener to track position and load more
+    const handleScroll = () => {
+        if (!messagesContainerRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+
+        // Check if user is near bottom (within 100px)
+        isUserAtBottomRef.current = scrollHeight - scrollTop - clientHeight < 100;
+
+        // Load more if at top
+        if (scrollTop === 0 && hasMoreMessages && !loading && selectedChat) {
+            const prevScrollHeight = scrollHeight;
+            loadMessages(selectedChat.id, page + 1, false).then(() => {
+                // Maintain scroll position after loading old messages
+                if (messagesContainerRef.current) {
+                    messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight - prevScrollHeight;
+                }
+            });
+        }
+    };
 
     // Hide search bar in mobile when chat is selected
     useEffect(() => {
@@ -154,6 +236,8 @@ export default function ChatPage() {
             document.body.classList.add('chat-selected');
         } else {
             document.body.classList.remove('chat-selected');
+            setOtherUserOnline(false);
+            setOtherUserTyping(false);
         }
         return () => {
             document.body.classList.remove('chat-selected');
@@ -237,15 +321,22 @@ export default function ChatPage() {
                     if (inquiry.product_id) {
                         const { data: productData } = await supabase
                             .from("products")
-                            .select("id, title, name")
+                            .select("id, title, name, price, product_media")
                             .eq("id", inquiry.product_id)
                             .single();
-                        product = productData;
+
+                        // Extract first image if available
+                        let image = null;
+                        if (productData?.product_media && Array.isArray(productData.product_media) && productData.product_media.length > 0) {
+                            image = productData.product_media[0].url;
+                        }
+
+                        product = { ...productData, image };
                     }
 
                     const { data: lastMessages } = await supabase
                         .from("messages")
-                        .select("message, created_at, sender_user_id, is_read")
+                        .select("message, created_at, sender_user_id, is_read, is_delivered")
                         .eq("chat_id", chat.id)
                         .order("created_at", { ascending: false })
                         .limit(1)
@@ -299,17 +390,49 @@ export default function ChatPage() {
         }
     };
 
-    const loadMessages = async (chatId: string) => {
+    // New function to mark messages as delivered
+    const markAsDelivered = async (chatId: string) => {
+        if (!currentUser) return;
+
         try {
+            const { error } = await supabase
+                .from("messages")
+                .update({ is_delivered: true })
+                .eq("chat_id", chatId)
+                .eq("is_delivered", false)
+                .neq("sender_user_id", currentUser.id);
+
+            if (error) throw error;
+        } catch (error) {
+            console.error("Error marking messages as delivered:", error);
+        }
+    };
+
+    const loadMessages = async (chatId: string, pageNum: number, isInitial: boolean) => {
+        if (!isInitial && !hasMoreMessages) return;
+
+        // Don't set global loading if pagination
+        if (isInitial) setLoading(true);
+
+        try {
+            const from = pageNum * MESSAGES_PER_PAGE;
+            const to = from + MESSAGES_PER_PAGE - 1;
+
             const { data: messagesData, error } = await supabase
                 .from("messages")
-                .select("*")
+                .select("*, reply_message:reply_to_message_id(*)")
                 .eq("chat_id", chatId)
-                .order("created_at", { ascending: true });
+                .order("created_at", { ascending: false }) // Fetch latest first
+                .range(from, to);
 
             if (error) throw error;
 
             if (messagesData && messagesData.length > 0) {
+                // Check if we reached the end
+                if (messagesData.length < MESSAGES_PER_PAGE) {
+                    setHasMoreMessages(false);
+                }
+
                 const uniqueSenderIds = [...new Set(messagesData.map((m: any) => m.sender_user_id))];
                 const { data: sendersData } = await supabase
                     .from("users")
@@ -323,29 +446,42 @@ export default function ChatPage() {
                 const messagesWithSenders = messagesData.map((message: any) => ({
                     ...message,
                     sender: sendersMap.get(message.sender_user_id) || { name: "Unknown" },
-                }));
+                })).reverse(); // Reverse back to chronological order for display
 
-                setMessages(messagesWithSenders);
-                markAsRead(chatId);
+                setMessages(prev => isInitial ? messagesWithSenders : [...messagesWithSenders, ...prev]);
+                setPage(pageNum);
+
+                if (isInitial) {
+                    setTimeout(scrollToBottom, 100);
+                    markAsRead(chatId);
+                }
             } else {
-                setMessages([]);
+                if (isInitial) setMessages([]);
+                setHasMoreMessages(false);
             }
         } catch (error) {
             console.error("Error loading messages:", error);
-            setMessages([]);
+            if (isInitial) setMessages([]);
+        } finally {
+            if (isInitial) setLoading(false);
         }
     };
 
-    const handleMessageRead = (chatId: string, messageId: string) => {
+    const handleMessageUpdate = (updatedMessage: Message) => {
         setMessages(prev => prev.map(m =>
-            m.id === messageId ? { ...m, is_read: true } : m
+            m.id === updatedMessage.id ? { ...m, ...updatedMessage } : m
         ));
 
         setChats(prev => prev.map(chat => {
-            if (chat.id === chatId && chat.last_message) {
+            if (chat.id === updatedMessage.chat_id && chat.last_message && chat.last_message.created_at <= updatedMessage.created_at) {
+                // Only update chat list if it matches the last message or is newer
                 return {
                     ...chat,
-                    last_message: { ...chat.last_message, is_read: true }
+                    last_message: {
+                        ...chat.last_message,
+                        is_read: updatedMessage.is_read,
+                        is_delivered: updatedMessage.is_delivered
+                    } as any
                 };
             }
             return chat;
@@ -373,61 +509,119 @@ export default function ChatPage() {
                     if (payload.eventType === "INSERT") {
                         const newMessage = payload.new as Message;
 
+                        // If we are the recipient, mark as read/delivered immediately if chat is open
                         if (newMessage.sender_user_id !== currentUser?.id) {
                             markAsRead(chatId);
+                            markAsDelivered(chatId);
                         }
 
+                        // Optimistically add message if not already present (should be from sender)
                         setMessages((prev) => {
                             if (prev.some((m) => m.id === newMessage.id)) return prev;
+
+                            // Fetch reply message if exists
+                            if (newMessage.reply_to_message_id) {
+                                // We might have it in local state
+                                const replyMsg = prev.find(m => m.id === newMessage.reply_to_message_id);
+                                if (replyMsg) {
+                                    const msgWithReply = { ...newMessage, reply_message: replyMsg };
+                                    // Also need sender info
+                                    const senderName = newMessage.sender_user_id === currentUser?.id ? currentUser?.name : "Loading...";
+                                    return [...prev, { ...msgWithReply, sender: { name: senderName || "Unknown" } }];
+                                }
+                            }
+
                             const senderName = newMessage.sender_user_id === currentUser?.id
                                 ? currentUser?.name
                                 : "Loading...";
                             return [...prev, { ...newMessage, sender: { name: senderName || "Unknown" } }];
                         });
 
-                        try {
-                            const { data: senderData } = await supabase
-                                .from("users")
-                                .select("id, name")
-                                .eq("id", newMessage.sender_user_id)
+                        // Refetch to get full details including join
+                        if (newMessage.reply_to_message_id) {
+                            const { data: freshMsg } = await supabase
+                                .from("messages")
+                                .select("*, reply_message:reply_to_message_id(*)")
+                                .eq("id", newMessage.id)
                                 .single();
 
-                            const messageWithSender = {
-                                ...newMessage,
-                                sender: senderData || { name: "Unknown" },
-                            };
+                            if (freshMsg) {
+                                const { data: senderData } = await supabase.from("users").select("id, name").eq("id", freshMsg.sender_user_id).single();
+                                setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...freshMsg, sender: senderData || { name: "Unknown" } } : m));
+                            }
+                        } else {
+                            // Basic sender fetch
+                            try {
+                                const { data: senderData } = await supabase
+                                    .from("users")
+                                    .select("id, name")
+                                    .eq("id", newMessage.sender_user_id)
+                                    .single();
 
-                            setMessages((prev) => {
-                                if (prev.some((m) => m.id === newMessage.id)) {
-                                    return prev.map(m => m.id === newMessage.id ? messageWithSender : m);
-                                }
-                                return [...prev, messageWithSender];
-                            });
-                        } catch (error) {
-                            console.error("Error fetching sender info:", error);
+                                const messageWithSender = {
+                                    ...newMessage,
+                                    sender: senderData || { name: "Unknown" },
+                                };
+
+                                setMessages((prev) => {
+                                    if (prev.some((m) => m.id === newMessage.id)) {
+                                        return prev.map(m => m.id === newMessage.id ? messageWithSender : m);
+                                    }
+                                    return [...prev, messageWithSender];
+                                });
+                            } catch (error) {
+                                console.error("Error fetching sender info:", error);
+                            }
                         }
+
                     } else if (payload.eventType === "UPDATE") {
-                        const updatedMessage = payload.new as Message;
-                        if (updatedMessage.is_read) {
-                            handleMessageRead(chatId, updatedMessage.id);
-                        }
+                        handleMessageUpdate(payload.new as Message);
                     }
                 }
             )
             .on("presence", { event: "sync" }, () => {
                 const state = channel.presenceState();
                 const otherUsers = Object.keys(state).filter(id => id !== currentUser?.id);
-                // Check if any presence state for other users has typing: true
-                const isAnyTyping = otherUsers.some(id => {
+
+                // Determine if other user is online and typing
+                let isOnline = false;
+                let isTyping = false;
+
+                otherUsers.forEach(id => {
                     const presences = state[id] as any[];
-                    return presences.some(p => p.typing === true);
+                    // If they are present in this channel, they are online in this chat context
+                    if (presences && presences.length > 0) {
+                        isOnline = true;
+                        if (presences.some(p => p.typing === true)) {
+                            isTyping = true;
+                        }
+                    }
                 });
-                setOtherUserTyping(isAnyTyping);
+
+                setOtherUserOnline(isOnline);
+                setOtherUserTyping(isTyping);
+
+                // If they just came online, mark my sent messages as delivered
+                if (isOnline) {
+                    // This is a bit tricky: we want to mark *their* received messages as delivered? 
+                    // No, "I" can't mark "their" messages as delivered.
+                    // But if *I* am the one viewing this, and *they* just joined, 
+                    // it means they are now receiving my messages.
+                    // Actually, the other client should mark as delivered when they join. 
+                    // So we call markAsDelivered for myself (currentUser) receiving messages in this chat.
+                    markAsDelivered(chatId);
+                }
             })
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
-                    // Start tracking ONLY after subscribed
                     chatChannelRef.current = channel;
+                    // Initial track
+                    channel.track({
+                        id: currentUser?.id,
+                        typing: false,
+                        online: true, // I am here
+                        last_seen: new Date().toISOString()
+                    });
                 }
             });
 
@@ -472,9 +666,11 @@ export default function ChatPage() {
                     message: "",
                     media_url: publicUrl,
                     media_type: "image",
-                    is_read: false
+                    is_read: false,
+                    is_delivered: false,
+                    reply_to_message_id: replyingTo?.id || null
                 }])
-                .select()
+                .select("*, reply_message:reply_to_message_id(*)")
                 .single();
 
             if (msgError) throw msgError;
@@ -483,13 +679,14 @@ export default function ChatPage() {
                 const newMessage = { ...msgData, sender: { name: currentUser.name || "Me" } };
                 setMessages((prev) => [...prev, newMessage]);
             }
+
+            setReplyingTo(null);
             loadChats();
         } catch (error) {
             console.error("Error uploading image:", error);
             alert("Failed to upload image. Please try again.");
         } finally {
             setSending(false);
-            // Clear input
             e.target.value = '';
         }
     };
@@ -508,12 +705,17 @@ export default function ChatPage() {
                     chat_id: selectedChat.id,
                     sender_user_id: currentUser.id,
                     message: messageInput.trim(),
+                    reply_to_message_id: replyingTo?.id || null,
+                    is_read: false,
+                    is_delivered: false
                 }])
-                .select()
+                .select("*, reply_message:reply_to_message_id(*)")
                 .single();
 
             if (error) throw error;
             setMessageInput("");
+            setReplyingTo(null);
+            setShowEmojiPicker(false);
 
             if (data) {
                 const newMessage = { ...data, sender: { name: currentUser.name || "Me" } };
@@ -526,6 +728,10 @@ export default function ChatPage() {
         } finally {
             setSending(false);
         }
+    };
+
+    const onEmojiClick = (emojiObject: any) => {
+        setMessageInput(prev => prev + emojiObject.emoji);
     };
 
     const scrollToBottom = () => {
@@ -564,20 +770,71 @@ export default function ChatPage() {
         return date.toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' });
     };
 
+    const renderMessageStatus = (msg: Message) => {
+        if (msg.sender_user_id !== currentUser?.id) return null; // Only show for my messages
+
+        if (msg.is_read) {
+            // Blue Ticks
+            return (
+                <div className="flex text-gray-600" title="Read">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 12l5 5L22 7" /><path d="M2 12l5 5L22 7" style={{ transform: 'translateX(-6px)' }} /></svg>
+                </div>
+            );
+        } else if (msg.is_delivered) {
+            // Gray Ticks
+            return (
+                <div className="flex text-gray-400">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 12l5 5L22 7" /><path d="M2 12l5 5L22 7" style={{ transform: 'translateX(-6px)' }} /></svg>
+                </div>
+            );
+        } else {
+            // Single Gray Tick
+            return (
+                <div className="flex text-gray-400">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                </div>
+            );
+        }
+    };
+
     const renderMessageContent = (msg: Message) => {
+        const isSent = msg.sender_user_id === currentUser?.id;
+
+        // Render Replied Context
+        const repliedMessage = msg.reply_message;
+        const replyContext = repliedMessage ? (
+            <div
+                className={`mb-1 rounded-lg p-2 text-xs border-l-4 cursor-pointer opacity-90 ${isSent ? "bg-black/5 border-black/30" : "bg-white/50 border-blue-500"}`}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    // Scroll to message functionality could go here
+                }}
+            >
+                <div className="font-bold mb-0.5 text-black/70">
+                    {repliedMessage.sender_user_id === currentUser?.id ? "You" : repliedMessage.sender?.name || "User"}
+                </div>
+                <div className="truncate text-black/60">
+                    {repliedMessage.media_url ? "📷 Photo" : repliedMessage.message}
+                </div>
+            </div>
+        ) : null;
+
         if (msg.media_url && msg.media_type === "image") {
             return (
-                <div className="mb-1 max-w-[300px] overflow-hidden rounded-lg">
-                    <img
-                        src={msg.media_url}
-                        alt="Media"
-                        className="w-full h-auto object-cover cursor-pointer hover:opacity-95 transition-opacity"
-                        onClick={() => window.open(msg.media_url, '_blank')}
-                        onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Expired';
-                        }}
-                    />
-                    {msg.message && <p className="text-[14.5px] leading-[19px] whitespace-pre-wrap break-words mt-1">{msg.message}</p>}
+                <div className="flex flex-col">
+                    {replyContext}
+                    <div className="mb-1 max-w-[300px] overflow-hidden rounded-lg">
+                        <img
+                            src={msg.media_url}
+                            alt="Media"
+                            className="w-full h-auto object-cover cursor-pointer hover:opacity-95 transition-opacity"
+                            onClick={() => window.open(msg.media_url, '_blank')}
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200?text=Image+Expired';
+                            }}
+                        />
+                        {msg.message && <p className="text-[14.5px] leading-[19px] whitespace-pre-wrap break-words mt-1">{msg.message}</p>}
+                    </div>
                 </div>
             );
         }
@@ -600,6 +857,7 @@ export default function ChatPage() {
         if (isInquiryCard && cardData) {
             return (
                 <div className="mb-1 w-full">
+                    {replyContext}
                     <div className="bg-gray-50 rounded p-2 mb-2 flex gap-3 border border-gray-200 overflow-hidden w-full max-w-[300px]">
                         {cardData.product.image && (
                             <div className="w-16 h-20 relative flex-shrink-0 bg-gray-200 rounded overflow-hidden">
@@ -616,8 +874,22 @@ export default function ChatPage() {
             );
         }
 
-        return <p className="text-[14.5px] leading-[19px] whitespace-pre-wrap break-words">{messageContent}</p>;
+        return (
+            <div className="flex flex-col min-w-[60px]">
+                {replyContext}
+                <p className="text-[14.5px] leading-[19px] whitespace-pre-wrap break-words">{messageContent}</p>
+            </div>
+        );
     };
+
+    // Filter chats based on search
+    const filteredChats = chats.filter(chat => {
+        const otherName = chat.other_user?.name?.toLowerCase() || "";
+        const productName = (chat.inquiry?.product?.title || chat.inquiry?.product?.name || "").toLowerCase();
+        const lastMsg = (chat.last_message?.message || "").toLowerCase();
+        const query = searchQuery.toLowerCase();
+        return otherName.includes(query) || productName.includes(query) || lastMsg.includes(query);
+    });
 
     if (loading) {
         return (
@@ -644,46 +916,85 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex-1 flex flex-col h-screen bg-white">
-            <Navbar />
-            <div className="flex-1 flex flex-col overflow-hidden w-full">
-                <div className="flex-1 flex bg-white overflow-hidden">
+        <div className="flex-1 flex flex-col h-[100dvh] bg-white">
+            {/* Hide Navbar on mobile when chat is selected */}
+            <div className={`${selectedChat ? 'hidden md:block' : 'block'}`}>
+                <Navbar />
+            </div>
+
+            <div className="flex-1 flex flex-col overflow-hidden w-full relative">
+                <div className="flex-1 flex bg-white overflow-hidden h-full">
                     {/* Chat List Sidebar */}
-                    <div className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
-                        <div className="bg-white px-4 py-3 flex items-center justify-between border-b border-gray-200">
-                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span className="text-gray-600 font-semibold">{currentUser.name.charAt(0).toUpperCase()}</span>
+                    <div className={`w-full md:w-1/3 border-r border-gray-200 flex flex-col h-full md:shrink-0 ${selectedChat ? 'hidden md:flex' : 'flex'}`}>
+                        <div className="bg-white px-4 py-3 border-b border-gray-200 flex-shrink-0">
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <span className="text-gray-600 font-semibold">{currentUser?.name?.charAt(0).toUpperCase()}</span>
+                                    </div>
+                                    <h2 className="text-xl font-bold text-[#111b21]">Chats</h2>
+                                </div>
+                                <div className="flex gap-3 text-gray-600">
+                                    <button title="New Chat"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg></button>
+                                    <button title="Menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg></button>
+                                </div>
                             </div>
-                            <h2 className="text-xl font-bold text-[#111b21]">Chats</h2>
+
+                            {/* Search Bar */}
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg className="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <input
+                                    type="text"
+                                    className="bg-[#f0f2f5] text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full pl-10 p-2 outline-none"
+                                    placeholder="Search or start new chat"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
                         </div>
                         <div className="flex-1 overflow-y-auto">
-                            {chats.length === 0 ? (
+                            {filteredChats.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center h-full p-6 text-center">
-                                    <p className="text-gray-500">No chats yet</p>
+                                    <p className="text-gray-500">{chats.length === 0 ? "No chats yet" : "No chats found"}</p>
                                 </div>
                             ) : (
-                                chats.map((chat) => {
+                                filteredChats.map((chat) => {
                                     const isSelected = selectedChat?.id === chat.id;
                                     const productName = chat.inquiry?.product?.title || chat.inquiry?.product?.name || "Product";
                                     return (
-                                        <div key={chat.id} onClick={() => setSelectedChat(chat)} className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? "bg-gray-50" : "bg-white hover:bg-gray-50"}`}>
+                                        <div key={chat.id} onClick={() => handleChatSelect(chat)} className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? "bg-[#f0f2f5]" : "bg-white hover:bg-[#f5f6f6]"}`}>
                                             <div className="flex items-start gap-3">
-                                                <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white font-semibold text-lg">{chat.other_user?.name?.charAt(0).toUpperCase()}</div>
+                                                <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center text-white font-semibold text-lg overflow-hidden shrink-0">
+                                                    {chat.inquiry?.product?.image ? (
+                                                        <img src={chat.inquiry.product.image} alt="Product" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        chat.other_user?.avatar_url ? (
+                                                            <img src={chat.other_user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            chat.other_user?.name?.charAt(0).toUpperCase()
+                                                        )
+                                                    )}
+                                                </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between">
-                                                        <h3 className="text-[15px] font-semibold text-gray-900 truncate">{chat.other_user?.name}</h3>
-                                                        {chat.last_message && <span className={`text-[12px] ${chat.unread_count > 0 ? "text-black" : "text-gray-500"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
+                                                        <h3 className="text-[16px] font-normal text-[#111b21] truncate">{chat.other_user?.name}</h3>
+                                                        {chat.last_message && <span className={`text-[12px] ${chat.unread_count > 0 ? "text-black font-semibold" : "text-[#667781]"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
                                                     </div>
-                                                    <div className="flex items-center justify-between">
-                                                        <p className="text-[13.5px] text-gray-500 truncate">
+                                                    <div className="flex items-center justify-between mt-0.5">
+                                                        <p className="text-[14px] text-[#667781] truncate flex-1">
                                                             {(() => {
                                                                 const msg = chat.last_message?.message;
+                                                                if (!msg && chat.last_message?.media_url) return <span className="flex items-center gap-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Photo</span>;
                                                                 if (!msg) return productName;
                                                                 try {
                                                                     if (msg.trim().startsWith('{') && msg.trim().endsWith('}')) {
                                                                         const parsed = JSON.parse(msg);
                                                                         if (parsed.type === 'inquiry_card') {
-                                                                            return `Inquiry for ${parsed.product.name}`;
+                                                                            return `Inquiry: ${parsed.product.name}`;
                                                                         }
                                                                         return parsed.text || "Sent an attachment";
                                                                     }
@@ -691,7 +1002,7 @@ export default function ChatPage() {
                                                                 return msg;
                                                             })()}
                                                         </p>
-                                                        {chat.unread_count > 0 && <div className="bg-black text-white text-[11px] font-bold min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1">{chat.unread_count}</div>}
+                                                        {chat.unread_count > 0 && <div className="bg-gray-500 text-white text-[12px] font-medium min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 ml-2">{chat.unread_count}</div>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -703,23 +1014,41 @@ export default function ChatPage() {
                     </div>
 
                     {/* Chat View */}
-                    <div className={`flex-1 flex flex-col ${selectedChat ? 'flex' : 'hidden md:flex'}`}>
+                    <div className={`flex flex-col relative h-full bg-white min-w-0 ${selectedChat ? 'flex w-full md:w-auto md:flex-1' : 'hidden md:flex md:flex-1'}`}>
+                        {/* Background Pattern */}
+                        {/* Background Pattern - REMOVED for clean look */}
+                        <div className="absolute inset-0 bg-white z-0"></div>
+
                         {selectedChat ? (
                             <>
-                                <div className="bg-white px-4 py-3 border-b border-gray-200 flex items-center gap-3">
-                                    <button onClick={() => setSelectedChat(null)} className="md:hidden p-2 -ml-2 text-gray-600"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M19 12H5M12 19l-7-7 7-7" /></svg></button>
-                                    <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-semibold">{selectedChat.other_user?.name?.charAt(0).toUpperCase()}</div>
-                                    <div>
-                                        <h3 className="text-[15px] font-semibold text-gray-900">{selectedChat.other_user?.name}</h3>
-                                        <p className="text-[12px] text-gray-500">
+                                <div className="bg-[#f0f2f5] px-4 py-2.5 border-b border-gray-300 flex items-center gap-3 relative z-10 shadow-sm flex-shrink-0">
+                                    <button onClick={handleBack} className="md:hidden p-1 -ml-1 text-gray-600 mr-1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg></button>
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden cursor-pointer">
+                                        {selectedChat.other_user?.avatar_url ? (
+                                            <img src={selectedChat.other_user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-gray-600 font-semibold">{selectedChat.other_user?.name?.charAt(0).toUpperCase()}</span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0 cursor-pointer">
+                                        <h3 className="text-[16px] font-medium text-[#111b21] leading-tight truncate">{selectedChat.other_user?.name}</h3>
+                                        <p className="text-[13px] text-gray-500 truncate h-4">
                                             {otherUserTyping ? (
-                                                <span className="text-black font-medium animate-pulse">typing...</span>
-                                            ) : "Online"}
+                                                <span className="text-gray-500 font-medium">typing...</span>
+                                            ) : otherUserOnline ? (
+                                                "Online"
+                                            ) : ""}
                                         </p>
                                     </div>
+                                    {/* Action Buttons */}
+                                    <div className="flex items-center gap-4 text-[#54656f]">
+                                        <button className="hidden sm:block hover:bg-gray-200 p-2 rounded-full"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg></button>
+                                        <button className="hover:bg-gray-200 p-2 rounded-full"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg></button>
+                                    </div>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-4 bg-gray-50 relative">
-                                    <div className="space-y-1">
+
+                                <div className="flex-1 overflow-y-auto px-4 py-2 relative z-10 scrollbar-thin scrollbar-thumb-gray-300">
+                                    <div className="space-y-1 pb-2">
                                         {messages.map((message, index) => {
                                             const isSent = message.sender_user_id === currentUser.id;
                                             const showAvatar = index === 0 || messages[index - 1].sender_user_id !== message.sender_user_id;
@@ -727,37 +1056,49 @@ export default function ChatPage() {
                                                 new Date(messages[index - 1].created_at).toDateString() !== new Date(message.created_at).toDateString();
 
                                             return (
-                                                <div key={message.id}>
+                                                <div key={message.id} className="group">
                                                     {showDateSeparator && (
-                                                        <div className="flex justify-center my-4">
-                                                            <span className="bg-[#d1d7db] text-[#54656f] text-[12.5px] px-3 py-1 rounded-md shadow-sm uppercase font-medium">
+                                                        <div className="flex justify-center my-4 sticky top-2 z-20">
+                                                            <span className="bg-gray-100/90 text-gray-500 text-[12.5px] px-3 py-1.5 rounded-lg shadow-sm font-medium border border-gray-100 uppercase tracking-wide">
                                                                 {formatDateSeparator(message.created_at)}
                                                             </span>
                                                         </div>
                                                     )}
-                                                    <div className={`flex ${isSent ? "justify-end" : "justify-start"}`}>
-                                                        <div className={`relative min-w-[100px] max-w-[85%] md:max-w-[65%] px-4 py-2 shadow-sm ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-1"} ${isSent ? "bg-gray-100 text-gray-900 rounded-2xl rounded-tr-sm" : "bg-white border border-gray-100 rounded-2xl rounded-tl-sm"}`}>
-                                                            {renderMessageContent(message)}
-                                                            <div className="flex items-center justify-end gap-1 mt-0.5">
-                                                                <span className="text-[10px] text-gray-500 uppercase">{formatTime(message.created_at)}</span>
-                                                                {isSent && (
-                                                                    <span className={message.is_read ? "text-blue-500" : "text-gray-400"}>
-                                                                        {message.is_read ? (
-                                                                            <svg width="16" height="11" viewBox="0 0 16 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                <path d="M10.0001 0.5L6.00006 4.5L4.50006 3L3.50006 4L6.00006 6.5L11.0001 1.5L10.0001 0.5Z" fill="currentColor" />
-                                                                                <path d="M15.0001 0.5L7.50006 8L4.50006 5L3.50006 6L7.50006 10L16.0001 1.5L15.0001 0.5Z" fill="currentColor" />
-                                                                                <path d="M6.00006 6.5L3.50006 4L2.00006 5.5L6.00006 9.5L6.00006 6.5Z" fill="currentColor" />
-                                                                                <path d="M6.00006 6.5L3.50006 4L2.00006 5.5L6.00006 9.5L6.00006 6.5Z" fill="currentColor" />
-                                                                                <path d="M1.35339 6.146L0.646729 6.853L5.07006 11.276L6.01673 10.33L1.35339 6.146Z" fill="currentColor" />
-                                                                            </svg>
-                                                                        ) : (
-                                                                            <svg width="12" height="11" viewBox="0 0 12 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                                <path d="M11.0001 0.5L3.50006 8L0.500061 5L-0.499939 6L3.50006 10L12.0001 1.5L11.0001 0.5Z" fill="currentColor" />
-                                                                            </svg>
-                                                                        )}
-                                                                    </span>
-                                                                )}
+                                                    <div className={`flex items-end ${isSent ? "justify-end" : "justify-start"} mb-1`}>
+                                                        {/* Reply Trigger for Mobile - Long Press could be added */}
+
+                                                        <div className={`relative max-w-[85%] md:max-w-[65%] px-2 py-1 shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] group-hover:shadow-md transition-shadow 
+                                                            ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-2"} 
+                                                            ${isSent ? "bg-gray-200 text-black rounded-lg rounded-tr-none" : "bg-gray-100 text-black rounded-lg rounded-tl-none"}`}>
+
+                                                            {/* Reply Context Menu (Visible on Hover) */}
+                                                            <button
+                                                                onClick={() => setReplyingTo(message)}
+                                                                className={`absolute top-0 ${isSent ? "-left-8" : "-right-8"} p-1.5 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity`}
+                                                                title="Reply"
+                                                            >
+                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6M3 10l6-6" /></svg>
+                                                            </button>
+
+                                                            <div className="px-1 pt-1">
+                                                                {renderMessageContent(message)}
                                                             </div>
+
+                                                            <div className="flex items-center justify-end gap-1 mt-0.5 pl-4 pb-0.5 select-none">
+                                                                <span className={`text-[11px] min-w-fit ${isSent ? "text-gray-700" : "text-gray-500"}`}>{formatTime(message.created_at)}</span>
+                                                                {isSent && renderMessageStatus(message)}
+                                                            </div>
+
+                                                            {/* Tail SVG */}
+                                                            {(!messages[index + 1] || messages[index + 1].sender_user_id !== message.sender_user_id) && (
+                                                                <div className={`absolute top-0 ${isSent ? "-right-[8px]" : "-left-[8px]"}`}>
+                                                                    {isSent ? (
+                                                                        <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1"><path fill="#e5e7eb" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
+                                                                    ) : (
+                                                                        <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1" style={{ transform: "scaleX(-1)" }}><path fill="#f3f4f6" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -766,8 +1107,37 @@ export default function ChatPage() {
                                         <div ref={messagesEndRef} />
                                     </div>
                                 </div>
-                                <div className="bg-white p-3 flex items-center gap-3 border-t border-gray-200">
-                                    <label className={`cursor-pointer p-2 text-gray-600 hover:bg-gray-200 rounded-full transition-colors ${sending ? 'opacity-50 cursor-not-allowed' : ''}`}>
+
+                                {/* Reply Preview Banner */}
+                                {replyingTo && (
+                                    <div className="bg-[#f0f2f5] border-l-4 border-l-[#00a884] p-3 mx-4 mt-2 rounded-lg flex justify-between items-center relative z-20 shadow-sm mb-2">
+                                        <div className="flex-1 overflow-hidden bg-white/50 p-2 rounded">
+                                            <div className="text-sm font-medium text-[#00a884] mb-0.5">
+                                                {replyingTo.sender_user_id === currentUser.id ? "You" : replyingTo.sender?.name}
+                                            </div>
+                                            <div className="text-xs text-gray-600 truncate">
+                                                {replyingTo.media_url ? "📷 Photo" : replyingTo.message}
+                                            </div>
+                                        </div>
+                                        <button onClick={() => setReplyingTo(null)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full ml-2">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Input Area */}
+                                <div className="bg-[#f0f2f5] px-4 py-2 flex items-center gap-2 relative z-20 flex-shrink-0">
+                                    {showEmojiPicker && (
+                                        <div ref={emojiPickerRef} className="absolute bottom-16 left-4 z-50 shadow-xl rounded-lg overflow-hidden">
+                                            <EmojiPicker onEmojiClick={onEmojiClick} width={300} height={400} previewConfig={{ showPreview: false }} />
+                                        </div>
+                                    )}
+
+                                    <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-[#54656f] hover:bg-gray-200 rounded-full transition-colors">
+                                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01" /><path d="M15 9h.01" /></svg>
+                                    </button>
+
+                                    <label className={`cursor-pointer p-2 text-[#54656f] hover:bg-gray-200 rounded-full transition-colors ${sending ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -775,29 +1145,57 @@ export default function ChatPage() {
                                             onChange={handleImageUpload}
                                             disabled={sending}
                                         />
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
                                     </label>
-                                    <input type="text" value={messageInput} onChange={(e) => setMessageInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()} placeholder="Type a message..." className="flex-1 bg-gray-100 px-4 py-2 rounded-full text-[15px] outline-none border-none shadow-sm focus:ring-1 focus:ring-black" />
-                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className="bg-black text-white p-2.5 rounded-full hover:opacity-90 disabled:opacity-50 transition-all">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
-                                    </button>
+
+                                    <input
+                                        type="text"
+                                        value={messageInput}
+                                        onChange={(e) => setMessageInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                                        placeholder="Type a message"
+                                        className="flex-1 bg-white px-4 py-2.5 rounded-lg text-[15px] outline-none border-none placeholder-gray-500 shadow-sm"
+                                    />
+
+                                    {messageInput.trim() || sending ? (
+                                        <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className="text-[#54656f] p-2.5 rounded-full hover:bg-gray-200 transition-all">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                                        </button>
+                                    ) : (
+                                        <button className="text-[#54656f] p-2.5 rounded-full hover:bg-gray-200 transition-all">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
+                                        </button>
+                                    )}
                                 </div>
                             </>
                         ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
-                                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
-                                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                                    </svg>
+                            <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] border-b-8 border-green-500 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-[#e5ddd5] opacity-30 z-0" style={{ backgroundImage: "url('https://repo.sourcelink.com/whatsapp-bg.png')", backgroundSize: "300px" }}></div>
+                                <div className="z-10 bg-white/80 p-8 rounded-2xl shadow-sm max-w-md text-center mx-4">
+                                    <div className="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                                    </div>
+                                    <h2 className="text-3xl font-light text-gray-700 mb-4">Anokhi Reet Web</h2>
+                                    <p className="text-gray-500 text-sm">Send and receive messages without keeping your phone online.<br />Use Anokhi Reet on up to 4 linked devices and 1 phone.</p>
+                                    <div className="mt-12 flex items-center justify-center gap-2 text-xs text-gray-400">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                                        Unknown to End-to-End Encrypted
+                                    </div>
                                 </div>
-                                <h2 className="text-2xl font-semibold text-gray-900 mb-2">Your Chats</h2>
-                                <p className="text-gray-500 text-sm max-w-[300px] text-center">Select a conversation from the sidebar to start messaging.</p>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-            <BottomNav />
-        </div>
+            {/* Hide BottomNav on mobile when chat is selected */}
+            <div className={`${selectedChat ? 'hidden md:block' : 'block'}`}>
+                <BottomNav />
+            </div>
+        </div >
     );
 }
+
+// Add these styles to global CSS or a module if not present
+// .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+// .scrollbar-thin::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 3px; }
+// .scrollbar-thin::-webkit-scrollbar-track { background-color: transparent; }
