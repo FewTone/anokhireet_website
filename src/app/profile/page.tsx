@@ -17,7 +17,7 @@ interface PendingUserData {
 
 export default function Profile() {
     const [phone, setPhone] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [isNewUser, setIsNewUser] = useState(false);
     const [firstName, setFirstName] = useState("");
@@ -35,7 +35,6 @@ export default function Profile() {
     const searchParams = useSearchParams();
 
     // Helper function to get return URL and redirect
-    // Helper function to get return URL and redirect
     const getReturnUrlAndRedirect = () => {
         const returnUrl = searchParams.get('returnUrl');
         const target = returnUrl ? decodeURIComponent(returnUrl) : "/user";
@@ -47,7 +46,7 @@ export default function Profile() {
         // Check if user is already logged in via Supabase Auth session
         checkSession().catch((error) => {
             console.error("Error in checkSession:", error);
-            // Don't block the UI if checkSession fails
+            setLoading(false);
         });
         loadCities();
     }, []);
@@ -99,36 +98,44 @@ export default function Profile() {
     };
 
     const checkSession = async () => {
-        // Check Supabase Auth session only
-        const { data: { session }, error } = await supabase.auth.getSession();
+        try {
+            // Check Supabase Auth session only
+            const { data: { session }, error } = await supabase.auth.getSession();
 
-        if (session?.user && !error) {
-            // Check if user is admin (in admins table)
-            const { data: adminData } = await supabase
-                .from("admins")
-                .select("id, email")
-                .eq("auth_user_id", session.user.id)
-                .maybeSingle();
+            if (session?.user && !error) {
+                // Check if user is admin (in admins table)
+                const { data: adminData } = await supabase
+                    .from("admins")
+                    .select("id, email")
+                    .eq("auth_user_id", session.user.id)
+                    .maybeSingle();
 
-            if (adminData) {
-                // Admin detected - don't sign out, just don't redirect
-                // Admin should use admin panel, not profile page
-                // Keep session active so admin panel works
-                return;
+                if (adminData) {
+                    // Admin detected - don't sign out, just don't redirect
+                    // Admin should use admin panel, not profile page
+                    setLoading(false);
+                    return;
+                }
+
+                // Check if user exists in users table
+                const { data: userData } = await supabase
+                    .from("users")
+                    .select("id, name, phone, email, auth_user_id")
+                    .eq("auth_user_id", session.user.id)
+                    .maybeSingle();
+
+                // Regular user with active session - redirect to user page or return URL
+                if (userData) {
+                    getReturnUrlAndRedirect();
+                    return; // Don't stop loading, let redirect happen
+                }
             }
-
-            // Check if user exists in users table
-            const { data: userData } = await supabase
-                .from("users")
-                .select("id, name, phone, email, auth_user_id")
-                .eq("auth_user_id", session.user.id)
-                .maybeSingle();
-
-            // Regular user with active session - redirect to user page or return URL
-            if (userData) {
-                getReturnUrlAndRedirect();
-            }
+        } catch (e) {
+            console.error("Session check error:", e);
         }
+
+        // If we get here, no valid session found, show login form
+        setLoading(false);
     };
 
     const handleLogin = async () => {
@@ -681,6 +688,14 @@ export default function Profile() {
             setLoading(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center w-full h-screen bg-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex items-center justify-center w-full h-screen bg-[#959393] p-4 font-sans">
