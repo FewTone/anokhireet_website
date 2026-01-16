@@ -1,8 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { formatUserDisplayName } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+
+// Add custom styles for the date picker to match the theme
+import "@/app/globals.css"; // Ensure global styles are available if they contain overrides
 
 interface ProfileViewProps {
     userName: string;
@@ -34,6 +39,10 @@ export default function ProfileView({
         birthdate: userBirthdate || ""
     });
 
+    const [cities, setCities] = useState<any[]>([]);
+    const [filteredCities, setFilteredCities] = useState<any[]>([]);
+    const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+
     useEffect(() => {
         setFormData({
             location: userLocation || "",
@@ -41,6 +50,41 @@ export default function ProfileView({
             birthdate: userBirthdate || ""
         });
     }, [userLocation, userGender, userBirthdate]);
+
+    // Load cities
+    useEffect(() => {
+        const loadCities = async () => {
+            const { data } = await supabase
+                .from("cities")
+                .select("*")
+                .order("display_order", { ascending: true });
+
+            if (data) {
+                setCities(data);
+            }
+        };
+        loadCities();
+    }, []);
+
+    const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setFormData({ ...formData, location: value });
+
+        if (value.trim()) {
+            const filtered = cities.filter(city =>
+                city.name.toLowerCase().includes(value.toLowerCase())
+            );
+            setFilteredCities(filtered);
+            setShowCitySuggestions(true);
+        } else {
+            setShowCitySuggestions(false);
+        }
+    };
+
+    const selectCity = (cityName: string) => {
+        setFormData({ ...formData, location: cityName });
+        setShowCitySuggestions(false);
+    };
 
     // Clear status message after 3 seconds
     useEffect(() => {
@@ -84,12 +128,11 @@ export default function ProfileView({
         <div className="w-full">
             <h2 className="text-2xl font-bold mb-6 text-center">Profile Details</h2>
 
-            <div className="bg-white border border-gray-100 rounded-lg p-8 max-w-xl mx-auto">
+            <div className="bg-white border border-gray-100 rounded-lg p-8 max-w-xl mx-auto min-h-[400px]">
                 <div className="space-y-6">
-                    {/* ... (existing fields) ... */}
+
                     {/* Read-only Fields */}
                     <div className="grid md:grid-cols-2 gap-6">
-                        {/* ... */}
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
                                 Full Name
@@ -115,32 +158,52 @@ export default function ProfileView({
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                            Email Address
-                        </label>
-                        <input
-                            type="text"
-                            value={userEmail || "Not provided"}
-                            disabled
-                            className="w-full text-gray-500 bg-gray-50 border-b border-gray-100 pb-2 focus:outline-none cursor-not-allowed"
-                        />
-                    </div>
+                    {/* Email Field REMOVED */}
 
                     {/* Editable Fields */}
-                    <div>
+                    <div className="relative">
                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
                             Location
                         </label>
                         <input
                             type="text"
                             value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                            onChange={handleLocationChange}
+                            onFocus={() => {
+                                if (isEditing && formData.location) {
+                                    const filtered = cities.filter(city =>
+                                        city.name.toLowerCase().includes(formData.location.toLowerCase())
+                                    );
+                                    setFilteredCities(filtered);
+                                    setShowCitySuggestions(true);
+                                } else if (isEditing) {
+                                    setFilteredCities(cities); // Show all if empty
+                                    setShowCitySuggestions(true);
+                                }
+                            }}
+                            onBlur={() => {
+                                // Delay hide to allow click
+                                setTimeout(() => setShowCitySuggestions(false), 200);
+                            }}
                             disabled={!isEditing}
                             placeholder={isEditing ? "Enter your city/location" : "Not provided"}
                             className={`w-full text-gray-900 border-b pb-2 focus:outline-none transition-colors ${isEditing ? "border-black bg-white" : "border-gray-100 bg-transparent"
                                 }`}
                         />
+                        {/* City Suggestions */}
+                        {showCitySuggestions && isEditing && filteredCities.length > 0 && (
+                            <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-lg max-h-48 overflow-y-auto mt-1 rounded text-sm">
+                                {filteredCities.map((city) => (
+                                    <li
+                                        key={city.id}
+                                        onClick={() => selectCity(city.name)}
+                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800"
+                                    >
+                                        {city.name}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">
@@ -166,30 +229,39 @@ export default function ProfileView({
                             )}
                         </div>
 
-                        <div
-                            onClick={() => {
-                                if (isEditing) {
-                                    const input = document.getElementById('birthdate-input') as HTMLInputElement;
-                                    if (input && 'showPicker' in input) {
-                                        input.showPicker();
-                                    }
-                                }
-                            }}
-                            className={isEditing ? "cursor-pointer" : ""}
-                        >
+                        <div className={isEditing ? "custom-datepicker-wrapper" : ""}>
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 pointer-events-none">
                                 Birthdate
                             </label>
-                            <input
-                                id="birthdate-input"
-                                type="date"
-                                value={formData.birthdate}
-                                onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
-                                disabled={!isEditing}
-                                max={new Date().toISOString().split("T")[0]}
-                                className={`w-full text-gray-900 border-b pb-2 focus:outline-none transition-colors h-9 ${isEditing ? "border-black bg-white" : "border-gray-100 bg-transparent"
-                                    }`}
-                            />
+                            {isEditing ? (
+                                <DatePicker
+                                    selected={formData.birthdate ? new Date(formData.birthdate) : null}
+                                    onChange={(date: Date | null) => {
+                                        if (date) {
+                                            const dateString = date.toLocaleDateString('en-CA');
+                                            setFormData({ ...formData, birthdate: dateString });
+                                        } else {
+                                            setFormData({ ...formData, birthdate: "" });
+                                        }
+                                    }}
+                                    maxDate={new Date()}
+                                    dateFormat="dd/MM/yyyy"
+                                    placeholderText="dd/mm/yyyy"
+                                    className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none transition-colors h-9 bg-white cursor-pointer"
+                                    onKeyDown={(e) => e.preventDefault()}
+                                    showMonthDropdown
+                                    showYearDropdown
+                                    dropdownMode="select"
+                                />
+                            ) : (
+                                <p className="text-gray-900 border-b border-gray-100 pb-2 h-8 flex items-center">
+                                    {formData.birthdate ? new Date(formData.birthdate).toLocaleDateString('en-IN', {
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    }) : "Not provided"}
+                                </p>
+                            )}
                         </div>
                     </div>
 
