@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import Hero from "@/components/Hero";
@@ -14,16 +15,7 @@ import { supabase } from "@/lib/supabase";
 
 const TABS = [
     "ALL",
-    "SHIRTS",
-    "TROUSER",
-    "T-SHIRTS",
-    "JEANS",
-    "JACKETS",
-    "SHORTS",
-    "SWEATSHIRTS",
-    "SWEATERS",
-    "SHOES",
-];
+]; // Removed individual tabs - now dynamic based on featured categories
 
 interface Product {
     id: string | number; // Support both string (UUID) and number IDs for uniqueness
@@ -37,6 +29,7 @@ interface Product {
 }
 
 export default function Home() {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState("ALL");
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
@@ -409,17 +402,27 @@ export default function Home() {
 
                         {/* Filter Tabs */}
                         <div className="py-2 flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-2 px-4 scrollbar-hide">
-                            {TABS.map((tab) => (
+                            <span
+                                onClick={() => router.push("/products")}
+                                className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap 
+                  ${activeTab === "ALL"
+                                        ? "bg-black text-white"
+                                        : "bg-white"
+                                    }`}
+                            >
+                                ALL
+                            </span>
+                            {featuredCategories.map((cat) => (
                                 <span
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap 
-                  ${activeTab === tab
-                                            ? "bg-black text-white"
-                                            : "bg-white"
-                                        }`}
+                                    key={cat.name}
+                                    onClick={() => {
+                                        if (cat.link_url) {
+                                            router.push(cat.link_url);
+                                        }
+                                    }}
+                                    className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap bg-white`}
                                 >
-                                    {tab}
+                                    {cat.name?.toUpperCase()}
                                 </span>
                             ))}
                         </div>

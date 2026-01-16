@@ -82,8 +82,23 @@ export default function ProductsPage() {
     ]);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-    // Category tags (can be made dynamic later)
-    const categoryTags = ["ALL", "NEW", "FORMAL", "BLACK", "LUXE", "PLUS SIZE", "SLIM", "LINEN", "KOREAN", "CHINOS", "GURKHA", "BEIGE", "RELAXED", "BAGGY", "DENIM"];
+    // Category tags are now dynamic based on featured categories
+    const categoryTags = useMemo(() => {
+        const tags = [{ id: 'all', name: 'ALL', type: 'all' }];
+
+        // Add featured product types
+        productTypes.filter(pt => pt.is_featured).forEach(pt => {
+            tags.push({ id: pt.id, name: pt.name, type: 'product_type' });
+        });
+
+        // Add featured occasions
+        occasions.filter(oc => oc.is_featured).forEach(oc => {
+            tags.push({ id: oc.id, name: oc.name, type: 'occasion' });
+        });
+
+        return tags;
+    }, [productTypes, occasions]);
+
     const [activeTag, setActiveTag] = useState("ALL");
     const [viewMode, setViewMode] = useState<'grid' | 'grid3'>('grid'); // 'grid' = 2 cols, 'grid3' = 3 cols
 
@@ -1068,10 +1083,10 @@ export default function ProductsPage() {
                                             </button>
                                         </div>
 
-                                        {/* Filter Button */}
+                                        {/* Filter Button - Hidden on Desktop per user request */}
                                         <button
                                             onClick={() => setIsFilterOpen(true)}
-                                            className="p-1"
+                                            className="p-1 md:hidden"
                                         >
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                                 <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -1088,18 +1103,26 @@ export default function ProductsPage() {
                                     </div>
                                 )}
 
-                                {/* Desktop Category Tags */}
+                                {/* Desktop Category Tags - Now dynamic and functional */}
                                 <div className="hidden md:flex flex-wrap gap-2 mb-4">
                                     {categoryTags.map(tag => (
                                         <button
-                                            key={tag}
-                                            onClick={() => setActiveTag(tag)}
-                                            className={`px-4 py-1.5 text-xs border border-black whitespace-nowrap transition-all ${activeTag === tag
+                                            key={`${tag.type}-${tag.id}`}
+                                            onClick={() => {
+                                                if (tag.type === 'all') {
+                                                    clearAllFilters();
+                                                    setActiveTag('ALL');
+                                                } else {
+                                                    handleCategoryClick(tag.type as any, String(tag.id), tag.name);
+                                                    setActiveTag(tag.name);
+                                                }
+                                            }}
+                                            className={`px-4 py-1.5 text-xs border border-black uppercase whitespace-nowrap transition-all ${activeTag === tag.name
                                                 ? "bg-black text-white"
                                                 : "bg-white hover:bg-gray-50"
                                                 }`}
                                         >
-                                            {tag}
+                                            {tag.name}
                                         </button>
                                     ))}
                                 </div>
