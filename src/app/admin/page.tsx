@@ -716,14 +716,26 @@ To get these values:
             console.log("Loading users...");
             // Load all users first, then filter non-admin users
             // Load all users (admins are in separate admins table)
+            // Removed 'email' from selection as it doesn't exist in the public.users table
             const { data, error } = await supabase
                 .from("users")
-                .select("id, name, phone, email, created_at, auth_user_id")
+                .select("id, name, phone, created_at, auth_user_id")
                 .order("created_at", { ascending: false });
 
             if (error) {
-                console.error("Error loading users:", error);
-                showPopup(`Error loading users: ${error.message}`, "error", "Error");
+                // Check if it's a real error (not empty {})
+                const errorStr = JSON.stringify(error);
+                if (errorStr !== '{}') {
+                    console.error("Error loading users:", {
+                        message: error.message,
+                        code: error.code,
+                        details: error.details,
+                        hint: error.hint
+                    });
+                    showPopup(`Error loading users: ${error.message || 'Unknown error'}`, "error", "Error");
+                } else {
+                    console.log("ℹ️ Supabase returned an empty error object for loadUsers (ignoring)");
+                }
                 setUsers([]);
                 return;
             }
@@ -731,14 +743,13 @@ To get these values:
             if (data) {
                 // All users in users table are non-admin (admins are in separate admins table)
                 console.log("Total users in database:", data.length);
-                console.log("Users data:", data);
                 setUsers(data);
             } else {
                 console.log("No users data returned");
                 setUsers([]);
             }
-        } catch (error) {
-            console.error("Error loading users:", error);
+        } catch (error: any) {
+            console.error("Unexpected error loading users:", error);
             setUsers([]);
         }
     };
@@ -753,8 +764,17 @@ To get these values:
                 .order("created_at", { ascending: false });
 
             if (error) {
-                console.error("Error loading products:", error);
-                showPopup(`Error loading products: ${error.message}`, "error", "Error");
+                const errorStr = JSON.stringify(error);
+                if (errorStr !== '{}') {
+                    console.error("Error loading products:", {
+                        message: error.message,
+                        code: error.code,
+                        details: error.details
+                    });
+                    showPopup(`Error loading products: ${error.message || 'Unknown error'}`, "error", "Error");
+                } else {
+                    console.log("ℹ️ Supabase returned an empty error object for loadUserProducts (ignoring)");
+                }
                 setUserProducts([]);
                 return;
             }
@@ -854,8 +874,13 @@ To get these values:
                 .order("display_order", { ascending: true });
 
             if (error) {
-                console.error("Error loading categories:", error);
-                showPopup(`Error loading categories: ${error.message}`, "error", "Error");
+                const errorStr = JSON.stringify(error);
+                if (errorStr !== '{}') {
+                    console.error("Error loading categories:", error);
+                    showPopup(`Error loading categories: ${error.message || 'Unknown error'}`, "error", "Error");
+                } else {
+                    console.log("ℹ️ Supabase returned an empty error object for loadCategories (ignoring)");
+                }
                 setCategories([]);
                 return;
             }
