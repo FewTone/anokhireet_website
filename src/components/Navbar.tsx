@@ -102,7 +102,7 @@ export default function Navbar() {
                     {/* Right: Search & Chat */}
                     <div className="flex flex-1 justify-end items-center gap-4 relative">
                         {!pathname?.startsWith("/chat") && (
-                            <form onSubmit={handleSearch} className="flex w-full max-w-[300px] h-[38px] border border-[#ccc] text-sm items-center pl-2 bg-white">
+                            <form onSubmit={handleSearch} className="flex w-full max-w-[300px] h-[40px] border border-[#ccc] text-sm items-center pl-2 bg-white">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 text-gray-500">
                                     <circle cx="11" cy="11" r="8"></circle>
                                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -113,7 +113,7 @@ export default function Navbar() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyPress={handleSearchKeyPress}
-                                    className="h-full flex-1 text-[0.9rem] pl-2 border-none outline-none bg-transparent min-w-0"
+                                    className="h-full flex-1 text-[12px] font-light pl-2 border-none outline-none bg-transparent min-w-0"
                                 />
                                 {searchQuery && (
                                     <button
@@ -190,7 +190,7 @@ export default function Navbar() {
 
                                 {/* Bottom Row: Search & Chat */}
                                 <div className="flex items-center gap-3 w-full">
-                                    <form onSubmit={handleSearch} className="flex flex-1 h-[42px] border text-sm items-center pl-3 border-white/30 backdrop-blur-sm bg-white/10 rounded-none">
+                                    <form onSubmit={handleSearch} className="flex flex-1 h-[40px] border text-sm items-center pl-3 border-white/30 backdrop-blur-sm bg-white/10 rounded-none">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 text-white">
                                             <circle cx="11" cy="11" r="8"></circle>
                                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -201,7 +201,7 @@ export default function Navbar() {
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyPress={handleSearchKeyPress}
-                                            className="h-full flex-1 text-[0.95rem] pl-3 border-none outline-none bg-transparent min-w-0 text-white placeholder-white/70"
+                                            className="h-full flex-1 text-[12px] font-light pl-3 border-none outline-none bg-transparent min-w-0 text-white placeholder-white/70"
                                         />
                                         {searchQuery && (
                                             <button
