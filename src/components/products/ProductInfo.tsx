@@ -36,7 +36,7 @@ export default function ProductInfo({
                 {/* Pricing Information */}
                 <div className="mb-6 space-y-1">
                     <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-normal text-gray-900 uppercase tracking-wide">Rent</span>
+                        <span className="text-xl font-normal text-gray-900 uppercase tracking-wide">RENT</span>
                         <span className="text-xl font-bold text-gray-900">
                             {formatPrice(price)}
                         </span>
@@ -48,6 +48,8 @@ export default function ProductInfo({
                         </span>
                     </div>
                 </div>
+
+
             </div>
 
             {isOwner ? (

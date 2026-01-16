@@ -907,21 +907,28 @@ export default function ProductsPage() {
                                         <span>AVAILABLE CITY</span>
                                         <span>{filterSections.find(s => s.id === "city")?.isOpen ? "−" : "+"}</span>
                                     </button>
-                                    {filterSections.find(s => s.id === "city")?.isOpen && (
-                                        <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                                            {cities.map(city => (
-                                                <label key={city.id} className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={pendingCities.includes(city.id)}
-                                                        onChange={() => toggleFilter('city', city.id)}
-                                                        className="w-4 h-4 border-gray-300 rounded"
-                                                    />
-                                                    <span className="text-sm">{city.name}</span>
-                                                </label>
-                                            ))}
+                                    <div
+                                        className={`grid transition-all duration-300 ease-in-out ${filterSections.find(s => s.id === "city")?.isOpen
+                                            ? 'grid-rows-[1fr] opacity-100'
+                                            : 'grid-rows-[0fr] opacity-0'
+                                            }`}
+                                    >
+                                        <div className="overflow-hidden">
+                                            <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                                                {cities.map(city => (
+                                                    <label key={city.id} className="flex items-center gap-2 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={pendingCities.includes(city.id)}
+                                                            onChange={() => toggleFilter('city', city.id)}
+                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                        />
+                                                        <span className="text-sm">{city.name}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 {/* PRICE */}
@@ -933,67 +940,74 @@ export default function ProductsPage() {
                                         <span>PRICE</span>
                                         <span>{filterSections.find(s => s.id === "price")?.isOpen ? "−" : "+"}</span>
                                     </button>
-                                    {filterSections.find(s => s.id === "price")?.isOpen && (
-                                        <div className="mt-4">
-                                            {/* Dual Range Slider */}
-                                            {/* Dual Range Slider - Ported from Mobile for Perfect Alignment */}
-                                            <div className="relative h-8 mb-2">
-                                                {/* Background track (gray) */}
-                                                <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gray-200 rounded transform -translate-y-1/2"></div>
+                                    <div
+                                        className={`grid transition-all duration-300 ease-in-out ${filterSections.find(s => s.id === "price")?.isOpen
+                                            ? 'grid-rows-[1fr] opacity-100'
+                                            : 'grid-rows-[0fr] opacity-0'
+                                            }`}
+                                    >
+                                        <div className="overflow-hidden">
+                                            <div className="mt-4">
+                                                {/* Dual Range Slider */}
+                                                {/* Dual Range Slider - Ported from Mobile for Perfect Alignment */}
+                                                <div className="relative h-8 mb-2">
+                                                    {/* Background track (gray) */}
+                                                    <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gray-200 rounded transform -translate-y-1/2"></div>
 
-                                                {/* Active range track (thick black line between thumbs) */}
-                                                <div
-                                                    className="absolute top-1/2 h-[2px] bg-black rounded transform -translate-y-1/2"
-                                                    style={{
-                                                        left: `${(pendingPriceRange[0] / maxPrice) * 100}%`,
-                                                        width: `${((pendingPriceRange[1] - pendingPriceRange[0]) / maxPrice) * 100}%`
-                                                    }}
-                                                ></div>
+                                                    {/* Active range track (thick black line between thumbs) */}
+                                                    <div
+                                                        className="absolute top-1/2 h-[2px] bg-black rounded transform -translate-y-1/2"
+                                                        style={{
+                                                            left: `${(pendingPriceRange[0] / maxPrice) * 100}%`,
+                                                            width: `${((pendingPriceRange[1] - pendingPriceRange[0]) / maxPrice) * 100}%`
+                                                        }}
+                                                    ></div>
 
-                                                {/* Invisible Inputs for Interaction */}
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max={maxPrice}
-                                                    step={Math.ceil(maxPrice / 200)}
-                                                    value={pendingPriceRange[0]}
-                                                    onChange={(e) => {
-                                                        const minValue = Math.min(Number(e.target.value), pendingPriceRange[1]);
-                                                        setPendingPriceRange([minValue, pendingPriceRange[1]]);
-                                                    }}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
-                                                />
-                                                <input
-                                                    type="range"
-                                                    min="0"
-                                                    max={maxPrice}
-                                                    step={Math.ceil(maxPrice / 200)}
-                                                    value={pendingPriceRange[1]}
-                                                    onChange={(e) => {
-                                                        const maxValue = Math.max(Number(e.target.value), pendingPriceRange[0]);
-                                                        setPendingPriceRange([pendingPriceRange[0], maxValue]);
-                                                    }}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
-                                                />
+                                                    {/* Invisible Inputs for Interaction */}
+                                                    <input
+                                                        type="range"
+                                                        min="0"
+                                                        max={maxPrice}
+                                                        step={Math.ceil(maxPrice / 200)}
+                                                        value={pendingPriceRange[0]}
+                                                        onChange={(e) => {
+                                                            const minValue = Math.min(Number(e.target.value), pendingPriceRange[1]);
+                                                            setPendingPriceRange([minValue, pendingPriceRange[1]]);
+                                                        }}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
+                                                    />
+                                                    <input
+                                                        type="range"
+                                                        min="0"
+                                                        max={maxPrice}
+                                                        step={Math.ceil(maxPrice / 200)}
+                                                        value={pendingPriceRange[1]}
+                                                        onChange={(e) => {
+                                                            const maxValue = Math.max(Number(e.target.value), pendingPriceRange[0]);
+                                                            setPendingPriceRange([pendingPriceRange[0], maxValue]);
+                                                        }}
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
+                                                    />
 
-                                                {/* Visual Thumbs - Premium Black Style */}
-                                                <div
-                                                    className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
-                                                    style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
-                                                />
-                                                <div
-                                                    className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
-                                                    style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
-                                                />
-                                            </div>
+                                                    {/* Visual Thumbs - Premium Black Style */}
+                                                    <div
+                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                                        style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
+                                                    />
+                                                    <div
+                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                                        style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
+                                                    />
+                                                </div>
 
-                                            {/* Price labels below slider */}
-                                            <div className="flex justify-between text-xs">
-                                                <span>₹{pendingPriceRange[0]}</span>
-                                                <span>₹{pendingPriceRange[1]}</span>
+                                                {/* Price labels below slider */}
+                                                <div className="flex justify-between text-xs">
+                                                    <span>₹{pendingPriceRange[0]}</span>
+                                                    <span>₹{pendingPriceRange[1]}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    )}
+                                    </div>
                                 </div>
 
                                 {/* Filter Buttons */}
@@ -1022,7 +1036,7 @@ export default function ProductsPage() {
 
                                 {/* Mobile Filter & View Bar - Only show when NOT in category view */}
                                 {!showCategories && (
-                                    <div className="md:hidden flex items-center justify-between mb-4 px-1">
+                                    <div className="flex items-center justify-between mb-4 px-1">
                                         {/* View Toggles */}
                                         <div className="flex items-center gap-4">
                                             <button
@@ -1271,7 +1285,7 @@ export default function ProductsPage() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className={`${showCategories ? 'hidden md:grid' : 'grid'} ${viewMode === 'grid3' ? 'grid-cols-3 gap-1 md:gap-4' : 'grid-cols-2 gap-2'} md:grid-cols-3 lg:grid-cols-4 w-full`}>
+                                <div className={`${showCategories ? 'hidden md:grid' : 'grid'} ${viewMode === 'grid3' ? 'grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-1 md:gap-4' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2'} w-full`}>
                                     {filteredProducts.map((product) => (
                                         <ProductCard
                                             key={product.id}

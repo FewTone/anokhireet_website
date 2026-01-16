@@ -171,7 +171,7 @@ export default function Navbar() {
                                             alt="Anokhi Reet Logo"
                                             width={40}
                                             height={40}
-                                            className="w-10 h-10 object-contain cursor-pointer grayscale brightness-0 invert"
+                                            className={`w-10 h-10 object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
                                             priority
                                             suppressHydrationWarning
                                         />
@@ -180,7 +180,7 @@ export default function Navbar() {
                                             alt="Anokhi Reet"
                                             width={120}
                                             height={18}
-                                            className="h-4 w-auto object-contain cursor-pointer grayscale brightness-0 invert"
+                                            className={`h-4 w-auto object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
                                             style={{ width: "auto" }}
                                             priority
                                             suppressHydrationWarning
@@ -190,24 +190,24 @@ export default function Navbar() {
 
                                 {/* Bottom Row: Search & Chat */}
                                 <div className="flex items-center gap-3 w-full">
-                                    <form onSubmit={handleSearch} className="flex flex-1 h-[40px] border text-sm items-center pl-3 border-white/30 backdrop-blur-sm bg-white/10 rounded-none">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 text-white">
+                                    <form onSubmit={handleSearch} className={`flex flex-1 h-[40px] border text-sm items-center pl-3 rounded-none ${isHomePage ? 'border-white/30 backdrop-blur-sm bg-white/10' : 'border-[#ccc] bg-white'}`}>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`opacity-70 ${isHomePage ? 'text-white' : 'text-gray-500'}`}>
                                             <circle cx="11" cy="11" r="8"></circle>
                                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                         </svg>
                                         <input
                                             type="search"
-                                            placeholder="Search"
+                                            placeholder="Search by Product ID or Name"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
                                             onKeyPress={handleSearchKeyPress}
-                                            className="h-full flex-1 text-[12px] font-light pl-3 border-none outline-none bg-transparent min-w-0 text-white placeholder-white/70"
+                                            className={`h-full flex-1 text-[12px] font-light pl-3 border-none outline-none bg-transparent min-w-0 ${isHomePage ? 'text-white placeholder-white/70' : 'text-black placeholder-gray-400'}`}
                                         />
                                         {searchQuery && (
                                             <button
                                                 type="button"
                                                 onClick={() => setSearchQuery("")}
-                                                className="p-2 transition-colors focus:outline-none text-white/70 hover:text-white"
+                                                className={`p-2 transition-colors focus:outline-none ${isHomePage ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
                                                 aria-label="Clear search"
                                             >
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -218,7 +218,7 @@ export default function Navbar() {
                                         )}
                                         <button type="submit" className="hidden" aria-label="Search" />
                                     </form>
-                                    <Link href="/chat" className="flex-shrink-0 p-2 text-white">
+                                    <Link href="/chat" className={`flex-shrink-0 p-2 ${isHomePage ? 'text-white' : 'text-black'}`}>
                                         <svg
                                             width="28"
                                             height="28"
