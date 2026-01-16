@@ -223,7 +223,7 @@ export default function MyProductsView() {
 
     return (
         <div className="w-full">
-            <div className="mb-10">
+            <div className="mb-4 text-center">
                 <h2 className="text-2xl font-bold text-gray-900">Project Performance</h2>
             </div>
 
@@ -257,20 +257,21 @@ export default function MyProductsView() {
             ) : (
                 <div className="w-full">
                     {/* Table Header */}
-                    <div className="grid grid-cols-12 gap-4 pb-4 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider mb-6">
-                        <div className="col-span-12 md:col-span-6 px-4">Project</div>
+                    <div className="grid grid-cols-12 gap-4 pb-2 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                        <div className="col-span-12 md:col-span-4 px-4">Project</div>
                         <div className="col-span-2 text-center hidden md:block">Views</div>
                         <div className="col-span-2 text-center hidden md:block">Likes</div>
                         <div className="col-span-2 text-center hidden md:block">Interest</div>
+                        <div className="col-span-2 text-center hidden md:block">Inquiry</div>
                     </div>
 
                     {/* Features List */}
-                    <div className="space-y-8">
+                    <div className="space-y-0">
                         {myProducts.map((product) => (
-                            <div key={product.id} className="group relative grid grid-cols-12 gap-4 items-center pb-8 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors -mx-4 px-4 py-4">
+                            <div key={product.id} className="group relative grid grid-cols-12 gap-4 items-center border-b border-gray-100 last:border-0 -mx-4 px-4 py-2">
                                 {/* Project Info */}
-                                <div className="col-span-12 md:col-span-6 flex gap-6 items-center">
-                                    <div className="relative w-32 h-20 md:w-40 md:h-24 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm group-hover:shadow-md transition-all">
+                                <div className="col-span-12 md:col-span-4 flex gap-3 items-center">
+                                    <div className="relative w-12 h-[60px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all">
                                         {product.status === 'draft' && (
                                             <div className="absolute top-0 right-0 bg-yellow-400 text-white text-[10px] font-bold px-2 py-0.5 z-10">PENDING</div>
                                         )}
@@ -280,35 +281,47 @@ export default function MyProductsView() {
                                         <img
                                             src={product.image}
                                             alt={product.name}
-                                            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                                            className="w-full h-full object-cover transition-transform duration-500"
                                         />
                                     </div>
-                                    <div className="flex flex-col justify-center">
-                                        <h3 className="font-bold text-lg text-gray-900 mb-1 leading-snug group-hover:text-blue-600 transition-colors">
+                                    <div className="flex flex-col justify-center min-w-0">
+                                        <h3 className="font-medium text-xs md:text-sm text-gray-900 mb-0.5 leading-snug transition-colors truncate">
                                             {product.name}
                                         </h3>
-                                        <p className="text-gray-400 text-xs font-medium">
-                                            Published {new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        <p className="text-[10px] text-gray-500 font-medium mb-0.5">
+                                            #{product.product_id || product.id}
+                                        </p>
+                                        <p className="text-xs font-semibold text-gray-900 mb-0.5">
+                                            RENT ₹{typeof product.price === 'string' ? Number(product.price).toLocaleString() : product.price}
                                         </p>
                                     </div>
+                                    <p className="text-gray-400 text-[10px] font-medium ml-auto whitespace-nowrap">
+                                        {new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </p>
                                 </div>
 
                                 {/* Stats - Views */}
-                                <div className="col-span-4 md:col-span-2 flex flex-col items-center justify-center">
+                                <div className="col-span-3 md:col-span-2 flex flex-col items-center justify-center">
                                     <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Views</span>
-                                    <span className="text-xl md:text-2xl font-bold text-gray-900">{product.views?.toLocaleString() || 0}</span>
+                                    <span className="text-sm text-gray-700">{product.views?.toLocaleString() || 0}</span>
                                 </div>
 
-                                {/* Stats - Likes/Appreciations */}
-                                <div className="col-span-4 md:col-span-2 flex flex-col items-center justify-center">
+                                {/* Stats - Likes */}
+                                <div className="col-span-3 md:col-span-2 flex flex-col items-center justify-center">
                                     <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Likes</span>
-                                    <span className="text-xl md:text-2xl font-bold text-gray-900">{product.wishlist_count?.toLocaleString() || 0}</span>
+                                    <span className="text-sm text-gray-700">{product.wishlist_count?.toLocaleString() || 0}</span>
                                 </div>
 
-                                {/* Stats - Inquiries */}
-                                <div className="col-span-4 md:col-span-2 flex flex-col items-center justify-center">
+                                {/* Stats - Interest */}
+                                <div className="col-span-3 md:col-span-2 flex flex-col items-center justify-center">
                                     <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Interest</span>
-                                    <span className="text-xl md:text-2xl font-bold text-gray-900">{product.inquiries_count?.toLocaleString() || 0}</span>
+                                    <span className="text-sm text-gray-700">0</span>
+                                </div>
+
+                                {/* Stats - Inquiry */}
+                                <div className="col-span-3 md:col-span-2 flex flex-col items-center justify-center">
+                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Inquiry</span>
+                                    <span className="text-sm text-gray-700">{product.inquiries_count?.toLocaleString() || 0}</span>
                                 </div>
                             </div>
                         ))}

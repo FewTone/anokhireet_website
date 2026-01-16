@@ -30,7 +30,7 @@ export default function WishlistView() {
 
     return (
         <div className="w-full">
-            <h2 className="text-2xl font-bold mb-8">Wish List</h2>
+            <h2 className="text-2xl font-bold mb-8 text-center">Wish List</h2>
 
             {wishlist.length === 0 ? (
                 <div className="text-center py-12">

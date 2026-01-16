@@ -82,9 +82,9 @@ export default function ProfileView({
 
     return (
         <div className="w-full">
-            <h2 className="text-2xl font-bold mb-6">Profile Details</h2>
+            <h2 className="text-2xl font-bold mb-6 text-center">Profile Details</h2>
 
-            <div className="bg-white border border-gray-100 rounded-lg p-8 max-w-xl">
+            <div className="bg-white border border-gray-100 rounded-lg p-8 max-w-xl mx-auto">
                 <div className="space-y-6">
                     {/* ... (existing fields) ... */}
                     {/* Read-only Fields */}
