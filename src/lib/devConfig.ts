@@ -15,11 +15,8 @@ export const OTP_CHANNEL: 'whatsapp' | 'sms' = 'sms'; // Change to 'whatsapp' fo
  * In production, use WhatsApp. In development, use SMS (works with test numbers)
  */
 export const getOtpChannel = (): 'whatsapp' | 'sms' => {
-    // In production, use WhatsApp if configured
-    if (process.env.NODE_ENV === 'production') {
-        return 'whatsapp';
-    }
-    // In development, use configured channel (default SMS for testing)
+    // Always use configured channel (default SMS)
+    // Production WhatsApp requirement disabled for now to fix login
     return OTP_CHANNEL;
 };
 

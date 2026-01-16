@@ -259,7 +259,7 @@ export default function Profile() {
                     } else {
                         setError(`Failed to send OTP: ${otpError.message}`);
                     }
-                    setOtpSent(true);
+                    setOtpSent(false); // Do not show OTP screen on error
                     setIsNewUser(false);
                     setLoading(false);
                     return;
@@ -286,7 +286,7 @@ export default function Profile() {
             if (otpError) {
                 console.error("❌ OTP sending failed:", otpError.message);
                 setError(`Failed to send OTP: ${otpError.message}`);
-                setOtpSent(true);
+                setOtpSent(false); // Do not show OTP screen on error
                 setLoading(false);
                 return;
             }
