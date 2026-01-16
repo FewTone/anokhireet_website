@@ -223,61 +223,20 @@ export default function MyProductsView() {
 
     return (
         <div className="w-full">
-            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold mb-2">
-                        {userName ? `${userName}'s Products` : "My Products"}
-                    </h2>
-                    <p className="text-gray-600 text-sm">
-                        Manage your listed products and check their performance.
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-100">
-                    <button
-                        onClick={() => setIsAddProductOpen(true)}
-                        className="px-5 py-2.5 rounded-md font-bold text-sm shadow-sm transition-all flex items-center gap-2 bg-black text-white hover:bg-gray-800 hover:shadow-md active:scale-95"
-                        title="Add a new product"
-                    >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Add Product
-                    </button>
-                </div>
+            <div className="mb-10">
+                <h2 className="text-2xl font-bold text-gray-900">Project Performance</h2>
             </div>
 
-            {/* Analytics Section */}
-            {userId && !loading && (
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-                        <h3 className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-2">Total Products</h3>
-                        <p className="text-2xl font-bold text-gray-900">{myProducts.length}</p>
-                    </div>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-                        <h3 className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-2">Total Interest</h3>
-                        <p className="text-2xl font-bold text-gray-900">{totalViews}</p>
-                    </div>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-                        <h3 className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-2">Total Views</h3>
-                        <p className="text-2xl font-bold text-gray-900">{totalViews}</p>
-                    </div>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-                        <h3 className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-2">Total Likes</h3>
-                        <p className="text-2xl font-bold text-gray-900">{totalLikes}</p>
-                    </div>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
-                        <h3 className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-2">Total Inquiries</h3>
-                        <p className="text-2xl font-bold text-gray-900">{totalInquiries}</p>
-                    </div>
-                </div>
-            )}
-
             {loading ? (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <ProductCardSkeleton key={i} />
+                <div className="space-y-6">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="flex gap-6 items-center p-4 border-b border-gray-100">
+                            <div className="w-48 h-32 bg-gray-100 animate-pulse"></div>
+                            <div className="flex-1 space-y-3">
+                                <div className="h-6 w-1/3 bg-gray-100 animate-pulse"></div>
+                                <div className="h-4 w-1/4 bg-gray-100 animate-pulse"></div>
+                            </div>
+                        </div>
                     ))}
                 </div>
             ) : !userId ? (
@@ -285,77 +244,75 @@ export default function MyProductsView() {
                     <p className="text-gray-500 text-lg mb-4">Please log in to view your products.</p>
                 </div>
             ) : myProducts.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
-                    <div className="mb-4 text-gray-400">
-                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    </div>
-                    <p className="text-gray-500 text-lg mb-2">You don't have any products yet.</p>
-                    <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                        Start listing your products on the platform.
-                    </p>
+                <div className="text-center py-16 border-2 border-dashed border-gray-200 bg-gray-50/30">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No projects yet</h3>
+                    <p className="text-gray-500 mb-6">Start building your portfolio by adding your first project.</p>
+                    <button
+                        onClick={() => setIsAddProductOpen(true)}
+                        className="px-6 py-2 bg-black text-white font-bold hover:bg-gray-800"
+                    >
+                        Create Project
+                    </button>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    {myProducts.map((product) => (
-                        <div key={product.id} className="relative group">
-                            {/* Status Badge */}
-                            <div className="absolute top-2 left-2 z-10">
-                                {product.status === 'draft' && (
-                                    <span className="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-1 rounded-md border border-yellow-200 shadow-sm flex items-center gap-1">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
-                                        Pending
-                                    </span>
-                                )}
-                                {product.status === 'rejected' && (
-                                    <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded-md border border-red-200 shadow-sm">
-                                        Rejected
-                                    </span>
-                                )}
-                                {/* Approved products typically don't show a badge to keep UI clean, or maybe a subtle one? */}
-                            </div>
+                <div className="w-full">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-12 gap-4 pb-4 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider mb-6">
+                        <div className="col-span-12 md:col-span-6 px-4">Project</div>
+                        <div className="col-span-2 text-center hidden md:block">Views</div>
+                        <div className="col-span-2 text-center hidden md:block">Likes</div>
+                        <div className="col-span-2 text-center hidden md:block">Interest</div>
+                    </div>
 
-                            <ProductCard
-                                product={{
-                                    id: parseInt(product.id) || 0,
-                                    productId: product.product_id,
-                                    name: product.name,
-                                    price: product.price,
-                                    image: product.image,
-                                }}
-                            />
-                            {/* Detailed Analytics Overlay/Footer */}
-                            <div className="mt-2 grid grid-cols-4 gap-1 bg-gray-50 rounded-md border border-gray-100 p-2 text-xs text-center text-gray-600">
-                                <div className="flex flex-col items-center justify-center p-1" title="Interest">
-                                    <div className="flex items-center gap-1 mb-1">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                    {/* Features List */}
+                    <div className="space-y-8">
+                        {myProducts.map((product) => (
+                            <div key={product.id} className="group relative grid grid-cols-12 gap-4 items-center pb-8 border-b border-gray-100 last:border-0 hover:bg-gray-50/50 transition-colors -mx-4 px-4 py-4">
+                                {/* Project Info */}
+                                <div className="col-span-12 md:col-span-6 flex gap-6 items-center">
+                                    <div className="relative w-32 h-20 md:w-40 md:h-24 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm group-hover:shadow-md transition-all">
+                                        {product.status === 'draft' && (
+                                            <div className="absolute top-0 right-0 bg-yellow-400 text-white text-[10px] font-bold px-2 py-0.5 z-10">PENDING</div>
+                                        )}
+                                        {product.status === 'rejected' && (
+                                            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 z-10">REJECTED</div>
+                                        )}
+                                        <img
+                                            src={product.image}
+                                            alt={product.name}
+                                            className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+                                        />
                                     </div>
-                                    <span className="font-semibold">{product.views || 0}</span>
-                                    <span className="text-[9px] text-gray-400">Intrst</span>
+                                    <div className="flex flex-col justify-center">
+                                        <h3 className="font-bold text-lg text-gray-900 mb-1 leading-snug group-hover:text-blue-600 transition-colors">
+                                            {product.name}
+                                        </h3>
+                                        <p className="text-gray-400 text-xs font-medium">
+                                            Published {new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col items-center justify-center p-1 border-l border-gray-200" title="Views">
-                                    <div className="flex items-center gap-1 mb-1">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                    </div>
-                                    <span className="font-semibold">{product.views || 0}</span>
-                                    <span className="text-[9px] text-gray-400">Views</span>
+
+                                {/* Stats - Views */}
+                                <div className="col-span-4 md:col-span-2 flex flex-col items-center justify-center">
+                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Views</span>
+                                    <span className="text-xl md:text-2xl font-bold text-gray-900">{product.views?.toLocaleString() || 0}</span>
                                 </div>
-                                <div className="flex flex-col items-center justify-center p-1 border-l border-gray-200" title="Likes">
-                                    <div className="flex items-center gap-1 mb-1">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                                    </div>
-                                    <span className="font-semibold">{product.wishlist_count || 0}</span>
-                                    <span className="text-[9px] text-gray-400">Likes</span>
+
+                                {/* Stats - Likes/Appreciations */}
+                                <div className="col-span-4 md:col-span-2 flex flex-col items-center justify-center">
+                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Likes</span>
+                                    <span className="text-xl md:text-2xl font-bold text-gray-900">{product.wishlist_count?.toLocaleString() || 0}</span>
                                 </div>
-                                <div className="flex flex-col items-center justify-center p-1 border-l border-gray-200" title="Inquiries">
-                                    <div className="flex items-center gap-1 mb-1">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                    </div>
-                                    <span className="font-semibold">{product.inquiries_count || 0}</span>
-                                    <span className="text-[9px] text-gray-400">Msgs</span>
+
+                                {/* Stats - Inquiries */}
+                                <div className="col-span-4 md:col-span-2 flex flex-col items-center justify-center">
+                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Interest</span>
+                                    <span className="text-xl md:text-2xl font-bold text-gray-900">{product.inquiries_count?.toLocaleString() || 0}</span>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             )}
 
@@ -364,7 +321,6 @@ export default function MyProductsView() {
                 isOpen={isAddProductOpen}
                 onClose={() => setIsAddProductOpen(false)}
                 userId={userId || ""}
-
                 onSuccess={handleProductAdded}
             />
         </div>
