@@ -14,10 +14,10 @@ interface AddProductModalProps {
     onClose: () => void;
     userId: string;
     onSuccess: () => void;
-    listingCredits: number;
+
 }
 
-export default function AddProductModal({ isOpen, onClose, userId, onSuccess, listingCredits }: AddProductModalProps) {
+export default function AddProductModal({ isOpen, onClose, userId, onSuccess }: Omit<AddProductModalProps, 'listingCredits'>) {
     const [name, setName] = useState("");
     const [price, setPrice] = useState("");
     const [categoryId, setCategoryId] = useState("");
@@ -72,10 +72,6 @@ export default function AddProductModal({ isOpen, onClose, userId, onSuccess, li
         setLoading(true);
 
         try {
-            if (listingCredits <= 0) {
-                throw new Error("You do not have enough listing credits.");
-            }
-
             if (!imageFile) throw new Error("Please upload an image.");
 
             // 1. Upload Image
@@ -98,17 +94,7 @@ export default function AddProductModal({ isOpen, onClose, userId, onSuccess, li
 
             if (insertError) throw insertError;
 
-            // 3. Deduct Credit
-            const { error: creditError } = await supabase
-                .from("users")
-                .update({ listing_credits: listingCredits - 1 })
-                .eq("id", userId);
 
-            if (creditError) {
-                console.error("Failed to deduct credit, but product was created.", creditError);
-                // Potential edge case: Free product usage if this fails?
-                // For now, acceptable risk or we could delete the product.
-            }
 
             onSuccess();
             onClose();
@@ -235,7 +221,7 @@ export default function AddProductModal({ isOpen, onClose, userId, onSuccess, li
                     </form>
 
                     <p className="text-center text-xs text-gray-500 mt-4">
-                        This will cost <span className="font-bold text-gray-900">1 Listing Credit</span>. Product will be reviewed by admin.
+                        Product will be reviewed by admin.
                     </p>
                 </div>
             </div>

@@ -11,9 +11,8 @@ import MyProductsView from "@/components/dashboard/MyProductsView";
 import WishlistView from "@/components/dashboard/WishlistView";
 import ProfileView from "@/components/dashboard/ProfileView";
 import SettingsView from "@/components/dashboard/SettingsView";
-import ReferEarnView from "@/components/dashboard/ReferEarnView";
 
-type View = "my-products" | "wishlist" | "profile" | "settings" | "refer-earn";
+type View = "my-products" | "wishlist" | "profile" | "settings";
 
 export default function UserPage() {
     const [userName, setUserName] = useState("");
@@ -134,7 +133,6 @@ export default function UserPage() {
         { label: "WISHLIST", id: "wishlist" as View },
         { label: "PROFILE", id: "profile" as View },
         { label: "SETTINGS", id: "settings" as View },
-        { label: "REFER AND EARN", id: "refer-earn" as View, isNew: true },
     ];
 
     const renderContent = () => {
@@ -156,8 +154,6 @@ export default function UserPage() {
                 />;
             case "settings":
                 return <SettingsView />;
-            case "refer-earn":
-                return <ReferEarnView />;
             default:
                 return <MyProductsView />;
         }
@@ -201,9 +197,7 @@ export default function UserPage() {
                                     >
                                         <div className="flex items-center gap-2">
                                             <span>{item.label}</span>
-                                            {item.isNew && (
-                                                <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-sm font-bold tracking-tight">NEW</span>
-                                            )}
+
                                         </div>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
                                             <polyline points="9 18 15 12 9 6"></polyline>

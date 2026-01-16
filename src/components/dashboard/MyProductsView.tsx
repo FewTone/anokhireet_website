@@ -26,7 +26,7 @@ export default function MyProductsView() {
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<string | null>(null);
     const [userName, setUserName] = useState<string>("");
-    const [listingCredits, setListingCredits] = useState<number>(0);
+
     const [totalInquiries, setTotalInquiries] = useState<number>(0);
     const [totalViews, setTotalViews] = useState<number>(0);
     const [totalLikes, setTotalLikes] = useState<number>(0);
@@ -56,7 +56,7 @@ export default function MyProductsView() {
             } else {
                 setUserId(null);
                 setUserName("");
-                setListingCredits(0);
+
                 setMyProducts([]);
                 setLoading(false);
             }
@@ -81,7 +81,7 @@ export default function MyProductsView() {
             const authUserId = session.user.id;
             const { data: userData, error: userError } = await supabase
                 .from("users")
-                .select("id, name, auth_user_id, listing_credits")
+                .select("id, name, auth_user_id")
                 .or(`id.eq.${authUserId},auth_user_id.eq.${authUserId}`)
                 .maybeSingle();
 
@@ -94,7 +94,6 @@ export default function MyProductsView() {
             const actualUserId = userData.id;
             setUserId(actualUserId);
             setUserName(userData.name || "");
-            setListingCredits(userData.listing_credits || 0);
 
             loadProducts(actualUserId);
             loadInquiryStats(actualUserId);
@@ -235,18 +234,10 @@ export default function MyProductsView() {
                 </div>
 
                 <div className="flex items-center gap-3 bg-gray-50 p-2 rounded-lg border border-gray-100">
-                    <div className="text-right px-2">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Credits</p>
-                        <p className="text-lg font-black text-gray-900 leading-none">{listingCredits}</p>
-                    </div>
                     <button
                         onClick={() => setIsAddProductOpen(true)}
-                        disabled={listingCredits <= 0}
-                        className={`px-5 py-2.5 rounded-md font-bold text-sm shadow-sm transition-all flex items-center gap-2 ${listingCredits > 0
-                            ? "bg-black text-white hover:bg-gray-800 hover:shadow-md active:scale-95"
-                            : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                            }`}
-                        title={listingCredits <= 0 ? "You need listing credits to add products. Refer friends to earn credits!" : "Add a new product"}
+                        className="px-5 py-2.5 rounded-md font-bold text-sm shadow-sm transition-all flex items-center gap-2 bg-black text-white hover:bg-gray-800 hover:shadow-md active:scale-95"
+                        title="Add a new product"
                     >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -300,7 +291,7 @@ export default function MyProductsView() {
                     </div>
                     <p className="text-gray-500 text-lg mb-2">You don't have any products yet.</p>
                     <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                        Refer friends to earn credits and start listing your products on the platform.
+                        Start listing your products on the platform.
                     </p>
                 </div>
             ) : (
@@ -373,7 +364,7 @@ export default function MyProductsView() {
                 isOpen={isAddProductOpen}
                 onClose={() => setIsAddProductOpen(false)}
                 userId={userId || ""}
-                listingCredits={listingCredits}
+
                 onSuccess={handleProductAdded}
             />
         </div>

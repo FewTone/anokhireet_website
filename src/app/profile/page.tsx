@@ -11,7 +11,6 @@ interface PendingUserData {
     id: string;
     name: string;
     phone: string;
-    email: string | null;
     auth_user_id: string | null;
 }
 
@@ -22,19 +21,10 @@ export default function Profile() {
     const [isNewUser, setIsNewUser] = useState(false);
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
-    const [newUserEmail, setNewUserEmail] = useState("");
-    const [referralCode, setReferralCode] = useState("");
     const [otpSent, setOtpSent] = useState(false);
     const [otp, setOtp] = useState("");
     const [verifyingOtp, setVerifyingOtp] = useState(false);
-
-    // Login Method State
-    const [loginMethod, setLoginMethod] = useState<'phone' | 'email'>('phone');
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [useOtpForEmail, setUseOtpForEmail] = useState(false); // Toggle for Forgot Password / OTP Login
     const [pendingUserData, setPendingUserData] = useState<PendingUserData | null>(null);
-
 
     const [cities, setCities] = useState<any[]>([]);
     const [selectedCities, setSelectedCities] = useState<string[]>([]);
@@ -115,7 +105,7 @@ export default function Profile() {
                 // Check if user is admin (in admins table)
                 const { data: adminData } = await supabase
                     .from("admins")
-                    .select("id, email")
+                    .select("id")
                     .eq("auth_user_id", session.user.id)
                     .maybeSingle();
 
@@ -129,7 +119,7 @@ export default function Profile() {
                 // Check if user exists in users table
                 const { data: userData } = await supabase
                     .from("users")
-                    .select("id, name, phone, email, auth_user_id")
+                    .select("id, name, phone, auth_user_id")
                     .eq("auth_user_id", session.user.id)
                     .maybeSingle();
 
@@ -141,37 +131,6 @@ export default function Profile() {
                     // User authenticated (e.g. via Google or Email OTP) but no public profile yet
                     // Show "Create Account" screen and pre-fill data
                     setIsNewUser(true);
-                    if (session.user.email) {
-                        setNewUserEmail(session.user.email);
-                        // If provider is email, set loginMethod to email so password field shows
-                        if (session.user.app_metadata.provider === 'email') {
-                            setLoginMethod('email');
-                        } else {
-                            // If Google/OAuth, check if we can Auto-Link to an existing unclaimed email
-                            const { data: unclaimedUser } = await supabase
-                                .from("users")
-                                .select("id, auth_user_id")
-                                .eq("email", session.user.email)
-                                .is("auth_user_id", null)
-                                .maybeSingle();
-
-                            if (unclaimedUser) {
-                                // Auto-Link found unclaimed user!
-                                console.log("🔗 Auto-linking Google account to existing user:", unclaimedUser.id);
-                                await supabase
-                                    .from("users")
-                                    .update({
-                                        auth_user_id: session.user.id,
-                                        // Update name/phone if missing? Maybe best to leave as is for now
-                                    })
-                                    .eq("id", unclaimedUser.id);
-
-                                // Refresh page/redirect to complete login
-                                getReturnUrlAndRedirect();
-                                return;
-                            }
-                        }
-                    }
                     if (session.user.user_metadata?.full_name) {
                         const names = session.user.user_metadata.full_name.split(' ');
                         if (names.length > 0) setFirstName(names[0]);
@@ -190,6 +149,7 @@ export default function Profile() {
     };
 
     const handleLogin = async () => {
+        // Phone validation
         if (!phone || phone.length !== 10) {
             setError("Please enter a valid 10-digit phone number");
             return;
@@ -225,92 +185,20 @@ export default function Profile() {
                 }
             }
 
-            // ========== EMAIL FLOW ==========
-            if (loginMethod === 'email') {
-                if (!email) {
-                    setError("Please enter your email");
-                    setLoading(false);
-                    return;
-                }
-
-                // Check if user exists in public DB
-                const { data: publicUser } = await supabase
-                    .from("users")
-                    .select("id, auth_user_id")
-                    .eq("email", email)
-                    .maybeSingle();
-
-                // Check if the user is "Claimed" (has an auth_user_id linked)
-                const isClaimedUser = publicUser && publicUser.auth_user_id;
-
-                if (isClaimedUser) {
-                    setIsNewUser(false);
-                } else {
-                    // Treat as new user if not found OR if found but unclaimed (auth_user_id is null)
-                    setIsNewUser(true);
-                    setNewUserEmail(email);
-                }
-
-                // 1. Password Login (Only for Existing CLAIMED Users requesting Password)
-                if (isClaimedUser && !useOtpForEmail) {
-                    if (!password) {
-                        setError("Please enter your password");
-                        setLoading(false);
-                        return;
-                    }
-                    const { error } = await supabase.auth.signInWithPassword({
-                        email,
-                        password,
-                    });
-
-                    if (error) {
-                        setError("Invalid credentials. Please try again.");
-                        setLoading(false);
-                        return;
-                    }
-                    // Success -> Session listener handles redirect
-                    return;
-                }
-
-                // 2. OTP Login (New Users OR Unclaimed Users OR Forgot Password Flow)
-                // If user is new/unclaimed OR useOtpForEmail is explicitly true
-                const { error } = await supabase.auth.signInWithOtp({
-                    email: email,
-                    options: {
-                        shouldCreateUser: true, // Allow creating auth user for new signups
-                    }
-                });
-
-                if (error) {
-                    setError(`Failed to send code: ${error.message}`);
-                    setLoading(false);
-                    return;
-                }
-
-                setOtpSent(true);
-                setLoading(false);
-                return;
-            }
-
-            // ========== PHONE FLOW ==========
+            // ========== PHONE FLOW Only ==========
             // Normalize phone number - extract only digits
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
 
             console.log("🔍 Checking for existing user...");
-            // console.log("[LoginDebug] Starting login flow with phone:", phone);
-            // console.log("Input phone (normalized):", normalizedPhone);
-            // console.log("Input phone (with +91):", phoneNumber);
 
-            // ========== NORMAL USER FLOW ==========
-            // Check regular users table - try multiple phone formats
-            let existingUser: { id: string; name: string; phone: string; email: string | null; auth_user_id: string | null } | null = null;
+            // Check regular users table
+            let existingUser: { id: string; name: string; phone: string; auth_user_id: string | null } | null = null;
 
             // Strategy: Get all users and match by normalized phone (last 10 digits)
-            // This handles all phone format variations
             const { data: allUsers, error: allUsersError } = await supabase
                 .from("users")
-                .select("id, name, phone, email, auth_user_id, auth_user_id");
+                .select("id, name, phone, auth_user_id");
 
             if (allUsersError) {
                 console.error("❌ Error fetching users:", allUsersError);
@@ -318,49 +206,19 @@ export default function Profile() {
             }
 
             if (allUsers && allUsers.length > 0) {
-                // console.log(`📋 Checking ${allUsers.length} users in database...`);
-
                 // Find user by matching normalized phone (last 10 digits)
-                // This works regardless of how phone is stored (+91 prefix, without prefix, etc.)
                 const foundUser = allUsers.find(u => {
-                    if (!u.phone) {
-                        // console.log(`  ⚠️ User ${u.id} has no phone number`);
-                        return false;
-                    }
-
-                    // Normalize stored phone (remove all non-digits)
+                    if (!u.phone) return false;
                     const storedDigits = u.phone.replace(/\D/g, "").trim();
-                    // Get last 10 digits (handles cases with country codes)
                     const storedLast10 = storedDigits.slice(-10);
                     const inputLast10 = normalizedPhone.slice(-10);
-
-                    const matches = storedLast10 === inputLast10;
-
-                    // if (matches) {
-                    //     console.log(`  ✅ MATCH FOUND!`);
-                    //     console.log(`     Stored phone: ${u.phone} (normalized: ${storedDigits}, last 10: ${storedLast10})`);
-                    //     console.log(`     Input phone: ${normalizedPhone} (last 10: ${inputLast10})`);
-                    //     console.log(`     User: ${u.name} (ID: ${u.id})`);
-                    // } else {
-                    //     console.log(`  ❌ No match: ${u.phone} (last 10: ${storedLast10}) vs input (last 10: ${inputLast10})`);
-                    // }
-
-                    return matches;
+                    return storedLast10 === inputLast10;
                 });
-
                 existingUser = foundUser || null;
-            } else {
-                // console.log("📋 No users found in database");
             }
 
-            // console.log("🎯 Final existingUser result:", existingUser ? `${existingUser.name} (${existingUser.phone})` : "NOT FOUND");
-            // console.log("[LoginDebug] Existing user check result:", existingUser ? "Found" : "Not Found", existingUser);
-
-            // Case 1: User found in users table (admin-created or self-registered)
+            // Case 1: User found in users table
             if (existingUser) {
-                // Check if this user is an admin (check admins table, not just auth_user_id)
-                // Admin-created users will have auth_user_id = null initially, but after first login they'll have auth_user_id
-                // We need to check the admins table to see if they're actually an admin
                 const userIdToCheck = existingUser.auth_user_id || existingUser.id;
                 const { data: adminCheck } = await supabase
                     .from("admins")
@@ -374,54 +232,33 @@ export default function Profile() {
                     return;
                 }
 
-                // User exists in user table - show OTP screen (OTP required for all users)
-                // console.log("✅ User found in database, showing OTP screen...");
-
-                // Store user info in state for after OTP verification (not localStorage)
-                // We'll use this to link auth_user_id if it's admin-created user
+                // Store user info in state for after OTP verification
                 setPendingUserData({
                     id: existingUser.id,
                     name: existingUser.name,
                     phone: existingUser.phone,
-                    email: existingUser.email,
+
                     auth_user_id: existingUser.auth_user_id
                 });
 
-                // Send OTP using configured channel (SMS for testing, WhatsApp for production)
+                // Send OTP
                 const otpChannel = getOtpChannel();
                 const { error: otpError } = await supabase.auth.signInWithOtp({
                     phone: phoneNumber,
                     options: {
-                        channel: otpChannel, // 'sms' for testing, 'whatsapp' for production
+                        channel: otpChannel,
                     },
                 });
 
                 if (otpError) {
-                    // OTP sending failed - show helpful error message
                     console.error("❌ OTP sending failed:", otpError.message);
-                    // console.error("[LoginDebug] ❌ OTP sending failed:", otpError.message);
-
-                    // Provide helpful error messages based on the error
                     if (otpError.message.includes("whatsapp") || otpError.message.includes("WhatsApp")) {
-                        setError(
-                            "WhatsApp OTP not configured. Please:\n" +
-                            "1. Set up Twilio Verify WhatsApp in Supabase Dashboard\n" +
-                            "2. Configure WhatsApp Sender in Twilio\n" +
-                            "3. Or use a TEST PHONE NUMBER from Supabase Dashboard > Auth > Providers > Phone\n\n" +
-                            "If you use a Test Number, the OTP is always the one you set (e.g., 000000)."
-                        );
-                    } else if (otpError.message.includes("Twilio") || otpError.message.includes("provider")) {
-                        setError(
-                            "Twilio not configured. For development:\n" +
-                            "1. Go to Supabase Dashboard > Authentication > Providers > Phone\n" +
-                            "2. Add your number to 'Phone Numbers for Testing'\n" +
-                            "3. Use that number and the fixed OTP (e.g., 000000).\n\n" +
-                            "Real SMS requires a paid Twilio account."
-                        );
+                        setError("WhatsApp OTP not configured. Please contact support or use a Test Number.");
+                    } else if (otpError.message.includes("Twilio")) {
+                        setError("Twilio configuration error. Please contact support.");
                     } else {
-                        setError(`Failed to send OTP: ${otpError.message}. Check Twilio configuration or use Test Numbers in Supabase Dashboard.`);
+                        setError(`Failed to send OTP: ${otpError.message}`);
                     }
-                    // Still show OTP screen even if sending failed - user might have received OTP
                     setOtpSent(true);
                     setIsNewUser(false);
                     setLoading(false);
@@ -429,54 +266,26 @@ export default function Profile() {
                 }
 
                 setOtpSent(true);
-                console.log("[LoginDebug] OTP sent successfully via channel:", otpChannel);
-                setIsNewUser(false); // Existing user, not new
+                setIsNewUser(false);
                 setLoading(false);
                 return;
             }
 
-            // Case 2: User not found in users table - Will ask info after OTP
-            // Mark as new user FIRST before sending OTP
+            // Case 2: User not found - Will ask info after OTP
             setIsNewUser(true);
 
-            // Send OTP using configured channel (SMS for testing, WhatsApp for production)
+            // Send OTP
             const otpChannel = getOtpChannel();
             const { error: otpError } = await supabase.auth.signInWithOtp({
                 phone: phoneNumber,
                 options: {
-                    channel: otpChannel, // 'sms' for testing, 'whatsapp' for production
-                    data: {
-                        // We'll collect name/email after OTP verification
-                    },
+                    channel: otpChannel,
                 },
             });
 
             if (otpError) {
-                // OTP sending failed - show helpful error message
                 console.error("❌ OTP sending failed:", otpError.message);
-                console.error("[LoginDebug] ❌ OTP sending failed (New User):", otpError.message);
-
-                // Provide helpful error messages based on the error
-                if (otpError.message.includes("whatsapp") || otpError.message.includes("WhatsApp")) {
-                    setError(
-                        "WhatsApp OTP not configured. Please:\n" +
-                        "1. Set up Twilio Verify WhatsApp in Supabase Dashboard\n" +
-                        "2. Configure WhatsApp Sender in Twilio\n" +
-                        "3. Or use a TEST PHONE NUMBER from Supabase Dashboard > Auth > Providers > Phone\n\n" +
-                        "If you use a Test Number, the OTP is always the one you set (e.g., 000000)."
-                    );
-                } else if (otpError.message.includes("Twilio") || otpError.message.includes("provider")) {
-                    setError(
-                        "Twilio not configured. For development:\n" +
-                        "1. Go to Supabase Dashboard > Authentication > Providers > Phone\n" +
-                        "2. Add your number to 'Phone Numbers for Testing'\n" +
-                        "3. Use that number and the fixed OTP (e.g., 000000).\n\n" +
-                        "Real SMS requires a paid Twilio account."
-                    );
-                } else {
-                    setError(`Failed to send OTP: ${otpError.message}. Check Twilio configuration or use Test Numbers in Supabase Dashboard.`);
-                }
-                // Still show OTP screen even if sending failed - user might have received OTP
+                setError(`Failed to send OTP: ${otpError.message}`);
                 setOtpSent(true);
                 setLoading(false);
                 return;
@@ -508,7 +317,7 @@ export default function Profile() {
                 // Check if user is admin
                 const { data: adminData } = await supabase
                     .from("admins")
-                    .select("id, email")
+                    .select("id")
                     .eq("auth_user_id", existingSession.user.id)
                     .maybeSingle();
 
@@ -543,25 +352,13 @@ export default function Profile() {
             // Use the same channel type as sending (sms for SMS, sms for WhatsApp too)
             // Normal OTP verification with Supabase
             // Use correct channel type based on login method
-            let verifyData, verifyError;
-
-            if (loginMethod === 'email') {
-                const res = await supabase.auth.verifyOtp({
-                    email: email,
-                    token: otp,
-                    type: "email",
-                });
-                verifyData = res.data;
-                verifyError = res.error;
-            } else {
-                const res = await supabase.auth.verifyOtp({
-                    phone: phoneNumber,
-                    token: otp,
-                    type: "sms",
-                });
-                verifyData = res.data;
-                verifyError = res.error;
-            }
+            // Normal OTP verification with Supabase
+            // Use current channel type (SMS)
+            const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+                phone: phoneNumber,
+                token: otp,
+                type: "sms",
+            });
 
             if (verifyError) {
                 throw verifyError;
@@ -616,7 +413,7 @@ export default function Profile() {
                 // Check by auth ID
                 const { data: existingUser, error: userError } = await supabase
                     .from("users")
-                    .select("id, name, phone, email, auth_user_id")
+                    .select("id, name, phone, auth_user_id")
                     .eq("auth_user_id", authUser.id)
                     .maybeSingle();
 
@@ -706,10 +503,7 @@ export default function Profile() {
             return;
         }
 
-        if (loginMethod === 'email' && !password && isNewUser) {
-            setError("Please set a password for your account");
-            return;
-        }
+
 
         const fullName = `${firstName.trim()} ${lastName.trim()}`;
 
@@ -738,115 +532,55 @@ export default function Profile() {
                 }
             }
 
-            if (selectedCities.length === 0) {
-                setError("Please select at least one city");
-                setLoading(false);
+            const fullName = `${firstName.trim()} ${lastName.trim()}`;
+            const authUserId = (await supabase.auth.getUser()).data.user?.id;
+
+            if (!authUserId) {
+                throw new Error("Authentication failed. Please try again.");
+            }
+
+            // Normal Phone Flow: Update or Create
+            // If we are here, it means the user verified phone OTP but wasn't found in our DB (or pendingUserData was set)
+
+            // Double check if user exists (just in case)
+            const { data: existingUserCheck } = await supabase
+                .from("users")
+                .select("id")
+                .eq("id", authUserId)
+                .maybeSingle();
+
+            if (existingUserCheck) {
+                // User already exists, just redirect
+                router.push("/user");
                 return;
             }
 
+            // INSERT new user
+            // Phone is taken from state (normalized)
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
 
-            let authUserId: string | null = null;
-
-            if (loginMethod === 'email' && isNewUser) {
-                // For new email users, we must update their password
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-                if (userError || !user) throw new Error("Authentication failed");
-
-                // Update password for the user
-                const { error: passwordError } = await supabase.auth.updateUser({
-                    password: password
-                });
-
-                if (passwordError) throw passwordError;
-
-                authUserId = user.id;
-            } else {
-                // ========== PHONE OTP SIGNUP (OTP ALREADY VERIFIED) ==========
-                // Get current auth session (user already verified OTP)
-                // Use getUser() as it is more robust than getSession() for validation
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-                if (userError || !user) {
-                    // Try refresh session
-                    const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
-                    if (!refreshedSession?.user) {
-                        throw new Error("Authentication session expired. Please login again.");
-                    }
-                    authUserId = refreshedSession?.user.id || null;
-                } else {
-                    authUserId = user.id;
-                }
-            }
-
-
-
-            if (!authUserId) throw new Error("User ID missing");
-
-            // Create user in users table using auth user ID
-            // RLS policy "user create self profile" allows this when auth_user_id = auth.uid()
-            // First check if an unclaimed user exists with this email (if email login)
-            let existingUnclaimedUser = null;
-            if (loginMethod === 'email') {
-                const { data } = await supabase
-                    .from("users")
-                    .select("id")
-                    .eq("email", email)
-                    .is("auth_user_id", null)
-                    .maybeSingle();
-                existingUnclaimedUser = data;
-            }
-
-            let newUser = null;
-            let createError = null;
-
-            if (existingUnclaimedUser) {
-                // UPDATE the existing unclaimed user
-                console.log("🔄 Claiming existing email user:", existingUnclaimedUser.id);
-                const { data, error } = await supabase
-                    .from("users")
-                    .update({
-                        auth_user_id: authUserId, // Important: Link auth ID
-                        name: fullName,
-                        // Don't overwrite email
-                    })
-                    .eq("id", existingUnclaimedUser.id)
-                    .select()
-                    .single();
-
-                newUser = data;
-                createError = error;
-            } else {
-                // INSERT new user
-                const { data, error } = await supabase
-                    .from("users")
-                    .insert([{
-                        id: authUserId,
-                        name: fullName,
-                        phone: loginMethod === 'phone' ? phoneNumber : null,
-                        email: loginMethod === 'email' ? email : (newUserEmail.trim() || null),
-                        auth_user_id: authUserId, // Link to Supabase Auth (required for RLS policy)
-                    }])
-                    .select()
-                    .single();
-                newUser = data;
-                createError = error;
-            }
+            const { data: newUser, error: createError } = await supabase
+                .from("users")
+                .insert([{
+                    id: authUserId,
+                    name: fullName,
+                    phone: phoneNumber,
+                    auth_user_id: authUserId, // Link to Supabase Auth
+                }])
+                .select()
+                .single();
 
             if (createError) {
                 // Check for unique key violation (user already exists)
                 if (createError.code === "23505") { // duplicate key value violates unique constraint
                     console.warn("⚠️ User already exists (duplicate key), linking account...", createError);
 
-                    const matchField = loginMethod === 'email' ? 'email' : 'phone';
-                    const matchValue = loginMethod === 'email' ? email : phoneNumber;
-
+                    // Try to link if phone matches
                     const { data: linkedUser, error: linkError } = await supabase
                         .from("users")
                         .update({ auth_user_id: authUserId })
-                        .eq(matchField, matchValue)
+                        .eq("phone", phoneNumber)
                         .select()
                         .single();
 
@@ -876,27 +610,6 @@ export default function Profile() {
                 await supabase.from("user_cities").insert(
                     selectedCities.map(cityId => ({ user_id: authUserId, city_id: cityId }))
                 );
-            }
-
-            // User created - auth session already exists
-            // No localStorage needed - session is managed by Supabase
-
-            // Handle referral if code provided
-            if (referralCode.trim()) {
-                try {
-                    const { error: referralError } = await supabase.rpc('handle_referral', {
-                        referral_code: referralCode.trim()
-                    });
-
-                    if (referralError) {
-                        console.error("Referral failed:", referralError);
-                        // Non-blocking error
-                    } else {
-                        console.log("Referral processed successfully");
-                    }
-                } catch (refErr) {
-                    console.error("Error processing referral:", refErr);
-                }
             }
 
             // Redirect to user page
@@ -959,23 +672,7 @@ export default function Profile() {
                                 : "Choose your preferred login method"}
                     </p>
 
-                    {/* Method Toggle */}
-                    {!otpSent && !isNewUser && (
-                        <div className="flex p-1 bg-gray-100 rounded-lg mb-6 max-w-[300px] mx-auto">
-                            <button
-                                onClick={() => { setLoginMethod('phone'); setError(''); }}
-                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${loginMethod === 'phone' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                PHONE
-                            </button>
-                            <button
-                                onClick={() => { setLoginMethod('email'); setError(''); }}
-                                className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-all ${loginMethod === 'email' ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                EMAIL
-                            </button>
-                        </div>
-                    )}
+                    {/* Method Toggle REMOVED */}
 
                     {otpSent ? (
                         <>
@@ -1091,89 +788,33 @@ export default function Profile() {
                         </>
                     ) : !isNewUser ? (
                         <>
-                            {loginMethod === 'phone' ? (
-                                <div className="border border-[#4d5563] mt-4 p-3 text-[0.8rem] flex items-center">
-                                    <span>+91</span>
-                                    <input
-                                        type="tel"
-                                        pattern="[0-9]{10}"
-                                        maxLength={10}
-                                        inputMode="numeric"
-                                        value={phone}
-                                        onChange={(e) => {
-                                            let val = e.target.value.replace(/\D/g, "");
-                                            // Handle paste with 91 prefix
-                                            if (val.length > 10 && val.startsWith("91")) {
-                                                val = val.substring(2);
-                                            }
-                                            if (val.length > 10) val = val.slice(0, 10);
-                                            setPhone(val);
-                                            setError(""); // Clear error when user starts typing
-                                        }}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter' && phone.length === 10) {
-                                                handleLogin();
-                                            }
-                                        }}
-                                        className="w-full outline-none border-none ml-2"
-                                        placeholder="Enter phone number"
-                                    />
-                                </div>
-                            ) : (
-                                <div className="space-y-3 mt-4">
-                                    <div className="border border-[#4d5563] p-3 text-[0.8rem] flex items-center">
-                                        <input
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            onKeyPress={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    if (useOtpForEmail) {
-                                                        handleLogin();
-                                                    } else {
-                                                        document.getElementById('login-password')?.focus();
-                                                    }
-                                                }
-                                            }}
-                                            className="w-full outline-none border-none"
-                                            placeholder="Enter your email"
-                                        />
-                                    </div>
-
-                                    {!useOtpForEmail && (
-                                        <div className="border border-[#4d5563] p-3 text-[0.8rem] flex items-center">
-                                            <input
-                                                id="login-password"
-                                                type="password"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                onKeyPress={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        handleLogin();
-                                                    }
-                                                }}
-                                                className="w-full outline-none border-none"
-                                                placeholder="Enter password"
-                                            />
-                                        </div>
-                                    )}
-
-                                    <div className="flex justify-between items-center mt-1">
-                                        <div className="text-[10px] text-gray-500">
-                                            {useOtpForEmail ? "We'll send a one-time code to this email." : ""}
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                setUseOtpForEmail(!useOtpForEmail);
-                                                setError("");
-                                            }}
-                                            className="text-[10px] text-gray-500 hover:text-black hover:underline"
-                                        >
-                                            {useOtpForEmail ? "Login with Password" : "Forgot Password? / Login with Code"}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
+                            <div className="border border-[#4d5563] mt-4 p-3 text-[0.8rem] flex items-center">
+                                <span>+91</span>
+                                <input
+                                    type="tel"
+                                    pattern="[0-9]{10}"
+                                    maxLength={10}
+                                    inputMode="numeric"
+                                    value={phone}
+                                    onChange={(e) => {
+                                        let val = e.target.value.replace(/\D/g, "");
+                                        // Handle paste with 91 prefix
+                                        if (val.length > 10 && val.startsWith("91")) {
+                                            val = val.substring(2);
+                                        }
+                                        if (val.length > 10) val = val.slice(0, 10);
+                                        setPhone(val);
+                                        setError(""); // Clear error when user starts typing
+                                    }}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter' && phone.length === 10) {
+                                            handleLogin();
+                                        }
+                                    }}
+                                    className="w-full outline-none border-none ml-2"
+                                    placeholder="Enter phone number"
+                                />
+                            </div>
 
                             {error && (
                                 <p className="mt-2 text-red-500 text-xs text-left">{error}</p>
@@ -1181,7 +822,7 @@ export default function Profile() {
 
                             <button
                                 onClick={handleLogin}
-                                disabled={loading || (loginMethod === 'phone' ? !phone || phone.length !== 10 : !email || (!useOtpForEmail && !password))}
+                                disabled={loading || !phone || phone.length !== 10}
                                 className="mt-4 w-full p-4 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {loading ? "LOGGING IN..." : "LOGIN"}
@@ -1235,48 +876,6 @@ export default function Profile() {
                                             />
                                         </div>
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs text-[#4d5563] text-left mb-1">
-                                        Email (Optional)
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={newUserEmail}
-                                        onChange={(e) => setNewUserEmail(e.target.value)}
-                                        className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
-                                        placeholder="user@example.com (optional)"
-                                        disabled={loginMethod === 'email'} // If signed up via email, this is fixed
-                                    />
-                                </div>
-
-                                {loginMethod === 'email' && (
-                                    <div>
-                                        <label className="block text-xs text-[#4d5563] text-left mb-1">
-                                            create Password *
-                                        </label>
-                                        <input
-                                            type="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
-                                            placeholder="Set a password"
-                                        />
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label className="block text-xs text-[#4d5563] text-left mb-1">
-                                        Referral Code (Optional)
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={referralCode}
-                                        onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-                                        className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded uppercase placeholder:normal-case"
-                                        placeholder="Enter referral code"
-                                    />
                                 </div>
 
                                 <div>
@@ -1374,8 +973,6 @@ export default function Profile() {
                                         setOtpSent(false);
                                         setFirstName("");
                                         setLastName("");
-                                        setNewUserEmail("");
-                                        setReferralCode("");
                                         setOtp("");
                                         setPhone("");
                                         setError("");
@@ -1394,55 +991,12 @@ export default function Profile() {
                                 </button>
                             </div>
                         </>
-                    )}
+                    )
+                    }
 
-                    {/* Social Login Options */}
-                    {!otpSent && !isNewUser && (
-                        <div className="mt-8">
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <span className="w-full border-t border-gray-300"></span>
-                                </div>
-                                <div className="relative flex justify-center text-xs uppercase">
-                                    <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                                </div>
-                            </div>
 
-                            <button
-                                onClick={async () => {
-                                    setLoading(true);
-                                    try {
-                                        const { error } = await supabase.auth.signInWithOAuth({
-                                            provider: 'google',
-                                            options: {
-                                                redirectTo: `${window.location.origin}/user`,
-                                                queryParams: {
-                                                    access_type: 'offline',
-                                                    prompt: 'consent',
-                                                },
-                                            },
-                                        });
-                                        if (error) throw error;
-                                    } catch (err: any) {
-                                        setError(err.message);
-                                        setLoading(false);
-                                    }
-                                }}
-                                disabled={loading}
-                                className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                                </svg>
-                                Continue with Google
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
