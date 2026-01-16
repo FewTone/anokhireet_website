@@ -138,10 +138,40 @@ export default function Profile() {
                     getReturnUrlAndRedirect();
                     return; // Don't stop loading, let redirect happen
                 } else {
-                    // User authenticated (e.g. via Google) but no public profile yet
+                    // User authenticated (e.g. via Google or Email OTP) but no public profile yet
                     // Show "Create Account" screen and pre-fill data
                     setIsNewUser(true);
-                    if (session.user.email) setNewUserEmail(session.user.email);
+                    if (session.user.email) {
+                        setNewUserEmail(session.user.email);
+                        // If provider is email, set loginMethod to email so password field shows
+                        if (session.user.app_metadata.provider === 'email') {
+                            setLoginMethod('email');
+                        } else {
+                            // If Google/OAuth, check if we can Auto-Link to an existing unclaimed email
+                            const { data: unclaimedUser } = await supabase
+                                .from("users")
+                                .select("id, auth_user_id")
+                                .eq("email", session.user.email)
+                                .is("auth_user_id", null)
+                                .maybeSingle();
+
+                            if (unclaimedUser) {
+                                // Auto-Link found unclaimed user!
+                                console.log("🔗 Auto-linking Google account to existing user:", unclaimedUser.id);
+                                await supabase
+                                    .from("users")
+                                    .update({
+                                        auth_user_id: session.user.id,
+                                        // Update name/phone if missing? Maybe best to leave as is for now
+                                    })
+                                    .eq("id", unclaimedUser.id);
+
+                                // Refresh page/redirect to complete login
+                                getReturnUrlAndRedirect();
+                                return;
+                            }
+                        }
+                    }
                     if (session.user.user_metadata?.full_name) {
                         const names = session.user.user_metadata.full_name.split(' ');
                         if (names.length > 0) setFirstName(names[0]);
@@ -206,19 +236,23 @@ export default function Profile() {
                 // Check if user exists in public DB
                 const { data: publicUser } = await supabase
                     .from("users")
-                    .select("id")
+                    .select("id, auth_user_id")
                     .eq("email", email)
                     .maybeSingle();
 
-                if (publicUser) {
+                // Check if the user is "Claimed" (has an auth_user_id linked)
+                const isClaimedUser = publicUser && publicUser.auth_user_id;
+
+                if (isClaimedUser) {
                     setIsNewUser(false);
                 } else {
+                    // Treat as new user if not found OR if found but unclaimed (auth_user_id is null)
                     setIsNewUser(true);
                     setNewUserEmail(email);
                 }
 
-                // 1. Password Login (Default)
-                if (!useOtpForEmail) {
+                // 1. Password Login (Only for Existing CLAIMED Users requesting Password)
+                if (isClaimedUser && !useOtpForEmail) {
                     if (!password) {
                         setError("Please enter your password");
                         setLoading(false);
@@ -238,8 +272,8 @@ export default function Profile() {
                     return;
                 }
 
-                // 2. OTP Login (Forgot Password Flow)
-                // useOtpForEmail is true
+                // 2. OTP Login (New Users OR Unclaimed Users OR Forgot Password Flow)
+                // If user is new/unclaimed OR useOtpForEmail is explicitly true
                 const { error } = await supabase.auth.signInWithOtp({
                     email: email,
                     options: {
@@ -753,17 +787,53 @@ export default function Profile() {
 
             // Create user in users table using auth user ID
             // RLS policy "user create self profile" allows this when auth_user_id = auth.uid()
-            const { data: newUser, error: createError } = await supabase
-                .from("users")
-                .insert([{
-                    id: authUserId,
-                    name: fullName,
-                    phone: loginMethod === 'phone' ? phoneNumber : null,
-                    email: loginMethod === 'email' ? email : (newUserEmail.trim() || null),
-                    auth_user_id: authUserId, // Link to Supabase Auth (required for RLS policy)
-                }])
-                .select()
-                .single();
+            // First check if an unclaimed user exists with this email (if email login)
+            let existingUnclaimedUser = null;
+            if (loginMethod === 'email') {
+                const { data } = await supabase
+                    .from("users")
+                    .select("id")
+                    .eq("email", email)
+                    .is("auth_user_id", null)
+                    .maybeSingle();
+                existingUnclaimedUser = data;
+            }
+
+            let newUser = null;
+            let createError = null;
+
+            if (existingUnclaimedUser) {
+                // UPDATE the existing unclaimed user
+                console.log("🔄 Claiming existing email user:", existingUnclaimedUser.id);
+                const { data, error } = await supabase
+                    .from("users")
+                    .update({
+                        auth_user_id: authUserId, // Important: Link auth ID
+                        name: fullName,
+                        // Don't overwrite email
+                    })
+                    .eq("id", existingUnclaimedUser.id)
+                    .select()
+                    .single();
+
+                newUser = data;
+                createError = error;
+            } else {
+                // INSERT new user
+                const { data, error } = await supabase
+                    .from("users")
+                    .insert([{
+                        id: authUserId,
+                        name: fullName,
+                        phone: loginMethod === 'phone' ? phoneNumber : null,
+                        email: loginMethod === 'email' ? email : (newUserEmail.trim() || null),
+                        auth_user_id: authUserId, // Link to Supabase Auth (required for RLS policy)
+                    }])
+                    .select()
+                    .single();
+                newUser = data;
+                createError = error;
+            }
 
             if (createError) {
                 // Check for unique key violation (user already exists)

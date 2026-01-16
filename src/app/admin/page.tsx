@@ -2170,24 +2170,6 @@ To get these values:
     const handleCreateUser = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate phone number
-        const phoneNumber = userFormData.phone.replace(/[^0-9+]/g, ''); // Remove non-numeric except +
-        if (!phoneNumber.startsWith('+91')) {
-            showPopup("Phone number must start with +91", "error", "Validation Error");
-            return;
-        }
-
-        const digitsOnly = phoneNumber.replace('+91', '');
-        if (digitsOnly.length !== 10) {
-            showPopup("Phone number must be exactly 10 digits after +91", "error", "Validation Error");
-            return;
-        }
-
-        if (!/^\d+$/.test(digitsOnly)) {
-            showPopup("Phone number must contain only numbers", "error", "Validation Error");
-            return;
-        }
-
         // Validate name
         if (!userFirstName.trim() || !userLastName.trim()) {
             showPopup("First Name and Surname are required", "error", "Validation Error");
@@ -2196,14 +2178,49 @@ To get these values:
 
         const fullName = `${userFirstName.trim()} ${userLastName.trim()}`;
 
-        // Email is optional, but if provided, validate format
-        if (userFormData.email && userFormData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userFormData.email.trim())) {
-            showPopup("Please enter a valid email address or leave it empty", "error", "Validation Error");
+        // Get Phone
+        const rawPhone = userFormData.phone.replace(/[^0-9+]/g, '');
+        const digitsOnly = rawPhone.replace('+91', '');
+        const hasPhone = digitsOnly.length > 0;
+        let userPhone: string | null = null;
+
+        // Get Email
+        // Email is valid if it's not empty and matches regex
+        const rawEmail = userFormData.email?.trim() || "";
+        const hasEmail = rawEmail.length > 0;
+        let userEmail: string | null = null;
+
+        // 1. Check if at least one contact method is provided
+        if (!hasPhone && !hasEmail) {
+            showPopup("Please provide either a phone number or an email address (or both).", "error", "Validation Error");
             return;
         }
 
-        const hasEmail = userFormData.email.trim().length > 0;
-        const userEmail = hasEmail ? userFormData.email.trim() : null;
+        // 2. Validate Phone (if provided)
+        if (hasPhone) {
+            if (!rawPhone.startsWith('+91')) {
+                showPopup("Phone number must start with +91", "error", "Validation Error");
+                return;
+            }
+            if (digitsOnly.length !== 10) {
+                showPopup("Phone number must be exactly 10 digits after +91", "error", "Validation Error");
+                return;
+            }
+            if (!/^\d+$/.test(digitsOnly)) {
+                showPopup("Phone number must contain only numbers", "error", "Validation Error");
+                return;
+            }
+            userPhone = rawPhone;
+        }
+
+        // 3. Validate Email (if provided)
+        if (hasEmail) {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
+                showPopup("Please enter a valid email address", "error", "Validation Error");
+                return;
+            }
+            userEmail = rawEmail;
+        }
 
         // Validate cities
         if (!userFormData.cities || userFormData.cities.length === 0) {
@@ -2214,42 +2231,30 @@ To get these values:
         try {
             if (editingUser) {
                 // Update existing user
-                // Check if phone number changed and if new phone already exists
-                if (userFormData.phone !== editingUser.phone) {
-                    const { data: existingUserByPhone } = await supabase
-                        .from("users")
-                        .select("id, name, email, phone")
-                        .eq("phone", userFormData.phone)
-                        .maybeSingle();
-
-                    if (existingUserByPhone && existingUserByPhone.id !== editingUser.id) {
-                        showPopup("Phone number already exists for another user", "error", "Validation Error");
-                        return;
-                    }
+                // Check conflicts
+                if (userPhone && userPhone !== editingUser.phone) {
+                    const { data: conflict } = await supabase.from("users").select("id").eq("phone", userPhone).neq("id", editingUser.id).maybeSingle();
+                    if (conflict) { showPopup("Phone number already exists for another user", "error", "Validation Error"); return; }
+                }
+                if (userEmail && userEmail !== editingUser.email) {
+                    const { data: conflict } = await supabase.from("users").select("id").eq("email", userEmail).neq("id", editingUser.id).maybeSingle();
+                    if (conflict) { showPopup("Email already exists for another user", "error", "Validation Error"); return; }
                 }
 
                 const userData = {
                     name: fullName,
-                    phone: userFormData.phone,
+                    phone: userPhone,
                     email: userEmail,
                 };
 
-                const { error: updateError } = await supabase
-                    .from("users")
-                    .update(userData)
-                    .eq("id", editingUser.id)
-                    .select("id, name, phone, email, created_at, auth_user_id");
-
+                // Update
+                const { error: updateError } = await supabase.from("users").update(userData).eq("id", editingUser.id);
                 if (updateError) throw updateError;
 
-                // Update user cities
-                // Delete existing cities first
+                // Update cities
                 await supabase.from("user_cities").delete().eq("user_id", editingUser.id);
-                // Insert new cities if any selected
                 if (userFormData.cities.length > 0) {
-                    await supabase.from("user_cities").insert(
-                        userFormData.cities.map(cityId => ({ user_id: editingUser.id, city_id: cityId }))
-                    );
+                    await supabase.from("user_cities").insert(userFormData.cities.map(cityId => ({ user_id: editingUser.id, city_id: cityId })));
                 }
 
                 showPopup("User updated successfully!", "success");
@@ -2260,41 +2265,36 @@ To get these values:
                 return;
             }
 
-            // Check if user already exists in users table by phone
-            const { data: existingUserByPhone } = await supabase
-                .from("users")
-                .select("id, name, email, phone")
-                .eq("phone", userFormData.phone)
-                .maybeSingle();
+            // Create New User
+            // Check if existing user (by phone or email)
+            let existingUser = null;
+            if (userPhone) {
+                const { data } = await supabase.from("users").select("*").eq("phone", userPhone).maybeSingle();
+                existingUser = data;
+            }
+            if (!existingUser && userEmail) {
+                const { data } = await supabase.from("users").select("*").eq("email", userEmail).maybeSingle();
+                existingUser = data;
+            }
 
-            if (existingUserByPhone) {
-                // User exists, update them in Supabase
+            if (existingUser) {
+                // Existing user logic - Update existing
+                // Merge logic: Don't overwrite existing info if new info is null, but if new info is present, use it.
+
                 const userData = {
                     name: fullName,
-                    phone: userFormData.phone,
-                    email: userEmail,
+                    phone: userPhone || existingUser.phone,
+                    email: userEmail || existingUser.email
                 };
 
-                const { data: updateData, error: updateError } = await supabase
-                    .from("users")
-                    .update(userData)
-                    .eq("phone", userFormData.phone)
-                    .select("id, name, phone, email, created_at, auth_user_id")
-                    .single();
-
+                const { data: updateData, error: updateError } = await supabase.from("users").update(userData).eq("id", existingUser.id).select().single();
                 if (updateError) throw updateError;
 
-                // Update user cities
-                const finalUserId = updateData?.id;
-                if (finalUserId) {
-                    // Delete existing cities first
-                    await supabase.from("user_cities").delete().eq("user_id", finalUserId);
-                    // Insert new cities if any selected
-                    if (userFormData.cities.length > 0) {
-                        await supabase.from("user_cities").insert(
-                            userFormData.cities.map(cityId => ({ user_id: finalUserId, city_id: cityId }))
-                        );
-                    }
+                // Update cities
+                const finalUserId = updateData.id;
+                await supabase.from("user_cities").delete().eq("user_id", finalUserId);
+                if (userFormData.cities.length > 0) {
+                    await supabase.from("user_cities").insert(userFormData.cities.map(cityId => ({ user_id: finalUserId, city_id: cityId })));
                 }
 
                 showPopup("User information updated successfully!", "success");
@@ -2304,69 +2304,30 @@ To get these values:
                 return;
             }
 
-            // Generate UUID for new user (user is NOT authenticated yet)
-            // When user logs in with phone OTP later, Supabase Auth will create auth.users entry
-            // We'll handle linking in the login flow
+            // Insert New User
             const userId = crypto.randomUUID();
-
-            // Create user in Supabase users table (no authentication yet - user will log in with phone OTP later)
             const userData = {
                 id: userId,
                 name: fullName,
-                phone: userFormData.phone,
+                phone: userPhone,
                 email: userEmail,
             };
 
-            // Create new user in users table
-            const { data: insertData, error: userError } = await supabase
-                .from("users")
-                .insert([userData])
-                .select("id, name, phone, email, created_at, auth_user_id")
-                .single();
-
+            const { error: userError } = await supabase.from("users").insert([userData]);
             if (userError) {
-                // If duplicate, try update instead
-                if (userError.message?.includes("duplicate key") || userError.code === "23505") {
-                    const { data: updateData, error: updateError } = await supabase
-                        .from("users")
-                        .update(userData)
-                        .eq("phone", userFormData.phone)
-                        .select("id, name, phone, email, created_at, auth_user_id")
-                        .single();
-
-                    if (updateError) {
-                        throw updateError;
-                    }
-
-                    // Save user cities for updated user
-                    const finalUserId = updateData?.id || userId;
-                    if (userFormData.cities.length > 0) {
-                        // Delete existing cities first
-                        await supabase.from("user_cities").delete().eq("user_id", finalUserId);
-                        // Insert new cities
-                        await supabase.from("user_cities").insert(
-                            userFormData.cities.map(cityId => ({ user_id: finalUserId, city_id: cityId }))
-                        );
-                    }
-
-                    showPopup("User already exists. User information updated successfully!", "success");
-                } else {
-                    throw userError;
-                }
-            } else {
-                // Save user cities for new user
-                const finalUserId = insertData?.id || userId;
-                if (userFormData.cities.length > 0 && finalUserId) {
-                    await supabase.from("user_cities").insert(
-                        userFormData.cities.map(cityId => ({ user_id: finalUserId, city_id: cityId }))
-                    );
-                }
-                showPopup("User created successfully! User can now log in with phone OTP.", "success");
+                throw userError;
             }
+
+            // Cities
+            if (userFormData.cities.length > 0) {
+                await supabase.from("user_cities").insert(userFormData.cities.map(cityId => ({ user_id: userId, city_id: cityId })));
+            }
+            showPopup("User created successfully!", "success");
 
             setIsUserModalOpen(false);
             setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
             await loadUsers();
+
         } catch (error: any) {
             showPopup(error.message || "Unknown error", "error", editingUser ? "Error Updating User" : "Error Creating User");
             console.error("Error creating/updating user:", error);
@@ -5178,7 +5139,7 @@ To get these values:
 
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Phone * (10 digits)
+                                                    Phone (10 digits)
                                                 </label>
                                                 <div className="flex">
                                                     <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm font-medium">
@@ -5186,7 +5147,6 @@ To get these values:
                                                     </span>
                                                     <input
                                                         type="tel"
-                                                        required
                                                         value={userFormData.phone.replace('+91', '')}
                                                         onChange={(e) => {
                                                             // Only allow numbers
@@ -5220,7 +5180,7 @@ To get these values:
                                                     placeholder="user@example.com (optional)"
                                                 />
                                                 <p className="text-xs text-gray-500 mt-1">
-                                                    Email is optional. User will log in with phone number + OTP.
+                                                    Email is optional, but recommended as an alternative login method.
                                                 </p>
                                             </div>
 
@@ -5333,7 +5293,7 @@ To get these values:
                                             <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
                                                 <p className="text-sm text-blue-800">
                                                     <strong>Note:</strong> User will be created without authentication.
-                                                    They can log in later using their phone number and OTP code.
+                                                    They can log in later using their phone number or email.
                                                 </p>
                                             </div>
 
