@@ -42,13 +42,7 @@ export default function Navbar() {
     return (
         <>
             <nav
-                className={`
-                    top-0 left-0 w-full z-[1000] transition-all duration-300
-                    ${isHomePage
-                        ? 'absolute bg-transparent shadow-none'
-                        : 'fixed bg-white shadow-sm border-b border-gray-100'
-                    }
-                `}
+                className="sticky top-0 left-0 w-full z-[1000] bg-white shadow-sm border-b border-gray-100 transition-all duration-300"
             >
                 {/* Desktop Layout */}
                 <div className="hidden md:flex h-[70px] px-4 items-center justify-between relative">

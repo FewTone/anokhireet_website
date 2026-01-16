@@ -760,7 +760,7 @@ export default function ProductDetailPage() {
 
     return (
         <>
-            <div className="hidden md:block">
+            <div className="hidden md:block sticky top-0 z-[1000]">
                 <Navbar />
             </div>
             <main className="min-h-screen pt-0 pb-12">

@@ -402,25 +402,27 @@ export default function Home() {
 
                 {/* Section 4: New and Popular */}
                 <div className="mt-2 md:mt-8 pb-12 md:pb-12">
-                    <h2 className="text-[16px] leading-[24px] font-bold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>
-                        NEW AND POPULAR
-                    </h2>
+                    <div className="sticky top-[60px] md:top-[70px] z-30 bg-white shadow-sm mb-4">
+                        <h2 className="text-[16px] leading-[24px] font-bold py-3 text-center uppercase tracking-normal mb-0" style={{ fontFamily: 'Inter, sans-serif' }}>
+                            NEW AND POPULAR
+                        </h2>
 
-                    {/* Filter Tabs */}
-                    <div className="sticky top-0 z-40 bg-white py-2 flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-2 mb-6 md:mb-8 px-4 scrollbar-hide border-b border-transparent">
-                        {TABS.map((tab) => (
-                            <span
-                                key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap 
+                        {/* Filter Tabs */}
+                        <div className="py-2 flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-2 px-4 scrollbar-hide">
+                            {TABS.map((tab) => (
+                                <span
+                                    key={tab}
+                                    onClick={() => setActiveTab(tab)}
+                                    className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap 
                   ${activeTab === tab
-                                        ? "bg-black text-white"
-                                        : "bg-white"
-                                    }`}
-                            >
-                                {tab}
-                            </span>
-                        ))}
+                                            ? "bg-black text-white"
+                                            : "bg-white"
+                                        }`}
+                                >
+                                    {tab}
+                                </span>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Product Grid */}
