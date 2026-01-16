@@ -42,7 +42,13 @@ export default function Navbar() {
     return (
         <>
             <nav
-                className="sticky top-0 left-0 w-full z-[1000] bg-white shadow-sm border-b border-gray-100 transition-all duration-300"
+                className={`
+                    left-0 w-full z-[1000] transition-all duration-300
+                    ${isHomePage
+                        ? 'md:sticky md:top-0 absolute bg-transparent shadow-none border-none md:bg-white md:shadow-sm md:border-b md:border-gray-100'
+                        : 'md:sticky md:top-0 relative bg-white shadow-sm border-b border-gray-100'
+                    }
+                `}
             >
                 {/* Desktop Layout */}
                 <div className="hidden md:flex h-[70px] px-4 items-center justify-between relative">
@@ -152,8 +158,8 @@ export default function Navbar() {
                 {isHomePage || pathname?.startsWith("/products") ? (
                     // Home Page Overlay Layout OR Products Page Layout (Same structure, diff style)
                     <div className={`md:hidden px-4 transition-all duration-300 ${isHomePage
-                        ? "bg-gradient-to-b from-black via-black to-transparent pt-3 pb-12" // Reduced bottom padding (shadow length)
-                        : "bg-white border-b border-gray-100 pt-4 pb-2"
+                        ? "bg-gradient-to-b from-black via-black to-transparent pt-4 pb-12"
+                        : "bg-white border-b border-gray-100 pt-4 pb-1"
                         }`}>
                         {!pathname?.startsWith("/chat") && (
                             <div className="flex flex-col gap-3 w-full">
@@ -232,7 +238,7 @@ export default function Navbar() {
                     </div>
                 ) : (
                     // Standard Mobile Layout (Other Pages)
-                    <div className="md:hidden py-3 px-4">
+                    <div className="md:hidden py-1 px-4">
                         <div className="flex justify-center items-center mb-3">
                             <Link href="/" className="flex items-center gap-2">
                                 <Image

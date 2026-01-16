@@ -152,7 +152,7 @@ export default function Hero() {
 
     if (loading) {
         return (
-            <div className="hero-container relative w-full overflow-hidden bg-white">
+            <div className="hero-container relative w-full overflow-hidden bg-white pt-20 md:pt-0">
                 <div className="flex items-start gap-0 md:gap-[10px] w-full">
                     {/* Desktop: Show multiple skeletons */}
                     {/* Mobile: Show one skeleton */}
@@ -192,7 +192,7 @@ export default function Hero() {
     const activeDotIndex = currentSlideIndex % heroSlides.length;
 
     return (
-        <div className="hero-container relative w-full overflow-hidden bg-white">
+        <div className="hero-container relative w-full overflow-hidden bg-white pt-20 md:pt-0">
             {/* Hero Slides Track */}
             <div
                 className="hero-scroll-track flex items-start gap-0 md:gap-[10px]"
@@ -241,9 +241,9 @@ export default function Hero() {
 
             <style jsx global>{`
                 .hero-container {
-                    /* Mobile: Use aspect ratio and 100% width to respect parent container constraints */
+                    /* Mobile: Remove fixed aspect ratio to allow expansion with padding */
                     width: 100%;
-                    aspect-ratio: 4/5;
+                    height: auto;
                 }
                 @media (min-width: 768px) {
                     .hero-container {
