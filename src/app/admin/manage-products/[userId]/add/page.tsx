@@ -11,7 +11,7 @@ interface User {
     id: string;
     name: string;
     phone: string;
-    email: string | null;
+    email?: string | null;
 }
 
 export default function AddProductPage() {
@@ -133,7 +133,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
         try {
             const { data, error } = await supabase
                 .from("users")
-                .select("id, name, phone, email")
+                .select("id, name, phone")
                 .eq("id", userId)
                 .single();
 
@@ -912,7 +912,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
+                    <div className="animate-spin rounded-none h-12 w-12 border-b-2 border-black mx-auto"></div>
                     <p className="mt-4 text-gray-600">Loading...</p>
                 </div>
             </div>
@@ -923,7 +923,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 {/* Header */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                <div className="bg-white rounded-none border border-gray-200 p-6 mb-6">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">{editingProduct ? "Edit Product" : "Add Product"}</h1>
@@ -933,7 +933,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                         </div>
                         <button
                             onClick={() => router.push(`/admin/manage-products/${userId}`)}
-                            className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+                            className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium rounded-none hover:bg-gray-100 transition-colors"
                         >
                             Cancel
                         </button>
@@ -941,14 +941,14 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 </div>
 
                 {/* Step Indicator */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                <div className="bg-white rounded-none border border-gray-200 p-6 mb-6">
                     <div className="flex items-center justify-center">
                         <div className="flex items-center">
-                            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep >= 1 ? 'bg-black border-black text-white' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-none border-2 ${currentStep >= 1 ? 'bg-black border-black text-white' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
                                 <span className="font-semibold">1</span>
                             </div>
                             <div className={`w-24 h-1 mx-2 ${currentStep >= 2 ? 'bg-black' : 'bg-gray-300'}`}></div>
-                            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep >= 2 ? 'bg-black border-black text-white' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
+                            <div className={`flex items-center justify-center w-10 h-10 rounded-none border-2 ${currentStep >= 2 ? 'bg-black border-black text-white' : 'bg-gray-100 border-gray-300 text-gray-400'}`}>
                                 <span className="font-semibold">2</span>
                             </div>
                         </div>
@@ -964,7 +964,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 </div>
 
                 {/* Form */}
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <div className="bg-white rounded-none border border-gray-200 p-6">
                     {currentStep === 1 ? (
                         <form onSubmit={(e) => {
                             e.preventDefault();
@@ -1003,7 +1003,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     required
                                     value={productFormData.name}
                                     onChange={(e) => setProductFormData({ ...productFormData, name: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                     placeholder="Enter product name"
                                 />
                             </div>
@@ -1017,7 +1017,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     required
                                     value={productFormData.price}
                                     onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                     placeholder="e.g., ₹999"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">The rental price for this outfit (required)</p>
@@ -1033,19 +1033,19 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     required
                                     value={productFormData.originalPrice}
                                     onChange={(e) => setProductFormData({ ...productFormData, originalPrice: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                     placeholder="e.g., 1299"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">Original purchase price of the outfit (required)</p>
                             </div>
 
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div className="bg-gray-50 border border-gray-200 rounded-none p-4">
                                 <label className="block text-sm font-semibold text-gray-800 mb-3">
                                     Upload Product Images *
                                 </label>
                                 <label
                                     htmlFor="product-images-input"
-                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-none bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
                                 >
                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                         <svg className="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1066,7 +1066,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     />
                                 </label>
                                 {imageSizeInfo.length > 0 && (
-                                    <div className="mt-3 border border-gray-200 rounded-lg bg-white">
+                                    <div className="mt-3 border border-gray-200 rounded-none bg-white">
                                         <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
                                             <h4 className="text-xs font-semibold text-gray-700 uppercase">Size Optimization</h4>
                                         </div>
@@ -1115,7 +1115,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                 <button
                                                     type="button"
                                                     onClick={() => setPrimaryImage(index)}
-                                                    className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-300 hover:border-gray-400 transition-all"
+                                                    className="relative w-full aspect-square rounded-none overflow-hidden border-2 border-gray-300 hover:border-gray-400 transition-all"
                                                 >
                                                     <Image
                                                         src={imgUrl}
@@ -1125,7 +1125,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         unoptimized
                                                     />
                                                     <div className="absolute top-2 right-2 z-10">
-                                                        <div className={`${primaryImageIndex === index ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md`}>
+                                                        <div className={`${primaryImageIndex === index ? 'bg-red-500' : 'bg-white/80'} rounded-none p-1.5 shadow-md`}>
                                                             <svg
                                                                 className={`w-5 h-5 ${primaryImageIndex === index ? 'text-white fill-white' : 'text-gray-400'}`}
                                                                 fill={primaryImageIndex === index ? "currentColor" : "none"}
@@ -1150,7 +1150,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                                 setPrimaryImageIndex(primaryImageIndex - 1);
                                                             }
                                                         }}
-                                                        className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
+                                                        className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-none p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
@@ -1180,7 +1180,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     <button
                                                         type="button"
                                                         onClick={() => setPrimaryImage(totalIndex)}
-                                                        className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-400 transition-all"
+                                                        className="relative w-full aspect-square rounded-none overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-400 transition-all"
                                                     >
                                                         <Image
                                                             src={preview}
@@ -1196,7 +1196,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                                 e.stopPropagation();
                                                                 removeImage(totalIndex);
                                                             }}
-                                                            className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
+                                                            className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-none p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
@@ -1217,13 +1217,13 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                 <button
                                     type="button"
                                     onClick={() => router.push(`/admin/manage-products/${userId}`)}
-                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity"
+                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity"
                                 >
                                     Next: Select Facets
                                 </button>
@@ -1232,7 +1232,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     ) : (
                         <form onSubmit={handleSaveProduct} className="space-y-6">
                             {/* Step 1 Summary */}
-                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                            <div className="bg-gray-50 border border-gray-200 rounded-none p-4 mb-6">
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Product Details Summary</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -1262,7 +1262,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                         <div className="flex gap-2 overflow-x-auto">
                                             {/* Show existing images first */}
                                             {productImages.slice(0, 3).map((imgUrl, index) => (
-                                                <div key={`existing-summary-${index}`} className="relative w-16 h-16 rounded border border-gray-300 overflow-hidden flex-shrink-0">
+                                                <div key={`existing-summary-${index}`} className="relative w-16 h-16 rounded-none border border-gray-300 overflow-hidden flex-shrink-0">
                                                     <Image
                                                         src={imgUrl}
                                                         alt={`Existing ${index + 1}`}
@@ -1274,7 +1274,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                             ))}
                                             {/* Then show new previews */}
                                             {productImagePreviews.slice(0, Math.max(0, 3 - productImages.length)).map((preview, index) => (
-                                                <div key={`preview-summary-${index}`} className="relative w-16 h-16 rounded border border-gray-300 overflow-hidden flex-shrink-0">
+                                                <div key={`preview-summary-${index}`} className="relative w-16 h-16 rounded-none border border-gray-300 overflow-hidden flex-shrink-0">
                                                     <Image
                                                         src={preview}
                                                         alt={`Preview ${index + 1}`}
@@ -1285,7 +1285,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                 </div>
                                             ))}
                                             {(productImages.length + productImagePreviews.length) > 3 && (
-                                                <div className="flex items-center justify-center w-16 h-16 rounded border border-gray-300 bg-gray-100 text-gray-500 text-xs font-medium">
+                                                <div className="flex items-center justify-center w-16 h-16 rounded-none border border-gray-300 bg-gray-100 text-gray-500 text-xs font-medium">
                                                     +{(productImages.length + productImagePreviews.length) - 3}
                                                 </div>
                                             )}
@@ -1320,7 +1320,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     </div>
 
                                     {showAddProductType && (
-                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-none">
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
@@ -1333,12 +1333,12 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         }
                                                     }}
                                                     placeholder="Enter new product type"
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={handleAddNewProductType}
-                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                 >
                                                     Add
                                                 </button>
@@ -1346,7 +1346,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                         </div>
                                     )}
 
-                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                    <div className="w-full border border-gray-300 rounded-none min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableProductTypes.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No product types available. Add them from the admin panel.</p>
                                         ) : (
@@ -1356,7 +1356,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={pt.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded-none cursor-pointer transition-colors ${isSelected
                                                                 ? "bg-blue-50 border border-blue-200"
                                                                 : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
@@ -1377,7 +1377,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                                         });
                                                                     }
                                                                 }}
-                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded-none focus:ring-blue-500"
                                                             />
                                                             <span className="text-sm text-gray-700">{pt.name}</span>
                                                         </label>
@@ -1412,7 +1412,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     </div>
 
                                     {showAddOccasion && (
-                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-none">
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
@@ -1425,12 +1425,12 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         }
                                                     }}
                                                     placeholder="Enter new occasion"
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={handleAddNewOccasion}
-                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                 >
                                                     Add
                                                 </button>
@@ -1438,7 +1438,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                         </div>
                                     )}
 
-                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                    <div className="w-full border border-gray-300 rounded-none min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableOccasions.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No occasions available. Add them from the admin panel.</p>
                                         ) : (
@@ -1448,7 +1448,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={oc.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded-none cursor-pointer transition-colors ${isSelected
                                                                 ? "bg-blue-50 border border-blue-200"
                                                                 : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
@@ -1469,7 +1469,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                                         });
                                                                     }
                                                                 }}
-                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded-none focus:ring-blue-500"
                                                             />
                                                             <span className="text-sm text-gray-700">{oc.name}</span>
                                                         </label>
@@ -1504,7 +1504,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     </div>
 
                                     {showAddColor && (
-                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-none">
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
@@ -1517,12 +1517,12 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         }
                                                     }}
                                                     placeholder="Enter new color"
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={handleAddNewColor}
-                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                 >
                                                     Add
                                                 </button>
@@ -1530,7 +1530,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                         </div>
                                     )}
 
-                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                    <div className="w-full border border-gray-300 rounded-none min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableColors.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No colors available. Add them from the admin panel.</p>
                                         ) : (
@@ -1540,7 +1540,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={c.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded-none cursor-pointer transition-colors ${isSelected
                                                                 ? "bg-blue-50 border border-blue-200"
                                                                 : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
@@ -1561,7 +1561,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                                         });
                                                                     }
                                                                 }}
-                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded-none focus:ring-blue-500"
                                                             />
                                                             <span className="text-sm text-gray-700">{c.name}</span>
                                                         </label>
@@ -1596,7 +1596,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     </div>
 
                                     {showAddMaterial && (
-                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-none">
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
@@ -1609,12 +1609,12 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         }
                                                     }}
                                                     placeholder="Enter new material"
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={handleAddNewMaterial}
-                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                 >
                                                     Add
                                                 </button>
@@ -1622,7 +1622,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                         </div>
                                     )}
 
-                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                    <div className="w-full border border-gray-300 rounded-none min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableMaterials.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No materials available. Add them from the admin panel.</p>
                                         ) : (
@@ -1632,7 +1632,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={m.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded-none cursor-pointer transition-colors ${isSelected
                                                                 ? "bg-blue-50 border border-blue-200"
                                                                 : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
@@ -1653,7 +1653,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                                         });
                                                                     }
                                                                 }}
-                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded-none focus:ring-blue-500"
                                                             />
                                                             <span className="text-sm text-gray-700">{m.name}</span>
                                                         </label>
@@ -1688,7 +1688,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     </div>
 
                                     {showAddCity && (
-                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-none">
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
@@ -1701,12 +1701,12 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                         }
                                                     }}
                                                     placeholder="Enter new city"
-                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={handleAddNewCity}
-                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                 >
                                                     Add
                                                 </button>
@@ -1714,7 +1714,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                         </div>
                                     )}
 
-                                    <div className="w-full border border-gray-300 rounded-md min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                    <div className="w-full border border-gray-300 rounded-none min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableCities.length === 0 ? (
                                             <p className="text-sm text-gray-500 text-center py-4">No cities available. Add them from the admin panel.</p>
                                         ) : (
@@ -1724,7 +1724,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                     return (
                                                         <label
                                                             key={city.id}
-                                                            className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${isSelected
+                                                            className={`flex items-center gap-2 p-2 rounded-none cursor-pointer transition-colors ${isSelected
                                                                 ? "bg-blue-50 border border-blue-200"
                                                                 : "hover:bg-gray-50 border border-transparent"
                                                                 }`}
@@ -1745,7 +1745,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                                         });
                                                                     }
                                                                 }}
-                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                className="w-4 h-4 text-blue-600 border-gray-300 rounded-none focus:ring-blue-500"
                                                             />
                                                             <span className="text-sm text-gray-700">{city.name}</span>
                                                         </label>
@@ -1762,14 +1762,14 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                 <button
                                     type="button"
                                     onClick={() => setCurrentStep(1)}
-                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                 >
                                     Back
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={isUploadingImage}
-                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isUploadingImage ? "Uploading..." : editingProduct ? "Update Product" : "Create Product"}
                                 </button>

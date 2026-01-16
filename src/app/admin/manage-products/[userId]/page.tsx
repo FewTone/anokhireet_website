@@ -24,7 +24,7 @@ interface User {
     id: string;
     name: string;
     phone: string;
-    email: string | null;
+    email?: string | null;
 }
 
 export default function ManageProductsPage() {
@@ -122,7 +122,7 @@ export default function ManageProductsPage() {
             console.log("Loading user for ID:", userId);
             const { data, error } = await supabase
                 .from("users")
-                .select("id, name, phone, email")
+                .select("id, name, phone")
                 .eq("id", userId)
                 .maybeSingle();
 
@@ -265,7 +265,7 @@ export default function ManageProductsPage() {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-none h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading products...</p>
                 </div>
             </div>
@@ -316,7 +316,7 @@ export default function ManageProductsPage() {
                             </div>
                             <button
                                 onClick={handleOpenAddProduct}
-                                className="px-6 py-3 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                                className="px-6 py-3 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -333,20 +333,20 @@ export default function ManageProductsPage() {
                     {/* Statistics Cards */}
                     {userProducts.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <div className="bg-white rounded-none shadow-sm border border-gray-200 p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Total Products</p>
                                         <p className="text-2xl font-bold text-gray-900 mt-1">{userProducts.length}</p>
                                     </div>
-                                    <div className="p-3 bg-blue-100 rounded-lg">
+                                    <div className="p-3 bg-blue-100 rounded-none">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-blue-600">
                                             <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                                         </svg>
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <div className="bg-white rounded-none shadow-sm border border-gray-200 p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Total Images</p>
@@ -357,7 +357,7 @@ export default function ManageProductsPage() {
                                             }, 0)}
                                         </p>
                                     </div>
-                                    <div className="p-3 bg-green-100 rounded-lg">
+                                    <div className="p-3 bg-green-100 rounded-none">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-green-600">
                                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                                             <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -366,7 +366,7 @@ export default function ManageProductsPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <div className="bg-white rounded-none shadow-sm border border-gray-200 p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Avg. Price</p>
@@ -381,7 +381,7 @@ export default function ManageProductsPage() {
                                             })()}
                                         </p>
                                     </div>
-                                    <div className="p-3 bg-purple-100 rounded-lg">
+                                    <div className="p-3 bg-purple-100 rounded-none">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-purple-600">
                                             <line x1="12" y1="1" x2="12" y2="23"></line>
                                             <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
@@ -389,7 +389,7 @@ export default function ManageProductsPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                            <div className="bg-white rounded-none shadow-sm border border-gray-200 p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Categories</p>
@@ -409,7 +409,7 @@ export default function ManageProductsPage() {
                                             })()}
                                         </p>
                                     </div>
-                                    <div className="p-3 bg-orange-100 rounded-lg">
+                                    <div className="p-3 bg-orange-100 rounded-none">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-orange-600">
                                             <path d="M20 7h-4M4 7h4m0 0a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2m0 0v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7"></path>
                                         </svg>
@@ -419,7 +419,7 @@ export default function ManageProductsPage() {
                         </div>
                     )}
                     {userProducts.length === 0 ? (
-                        <div className="text-center py-16 bg-white rounded-lg shadow-sm border border-gray-200">
+                        <div className="text-center py-16 bg-white rounded-none shadow-sm border border-gray-200">
                             <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
@@ -427,7 +427,7 @@ export default function ManageProductsPage() {
                             <p className="text-sm text-gray-600 mb-6">This user doesn't have any products yet.</p>
                             <button
                                 onClick={handleOpenAddProduct}
-                                className="px-6 py-3 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 inline-flex items-center gap-2"
+                                className="px-6 py-3 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 inline-flex items-center gap-2"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                     <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -437,7 +437,7 @@ export default function ManageProductsPage() {
                             </button>
                         </div>
                     ) : (
-                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                        <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full">
                                     <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
@@ -501,13 +501,13 @@ export default function ManageProductsPage() {
                                             return (
                                                 <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="relative w-20 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                                                        <div className="relative w-20 h-24 bg-gray-100 rounded-none overflow-hidden">
                                                             {product.image ? (
                                                                 <Image
                                                                     src={product.image}
                                                                     alt={product.name}
                                                                     fill
-                                                                    className="object-cover rounded-lg"
+                                                                    className="object-cover rounded-none"
                                                                     unoptimized
                                                                     onError={(e) => {
                                                                         console.error("Image load error:", product.image);
@@ -520,7 +520,7 @@ export default function ManageProductsPage() {
                                                                 </div>
                                                             )}
                                                             {images.length > 1 && (
-                                                                <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded">
+                                                                <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-none">
                                                                     {images.length}
                                                                 </div>
                                                             )}
@@ -544,7 +544,7 @@ export default function ManageProductsPage() {
                                                         <div className="flex flex-col gap-1">
                                                             {facets.productTypes.length > 0 ? (
                                                                 facets.productTypes.map((pt, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-purple-100 text-purple-800">
                                                                         {pt}
                                                                     </span>
                                                                 ))
@@ -559,7 +559,7 @@ export default function ManageProductsPage() {
                                                         <div className="flex flex-col gap-1">
                                                             {facets.occasions.length > 0 ? (
                                                                 facets.occasions.map((oc, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-pink-100 text-pink-800">
                                                                         {oc}
                                                                     </span>
                                                                 ))
@@ -574,7 +574,7 @@ export default function ManageProductsPage() {
                                                         <div className="flex flex-col gap-1">
                                                             {facets.colors.length > 0 ? (
                                                                 facets.colors.map((c, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-red-100 text-red-800">
                                                                         {c}
                                                                     </span>
                                                                 ))
@@ -589,7 +589,7 @@ export default function ManageProductsPage() {
                                                         <div className="flex flex-col gap-1">
                                                             {facets.materials.length > 0 ? (
                                                                 facets.materials.map((m, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-green-100 text-green-800">
                                                                         {m}
                                                                     </span>
                                                                 ))
@@ -604,7 +604,7 @@ export default function ManageProductsPage() {
                                                         <div className="flex flex-col gap-1">
                                                             {facets.cities.length > 0 ? (
                                                                 facets.cities.map((city, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-blue-100 text-blue-800">
                                                                         {city}
                                                                     </span>
                                                                 ))
@@ -658,14 +658,14 @@ export default function ManageProductsPage() {
                                                         <div className="flex gap-2">
                                                             <button
                                                                 onClick={() => router.push(`/admin/manage-products/${userId}/add?edit=${product.id}`)}
-                                                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                                                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                 title="Edit product"
                                                             >
                                                                 Edit
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteProduct(product.id, product.name)}
-                                                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                                                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                 title="Delete product"
                                                             >
                                                                 Delete
@@ -695,9 +695,9 @@ export default function ManageProductsPage() {
             {/* Custom Delete Confirmation Modal */}
             {deleteConfirmation.isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 animate-scaleIn">
+                    <div className="bg-white rounded-none shadow-xl max-w-sm w-full p-6 animate-scaleIn">
                         <div className="flex flex-col items-center text-center">
-                            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                            <div className="w-12 h-12 bg-red-100 rounded-none flex items-center justify-center mb-4">
                                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
@@ -709,13 +709,13 @@ export default function ManageProductsPage() {
                             <div className="flex gap-3 w-full">
                                 <button
                                     onClick={cancelDelete}
-                                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-none hover:bg-gray-200 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={confirmDelete}
-                                    className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors"
                                 >
                                     Delete
                                 </button>

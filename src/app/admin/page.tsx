@@ -74,7 +74,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
                 </div>
                 <button
                     onClick={onAdd}
-                    className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2"
+                    className="px-4 py-2 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 flex items-center gap-2"
                 >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -85,7 +85,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
             </div>
 
             {items.length === 0 ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <div className="text-center py-12 bg-gray-50 rounded-none border-2 border-dashed border-gray-300">
                     <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -93,7 +93,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
                     <p className="text-sm text-gray-600">Add your first {title.slice(0, -1).toLowerCase()} to get started</p>
                 </div>
             ) : (
-                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="bg-white rounded-none border border-gray-200 overflow-hidden">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                             <tr>
@@ -119,7 +119,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
                                             <div className="flex items-center gap-2">
                                                 {item.hex && (
                                                     <div
-                                                        className="w-6 h-6 rounded border border-gray-300"
+                                                        className="w-6 h-6 rounded-none border border-gray-300"
                                                         style={{ backgroundColor: item.hex }}
                                                     />
                                                 )}
@@ -141,13 +141,13 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
                                         <div className="flex items-center justify-end gap-2">
                                             <button
                                                 onClick={() => onEdit(item)}
-                                                className="text-blue-600 hover:text-blue-900 px-3 py-1 rounded hover:bg-blue-50 transition-colors"
+                                                className="text-blue-600 hover:text-blue-900 px-3 py-1 rounded-none hover:bg-blue-50 transition-colors"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 onClick={() => onDelete(item.id, item.name)}
-                                                className="text-red-600 hover:text-red-900 px-3 py-1 rounded hover:bg-red-50 transition-colors"
+                                                className="text-red-600 hover:text-red-900 px-3 py-1 rounded-none hover:bg-red-50 transition-colors"
                                             >
                                                 Delete
                                             </button>
@@ -281,6 +281,7 @@ function AdminContent() {
     const [convertedWebPBlob, setConvertedWebPBlob] = useState<Blob | null>(null);
     const [isConvertingImage, setIsConvertingImage] = useState(false);
     const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; name: string } | null>(null);
+    const [deleteConfirmProduct, setDeleteConfirmProduct] = useState<{ id: string; name: string } | null>(null);
     const [popup, setPopup] = useState<{
         isOpen: boolean;
         message: string;
@@ -3138,8 +3139,14 @@ To get these values:
         }
     };
 
-    const handleDeleteUserProduct = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this product?")) return;
+    const handleDeleteUserProduct = async (id: string, name: string = "this product") => {
+        setDeleteConfirmProduct({ id, name });
+    };
+
+    const confirmDeleteUserProduct = async () => {
+        if (!deleteConfirmProduct) return;
+
+        const { id, name } = deleteConfirmProduct;
 
         try {
             const { error } = await supabase
@@ -3148,11 +3155,16 @@ To get these values:
                 .eq("id", id);
 
             if (error) throw error;
-            loadUserProducts();
-            showPopup("Product deleted successfully!", "success");
+
+            // Reload data
+            await loadUserProducts();
+
+            setDeleteConfirmProduct(null);
+            showPopup(`Product "${name}" deleted successfully!`, "success");
         } catch (error: any) {
             showPopup(error.message || "Unknown error", "error", "Error Deleting Product");
             console.error("Error deleting product:", error);
+            setDeleteConfirmProduct(null);
         }
     };
 
@@ -3241,7 +3253,7 @@ To get these values:
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+                <div className="bg-white rounded-none shadow-lg p-8 max-w-md w-full">
                     <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
                     <form onSubmit={handleAdminLogin} className="space-y-4">
                         <div>
@@ -3253,7 +3265,7 @@ To get these values:
                                 required
                                 value={adminEmail}
                                 onChange={(e) => setAdminEmail(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                 placeholder="admin@example.com"
                             />
                         </div>
@@ -3266,7 +3278,7 @@ To get these values:
                                 required
                                 value={adminPassword}
                                 onChange={(e) => setAdminPassword(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                 placeholder="Enter password"
                             />
                         </div>
@@ -3276,13 +3288,13 @@ To get these values:
                                 setAdminEmail("anokhireet@gmail.com");
                                 setAdminPassword("Reet@1432@1402");
                             }}
-                            className="w-full px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors mb-2 text-sm"
+                            className="w-full px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors mb-2 text-sm"
                         >
                             Auto Fill Credentials
                         </button>
                         <button
                             type="submit"
-                            className="w-full px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity"
+                            className="w-full px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity"
                         >
                             Login
                         </button>
@@ -3290,7 +3302,7 @@ To get these values:
                     <p className="text-sm text-gray-500 mt-4 text-center">
                         Only admin accounts can access this page
                     </p>
-                    <div className="mt-4 p-3 bg-blue-50 rounded text-sm text-blue-700">
+                    <div className="mt-4 p-3 bg-blue-50 rounded-none text-sm text-blue-700">
                         <p className="font-semibold mb-2">Default Admin Credentials:</p>
                         <p>Email: anokhireet@gmail.com</p>
                         <p>Password: Reet@1432@1402</p>
@@ -3316,7 +3328,7 @@ To get these values:
                             </span>
                             <button
                                 onClick={handleLogout}
-                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors text-sm"
+                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors text-sm"
                             >
                                 Logout
                             </button>
@@ -3329,7 +3341,7 @@ To get these values:
                 <div className="flex flex-col lg:flex-row gap-6 max-w-full mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Vertical Sidebar */}
                     <aside className="w-full lg:w-56 flex-shrink-0" id="admin-sidebar">
-                        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky self-start max-h-[calc(100vh-7rem)] flex flex-col" id="admin-sidebar-container" style={{ top: 'calc(4rem + 2rem)', position: 'sticky' }}>
+                        <div className="bg-white rounded-none border border-gray-200 overflow-hidden sticky self-start max-h-[calc(100vh-7rem)] flex flex-col" id="admin-sidebar-container" style={{ top: 'calc(4rem + 2rem)', position: 'sticky' }}>
                             {/* Sidebar Header */}
                             <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
                                 <h2 className="text-lg font-bold text-gray-900">Admin Panel</h2>
@@ -3350,7 +3362,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "dashboard"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "dashboard"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3376,7 +3388,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "products"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "products"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3402,7 +3414,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "users"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "users"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3428,7 +3440,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "featured"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "featured"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3454,7 +3466,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "hero"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "hero"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3477,7 +3489,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-lg mb-1 ${activeTab === "contact"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "contact"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3494,7 +3506,7 @@ To get these values:
                             <div className="p-4 border-t border-gray-200 flex-shrink-0">
                                 <button
                                     onClick={handleLogout}
-                                    className="w-full px-4 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+                                    className="w-full px-4 py-2.5 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
                                 >
                                     <svg
                                         width="18"
@@ -3523,7 +3535,7 @@ To get these values:
                         {/* Removed categories tab - using facets instead */}
                         {false && (
                             <div className="space-y-6">
-                                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                <div className="bg-white rounded-none border border-gray-200 p-6">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
                                             <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
@@ -3537,7 +3549,7 @@ To get these values:
                                                 setCategoryImagePreview("");
                                                 setIsCategoryModalOpen(true);
                                             }}
-                                            className="px-6 py-3 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                                            className="px-6 py-3 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                                         >
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -3548,7 +3560,7 @@ To get these values:
                                     </div>
 
                                     {categories.length === 0 ? (
-                                        <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                        <div className="text-center py-16 bg-gray-50 rounded-none border-2 border-dashed border-gray-300">
                                             <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                                             </svg>
@@ -3566,7 +3578,7 @@ To get these values:
                                                     onDragLeave={handleDragLeave}
                                                     onDrop={(e) => handleDrop(e, category.id)}
                                                     onDragEnd={handleDragEnd}
-                                                    className={`flex items-center gap-4 p-4 rounded-lg border transition-all cursor-move relative ${draggedCategoryId === category.id
+                                                    className={`flex items-center gap-4 p-4 rounded-none border transition-all cursor-move relative ${draggedCategoryId === category.id
                                                         ? "opacity-50 border-gray-200 bg-gray-50"
                                                         : dragOverCategoryId === category.id
                                                             ? "border-gray-200 bg-gray-50"
@@ -3588,7 +3600,7 @@ To get these values:
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 8h16M4 16h16" />
                                                             </svg>
                                                         </div>
-                                                        <div className="relative w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                        <div className="relative w-20 h-20 bg-gray-200 rounded-none overflow-hidden flex-shrink-0">
                                                             {(() => {
                                                                 const imageUrl = category?.image_url;
                                                                 const isValidUrl = imageUrl && typeof imageUrl === 'string' && imageUrl.trim().length > 0 && imageUrl !== 'null' && imageUrl !== 'undefined';
@@ -3628,7 +3640,7 @@ To get these values:
                                                                     </h3>
                                                                 </button>
                                                                 {category.is_featured && (
-                                                                    <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full flex items-center gap-1">
+                                                                    <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-none flex items-center gap-1">
                                                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1">
                                                                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                                                         </svg>
@@ -3665,7 +3677,7 @@ To get these values:
                                                     <div className="flex items-center gap-2">
                                                         <button
                                                             onClick={() => toggleCategoryFeatured(category.id, category.is_featured || false)}
-                                                            className={`p-2 rounded-lg transition-colors ${category.is_featured
+                                                            className={`p-2 rounded-none transition-colors ${category.is_featured
                                                                 ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
                                                                 : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
                                                                 }`}
@@ -3675,7 +3687,7 @@ To get these values:
                                                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                                             </svg>
                                                         </button>
-                                                        <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded whitespace-nowrap">
+                                                        <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded-none whitespace-nowrap">
                                                             Drag to reorder
                                                         </div>
                                                         <button
@@ -3689,13 +3701,13 @@ To get these values:
                                                                 setCategoryImagePreview("");
                                                                 setIsCategoryModalOpen(true);
                                                             }}
-                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                                            className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                         >
                                                             Edit
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteCategory(category.id, category.name)}
-                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors text-sm"
+                                                            className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors text-sm"
                                                         >
                                                             Delete
                                                         </button>
@@ -3712,7 +3724,7 @@ To get these values:
                         {activeTab === "dashboard" && (
                             <div className="space-y-6">
                                 {/* Website Toggle Card */}
-                                <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200">
+                                <div className="bg-white p-6 rounded-none border border-gray-200 hover:shadow-lg transition-all duration-200">
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <h3 className="text-lg font-semibold text-gray-900 mb-1">Website Visibility</h3>
@@ -3729,11 +3741,11 @@ To get these values:
                                             <button
                                                 onClick={toggleWebsite}
                                                 disabled={isTogglingWebsite}
-                                                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 ${websiteEnabled ? 'bg-black' : 'bg-gray-300'
+                                                className={`relative inline-flex h-8 w-14 items-center rounded-none transition-colors focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 ${websiteEnabled ? 'bg-black' : 'bg-gray-300'
                                                     } ${isTogglingWebsite ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                             >
                                                 <span
-                                                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${websiteEnabled ? 'translate-x-7' : 'translate-x-1'
+                                                    className={`inline-block h-6 w-6 transform rounded-none bg-white transition-transform ${websiteEnabled ? 'translate-x-7' : 'translate-x-1'
                                                         }`}
                                                 />
                                             </button>
@@ -3743,10 +3755,10 @@ To get these values:
 
                                 {/* Stats Cards */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200">
+                                    <div className="bg-white p-6 rounded-none border border-gray-200 hover:shadow-lg transition-all duration-200">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Products</h3>
-                                            <div className="p-3 bg-blue-100 rounded-lg">
+                                            <div className="p-3 bg-blue-100 rounded-none">
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-blue-600">
                                                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -3759,10 +3771,10 @@ To get these values:
                                             {userProducts.length} user products
                                         </p>
                                     </div>
-                                    <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200">
+                                    <div className="bg-white p-6 rounded-none border border-gray-200 hover:shadow-lg transition-all duration-200">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Users</h3>
-                                            <div className="p-3 bg-purple-100 rounded-lg">
+                                            <div className="p-3 bg-purple-100 rounded-none">
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-purple-600">
                                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                                                     <circle cx="9" cy="7" r="4"></circle>
@@ -3777,10 +3789,10 @@ To get these values:
                                             <p>• Visitor users: <span className="font-semibold text-gray-700">{visitorUsersCount}</span></p>
                                         </div>
                                     </div>
-                                    <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200">
+                                    <div className="bg-white p-6 rounded-none border border-gray-200 hover:shadow-lg transition-all duration-200">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Categories</h3>
-                                            <div className="p-3 bg-green-100 rounded-lg">
+                                            <div className="p-3 bg-green-100 rounded-none">
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-green-600">
                                                     <rect x="3" y="3" width="7" height="7"></rect>
                                                     <rect x="14" y="3" width="7" height="7"></rect>
@@ -3797,10 +3809,10 @@ To get these values:
                                                 occasions.filter(oc => oc.is_featured).length} featured
                                         </p>
                                     </div>
-                                    <div className="bg-white p-6 rounded-lg border border-gray-200 hover:shadow-lg transition-all duration-200">
+                                    <div className="bg-white p-6 rounded-none border border-gray-200 hover:shadow-lg transition-all duration-200">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Views</h3>
-                                            <div className="p-3 bg-indigo-100 rounded-lg">
+                                            <div className="p-3 bg-indigo-100 rounded-none">
                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-indigo-600">
                                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                                     <circle cx="12" cy="12" r="3"></circle>
@@ -3817,7 +3829,7 @@ To get these values:
                                 {/* Recent Activity */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Recent Products */}
-                                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                    <div className="bg-white rounded-none border border-gray-200 overflow-hidden">
                                         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
                                             <h3 className="text-sm font-semibold text-gray-900">Recent Products</h3>
                                             <p className="text-xs text-gray-500 mt-1">Latest 5 products added</p>
@@ -3834,7 +3846,7 @@ To get these values:
                                                 .map((product, index) => (
                                                     <div key={index} className="px-6 py-3 hover:bg-gray-50 transition-colors">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
+                                                            <div className="flex-shrink-0 w-12 h-12 bg-gray-100 rounded-none overflow-hidden">
                                                                 {product.image && (
                                                                     <Image
                                                                         src={product.image}
@@ -3876,7 +3888,7 @@ To get these values:
                                     </div>
 
                                     {/* Recent Users */}
-                                    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                    <div className="bg-white rounded-none border border-gray-200 overflow-hidden">
                                         <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
                                             <h3 className="text-sm font-semibold text-gray-900">Recent Users</h3>
                                             <p className="text-xs text-gray-500 mt-1">Latest 5 users registered</p>
@@ -3926,7 +3938,7 @@ To get these values:
                             if (userProducts.length === 0 && !isCheckingAuth) {
                                 return (
                                     <div className="space-y-6">
-                                        <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+                                        <div className="bg-white rounded-none border border-gray-200 p-8 text-center">
                                             <p className="text-gray-500">Loading products...</p>
                                         </div>
                                     </div>
@@ -4146,7 +4158,7 @@ To get these values:
                                         </div>
 
                                         {/* Filters */}
-                                        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                                        <div className="bg-white rounded-none border border-gray-200 p-4 mb-6">
                                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                 {/* Search */}
                                                 <div>
@@ -4156,7 +4168,7 @@ To get these values:
                                                         value={searchQuery}
                                                         onChange={(e) => setSearchQuery(e.target.value)}
                                                         placeholder="Search by name, ID, category..."
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-black"
                                                     />
                                                 </div>
 
@@ -4167,7 +4179,7 @@ To get these values:
                                                     <select
                                                         value={filterUserId}
                                                         onChange={(e) => setFilterUserId(e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-black"
                                                         disabled={filterType === 'all'}
                                                     >
                                                         <option value="all">All Users</option>
@@ -4183,7 +4195,7 @@ To get these values:
                                                     <select
                                                         value={filterCategory}
                                                         onChange={(e) => setFilterCategory(e.target.value)}
-                                                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-black"
                                                     >
                                                         <option value="all">All Facets</option>
                                                         <optgroup label="Product Types">
@@ -4236,7 +4248,7 @@ To get these values:
                                             )}
                                         </div>
 
-                                        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                        <div className="bg-white rounded-none border border-gray-200 overflow-hidden">
                                             <div className="overflow-x-auto">
                                                 <table className="w-full">
                                                     <thead className="bg-gray-50 border-b border-gray-200">
@@ -4269,7 +4281,7 @@ To get these values:
                                                                             e.stopPropagation();
                                                                             setOpenFilterColumn(openFilterColumn === 'name' ? null : 'name');
                                                                         }}
-                                                                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.name ? 'opacity-100 text-blue-600' : ''}`}
+                                                                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-none hover:bg-gray-200 ${columnFilters.name ? 'opacity-100 text-blue-600' : ''}`}
                                                                     >
                                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -4277,13 +4289,13 @@ To get these values:
                                                                     </button>
                                                                 </div>
                                                                 {openFilterColumn === 'name' && (
-                                                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 min-w-[200px]">
+                                                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-none shadow-lg z-50 p-3 min-w-[200px]">
                                                                         <input
                                                                             type="text"
                                                                             value={columnFilters.name || ''}
                                                                             onChange={(e) => setColumnFilters({ ...columnFilters, name: e.target.value })}
                                                                             placeholder="Filter by name..."
-                                                                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
+                                                                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-black"
                                                                             autoFocus
                                                                         />
                                                                         <div className="flex justify-end gap-2 mt-2">
@@ -4310,7 +4322,7 @@ To get these values:
                                                                             e.stopPropagation();
                                                                             setOpenFilterColumn(openFilterColumn === 'user' ? null : 'user');
                                                                         }}
-                                                                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.user ? 'opacity-100 text-blue-600' : ''}`}
+                                                                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-none hover:bg-gray-200 ${columnFilters.user ? 'opacity-100 text-blue-600' : ''}`}
                                                                     >
                                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -4318,13 +4330,13 @@ To get these values:
                                                                     </button>
                                                                 </div>
                                                                 {openFilterColumn === 'user' && (
-                                                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 min-w-[200px] filter-dropdown-container">
+                                                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-none shadow-lg z-50 p-3 min-w-[200px] filter-dropdown-container">
                                                                         <input
                                                                             type="text"
                                                                             value={columnFilters.user || ''}
                                                                             onChange={(e) => setColumnFilters({ ...columnFilters, user: e.target.value })}
                                                                             placeholder="Filter by user name/phone..."
-                                                                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
+                                                                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-black"
                                                                             autoFocus
                                                                         />
                                                                         <div className="flex justify-end gap-2 mt-2">
@@ -4383,7 +4395,7 @@ To get these values:
                                                                             e.stopPropagation();
                                                                             setOpenFilterColumn(openFilterColumn === 'productId' ? null : 'productId');
                                                                         }}
-                                                                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.productId ? 'opacity-100 text-blue-600' : ''}`}
+                                                                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-none hover:bg-gray-200 ${columnFilters.productId ? 'opacity-100 text-blue-600' : ''}`}
                                                                     >
                                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -4391,13 +4403,13 @@ To get these values:
                                                                     </button>
                                                                 </div>
                                                                 {openFilterColumn === 'productId' && (
-                                                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 min-w-[200px] filter-dropdown-container">
+                                                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-none shadow-lg z-50 p-3 min-w-[200px] filter-dropdown-container">
                                                                         <input
                                                                             type="text"
                                                                             value={columnFilters.productId || ''}
                                                                             onChange={(e) => setColumnFilters({ ...columnFilters, productId: e.target.value })}
                                                                             placeholder="Filter by product ID..."
-                                                                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
+                                                                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-black"
                                                                             autoFocus
                                                                         />
                                                                         <div className="flex justify-end gap-2 mt-2">
@@ -4441,7 +4453,7 @@ To get these values:
                                                                             e.stopPropagation();
                                                                             setOpenFilterColumn(openFilterColumn === 'price' ? null : 'price');
                                                                         }}
-                                                                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-200 ${columnFilters.price ? 'opacity-100 text-blue-600' : ''}`}
+                                                                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-none hover:bg-gray-200 ${columnFilters.price ? 'opacity-100 text-blue-600' : ''}`}
                                                                     >
                                                                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -4449,13 +4461,13 @@ To get these values:
                                                                     </button>
                                                                 </div>
                                                                 {openFilterColumn === 'price' && (
-                                                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 min-w-[200px] filter-dropdown-container">
+                                                                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-none shadow-lg z-50 p-3 min-w-[200px] filter-dropdown-container">
                                                                         <input
                                                                             type="text"
                                                                             value={columnFilters.price || ''}
                                                                             onChange={(e) => setColumnFilters({ ...columnFilters, price: e.target.value })}
                                                                             placeholder="Filter by price..."
-                                                                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-black"
+                                                                            className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-black"
                                                                             autoFocus
                                                                         />
                                                                         <div className="flex justify-end gap-2 mt-2">
@@ -4526,7 +4538,7 @@ To get these values:
                                                             return (
                                                                 <tr key={`user-${product.id}`} className="hover:bg-gray-50">
                                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                                        <div className="relative w-16 h-20 bg-gray-100 rounded overflow-hidden">
+                                                                        <div className="relative w-16 h-20 bg-gray-100 rounded-none overflow-hidden">
                                                                             {primaryImage && (
                                                                                 <Image
                                                                                     src={primaryImage}
@@ -4570,7 +4582,7 @@ To get these values:
                                                                         <div className="flex flex-col gap-1">
                                                                             {facets.productTypes.length > 0 ? (
                                                                                 facets.productTypes.map((pt, idx) => (
-                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-purple-100 text-purple-800">
                                                                                         {pt}
                                                                                     </span>
                                                                                 ))
@@ -4585,7 +4597,7 @@ To get these values:
                                                                         <div className="flex flex-col gap-1">
                                                                             {facets.occasions.length > 0 ? (
                                                                                 facets.occasions.map((oc, idx) => (
-                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
+                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-pink-100 text-pink-800">
                                                                                         {oc}
                                                                                     </span>
                                                                                 ))
@@ -4600,7 +4612,7 @@ To get these values:
                                                                         <div className="flex flex-col gap-1">
                                                                             {facets.colors.length > 0 ? (
                                                                                 facets.colors.map((c, idx) => (
-                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-red-100 text-red-800">
                                                                                         {c}
                                                                                     </span>
                                                                                 ))
@@ -4615,7 +4627,7 @@ To get these values:
                                                                         <div className="flex flex-col gap-1">
                                                                             {facets.materials.length > 0 ? (
                                                                                 facets.materials.map((m, idx) => (
-                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-green-100 text-green-800">
                                                                                         {m}
                                                                                     </span>
                                                                                 ))
@@ -4630,7 +4642,7 @@ To get these values:
                                                                         <div className="flex flex-col gap-1">
                                                                             {facets.cities.length > 0 ? (
                                                                                 facets.cities.map((city, idx) => (
-                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-blue-100 text-blue-800">
                                                                                         {city}
                                                                                     </span>
                                                                                 ))
@@ -4672,7 +4684,7 @@ To get these values:
                                                                     </td>
                                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                                         <div className="flex flex-col">
-                                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.status === 'approved'
+                                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-none text-xs font-medium ${product.status === 'approved'
                                                                                 ? 'bg-green-100 text-green-800'
                                                                                 : product.status === 'rejected'
                                                                                     ? 'bg-red-100 text-red-800'
@@ -4692,13 +4704,13 @@ To get these values:
                                                                             <div className="flex gap-2 mb-2">
                                                                                 <button
                                                                                     onClick={() => handleApproveProduct(product)}
-                                                                                    className="text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs"
+                                                                                    className="text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-none text-xs"
                                                                                 >
                                                                                     Approve
                                                                                 </button>
                                                                                 <button
                                                                                     onClick={() => handleRejectProduct(product)}
-                                                                                    className="text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs"
+                                                                                    className="text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded-none text-xs"
                                                                                 >
                                                                                     Reject
                                                                                 </button>
@@ -4711,7 +4723,7 @@ To get these values:
                                                                             Edit
                                                                         </button>
                                                                         <button
-                                                                            onClick={() => handleDeleteUserProduct((product as any).id)}
+                                                                            onClick={() => handleDeleteUserProduct((product as any).id, (product as any).name)}
                                                                             className="text-red-600 hover:text-red-900"
                                                                         >
                                                                             Delete
@@ -4747,11 +4759,11 @@ To get these values:
                         {false && (
                             <div className="space-y-6">
                                 {/* Facet Type Tabs */}
-                                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                                <div className="bg-white rounded-none border border-gray-200 p-4">
                                     <div className="flex flex-wrap gap-2 border-b border-gray-200 pb-4 mb-4">
                                         <button
                                             onClick={() => setActiveFacetTab("product_types")}
-                                            className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "product_types"
+                                            className={`px-4 py-2 rounded-none font-medium transition-all ${activeFacetTab === "product_types"
                                                 ? "bg-black text-white"
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
@@ -4760,7 +4772,7 @@ To get these values:
                                         </button>
                                         <button
                                             onClick={() => setActiveFacetTab("occasions")}
-                                            className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "occasions"
+                                            className={`px-4 py-2 rounded-none font-medium transition-all ${activeFacetTab === "occasions"
                                                 ? "bg-black text-white"
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
@@ -4769,7 +4781,7 @@ To get these values:
                                         </button>
                                         <button
                                             onClick={() => setActiveFacetTab("colors")}
-                                            className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "colors"
+                                            className={`px-4 py-2 rounded-none font-medium transition-all ${activeFacetTab === "colors"
                                                 ? "bg-black text-white"
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
@@ -4778,7 +4790,7 @@ To get these values:
                                         </button>
                                         <button
                                             onClick={() => setActiveFacetTab("materials")}
-                                            className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "materials"
+                                            className={`px-4 py-2 rounded-none font-medium transition-all ${activeFacetTab === "materials"
                                                 ? "bg-black text-white"
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
@@ -4787,7 +4799,7 @@ To get these values:
                                         </button>
                                         <button
                                             onClick={() => setActiveFacetTab("cities")}
-                                            className={`px-4 py-2 rounded-lg font-medium transition-all ${activeFacetTab === "cities"
+                                            className={`px-4 py-2 rounded-none font-medium transition-all ${activeFacetTab === "cities"
                                                 ? "bg-black text-white"
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
@@ -4947,7 +4959,7 @@ To get these values:
 
                         {activeTab === "users" && (
                             <div>
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white rounded-lg border border-gray-200 p-6">
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white rounded-none border border-gray-200 p-6">
                                     <div>
                                     </div>
                                     <button
@@ -4961,7 +4973,7 @@ To get these values:
                                             }
                                             setIsUserModalOpen(true);
                                         }}
-                                        className="px-5 py-2.5 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                                        className="px-5 py-2.5 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                                     >
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -4971,7 +4983,7 @@ To get these values:
                                     </button>
                                 </div>
 
-                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+                                <div className="bg-white rounded-none border border-gray-200 overflow-hidden mb-6">
                                     <div className="overflow-x-auto">
                                         <table className="w-full">
                                             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
@@ -4979,12 +4991,9 @@ To get these values:
                                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                                         Name
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                        Phone
-                                                    </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                        Email
-                                                    </th>
+                                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                         Phone
+                                                     </th>
                                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                                         Created
                                                     </th>
@@ -4998,8 +5007,8 @@ To get these values:
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
                                                 {users.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan={6} className="px-6 py-12 text-center">
+                                                     <tr>
+                                                         <td colSpan={5} className="px-6 py-12 text-center">
                                                             <div className="text-gray-500">
                                                                 <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-3-3H5a3 3 0 00-3 3v2h5m16 0v-7a2 2 0 00-2-2H3a2 2 0 00-2 2v7m16 0H9" />
@@ -5018,12 +5027,9 @@ To get these values:
                                                                     {user.name}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className="text-sm text-gray-600">{user.phone}</div>
-                                                            </td>
-                                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className="text-sm text-gray-600">{user.email || "-"}</div>
-                                                            </td>
+                                                             <td className="px-6 py-4 whitespace-nowrap">
+                                                                 <div className="text-sm text-gray-600">{user.phone}</div>
+                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className="text-sm text-gray-600">
                                                                     {new Date(user.created_at).toLocaleDateString()}
@@ -5032,14 +5038,14 @@ To get these values:
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className="flex items-center">
                                                                     {user.auth_user_id ? (
-                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-xs font-medium bg-green-100 text-green-800">
                                                                             <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                                             </svg>
                                                                             Authenticated
                                                                         </span>
                                                                     ) : (
-                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-xs font-medium bg-gray-100 text-gray-800">
                                                                             <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                                                                             </svg>
@@ -5052,7 +5058,7 @@ To get these values:
                                                                 <div className="flex items-center gap-2">
                                                                     <button
                                                                         onClick={() => handleEditUser(user)}
-                                                                        className="px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1"
+                                                                        className="px-4 py-2 bg-gray-600 text-white font-medium rounded-none hover:bg-gray-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1"
                                                                         title="Edit user details"
                                                                     >
                                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
@@ -5065,13 +5071,13 @@ To get these values:
                                                                         onClick={() => {
                                                                             router.push(`/admin/manage-products/${user.id}`);
                                                                         }}
-                                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                                                                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                     >
                                                                         Manage Products
                                                                     </button>
                                                                     <button
                                                                         onClick={() => handleDeleteUser(user.id, user.name)}
-                                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1"
+                                                                        className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1"
                                                                         title="Delete user and all their products"
                                                                     >
                                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
@@ -5100,7 +5106,7 @@ To get these values:
                         {/* Create/Edit User Modal */}
                         {isUserModalOpen && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg max-w-md w-full">
+                                <div className="bg-white rounded-none max-w-md w-full">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <h2 className="text-2xl font-bold">{editingUser ? "Edit User" : "Create User Account"}</h2>
@@ -5143,7 +5149,7 @@ To get these values:
                                                         value={userFirstName}
                                                         onChange={(e) => setUserFirstName(capitalizeFirstLetter(e.target.value))}
                                                         placeholder="First Name"
-                                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                                                        className="w-full px-4 py-2 border rounded-none focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                                                         required
                                                     />
                                                 </div>
@@ -5156,7 +5162,7 @@ To get these values:
                                                         value={userLastName}
                                                         onChange={(e) => setUserLastName(capitalizeFirstLetter(e.target.value))}
                                                         placeholder="Surname"
-                                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                                                        className="w-full px-4 py-2 border rounded-none focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
                                                         required
                                                     />
                                                 </div>
@@ -5167,7 +5173,7 @@ To get these values:
                                                     Phone (10 digits)
                                                 </label>
                                                 <div className="flex">
-                                                    <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm font-medium">
+                                                    <span className="inline-flex items-center px-3 rounded-none-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm font-medium">
                                                         +91
                                                     </span>
                                                     <input
@@ -5180,7 +5186,7 @@ To get these values:
                                                             const limitedNumbers = numbersOnly.slice(0, 10);
                                                             setUserFormData({ ...userFormData, phone: '+91' + limitedNumbers });
                                                         }}
-                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                        className="flex-1 px-3 py-2 border border-gray-300 rounded-none-md focus:outline-none focus:ring-2 focus:ring-black"
                                                         placeholder="1234567890"
                                                         maxLength={10}
                                                         pattern="[0-9]{10}"
@@ -5201,7 +5207,7 @@ To get these values:
                                                     onChange={(e) =>
                                                         setUserFormData({ ...userFormData, email: e.target.value })
                                                     }
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                     placeholder="user@example.com (optional)"
                                                 />
                                                 <p className="text-xs text-gray-500 mt-1">
@@ -5229,7 +5235,7 @@ To get these values:
                                                 </div>
 
                                                 {showAddCity && (
-                                                    <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                                                    <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-none">
                                                         <div className="flex gap-2">
                                                             <input
                                                                 type="text"
@@ -5242,12 +5248,12 @@ To get these values:
                                                                     }
                                                                 }}
                                                                 placeholder="Enter new city name"
-                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                             />
                                                             <button
                                                                 type="button"
                                                                 onClick={handleAddNewCity}
-                                                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors text-sm"
+                                                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                             >
                                                                 Add
                                                             </button>
@@ -5255,7 +5261,7 @@ To get these values:
                                                     </div>
                                                 )}
 
-                                                <div className="border border-gray-300 rounded-md max-h-48 overflow-y-auto p-2">
+                                                <div className="border border-gray-300 rounded-none max-h-48 overflow-y-auto p-2">
                                                     {cities.length === 0 ? (
                                                         <p className="text-xs text-gray-500">Loading cities...</p>
                                                     ) : (
@@ -5264,7 +5270,7 @@ To get these values:
                                                             return (
                                                                 <label
                                                                     key={city.id}
-                                                                    className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-2 rounded"
+                                                                    className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-2 rounded-none"
                                                                 >
                                                                     <input
                                                                         type="checkbox"
@@ -5295,7 +5301,7 @@ To get these values:
                                                                                 }
                                                                             });
                                                                         }}
-                                                                        className="w-4 h-4 border-gray-300 rounded text-black focus:ring-2 focus:ring-black cursor-pointer"
+                                                                        className="w-4 h-4 border-gray-300 rounded-none text-black focus:ring-2 focus:ring-black cursor-pointer"
                                                                     />
                                                                     <span className="text-sm text-gray-700 select-none">{city.name}</span>
                                                                 </label>
@@ -5315,7 +5321,7 @@ To get these values:
                                                 </p>
                                             </div>
 
-                                            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
+                                            <div className="bg-blue-50 border border-blue-200 rounded-none p-3 mt-4">
                                                 <p className="text-sm text-blue-800">
                                                     <strong>Note:</strong> User will be created without authentication.
                                                     They can log in later using their phone number or email.
@@ -5325,7 +5331,7 @@ To get these values:
                                             <div className="flex gap-4 pt-4">
                                                 <button
                                                     type="submit"
-                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity"
+                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity"
                                                 >
                                                     {editingUser ? "Update User" : "Create User"}
                                                 </button>
@@ -5336,7 +5342,7 @@ To get these values:
                                                         setEditingUser(null);
                                                         setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
                                                     }}
-                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
@@ -5351,7 +5357,7 @@ To get these values:
                         {/* Manage Products Modal */}
                         {isManageProductsModalOpen && selectedUserId && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg border border-gray-200 max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                                <div className="bg-white rounded-none border border-gray-200 max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
                                     {/* Modal Header */}
                                     <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                                         <div>
@@ -5367,7 +5373,7 @@ To get these values:
                                                 setIsManageProductsModalOpen(false);
                                                 setSelectedUserId(null);
                                             }}
-                                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                            className="p-2 hover:bg-gray-100 rounded-none transition-colors"
                                         >
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                 <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -5387,7 +5393,7 @@ To get these values:
                                                 <p className="text-sm text-gray-600">This user doesn't have any products yet.</p>
                                             </div>
                                         ) : (
-                                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                                            <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
                                                 <div className="overflow-x-auto">
                                                     <table className="w-full">
                                                         <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
@@ -5412,13 +5418,13 @@ To get these values:
                                                                 .map((product) => (
                                                                     <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
                                                                         <td className="px-6 py-4 whitespace-nowrap">
-                                                                            <div className="relative w-20 h-24 bg-gray-100 rounded-lg overflow-hidden">
+                                                                            <div className="relative w-20 h-24 bg-gray-100 rounded-none overflow-hidden">
                                                                                 {product.image ? (
                                                                                     <Image
                                                                                         src={product.image}
                                                                                         alt={product.name}
                                                                                         fill
-                                                                                        className="object-cover rounded-lg"
+                                                                                        className="object-cover rounded-none"
                                                                                         unoptimized
                                                                                         onError={(e) => {
                                                                                             console.error("Image load error:", product.image);
@@ -5449,18 +5455,18 @@ To get these values:
                                                                                         handleEditUserProduct(product);
                                                                                         setIsManageProductsModalOpen(false);
                                                                                     }}
-                                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                                 >
                                                                                     Edit
                                                                                 </button>
                                                                                 <button
                                                                                     onClick={async () => {
                                                                                         if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
-                                                                                            await handleDeleteUserProduct(product.id);
+                                                                                            await handleDeleteUserProduct(product.id, product.name);
                                                                                             await loadUserProducts();
                                                                                         }
                                                                                     }}
-                                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md"
+                                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                                 >
                                                                                     Delete
                                                                                 </button>
@@ -5500,7 +5506,7 @@ To get these values:
                                                 setIsConvertingImage(false);
                                                 router.push(`/admin/manage-products/${selectedUserId}/add`);
                                             }}
-                                            className="px-5 py-2.5 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                                            className="px-5 py-2.5 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                                         >
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -5513,7 +5519,7 @@ To get these values:
                                                 setIsManageProductsModalOpen(false);
                                                 setSelectedUserId(null);
                                             }}
-                                            className="px-5 py-2.5 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-all duration-200"
+                                            className="px-5 py-2.5 bg-gray-200 text-gray-800 font-semibold rounded-none hover:bg-gray-300 transition-all duration-200"
                                         >
                                             Close
                                         </button>
@@ -5525,7 +5531,7 @@ To get these values:
                         {/* User Product Modal */}
                         {isUserProductModalOpen && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                <div className="bg-white rounded-none max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <div>
@@ -5603,7 +5609,7 @@ To get these values:
                                                             name: e.target.value,
                                                         })
                                                     }
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                 />
                                             </div>
 
@@ -5621,7 +5627,7 @@ To get these values:
                                                             price: e.target.value,
                                                         })
                                                     }
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                     placeholder="e.g., ₹999"
                                                 />
                                                 <p className="text-xs text-gray-500 mt-1">
@@ -5643,7 +5649,7 @@ To get these values:
                                                             originalPrice: e.target.value,
                                                         })
                                                     }
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                     placeholder="e.g., 1299"
                                                 />
                                                 <p className="text-xs text-gray-500 mt-1">
@@ -5664,7 +5670,7 @@ To get these values:
                                                             category: e.target.value,
                                                         })
                                                     }
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                     placeholder="e.g., Shirts, Jeans, Dresses"
                                                 />
                                                 <p className="text-xs text-gray-500 mt-1">
@@ -5672,13 +5678,13 @@ To get these values:
                                                 </p>
                                             </div>
 
-                                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                            <div className="bg-gray-50 border border-gray-200 rounded-none p-4">
                                                 <label className="block text-sm font-semibold text-gray-800 mb-3">
                                                     Upload Product Images {!editingUserProduct && "*"}
                                                 </label>
                                                 <label
                                                     htmlFor="user-product-images-input"
-                                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all cursor-pointer group"
+                                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-none bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all cursor-pointer group"
                                                 >
                                                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                                         <svg className="w-10 h-10 mb-3 text-gray-400 group-hover:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5701,7 +5707,7 @@ To get these values:
                                                     />
                                                 </label>
                                                 {imageSizeInfo.length > 0 && (
-                                                    <div className="mt-3 border border-gray-200 rounded-lg bg-white">
+                                                    <div className="mt-3 border border-gray-200 rounded-none bg-white">
                                                         <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
                                                             <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Size Optimization</h4>
                                                         </div>
@@ -5750,7 +5756,7 @@ To get these values:
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setPrimaryImage(index)}
-                                                                    className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-gray-300 hover:border-gray-400 transition-all"
+                                                                    className="relative w-full aspect-square rounded-none overflow-hidden border-2 border-gray-300 hover:border-gray-400 transition-all"
                                                                 >
                                                                     <Image
                                                                         src={imgUrl}
@@ -5764,7 +5770,7 @@ To get these values:
                                                                     />
                                                                     {/* Heart icon overlay - always visible, filled when selected */}
                                                                     <div className="absolute top-2 right-2 z-10">
-                                                                        <div className={`${primaryImageIndex === index ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md transition-all`}>
+                                                                        <div className={`${primaryImageIndex === index ? 'bg-red-500' : 'bg-white/80'} rounded-none p-1.5 shadow-md transition-all`}>
                                                                             <svg
                                                                                 className={`w-5 h-5 ${primaryImageIndex === index ? 'text-white fill-white' : 'text-gray-400'}`}
                                                                                 fill={primaryImageIndex === index ? "currentColor" : "none"}
@@ -5782,7 +5788,7 @@ To get these values:
                                                                             e.stopPropagation();
                                                                             removeImage(index, false);
                                                                         }}
-                                                                        className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
+                                                                        className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-none p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                                         title="Remove image"
                                                                     >
                                                                         <svg
@@ -5806,7 +5812,7 @@ To get these values:
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => setPrimaryImage(totalIndex)}
-                                                                        className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-400 transition-all"
+                                                                        className="relative w-full aspect-square rounded-none overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-400 transition-all"
                                                                     >
                                                                         <Image
                                                                             src={preview}
@@ -5817,7 +5823,7 @@ To get these values:
                                                                         />
                                                                         {/* Heart icon overlay - always visible, filled when selected */}
                                                                         <div className="absolute top-2 right-2 z-10">
-                                                                            <div className={`${primaryImageIndex === totalIndex ? 'bg-red-500' : 'bg-white/80'} rounded-full p-1.5 shadow-md transition-all`}>
+                                                                            <div className={`${primaryImageIndex === totalIndex ? 'bg-red-500' : 'bg-white/80'} rounded-none p-1.5 shadow-md transition-all`}>
                                                                                 <svg
                                                                                     className={`w-5 h-5 ${primaryImageIndex === totalIndex ? 'text-white fill-white' : 'text-gray-400'}`}
                                                                                     fill={primaryImageIndex === totalIndex ? "currentColor" : "none"}
@@ -5835,7 +5841,7 @@ To get these values:
                                                                                 e.stopPropagation();
                                                                                 removeImage(totalIndex, true);
                                                                             }}
-                                                                            className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
+                                                                            className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-none p-1.5 shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                                             title="Remove image"
                                                                         >
                                                                             <svg
@@ -5866,12 +5872,12 @@ To get these values:
                                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                                             Preview
                                                         </label>
-                                                        <div className="relative w-32 h-40 border border-gray-300 rounded">
+                                                        <div className="relative w-32 h-40 border border-gray-300 rounded-none">
                                                             <Image
                                                                 src={userProductImagePreview || userProductFormData.image}
                                                                 alt="Preview"
                                                                 fill
-                                                                className="object-cover rounded"
+                                                                className="object-cover rounded-none"
                                                                 unoptimized
                                                                 onError={(e) => {
                                                                     (e.target as HTMLImageElement).style.display = "none";
@@ -5885,7 +5891,7 @@ To get these values:
                                                 <button
                                                     type="submit"
                                                     disabled={isUploadingImage}
-                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     {isUploadingImage
                                                         ? "Uploading..."
@@ -5926,7 +5932,7 @@ To get these values:
                                                             router.push(`/admin/manage-products/${userIdToUse}`);
                                                         }
                                                     }}
-                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
@@ -5940,7 +5946,7 @@ To get these values:
                         {/* Hero Section Tab */}
                         {activeTab === "hero" && (
                             <div className="space-y-6">
-                                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                                <div className="bg-white rounded-none border border-gray-200 p-6">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
                                             <h2 className="text-2xl font-bold text-gray-900">Hero Section Slides</h2>
@@ -5954,7 +5960,7 @@ To get these values:
                                                 setHeroImagePreview("");
                                                 setIsHeroModalOpen(true);
                                             }}
-                                            className="px-4 py-2 bg-black text-white font-semibold rounded-lg hover:opacity-90 transition-all duration-200 flex items-center gap-2"
+                                            className="px-4 py-2 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 flex items-center gap-2"
                                         >
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -5965,7 +5971,7 @@ To get these values:
                                     </div>
 
                                     {heroSlides.length === 0 ? (
-                                        <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+                                        <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-none">
                                             <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
@@ -5982,7 +5988,7 @@ To get these values:
                                                     onDragOver={(e) => handleHeroDragOver(e, slide.id)}
                                                     onDragEnd={handleHeroDragEnd}
                                                     onDrop={(e) => handleHeroDrop(e, slide.id)}
-                                                    className={`flex items-center gap-4 p-4 border-2 rounded-lg transition-all ${draggedHeroId === slide.id
+                                                    className={`flex items-center gap-4 p-4 border-2 rounded-none transition-all ${draggedHeroId === slide.id
                                                         ? "border-blue-500 bg-blue-50 opacity-50"
                                                         : dragOverHeroId === slide.id
                                                             ? "border-green-500 bg-green-50"
@@ -6000,7 +6006,7 @@ To get these values:
                                                         </div>
                                                     </div>
 
-                                                    <div className="relative w-24 h-32 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                                    <div className="relative w-24 h-32 rounded-none overflow-hidden bg-gray-100 flex-shrink-0">
                                                         {slide.image_url ? (
                                                             <Image
                                                                 src={slide.image_url}
@@ -6020,7 +6026,7 @@ To get these values:
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <h3 className="text-lg font-semibold text-gray-900">Hero Slide #{index + 1}</h3>
                                                             {!slide.is_active && (
-                                                                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                                                                <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-none">
                                                                     Inactive
                                                                 </span>
                                                             )}
@@ -6030,7 +6036,7 @@ To get these values:
                                                     <div className="flex items-center gap-2 flex-shrink-0">
                                                         <button
                                                             onClick={() => toggleHeroSlideActive(slide.id, slide.is_active)}
-                                                            className={`p-2 rounded-lg transition-colors ${slide.is_active
+                                                            className={`p-2 rounded-none transition-colors ${slide.is_active
                                                                 ? "text-green-600 hover:bg-green-50 bg-green-50"
                                                                 : "text-gray-400 hover:text-green-600 hover:bg-gray-100"
                                                                 }`}
@@ -6042,7 +6048,7 @@ To get these values:
                                                         </button>
                                                         <button
                                                             onClick={() => handleEditHeroSlide(slide)}
-                                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-none transition-colors"
                                                             title="Edit slide"
                                                         >
                                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
@@ -6052,7 +6058,7 @@ To get these values:
                                                         </button>
                                                         <button
                                                             onClick={() => handleDeleteHeroSlide(slide.id, slide.title)}
-                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-none transition-colors"
                                                             title="Delete slide"
                                                         >
                                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
@@ -6080,7 +6086,7 @@ To get these values:
                         {/* Facet Add/Edit Modal */}
                         {isFacetModalOpen && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+                                <div className="bg-white rounded-none max-w-md w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <h2 className="text-2xl font-bold">
@@ -6118,7 +6124,7 @@ To get these values:
                                                     required
                                                     value={facetFormData.name}
                                                     onChange={(e) => setFacetFormData({ ...facetFormData, name: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                     placeholder={activeFacetTab === "product_types" ? "e.g., Choly, Western, Sari" : activeFacetTab === "occasions" ? "e.g., Navratri, Marriage" : activeFacetTab === "colors" ? "e.g., Red, Blue, Green" : activeFacetTab === "materials" ? "e.g., Cotton, Silk, Linen" : "e.g., Rajkot, Surat, Ahmedabad"}
                                                 />
                                             </div>
@@ -6133,12 +6139,12 @@ To get these values:
                                                             type="text"
                                                             value={facetFormData.hex}
                                                             onChange={(e) => setFacetFormData({ ...facetFormData, hex: e.target.value })}
-                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                            className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                             placeholder="#FF0000"
                                                         />
                                                         {facetFormData.hex && (
                                                             <div
-                                                                className="w-12 h-12 rounded border border-gray-300"
+                                                                className="w-12 h-12 rounded-none border border-gray-300"
                                                                 style={{ backgroundColor: facetFormData.hex }}
                                                             />
                                                         )}
@@ -6156,7 +6162,7 @@ To get these values:
                                                             type="text"
                                                             value={facetFormData.state}
                                                             onChange={(e) => setFacetFormData({ ...facetFormData, state: e.target.value })}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                             placeholder="e.g., Gujarat"
                                                         />
                                                     </div>
@@ -6168,7 +6174,7 @@ To get these values:
                                                             type="text"
                                                             value={facetFormData.country}
                                                             onChange={(e) => setFacetFormData({ ...facetFormData, country: e.target.value })}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                            className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                             placeholder="e.g., India"
                                                         />
                                                     </div>
@@ -6182,7 +6188,7 @@ To get these values:
                                                     </label>
                                                     <label
                                                         htmlFor="facet-image-input"
-                                                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                                                        className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-none bg-white hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
                                                     >
                                                         {facetImagePreview || (editingFacet && editingFacet.image_url) ? (
                                                             <div className="relative w-full h-full">
@@ -6190,7 +6196,7 @@ To get these values:
                                                                     src={facetImagePreview || editingFacet.image_url}
                                                                     alt="Facet image preview"
                                                                     fill
-                                                                    className="object-cover rounded-lg"
+                                                                    className="object-cover rounded-none"
                                                                     unoptimized
                                                                 />
                                                             </div>
@@ -6225,7 +6231,7 @@ To get these values:
                                                 <button
                                                     type="submit"
                                                     disabled={isUploadingFacetImage}
-                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     {isUploadingFacetImage ? "Uploading..." : editingFacet ? "Update" : "Add"}
                                                 </button>
@@ -6238,7 +6244,7 @@ To get these values:
                                                         setFacetImageFile(null);
                                                         setFacetImagePreview("");
                                                     }}
-                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
@@ -6252,7 +6258,7 @@ To get these values:
                         {/* Category Add/Edit Modal */}
                         {isCategoryModalOpen && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+                                <div className="bg-white rounded-none max-w-md w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <h2 className="text-2xl font-bold">
@@ -6285,7 +6291,7 @@ To get these values:
                                                     required
                                                     value={categoryFormData.name}
                                                     onChange={(e) => setCategoryFormData({ ...categoryFormData, name: e.target.value })}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                     placeholder="e.g., Shirts, Jeans, Dresses"
                                                 />
                                             </div>
@@ -6298,13 +6304,13 @@ To get these values:
                                                     type="file"
                                                     accept="image/*"
                                                     onChange={handleCategoryImageChange}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black text-sm"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black text-sm"
                                                 />
                                                 <p className="text-xs text-gray-500 mt-1">Select an image file (max 10MB)</p>
 
                                                 {/* Show preview of selected image or existing image */}
                                                 {((categoryImagePreview && categoryImagePreview.trim()) || (editingCategory && categoryFormData.image_url && typeof categoryFormData.image_url === 'string' && categoryFormData.image_url.trim().length > 0)) && (
-                                                    <div className="mt-3 relative w-32 h-40 border border-gray-300 rounded overflow-hidden">
+                                                    <div className="mt-3 relative w-32 h-40 border border-gray-300 rounded-none overflow-hidden">
                                                         {(categoryImagePreview && categoryImagePreview.trim()) || (categoryFormData.image_url && typeof categoryFormData.image_url === 'string' && categoryFormData.image_url.trim().length > 0) ? (
                                                             <Image
                                                                 src={categoryImagePreview || categoryFormData.image_url}
@@ -6318,7 +6324,7 @@ To get these values:
                                                             />
                                                         ) : null}
                                                         {categoryImageFile && (
-                                                            <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                                                            <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-2 py-1 rounded-none">
                                                                 New
                                                             </div>
                                                         )}
@@ -6336,7 +6342,7 @@ To get these values:
                                                 <button
                                                     type="submit"
                                                     disabled={isUploadingCategoryImage}
-                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     {isUploadingCategoryImage
                                                         ? "Uploading..."
@@ -6353,7 +6359,7 @@ To get these values:
                                                         setCategoryImageFile(null);
                                                         setCategoryImagePreview("");
                                                     }}
-                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
@@ -6367,9 +6373,9 @@ To get these values:
                         {/* Delete User Confirmation Modal */}
                         {deleteConfirmUser && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg border border-gray-200 max-w-md w-full">
+                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full">
                                     <div className="p-6">
-                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
+                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-none">
                                             <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
@@ -6380,7 +6386,7 @@ To get these values:
                                         <p className="text-sm text-gray-600 text-center mb-6">
                                             Are you sure you want to delete <strong>{deleteConfirmUser.name}</strong>?
                                         </p>
-                                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                                        <div className="bg-red-50 border border-red-200 rounded-none p-4 mb-6">
                                             <p className="text-sm text-red-800 font-medium mb-2">This will:</p>
                                             <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
                                                 <li>Delete the user account</li>
@@ -6392,15 +6398,53 @@ To get these values:
                                         <div className="flex gap-3">
                                             <button
                                                 onClick={() => setDeleteConfirmUser(null)}
-                                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-lg hover:bg-gray-300 transition-colors"
+                                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 onClick={confirmDeleteUser}
-                                                className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+                                                className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors"
                                             >
                                                 Delete User
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {deleteConfirmProduct && (
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full">
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-none">
+                                            <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+                                            Delete Product?
+                                        </h3>
+                                        <p className="text-sm text-gray-600 text-center mb-6">
+                                            Are you sure you want to delete <strong>{deleteConfirmProduct.name}</strong>?
+                                        </p>
+                                        <div className="bg-red-50 border border-red-200 rounded-none p-4 mb-6">
+                                            <p className="text-sm text-red-800 font-medium mb-1 text-center">This will remove the product from the website permanently.</p>
+                                            <p className="text-xs text-red-600 text-center uppercase tracking-wider font-bold mt-2">This action cannot be undone.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setDeleteConfirmProduct(null)}
+                                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={confirmDeleteUserProduct}
+                                                className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
+                                            >
+                                                Delete Product
                                             </button>
                                         </div>
                                     </div>
@@ -6411,7 +6455,7 @@ To get these values:
                         {/* Hero Slide Add/Edit Modal */}
                         {isHeroModalOpen && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                <div className="bg-white rounded-none max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <h2 className="text-2xl font-bold">
@@ -6442,7 +6486,7 @@ To get these values:
                                                 <div className="space-y-3">
                                                     <label
                                                         htmlFor="hero-image-input"
-                                                        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:border-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                                                        className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-none bg-gray-50 hover:border-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
                                                     >
                                                         {heroImagePreview ? (
                                                             <div className="relative w-full h-full">
@@ -6450,7 +6494,7 @@ To get these values:
                                                                     src={heroImagePreview}
                                                                     alt="Hero slide preview"
                                                                     fill
-                                                                    className="object-cover rounded-lg"
+                                                                    className="object-cover rounded-none"
                                                                     unoptimized
                                                                 />
                                                             </div>
@@ -6491,14 +6535,14 @@ To get these values:
                                                         setHeroImageFile(null);
                                                         setHeroImagePreview("");
                                                     }}
-                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     type="submit"
                                                     disabled={isUploadingHeroImage}
-                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="flex-1 px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     {isUploadingHeroImage ? "Uploading..." : editingHeroSlide ? "Update Slide" : "Add Slide"}
                                                 </button>
@@ -6554,11 +6598,11 @@ To get these values:
                                     featuredItems.sort((a, b) => a.display_order - b.display_order);
 
                                     return featuredItems.length > 0 ? (
-                                        <div className="mb-8 border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
+                                        <div className="mb-8 border-2 border-yellow-200 rounded-none p-6 bg-yellow-50">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
                                                     <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                                        <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-medium rounded">★</span>
+                                                        <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-medium rounded-none">★</span>
                                                         Featured Items - Reorder Here
                                                     </h3>
                                                     <p className="text-sm text-gray-600 mt-1">Drag and drop to reorder featured items across all types. This order will be used on the home page.</p>
@@ -6636,7 +6680,7 @@ To get these values:
                                                                 setDraggedFeaturedItem(null);
                                                                 setDragOverFeaturedItem(null);
                                                             }}
-                                                            className={`flex items-center gap-4 p-4 rounded-lg border transition-all cursor-move ${draggedFeaturedItem === itemKey
+                                                            className={`flex items-center gap-4 p-4 rounded-none border transition-all cursor-move ${draggedFeaturedItem === itemKey
                                                                 ? "opacity-50 border-gray-300 bg-white"
                                                                 : dragOverFeaturedItem === itemKey
                                                                     ? "border-yellow-400 bg-yellow-100 shadow-md"
@@ -6653,7 +6697,7 @@ To get these values:
                                                                     </svg>
                                                                 </div>
                                                             </div>
-                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-none overflow-hidden flex-shrink-0">
                                                                 {item.image_url ? (
                                                                     <Image
                                                                         src={item.image_url}
@@ -6674,7 +6718,7 @@ To get these values:
                                                             <div className="flex-1 min-w-0">
                                                                 <div className="flex items-center gap-2 mb-1">
                                                                     <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                                                                    <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                    <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-none">
                                                                         {item.typeLabel}
                                                                     </span>
                                                                 </div>
@@ -6700,7 +6744,7 @@ To get these values:
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="mb-8 border-2 border-gray-200 border-dashed rounded-lg p-8 bg-gray-50 text-center">
+                                        <div className="mb-8 border-2 border-gray-200 border-dashed rounded-none p-8 bg-gray-50 text-center">
                                             <p className="text-sm text-gray-500">No featured items yet. Pin items from the sections below to add them here.</p>
                                         </div>
                                     );
@@ -6709,7 +6753,7 @@ To get these values:
                                 {/* Vertical List Layout */}
                                 <div className="space-y-8">
                                     {/* Section 1: Product Types */}
-                                    <div className="border border-gray-200 rounded-lg p-6">
+                                    <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-lg font-bold text-gray-900">Product Types</h3>
                                             <div className="flex items-center gap-4">
@@ -6723,7 +6767,7 @@ To get these values:
                                                         setFacetImagePreview("");
                                                         setIsFacetModalOpen(true);
                                                     }}
-                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -6735,7 +6779,7 @@ To get these values:
                                         </div>
                                         <div className="space-y-3">
                                             {productTypes.length === 0 ? (
-                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                <div className="text-center py-8 bg-gray-50 rounded-none border border-dashed border-gray-300">
                                                     <p className="text-sm text-gray-500">No items</p>
                                                 </div>
                                             ) : (
@@ -6745,7 +6789,7 @@ To get these values:
                                                     return (
                                                         <div
                                                             key={pt.id}
-                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                            className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
@@ -6757,7 +6801,7 @@ To get these values:
                                                                     </svg>
                                                                 </div>
                                                             </div>
-                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-none overflow-hidden flex-shrink-0">
                                                                 {pt.image_url ? (
                                                                     <Image
                                                                         src={pt.image_url}
@@ -6779,7 +6823,7 @@ To get these values:
                                                                 <div className="flex items-center gap-2 mb-1">
                                                                     <h4 className="font-semibold text-gray-900">{pt.name}</h4>
                                                                     {pt.is_featured && (
-                                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-none">
                                                                             ★ Featured
                                                                         </span>
                                                                     )}
@@ -6812,7 +6856,7 @@ To get these values:
                                                                             showPopup(error.message || "Failed to update", "error");
                                                                         }
                                                                     }}
-                                                                    className={`p-2 rounded transition-colors ${pt.is_featured
+                                                                    className={`p-2 rounded-none transition-colors ${pt.is_featured
                                                                         ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
                                                                         : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
                                                                         }`}
@@ -6838,13 +6882,13 @@ To get these values:
                                                                         setFacetImagePreview(pt.image_url || "");
                                                                         setIsFacetModalOpen(true);
                                                                     }}
-                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                                 >
                                                                     Edit
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteProductType(pt.id, pt.name)}
-                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors text-sm"
                                                                 >
                                                                     Delete
                                                                 </button>
@@ -6857,7 +6901,7 @@ To get these values:
                                     </div>
 
                                     {/* Section 2: Occasions */}
-                                    <div className="border border-gray-200 rounded-lg p-6">
+                                    <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-lg font-bold text-gray-900">Occasions</h3>
                                             <div className="flex items-center gap-4">
@@ -6871,7 +6915,7 @@ To get these values:
                                                         setFacetImagePreview("");
                                                         setIsFacetModalOpen(true);
                                                     }}
-                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -6883,7 +6927,7 @@ To get these values:
                                         </div>
                                         <div className="space-y-3">
                                             {occasions.length === 0 ? (
-                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                <div className="text-center py-8 bg-gray-50 rounded-none border border-dashed border-gray-300">
                                                     <p className="text-sm text-gray-500">No items</p>
                                                 </div>
                                             ) : (
@@ -6893,7 +6937,7 @@ To get these values:
                                                     return (
                                                         <div
                                                             key={oc.id}
-                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                            className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
@@ -6905,7 +6949,7 @@ To get these values:
                                                                     </svg>
                                                                 </div>
                                                             </div>
-                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-none overflow-hidden flex-shrink-0">
                                                                 {oc.image_url ? (
                                                                     <Image
                                                                         src={oc.image_url}
@@ -6927,7 +6971,7 @@ To get these values:
                                                                 <div className="flex items-center gap-2 mb-1">
                                                                     <h4 className="font-semibold text-gray-900">{oc.name}</h4>
                                                                     {oc.is_featured && (
-                                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">
+                                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-none">
                                                                             ★ Featured
                                                                         </span>
                                                                     )}
@@ -6960,7 +7004,7 @@ To get these values:
                                                                             showPopup(error.message || "Failed to update", "error");
                                                                         }
                                                                     }}
-                                                                    className={`p-2 rounded transition-colors ${oc.is_featured
+                                                                    className={`p-2 rounded-none transition-colors ${oc.is_featured
                                                                         ? "text-yellow-600 hover:bg-yellow-50 bg-yellow-50"
                                                                         : "text-gray-400 hover:text-yellow-600 hover:bg-gray-100"
                                                                         }`}
@@ -6986,13 +7030,13 @@ To get these values:
                                                                         setFacetImagePreview(oc.image_url || "");
                                                                         setIsFacetModalOpen(true);
                                                                     }}
-                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                                 >
                                                                     Edit
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteOccasion(oc.id, oc.name)}
-                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors text-sm"
                                                                 >
                                                                     Delete
                                                                 </button>
@@ -7005,7 +7049,7 @@ To get these values:
                                     </div>
 
                                     {/* Section 3: Colors */}
-                                    <div className="border border-gray-200 rounded-lg p-6">
+                                    <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-lg font-bold text-gray-900">Colors</h3>
                                             <div className="flex items-center gap-4">
@@ -7019,7 +7063,7 @@ To get these values:
                                                         setFacetImagePreview("");
                                                         setIsFacetModalOpen(true);
                                                     }}
-                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -7031,7 +7075,7 @@ To get these values:
                                         </div>
                                         <div className="space-y-3">
                                             {colors.length === 0 ? (
-                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                <div className="text-center py-8 bg-gray-50 rounded-none border border-dashed border-gray-300">
                                                     <p className="text-sm text-gray-500">No items</p>
                                                 </div>
                                             ) : (
@@ -7041,7 +7085,7 @@ To get these values:
                                                     return (
                                                         <div
                                                             key={c.id}
-                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                            className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
@@ -7053,11 +7097,11 @@ To get these values:
                                                                     </svg>
                                                                 </div>
                                                             </div>
-                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-none overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                                 {c.hex ? (
-                                                                    <div className="w-full h-full rounded-lg border border-gray-300" style={{ backgroundColor: c.hex }}></div>
+                                                                    <div className="w-full h-full rounded-none border border-gray-300" style={{ backgroundColor: c.hex }}></div>
                                                                 ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs rounded-lg">
+                                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs rounded-none">
                                                                         No Color
                                                                     </div>
                                                                 )}
@@ -7093,13 +7137,13 @@ To get these values:
                                                                         setFacetImagePreview("");
                                                                         setIsFacetModalOpen(true);
                                                                     }}
-                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                                 >
                                                                     Edit
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteColor(c.id, c.name)}
-                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors text-sm"
                                                                 >
                                                                     Delete
                                                                 </button>
@@ -7112,7 +7156,7 @@ To get these values:
                                     </div>
 
                                     {/* Section 4: Materials */}
-                                    <div className="border border-gray-200 rounded-lg p-6">
+                                    <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-lg font-bold text-gray-900">Materials</h3>
                                             <div className="flex items-center gap-4">
@@ -7126,7 +7170,7 @@ To get these values:
                                                         setFacetImagePreview("");
                                                         setIsFacetModalOpen(true);
                                                     }}
-                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -7138,7 +7182,7 @@ To get these values:
                                         </div>
                                         <div className="space-y-3">
                                             {materials.length === 0 ? (
-                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                <div className="text-center py-8 bg-gray-50 rounded-none border border-dashed border-gray-300">
                                                     <p className="text-sm text-gray-500">No items</p>
                                                 </div>
                                             ) : (
@@ -7148,7 +7192,7 @@ To get these values:
                                                     return (
                                                         <div
                                                             key={m.id}
-                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                            className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
@@ -7160,7 +7204,7 @@ To get these values:
                                                                     </svg>
                                                                 </div>
                                                             </div>
-                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-none overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                                 <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
                                                                     No Image
                                                                 </div>
@@ -7196,13 +7240,13 @@ To get these values:
                                                                         setFacetImagePreview("");
                                                                         setIsFacetModalOpen(true);
                                                                     }}
-                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                                 >
                                                                     Edit
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteMaterial(m.id, m.name)}
-                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors text-sm"
                                                                 >
                                                                     Delete
                                                                 </button>
@@ -7215,7 +7259,7 @@ To get these values:
                                     </div>
 
                                     {/* Section 5: Cities */}
-                                    <div className="border border-gray-200 rounded-lg p-6">
+                                    <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className="text-lg font-bold text-gray-900">Cities</h3>
                                             <div className="flex items-center gap-4">
@@ -7229,7 +7273,7 @@ To get these values:
                                                         setFacetImagePreview("");
                                                         setIsFacetModalOpen(true);
                                                     }}
-                                                    className="px-4 py-2 bg-black text-white font-medium rounded-lg hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
+                                                    className="px-4 py-2 bg-black text-white font-medium rounded-none hover:opacity-90 transition-opacity text-sm flex items-center gap-2"
                                                 >
                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
                                                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -7241,7 +7285,7 @@ To get these values:
                                         </div>
                                         <div className="space-y-3">
                                             {cities.length === 0 ? (
-                                                <div className="text-center py-8 bg-gray-50 rounded border border-dashed border-gray-300">
+                                                <div className="text-center py-8 bg-gray-50 rounded-none border border-dashed border-gray-300">
                                                     <p className="text-sm text-gray-500">No items</p>
                                                 </div>
                                             ) : (
@@ -7251,7 +7295,7 @@ To get these values:
                                                     return (
                                                         <div
                                                             key={city.id}
-                                                            className="flex items-center gap-4 p-4 rounded-lg border transition-all bg-white border-gray-200 hover:shadow-md"
+                                                            className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                                 <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
@@ -7263,7 +7307,7 @@ To get these values:
                                                                     </svg>
                                                                 </div>
                                                             </div>
-                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                                            <div className="relative w-16 h-16 bg-gray-200 rounded-none overflow-hidden flex-shrink-0 flex items-center justify-center">
                                                                 <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
                                                                     No Image
                                                                 </div>
@@ -7302,13 +7346,13 @@ To get these values:
                                                                         setFacetImagePreview("");
                                                                         setIsFacetModalOpen(true);
                                                                     }}
-                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded hover:bg-blue-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                                 >
                                                                     Edit
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleDeleteCity(city.id, city.name)}
-                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors text-sm"
+                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors text-sm"
                                                                 >
                                                                     Delete
                                                                 </button>
@@ -7330,7 +7374,7 @@ To get these values:
                                     <span className="text-sm text-gray-500">{contactRequests.length} messages</span>
                                 </div>
 
-                                <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="bg-white rounded-none border border-gray-200 overflow-hidden">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
@@ -7366,7 +7410,7 @@ To get these values:
                                                             <div className="text-sm text-gray-900 line-clamp-2">{req.message}</div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${req.status === 'new' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-none text-xs font-medium capitalize ${req.status === 'new' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                                                                 }`}>
                                                                 {req.status}
                                                             </span>
@@ -7392,7 +7436,7 @@ function AdminLoading() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <div className="text-center">
-                <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <div className="w-16 h-16 border-4 border-black border-t-transparent rounded-none animate-spin mx-auto mb-4"></div>
                 <p className="text-gray-600">Loading admin panel...</p>
             </div>
         </div>
