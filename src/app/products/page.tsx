@@ -722,7 +722,7 @@ export default function ProductsPage() {
     return (
         <>
             <Navbar />
-            <main className="min-h-screen pt-24 md:pt-20 pb-12">
+            <main className="min-h-screen pt-4 md:pt-4 pb-12">
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Left Sidebar - Filters */}
