@@ -56,6 +56,7 @@ interface Message {
     reply_to_message_id?: string;
     sender?: {
         name: string;
+        avatar_url?: string;
     };
     reply_message?: Message;
 }
@@ -63,7 +64,7 @@ interface Message {
 export default function ChatPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
+    const [currentUser, setCurrentUser] = useState<{ id: string; name: string; avatar_url?: string } | null>(null);
     const [chats, setChats] = useState<Chat[]>([]);
     const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -250,12 +251,12 @@ export default function ChatPage() {
             if (session?.user) {
                 const { data: userData, error } = await supabase
                     .from("users")
-                    .select("id, name, phone")
+                    .select("id, name, phone, avatar_url")
                     .eq("auth_user_id", session.user.id)
                     .single();
 
                 if (userData && !error) {
-                    setCurrentUser({ id: userData.id, name: userData.name || "User" });
+                    setCurrentUser({ ...userData, name: userData.name || "User" });
                 } else {
                     setCurrentUser({ id: session.user.id, name: "User" });
                 }
@@ -313,7 +314,7 @@ export default function ChatPage() {
 
                     const { data: otherUser } = await supabase
                         .from("users")
-                        .select("id, name, phone")
+                        .select("id, name, phone, avatar_url")
                         .eq("id", otherUserId)
                         .single();
 
@@ -436,11 +437,11 @@ export default function ChatPage() {
                 const uniqueSenderIds = [...new Set(messagesData.map((m: any) => m.sender_user_id))];
                 const { data: sendersData } = await supabase
                     .from("users")
-                    .select("id, name")
+                    .select("id, name, avatar_url")
                     .in("id", uniqueSenderIds);
 
                 const sendersMap = new Map(
-                    (sendersData || []).map((s: any) => [s.id, { name: s.name }])
+                    (sendersData || []).map((s: any) => [s.id, { name: s.name, avatar_url: s.avatar_url }])
                 );
 
                 const messagesWithSenders = messagesData.map((message: any) => ({
@@ -527,14 +528,18 @@ export default function ChatPage() {
                                     const msgWithReply = { ...newMessage, reply_message: replyMsg };
                                     // Also need sender info
                                     const senderName = newMessage.sender_user_id === currentUser?.id ? currentUser?.name : "Loading...";
-                                    return [...prev, { ...msgWithReply, sender: { name: senderName || "Unknown" } }];
+                                    // @ts-ignore
+                                    const senderAvatar = newMessage.sender_user_id === currentUser?.id ? currentUser?.avatar_url : undefined;
+                                    return [...prev, { ...msgWithReply, sender: { name: senderName || "Unknown", avatar_url: senderAvatar } }];
                                 }
                             }
 
                             const senderName = newMessage.sender_user_id === currentUser?.id
                                 ? currentUser?.name
                                 : "Loading...";
-                            return [...prev, { ...newMessage, sender: { name: senderName || "Unknown" } }];
+                            // @ts-ignore
+                            const senderAvatar = newMessage.sender_user_id === currentUser?.id ? currentUser?.avatar_url : undefined;
+                            return [...prev, { ...newMessage, sender: { name: senderName || "Unknown", avatar_url: senderAvatar } }];
                         });
 
                         // Refetch to get full details including join
@@ -546,7 +551,7 @@ export default function ChatPage() {
                                 .single();
 
                             if (freshMsg) {
-                                const { data: senderData } = await supabase.from("users").select("id, name").eq("id", freshMsg.sender_user_id).single();
+                                const { data: senderData } = await supabase.from("users").select("id, name, avatar_url").eq("id", freshMsg.sender_user_id).single();
                                 setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...freshMsg, sender: senderData || { name: "Unknown" } } : m));
                             }
                         } else {
@@ -554,7 +559,7 @@ export default function ChatPage() {
                             try {
                                 const { data: senderData } = await supabase
                                     .from("users")
-                                    .select("id, name")
+                                    .select("id, name, avatar_url")
                                     .eq("id", newMessage.sender_user_id)
                                     .single();
 
@@ -929,8 +934,12 @@ export default function ChatPage() {
                         <div className="bg-white px-4 py-3 border-b border-gray-200 flex-shrink-0">
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                        <span className="text-gray-600 font-semibold">{currentUser?.name?.charAt(0).toUpperCase()}</span>
+                                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden">
+                                        {currentUser?.avatar_url ? (
+                                            <img src={currentUser.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <span className="text-gray-600 font-semibold">{currentUser?.name?.charAt(0).toUpperCase()}</span>
+                                        )}
                                     </div>
                                     <h2 className="text-xl font-bold text-[#111b21]">Chats</h2>
                                 </div>
@@ -1169,7 +1178,7 @@ export default function ChatPage() {
                                 </div>
                             </>
                         ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] border-b-8 border-green-500 relative overflow-hidden">
+                            <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] relative overflow-hidden">
                                 <div className="absolute inset-0 bg-[#e5ddd5] opacity-30 z-0" style={{ backgroundImage: "url('https://repo.sourcelink.com/whatsapp-bg.png')", backgroundSize: "300px" }}></div>
                                 <div className="z-10 bg-white/80 p-8 rounded-2xl shadow-sm max-w-md text-center mx-4">
                                     <div className="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
@@ -1177,10 +1186,7 @@ export default function ChatPage() {
                                     </div>
                                     <h2 className="text-3xl font-light text-gray-700 mb-4">Anokhi Reet Web</h2>
                                     <p className="text-gray-500 text-sm">Send and receive messages without keeping your phone online.<br />Use Anokhi Reet on up to 4 linked devices and 1 phone.</p>
-                                    <div className="mt-12 flex items-center justify-center gap-2 text-xs text-gray-400">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                                        Unknown to End-to-End Encrypted
-                                    </div>
+
                                 </div>
                             </div>
                         )}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { formatUserDisplayName } from "@/lib/utils";
@@ -16,6 +17,7 @@ interface ProfileViewProps {
     userLocation?: string;
     userGender?: string;
     userBirthdate?: string;
+    userAvatar?: string;
     userId?: string;
     onUpdate?: () => void;
 }
@@ -27,12 +29,16 @@ export default function ProfileView({
     userLocation,
     userGender,
     userBirthdate,
+    userAvatar,
     userId,
     onUpdate
 }: ProfileViewProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const [formData, setFormData] = useState({
         location: userLocation || "",
         gender: userGender || "",
@@ -96,6 +102,48 @@ export default function ProfileView({
         }
     }, [statusMessage]);
 
+    const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        try {
+            if (!event.target.files || event.target.files.length === 0 || !userId) {
+                return;
+            }
+
+            setUploadingAvatar(true);
+            const file = event.target.files[0];
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${userId}-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            // Upload image
+            const { error: uploadError } = await supabase.storage
+                .from('profiles')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // Get public URL
+            const { data: { publicUrl } } = supabase.storage
+                .from('profiles')
+                .getPublicUrl(filePath);
+
+            // Update user profile
+            const { error: updateError } = await supabase
+                .from('users')
+                .update({ avatar_url: publicUrl })
+                .eq('id', userId);
+
+            if (updateError) throw updateError;
+
+            if (onUpdate) onUpdate();
+            setStatusMessage({ type: 'success', text: 'Profile picture updated!' });
+        } catch (error: any) {
+            console.error('Error uploading avatar:', error);
+            setStatusMessage({ type: 'error', text: 'Error uploading image.' });
+        } finally {
+            setUploadingAvatar(false);
+        }
+    };
+
     const handleSave = async () => {
         if (!userId) return;
         setLoading(true);
@@ -130,6 +178,45 @@ export default function ProfileView({
 
             <div className="bg-white border border-gray-100 rounded-lg p-8 max-w-xl mx-auto min-h-[400px]">
                 <div className="space-y-6">
+
+                    {/* Avatar Section */}
+                    <div className="flex justify-center mb-6 relative">
+                        <div className="relative group">
+                            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-100 relative bg-gray-50 flex items-center justify-center">
+                                {userAvatar ? (
+                                    <Image
+                                        src={userAvatar}
+                                        alt="Profile"
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
+                                    />
+                                ) : (
+                                    <span className="text-2xl font-bold text-gray-400">
+                                        {userName ? userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+                                    </span>
+                                )}
+                            </div>
+
+                            {isEditing && (
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploadingAvatar}
+                                    className="absolute bottom-0 right-0 bg-black text-white px-3 py-1 text-xs rounded-full shadow-md hover:bg-gray-800 transition-colors z-10"
+                                    title="Change Profile Picture"
+                                >
+                                    {uploadingAvatar ? "Uploading..." : "Edit"}
+                                </button>
+                            )}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleAvatarUpload}
+                                className="hidden"
+                                accept="image/*"
+                            />
+                        </div>
+                    </div>
 
                     {/* Read-only Fields */}
                     <div className="grid md:grid-cols-2 gap-6">

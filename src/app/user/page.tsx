@@ -22,6 +22,7 @@ export default function UserPage() {
     const [userLocation, setUserLocation] = useState("");
     const [userGender, setUserGender] = useState("");
     const [userBirthdate, setUserBirthdate] = useState("");
+    const [userAvatar, setUserAvatar] = useState("");
     const [loading, setLoading] = useState(true);
     const [activeView, setActiveView] = useState<View>("my-products");
     const router = useRouter();
@@ -54,15 +55,14 @@ export default function UserPage() {
 
     // Effect for loading data and setting up auth listeners
     useEffect(() => {
-        loadUserData();
+        // loadUserData(); // REMOVED: Rely on onAuthStateChange to avoid race conditions
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
                 loadUserData();
             } else {
-                if (!loading) {
-                    router.push("/profile");
-                }
+                setLoading(false);
+                router.push("/profile");
             }
         });
 
@@ -98,14 +98,16 @@ export default function UserPage() {
             // Check user
             const { data: userData, error: userError } = await supabase
                 .from("users")
-                .select("id, name, phone, auth_user_id, location, gender, birthdate")
+                .select("id, name, phone, auth_user_id, location, gender, birthdate, avatar_url")
                 .eq("auth_user_id", session.user.id)
                 .maybeSingle();
 
             if (userError || !userData) {
                 try { await supabase.auth.signOut(); } catch (e) { }
                 setLoading(false);
-                router.push("/admin");
+                // If user auth exists but no profile data, redirect to profile to create/complete account
+                // Do NOT redirect to admin
+                router.push("/profile");
                 return;
             }
 
@@ -116,6 +118,7 @@ export default function UserPage() {
             setUserLocation(userData.location || "");
             setUserGender(userData.gender || "");
             setUserBirthdate(userData.birthdate || "");
+            setUserAvatar(userData.avatar_url || "");
             setLoading(false);
         } catch (error) {
             console.error("Error loading user data:", error);
@@ -149,6 +152,7 @@ export default function UserPage() {
                     userLocation={userLocation}
                     userGender={userGender}
                     userBirthdate={userBirthdate}
+                    userAvatar={userAvatar}
                     userId={userId}
                     onUpdate={loadUserData}
                 />;
@@ -171,8 +175,18 @@ export default function UserPage() {
                             {/* Header */}
                             <div className="px-5 py-4 border-b border-gray-100">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">
-                                        {userName ? userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "U"}
+                                    <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium relative overflow-hidden border border-gray-100">
+                                        {userAvatar ? (
+                                            <Image
+                                                src={userAvatar}
+                                                alt={userName || "User"}
+                                                fill
+                                                className="object-cover"
+                                                unoptimized
+                                            />
+                                        ) : (
+                                            userName ? userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) : "U"
+                                        )}
                                     </div>
                                     <div>
                                         <p className="text-xs text-gray-500">Hello,</p>

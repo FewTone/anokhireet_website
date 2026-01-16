@@ -34,11 +34,12 @@ export default function Profile() {
     const searchParams = useSearchParams();
 
     // Helper function to get return URL and redirect
+    // Helper function to get return URL and redirect
     const getReturnUrlAndRedirect = () => {
         const returnUrl = searchParams.get('returnUrl');
         const target = returnUrl ? decodeURIComponent(returnUrl) : "/user";
-        console.log("🚀 Hard Redirecting to:", target);
-        window.location.href = target;
+        console.log("🚀 Redirecting to:", target);
+        router.push(target);
     };
 
     useEffect(() => {
@@ -299,7 +300,9 @@ export default function Profile() {
         }
     };
 
-    const handleVerifyOtp = async () => {
+    const handleVerifyOtp = async (e?: React.FormEvent | React.MouseEvent) => {
+        if (e && e.preventDefault) e.preventDefault();
+
         // Require 6-digit OTP
         if (!otp || otp.length !== 6) {
             setError("Please enter a valid 6-digit OTP");
@@ -430,7 +433,7 @@ export default function Profile() {
 
                 // CRITICAL FIX: Check if user exists by PHONE now that we are authenticated
                 // RLS might have hidden them before, but we might be able to see/link them now.
-                console.log("ℹ️ Checking for existing user profile by phone...", phoneNumber);
+                console.log("ℹ️ Checking for existing user profile by phone...", phone);
 
                 // DEBUG: Check what the user object looks like and what Supabase thinks our phone is
                 console.log("ℹ️ Current Auth User ID:", authUser.id);
@@ -439,7 +442,7 @@ export default function Profile() {
                 const { data: profileByPhone, error: profileError } = await supabase
                     .from("users")
                     .select("*")
-                    .eq("phone", phoneNumber)
+                    .eq("phone", phone)
                     .maybeSingle();
 
                 if (profileError) {

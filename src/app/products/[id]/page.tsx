@@ -9,6 +9,8 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import ProductDetailSkeleton from "@/components/ProductDetailSkeleton";
+import ProductGallery from "@/components/products/ProductGallery";
+import ProductInfo from "@/components/products/ProductInfo";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName, getUserInitials } from "@/lib/utils";
 import DatePicker from "react-datepicker";
@@ -29,7 +31,9 @@ interface Product {
     colors?: { name: string; hex?: string }[];
     materials?: string[];
     cities?: string[];
+
     ownerName?: string;
+    ownerAvatar?: string;
 }
 
 export default function ProductDetailPage() {
@@ -40,9 +44,7 @@ export default function ProductDetailPage() {
 
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedImage, setSelectedImage] = useState<string>("");
     const [productImages, setProductImages] = useState<string[]>([]);
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
     const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
         availability: false,
         details: false,
@@ -377,14 +379,19 @@ export default function ProductDetailPage() {
                     productImages = [p.image];
                 }
 
-                // Fetch owner name if owner_user_id exists
+                // Fetch owner name and avatar if owner_user_id exists
                 let fetchedOwnerName = "";
+                let fetchedOwnerAvatar = "";
                 if (p.owner_user_id) {
-                    const { data: ownerNameStr } = await supabase
-                        .rpc('get_public_user_name', { user_uuid: p.owner_user_id });
+                    const { data: ownerData } = await supabase
+                        .from('users')
+                        .select('name, avatar_url')
+                        .eq('id', p.owner_user_id)
+                        .single();
 
-                    if (ownerNameStr) {
-                        fetchedOwnerName = ownerNameStr;
+                    if (ownerData) {
+                        fetchedOwnerName = ownerData.name;
+                        fetchedOwnerAvatar = ownerData.avatar_url;
                     }
                 }
 
@@ -398,6 +405,7 @@ export default function ProductDetailPage() {
                     original_price: p.original_price,
                     owner_user_id: p.owner_user_id,
                     ownerName: fetchedOwnerName,
+                    ownerAvatar: fetchedOwnerAvatar,
                     db_id: p.id,
                 };
             } else {
@@ -417,14 +425,19 @@ export default function ProductDetailPage() {
                         productImages = [p.image];
                     }
 
-                    // Fetch owner name if owner_user_id exists
+                    // Fetch owner name and avatar if owner_user_id exists
                     let fetchedOwnerName = "";
+                    let fetchedOwnerAvatar = "";
                     if (p.owner_user_id) {
-                        const { data: ownerNameStr } = await supabase
-                            .rpc('get_public_user_name', { user_uuid: p.owner_user_id });
+                        const { data: ownerData } = await supabase
+                            .from('users')
+                            .select('name, avatar_url')
+                            .eq('id', p.owner_user_id)
+                            .single();
 
-                        if (ownerNameStr) {
-                            fetchedOwnerName = ownerNameStr;
+                        if (ownerData) {
+                            fetchedOwnerName = ownerData.name;
+                            fetchedOwnerAvatar = ownerData.avatar_url;
                         }
                     }
 
@@ -438,6 +451,7 @@ export default function ProductDetailPage() {
                         original_price: p.original_price,
                         owner_user_id: p.owner_user_id,
                         ownerName: fetchedOwnerName,
+                        ownerAvatar: fetchedOwnerAvatar,
                         db_id: p.id,
                     };
                 }
@@ -502,7 +516,7 @@ export default function ProductDetailPage() {
                 // Use all images if available, otherwise use single image
                 const imagesToUse = productImages.length > 0 ? productImages : (productData.image ? [productData.image] : []);
                 setProductImages(imagesToUse);
-                setSelectedImage(imagesToUse.length > 0 ? imagesToUse[0] : productData.image);
+
 
                 // Track view after product is loaded
                 const finalProductId = productData.productId || productId;
@@ -520,15 +534,7 @@ export default function ProductDetailPage() {
 
     // Removed toggleSection - no longer needed
 
-    // Handle mobile carousel scroll
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        const container = e.currentTarget;
-        const scrollPosition = container.scrollLeft;
-        const width = container.clientWidth;
-        // Calculate active index based on scroll position - simple snap logic
-        const index = Math.round(scrollPosition / width);
-        setActiveImageIndex(index);
-    };
+
 
     const handleMakeInquiry = () => {
         if (!isLoggedIn) {
@@ -764,439 +770,213 @@ export default function ProductDetailPage() {
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6">
                         {/* Main Content - Product Images with Thumbnails on Left */}
-                        <div className="lg:col-span-7">
-                            <div className="flex flex-col md:flex-row gap-4">
-                                {/* Mobile Image Carousel (Visible only on mobile) */}
-                                <div className="md:hidden w-full relative">
-                                    {/* Overlay Buttons for Mobile - Moved outside scroll container */}
-                                    <div className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-start pointer-events-none">
-                                        {/* Back Button */}
-                                        <button
-                                            onClick={handleBack}
-                                            className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white rounded-full shadow-md z-30"
-                                        >
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M15 18l-6-6 6-6" />
-                                            </svg>
-                                        </button>
-
-                                        {/* Right Action Buttons */}
-                                        <div className="flex flex-col gap-4 pointer-events-auto items-center">
-                                            {/* Wishlist Button */}
-                                            <button
-                                                onClick={toggleWishlist}
-                                                disabled={wishlistLoading}
-                                                className="w-10 h-10 flex items-center justify-center transition-transform active:scale-95 bg-white rounded-full shadow-md"
-                                            >
-                                                <svg
-                                                    width="20"
-                                                    height="20"
-                                                    viewBox="0 0 24 24"
-                                                    fill={isInWishlist ? "red" : "none"}
-                                                    stroke={isInWishlist ? "red" : "black"}
-                                                    strokeWidth="1"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                >
-                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                                </svg>
-                                            </button>
-
-                                            {/* Share Button */}
-                                            <button
-                                                onClick={handleShare}
-                                                className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-md"
-                                            >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                                                    <polyline points="16 6 12 2 8 6" />
-                                                    <line x1="12" y1="2" x2="12" y2="15" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide aspect-[4/5] w-full bg-gray-100 relative"
-                                        onScroll={handleScroll}
-                                    >
-                                        {displayImages.map((img, index) => (
-                                            <div
-                                                key={index}
-                                                className="w-full flex-shrink-0 snap-center snap-always relative"
-                                                style={{ scrollSnapStop: 'always' }}
-                                            >
-                                                <Image
-                                                    src={img}
-                                                    alt={`${product.name} - View ${index + 1}`}
-                                                    fill
-                                                    className="object-cover"
-                                                    sizes="100vw"
-                                                    priority={index === 0}
-                                                    unoptimized
-                                                />
-                                            </div>
-                                        ))}
-                                        {displayImages.length === 0 && (
-                                            <div className="w-full flex-shrink-0 snap-center relative flex items-center justify-center text-gray-400">
-                                                No Image
-                                            </div>
-                                        )}
-                                    </div>
-                                    {/* Mobile Dots Indicator - Overlay on Image or below */}
-                                    {displayImages.length > 1 && (
-                                        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10 pointer-events-none">
-                                            {displayImages.map((_, index) => (
-                                                <div
-                                                    key={index}
-                                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 shadow-sm ${index === activeImageIndex ? 'bg-black w-4' : 'bg-white/70 backdrop-blur-sm'}`}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-
-                                {/* Desktop Image Gallery (Hidden on mobile) */}
-                                <div className="hidden md:flex flex-1 w-full flex-col gap-4">
-                                    {/* Breadcrumbs */}
-                                    <div className="flex items-center gap-2 text-sm text-gray-500 mb-4 mt-8">
-                                        <Link href="/" className="hover:text-black transition-colors">Home</Link>
-                                        <span>/</span>
-                                        <Link href="/products" className="hover:text-black transition-colors">Products</Link>
-                                        <span>/</span>
-                                        <span className="text-gray-900 font-medium truncate max-w-xs">{product.name}</span>
-                                    </div>
-
-                                    <div className="flex gap-6 justify-end items-start px-4">
-                                        {/* Left Side - Small Thumbnail Images (Vertical Column) */}
-                                        <div className="flex flex-col gap-3 w-20 flex-shrink-0 pt-2">
-                                            {displayImages.map((img, index) => (
-                                                <button
-                                                    key={index}
-                                                    onClick={() => setSelectedImage(img)}
-                                                    className={`relative w-full aspect-[4/5] border-2 transition-all overflow-hidden bg-gray-50 ${selectedImage === img
-                                                        ? "border-black"
-                                                        : "border-gray-300 hover:border-gray-500"
-                                                        }`}
-                                                >
-                                                    <Image
-                                                        src={img}
-                                                        alt={`${product.name} - View ${index + 1}`}
-                                                        fill
-                                                        className="object-cover"
-                                                        sizes="80px"
-                                                        unoptimized
-                                                        onError={(e) => {
-                                                            console.error("Image load error:", img);
-                                                            e.currentTarget.style.display = 'none';
-                                                        }}
-                                                    />
-                                                </button>
-                                            ))}
-                                        </div>
-
-                                        {/* Center - Main Product Image */}
-                                        <div className="relative w-full max-w-[500px] aspect-[4/5] bg-gray-100 shadow-sm">
-                                            {selectedImage ? (
-                                                <Image
-                                                    src={selectedImage}
-                                                    alt={product.name}
-                                                    fill
-                                                    className="object-cover"
-                                                    sizes="(max-width: 1024px) 50vw, 500px"
-                                                    priority
-                                                    unoptimized
-                                                    onError={(e) => {
-                                                        console.error("Image load error:", selectedImage);
-                                                        e.currentTarget.style.display = 'none';
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
-                                                    <span>No Image</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Right Side - Action Buttons (Outside Image) */}
-                                        <div className="flex flex-col gap-3 pt-4">
-                                            {/* Wishlist Button */}
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleWishlist();
-                                                }}
-                                                disabled={wishlistLoading}
-                                                className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm group"
-                                                title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-                                            >
-                                                <svg
-                                                    width="20"
-                                                    height="20"
-                                                    viewBox="0 0 24 24"
-                                                    fill={isInWishlist ? "red" : "none"}
-                                                    stroke={isInWishlist ? "red" : "currentColor"}
-                                                    strokeWidth="1"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    className="text-gray-900 group-hover:text-black"
-                                                >
-                                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                                </svg>
-                                            </button>
-
-                                            {/* Share Button */}
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleShare();
-                                                }}
-                                                className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm group"
-                                                title="Share Product"
-                                            >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900 group-hover:text-black">
-                                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                                                    <polyline points="16 6 12 2 8 6" />
-                                                    <line x1="12" y1="2" x2="12" y2="15" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <ProductGallery
+                            images={displayImages}
+                            productName={product.name}
+                            isInWishlist={isInWishlist}
+                            isWishlistLoading={wishlistLoading}
+                            onToggleWishlist={toggleWishlist}
+                            onShare={handleShare}
+                            onBack={handleBack}
+                        />
 
                         {/* Right Sidebar - Product Information */}
                         <div className="lg:col-span-5 px-4 md:px-0 mt-0 lg:mt-24">
-                            <div className="sticky top-24">
-                                <div className="bg-white space-y-6">
-                                    <div>
-                                        <h2 className="text-2xl font-bold mb-1">{product.name}</h2>
-                                        <p className="text-sm text-gray-500 mb-4">Product ID: {product.productId || product.id}</p>
+                            <div className="">
+                                <ProductInfo
+                                    title={product.name}
+                                    productId={product.productId || product.id}
+                                    price={product.price}
+                                    originalPrice={product.original_price}
+                                    ownerId={product.owner_user_id}
+                                    currentUserId={currentUser?.id}
+                                    onMakeInquiry={handleMakeInquiry}
+                                />
 
-                                        {/* Pricing Information */}
-                                        <div className="mb-6 space-y-2">
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-sm text-gray-500">Rent</span>
-                                                <span className="text-xl font-medium text-gray-900">
-                                                    {product.price && !product.price.startsWith('₹') ? `₹${product.price.replace(/[₹,]/g, '')}` : product.price}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                {product.original_price && (
-                                                    <div className="flex items-baseline gap-2">
-                                                        <span className="text-sm text-gray-500">MRP</span>
-                                                        <span className="text-base text-gray-600">
-                                                            ₹{typeof product.original_price === 'number' ? product.original_price.toLocaleString() : parseFloat(String(product.original_price)).toLocaleString()}
-                                                        </span>
-                                                    </div>
-                                                )}
-
-                                                {currentUser && product.owner_user_id && currentUser.id === product.owner_user_id ? (
-                                                    <div className="mt-4">
-                                                        <button
-                                                            disabled
-                                                            className="w-full bg-gray-100 text-gray-500 font-semibold py-4 px-6 cursor-not-allowed border border-gray-200"
-                                                        >
-                                                            Your Product
-                                                        </button>
-                                                    </div>
+                                {/* Product Details */}
+                                <div className="space-y-4 border-t border-gray-200 pt-6">
+                                    {product.ownerName && product.owner_user_id && (
+                                        <Link
+                                            href={`/products?owner_id=${product.owner_user_id}`}
+                                            className="flex items-center gap-3 mb-4 group hover:opacity-80 transition-opacity w-fit relative z-10 pointer-events-auto"
+                                        >
+                                            <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-base font-medium tracking-wide overflow-hidden border border-gray-200">
+                                                {product.ownerAvatar ? (
+                                                    <img src={product.ownerAvatar} alt={product.ownerName} className="w-full h-full object-cover" />
                                                 ) : (
-                                                    <div className="grid grid-cols-2 gap-3 mt-4">
-                                                        <button
-                                                            onClick={handleMakeInquiry}
-                                                            className="bg-white text-black border border-black font-semibold py-4 px-6 hover:bg-gray-50 transition-all text-center text-sm md:text-base"
-                                                        >
-                                                            Send Msg
-                                                        </button>
-                                                        <button
-                                                            onClick={handleMakeInquiry}
-                                                            className="bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity text-center text-sm md:text-base"
-                                                        >
-                                                            Make Inquiry
-                                                        </button>
-                                                    </div>
+                                                    getUserInitials(product.ownerName)
                                                 )}
                                             </div>
-                                        </div>
-
-                                        {/* Product Details */}
-                                        <div className="space-y-4 border-t border-gray-200 pt-6">
-                                            {product.ownerName && product.owner_user_id && (
-                                                <Link
-                                                    href={`/products?owner_id=${product.owner_user_id}`}
-                                                    className="flex items-center gap-3 mb-4 group hover:opacity-80 transition-opacity w-fit relative z-10 pointer-events-auto"
+                                            <div className="text-lg font-medium text-gray-900 group-hover:underline decoration-black/50 underline-offset-4">
+                                                {formatUserDisplayName(product.ownerName)}
+                                            </div>
+                                        </Link>
+                                    )}
+                                    {/* Product Information Accordion */}
+                                    <div className="space-y-0 border-t border-gray-200 pt-2">
+                                        {/* Availability Section */}
+                                        <div className="border-b border-gray-100">
+                                            <button
+                                                onClick={() => setExpandedSections(prev => ({ ...prev, availability: !prev.availability }))}
+                                                className="w-full flex items-center justify-between py-4 text-left group"
+                                            >
+                                                <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Availability</span>
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.availability ? 'rotate-180' : ''}`}
                                                 >
-                                                    <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-base font-medium tracking-wide">
-                                                        {getUserInitials(product.ownerName)}
+                                                    <path d="M6 9l6 6 6-6" />
+                                                </svg>
+                                            </button>
+                                            {expandedSections.availability && product.cities && product.cities.length > 0 && (
+                                                <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                    <div className="space-y-3 text-sm text-gray-600">
+                                                        <div>
+                                                            <span className="font-medium text-gray-700">Available City:</span>
+                                                            <p className="mt-1">{product.cities.join(", ")}</p>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-lg font-medium text-gray-900 group-hover:underline decoration-black/50 underline-offset-4">
-                                                        {formatUserDisplayName(product.ownerName)}
-                                                    </div>
-                                                </Link>
+                                                </div>
                                             )}
-                                            {/* Product Information Accordion */}
-                                            <div className="space-y-0 border-t border-gray-200 pt-2">
-                                                {/* Availability Section */}
-                                                <div className="border-b border-gray-100">
-                                                    <button
-                                                        onClick={() => setExpandedSections(prev => ({ ...prev, availability: !prev.availability }))}
-                                                        className="w-full flex items-center justify-between py-4 text-left group"
-                                                    >
-                                                        <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Availability</span>
-                                                        <svg
-                                                            width="20"
-                                                            height="20"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="1"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.availability ? 'rotate-180' : ''}`}
-                                                        >
-                                                            <path d="M6 9l6 6 6-6" />
-                                                        </svg>
-                                                    </button>
-                                                    {expandedSections.availability && product.cities && product.cities.length > 0 && (
-                                                        <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                            <div className="space-y-3 text-sm text-gray-600">
-                                                                <div>
-                                                                    <span className="font-medium text-gray-700">Available City:</span>
-                                                                    <p className="mt-1">{product.cities.join(", ")}</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Product Details Section */}
-                                                <div className="border-b border-gray-100">
-                                                    <button
-                                                        onClick={() => setExpandedSections(prev => ({ ...prev, details: !prev.details }))}
-                                                        className="w-full flex items-center justify-between py-4 text-left group"
-                                                    >
-                                                        <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Product Details</span>
-                                                        <svg
-                                                            width="20"
-                                                            height="20"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="1"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.details ? 'rotate-180' : ''}`}
-                                                        >
-                                                            <path d="M6 9l6 6 6-6" />
-                                                        </svg>
-                                                    </button>
-                                                    {expandedSections.details && (
-                                                        <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                            <div className="space-y-4 text-sm text-gray-600">
-
-
-                                                                {product.category && (
-                                                                    <div>
-                                                                        <span className="font-medium text-gray-700">Category:</span>
-                                                                        <p className="mt-1">{product.category}</p>
-                                                                    </div>
-                                                                )}
-                                                                {product.productTypes && product.productTypes.length > 0 && (
-                                                                    <div>
-                                                                        <span className="font-medium text-gray-700">Product Type:</span>
-                                                                        <p className="mt-1">{product.productTypes.join(", ")}</p>
-                                                                    </div>
-                                                                )}
-                                                                {product.colors && product.colors.length > 0 && (
-                                                                    <div>
-                                                                        <span className="font-medium text-gray-700">Color:</span>
-                                                                        <div className="flex gap-2 mt-1">
-                                                                            {product.colors.map((color, index) => (
-                                                                                <div
-                                                                                    key={index}
-                                                                                    className="w-6 h-6 rounded border border-gray-300"
-                                                                                    style={{ backgroundColor: color.hex || color.name }}
-                                                                                    title={color.name}
-                                                                                />
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {product.materials && product.materials.length > 0 && (
-                                                                    <div>
-                                                                        <span className="font-medium text-gray-700">Material:</span>
-                                                                        <p className="mt-1">{product.materials.join(", ")}</p>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Occasion Section */}
-                                                <div className="border-b border-gray-100">
-                                                    <button
-                                                        onClick={() => setExpandedSections(prev => ({ ...prev, occasion: !prev.occasion }))}
-                                                        className="w-full flex items-center justify-between py-4 text-left group"
-                                                    >
-                                                        <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Occasion</span>
-                                                        <svg
-                                                            width="20"
-                                                            height="20"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="1"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.occasion ? 'rotate-180' : ''}`}
-                                                        >
-                                                            <path d="M6 9l6 6 6-6" />
-                                                        </svg>
-                                                    </button>
-                                                    {expandedSections.occasion && product.occasions && product.occasions.length > 0 && (
-                                                        <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
-                                                            <div className="space-y-3 text-sm text-gray-600">
-                                                                <div>
-                                                                    <p className="mt-1">{product.occasions.join(", ")}</p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            {/* Bottom bar space removed per user request to move buttons up */}
-                                            <div className="pt-2">
-                                                {/* Clean space below accordions */}
-                                            </div>
                                         </div>
+
+                                        {/* Product Details Section */}
+                                        <div className="border-b border-gray-100">
+                                            <button
+                                                onClick={() => setExpandedSections(prev => ({ ...prev, details: !prev.details }))}
+                                                className="w-full flex items-center justify-between py-4 text-left group"
+                                            >
+                                                <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Product Details</span>
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.details ? 'rotate-180' : ''}`}
+                                                >
+                                                    <path d="M6 9l6 6 6-6" />
+                                                </svg>
+                                            </button>
+                                            {expandedSections.details && (
+                                                <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                    <div className="space-y-4 text-sm text-gray-600">
+
+
+                                                        {product.category && (
+                                                            <div>
+                                                                <span className="font-medium text-gray-700">Category:</span>
+                                                                <p className="mt-1">{product.category}</p>
+                                                            </div>
+                                                        )}
+                                                        {product.productTypes && product.productTypes.length > 0 && (
+                                                            <div>
+                                                                <span className="font-medium text-gray-700">Product Type:</span>
+                                                                <p className="mt-1">{product.productTypes.join(", ")}</p>
+                                                            </div>
+                                                        )}
+                                                        {product.colors && product.colors.length > 0 && (
+                                                            <div>
+                                                                <span className="font-medium text-gray-700">Color:</span>
+                                                                <div className="flex gap-2 mt-1">
+                                                                    {product.colors.map((color, index) => (
+                                                                        <div
+                                                                            key={index}
+                                                                            className="w-6 h-6 rounded border border-gray-300"
+                                                                            style={{ backgroundColor: color.hex || color.name }}
+                                                                            title={color.name}
+                                                                        />
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {product.materials && product.materials.length > 0 && (
+                                                            <div>
+                                                                <span className="font-medium text-gray-700">Material:</span>
+                                                                <p className="mt-1">{product.materials.join(", ")}</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Occasion Section */}
+                                        <div className="border-b border-gray-100">
+                                            <button
+                                                onClick={() => setExpandedSections(prev => ({ ...prev, occasion: !prev.occasion }))}
+                                                className="w-full flex items-center justify-between py-4 text-left group"
+                                            >
+                                                <span className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Occasion</span>
+                                                <svg
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="1"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className={`text-gray-400 group-hover:text-gray-900 transition-transform duration-300 ${expandedSections.occasion ? 'rotate-180' : ''}`}
+                                                >
+                                                    <path d="M6 9l6 6 6-6" />
+                                                </svg>
+                                            </button>
+                                            {expandedSections.occasion && product.occasions && product.occasions.length > 0 && (
+                                                <div className="pb-4 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                    <div className="space-y-3 text-sm text-gray-600">
+                                                        <div>
+                                                            <p className="mt-1">{product.occasions.join(", ")}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Bottom bar space removed per user request to move buttons up */}
+                                    <div className="pt-2">
+                                        {/* Clean space below accordions */}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div >
+
+
+
+                </div>
+
 
                 {/* Related Products Section */}
-                {(relatedProducts.length > 0 || loadingRelated) && (
-                    <div className="w-full pb-12 mt-8 border-t border-gray-100 pt-8">
-                        <h3 className="text-lg font-bold mb-4 px-4 uppercase tracking-wide text-center">You Might Also Like</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                            {loadingRelated ? (
-                                Array.from({ length: 6 }).map((_, i) => (
-                                    <ProductCardSkeleton key={i} />
-                                ))
-                            ) : (
-                                relatedProducts.map((p) => (
-                                    <ProductCard key={p.id} product={p} disableHover={true} />
-                                ))
-                            )}
+                {
+                    (relatedProducts.length > 0 || loadingRelated) && (
+                        <div className="w-full pb-12 mt-8 border-t border-gray-100 pt-8">
+                            <h3 className="text-lg font-bold mb-4 px-4 uppercase tracking-wide text-center">You Might Also Like</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                                {loadingRelated ? (
+                                    Array.from({ length: 6 }).map((_, i) => (
+                                        <ProductCardSkeleton key={i} />
+                                    ))
+                                ) : (
+                                    relatedProducts.map((p) => (
+                                        <ProductCard key={p.id} product={p} disableHover={true} />
+                                    ))
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )
+                }
             </main >
             <Footer />
 
