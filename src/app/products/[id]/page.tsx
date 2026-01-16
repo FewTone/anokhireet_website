@@ -11,6 +11,7 @@ import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import ProductDetailSkeleton from "@/components/ProductDetailSkeleton";
 import ProductGallery from "@/components/products/ProductGallery";
 import ProductInfo from "@/components/products/ProductInfo";
+import RelatedProducts from "@/components/products/RelatedProducts";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName, getUserInitials } from "@/lib/utils";
 import DatePicker from "react-datepicker";
@@ -164,7 +165,7 @@ export default function ProductDetailPage() {
                 .select("*")
                 .neq("id", product.db_id) // Exclude current product using DB ID which is safe
                 .eq("is_active", true)
-                .limit(6); // Show 6 related products
+                .limit(8); // Show 8 related products
 
             if (filteredProductIds) {
                 if (filteredProductIds.size === 0) {
@@ -958,25 +959,7 @@ export default function ProductDetailPage() {
                 </div>
 
 
-                {/* Related Products Section */}
-                {
-                    (relatedProducts.length > 0 || loadingRelated) && (
-                        <div className="w-full pb-12 mt-8 border-t border-gray-100 pt-8">
-                            <h3 className="text-lg font-bold mb-4 px-4 uppercase tracking-wide text-center">You Might Also Like</h3>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                                {loadingRelated ? (
-                                    Array.from({ length: 6 }).map((_, i) => (
-                                        <ProductCardSkeleton key={i} />
-                                    ))
-                                ) : (
-                                    relatedProducts.map((p) => (
-                                        <ProductCard key={p.id} product={p} disableHover={true} />
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    )
-                }
+                <RelatedProducts products={relatedProducts} loading={loadingRelated} />
             </main >
             <Footer />
 
