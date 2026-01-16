@@ -305,8 +305,6 @@ export default function Navbar() {
                     </div>
                 )}
             </nav>
-            {/* Spacer for fixed nav */}
-            <div className={`hidden md:block ${!isHomePage ? 'block' : ''} h-[70px]`}></div>
         </>
     );
 }

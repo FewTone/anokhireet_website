@@ -152,7 +152,7 @@ export default function Hero() {
 
     if (loading) {
         return (
-            <div className="hero-container relative w-full overflow-hidden bg-white mt-4 md:mt-0">
+            <div className="hero-container relative w-full overflow-hidden bg-white">
                 <div className="flex items-start gap-0 md:gap-[10px] w-full">
                     {/* Desktop: Show multiple skeletons */}
                     {/* Mobile: Show one skeleton */}
@@ -192,7 +192,7 @@ export default function Hero() {
     const activeDotIndex = currentSlideIndex % heroSlides.length;
 
     return (
-        <div className="hero-container relative w-full overflow-hidden bg-white mt-20 md:mt-0">
+        <div className="hero-container relative w-full overflow-hidden bg-white">
             {/* Hero Slides Track */}
             <div
                 className="hero-scroll-track flex items-start gap-0 md:gap-[10px]"
