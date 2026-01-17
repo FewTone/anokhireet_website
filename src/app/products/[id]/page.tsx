@@ -850,7 +850,7 @@ export default function ProductDetailPage() {
                                 </svg>
                             </button>
 
-                            <h2 className="text-2xl font-bold mb-6">Make an Inquiry</h2>
+                            <h2 className="text-2xl font-bold mb-6">Select Date</h2>
 
                             <div className="space-y-4">
                                 <div>
@@ -922,7 +922,7 @@ export default function ProductDetailPage() {
                                     disabled={submittingInquiry || !inquiryForm.start_date || !inquiryForm.end_date}
                                     className="w-full bg-black text-white font-semibold py-3 px-4 rounded-none hover:opacity-90 transition-opacity disabled:opacity-50"
                                 >
-                                    {submittingInquiry ? "Submitting..." : "Submit Inquiry"}
+                                    {submittingInquiry ? "Submitting..." : "Confirm Selection"}
                                 </button>
                             </div>
                         </div>

@@ -73,7 +73,7 @@ export default function ProductInfo({
                         onClick={onMakeInquiry}
                         className="bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity text-center text-sm md:text-base"
                     >
-                        Make Inquiry
+                        Select Date
                     </button>
                 </div>
             )}

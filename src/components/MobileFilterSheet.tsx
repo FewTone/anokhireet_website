@@ -55,7 +55,42 @@ export default function MobileFilterSheet({
     onClear,
     appliedCount
 }: MobileFilterSheetProps) {
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+    const [translateY, setTranslateY] = useState(0);
+
     if (!isOpen) return null;
+
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e: React.TouchEvent) => {
+        setTouchEnd(null);
+        setTouchStart(e.targetTouches[0].clientY);
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        if (!touchStart) return;
+        const currentTouch = e.targetTouches[0].clientY;
+        const diff = currentTouch - touchStart;
+        if (diff > 0) {
+            setTranslateY(diff);
+        }
+        setTouchEnd(currentTouch);
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStart || !touchEnd) return;
+        const distance = touchEnd - touchStart;
+        const isSwipeDown = distance > minSwipeDistance;
+
+        if (isSwipeDown) {
+            onClose();
+        }
+
+        setTranslateY(0);
+        setTouchStart(null);
+        setTouchEnd(null);
+    };
 
     return (
         <div className="fixed inset-0 z-[2000] lg:hidden">
@@ -66,14 +101,26 @@ export default function MobileFilterSheet({
             />
 
             {/* Sheet */}
-            <div className="absolute inset-x-0 bottom-0 h-[50vh] bg-white rounded-t-2xl flex flex-col overflow-hidden animate-slide-up">
+            <div
+                className="absolute inset-x-0 bottom-0 h-[70vh] bg-white rounded-t-2xl flex flex-col overflow-hidden animate-slide-up"
+                style={{
+                    transform: translateY > 0 ? `translateY(${translateY}px)` : undefined,
+                    transition: translateY === 0 ? 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+                    borderRadius: '0'
+                }}
+            >
                 {/* Drag Handle */}
-                <div className="w-full flex justify-center pt-3 pb-2 bg-white sticky top-0 z-10">
-                    <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+                <div
+                    className="w-full flex justify-center pt-3 pb-2 bg-white sticky top-0 z-10 cursor-grab active:cursor-grabbing"
+                    onTouchStart={onTouchStart}
+                    onTouchMove={onTouchMove}
+                    onTouchEnd={onTouchEnd}
+                >
+                    <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto px-4 pb-20">
+                <div className="flex-1 overflow-y-auto px-4 pb-32">
                     {/* Reuse the logic from the sidebar but styled for mobile */}
 
                     {/* SORT */}
@@ -82,7 +129,7 @@ export default function MobileFilterSheet({
                             onClick={() => toggleFilterSection("sort")}
                             className="w-full flex items-center justify-between py-2"
                         >
-                            <span className="font-medium text-sm text-gray-900">SORT</span>
+                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">SORT</span>
                             <span className="text-xl text-gray-400 font-light">
                                 {filterSections.find(s => s.id === "sort")?.isOpen ? "−" : "+"}
                             </span>
@@ -110,8 +157,8 @@ export default function MobileFilterSheet({
                                                 onChange={() => setSortBy(option.value)}
                                                 className="w-4 h-4 border-gray-300 text-black focus:ring-black"
                                             />
-                                            <span className={`text-sm ${sortBy === option.value ? "text-black font-medium" : "text-gray-600"}`}>
-                                                {option.label}
+                                            <span className={`text-[13px] tracking-wider ${sortBy === option.value ? "text-black font-medium" : "text-gray-600"}`}>
+                                                {option.label.toUpperCase()}
                                             </span>
                                         </label>
                                     ))}
@@ -126,7 +173,7 @@ export default function MobileFilterSheet({
                             onClick={() => toggleFilterSection("product_type")}
                             className="w-full flex items-center justify-between py-2"
                         >
-                            <span className="font-medium text-sm text-gray-900">PRODUCT TYPE</span>
+                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">PRODUCT TYPE</span>
                             <span className="text-xl text-gray-400 font-light">
                                 {filterSections.find(s => s.id === "product_type")?.isOpen ? "−" : "+"}
                             </span>
@@ -138,48 +185,16 @@ export default function MobileFilterSheet({
                                 }`}
                         >
                             <div className="overflow-hidden">
-                                <div className="mt-0 space-y-0 pl-0 max-h-[60vh] overflow-y-auto">
+                                <div className="mt-4 space-y-3 pl-1 max-h-60 overflow-y-auto">
                                     {productTypes.map(type => (
-                                        <label key={type.id} className="flex items-center w-full bg-white border-b border-gray-200 cursor-pointer group">
+                                        <label key={type.id} className="flex items-center gap-3 cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 checked={pendingProductTypes.includes(type.id)}
                                                 onChange={() => toggleFilter('productType', type.id)}
-                                                className="hidden" // Hide default checkbox
+                                                className="w-4 h-4 border-gray-300 rounded-none text-black focus:ring-black"
                                             />
-                                            <div className={`flex items-center w-full gap-4 px-4 py-3 transition-colors ${pendingProductTypes.includes(type.id) ? 'bg-gray-50' : 'hover:bg-gray-50'}`}>
-                                                <div className="w-[72px] h-[96px] bg-gray-100 flex-shrink-0 relative overflow-hidden">
-                                                    {type.image_url ? (
-                                                        <Image
-                                                            src={type.image_url}
-                                                            alt={type.name}
-                                                            fill
-                                                            className="object-cover"
-                                                            sizes="72px"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-300">
-                                                            {/* Simple Icon Placeholder */}
-                                                            <svg className="w-8 h-8 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                        </div>
-                                                    )}
-                                                    {/* Selected Indicator - Subtle Overlay */}
-                                                    {pendingProductTypes.includes(type.id) && (
-                                                        <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
-                                                            <div className="w-5 h-5 bg-black rounded-full flex items-center justify-center shadow-sm">
-                                                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                                                                </svg>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <span className={`text-[13px] font-bold uppercase tracking-widest flex-1 ${pendingProductTypes.includes(type.id) ? 'text-black' : 'text-gray-900'}`}>
-                                                    {type.name}
-                                                </span>
-                                            </div>
+                                            <span className="text-[13px] text-gray-600 uppercase tracking-widest">{type.name}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -193,7 +208,7 @@ export default function MobileFilterSheet({
                             onClick={() => toggleFilterSection("occasion")}
                             className="w-full flex items-center justify-between py-2"
                         >
-                            <span className="font-medium text-sm text-gray-900">OCCASION</span>
+                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">OCCASION</span>
                             <span className="text-xl text-gray-400 font-light">
                                 {filterSections.find(s => s.id === "occasion")?.isOpen ? "−" : "+"}
                             </span>
@@ -212,9 +227,9 @@ export default function MobileFilterSheet({
                                                 type="checkbox"
                                                 checked={pendingOccasions.includes(item.id)}
                                                 onChange={() => toggleFilter('occasion', item.id)}
-                                                className="w-4 h-4 border-gray-300 rounded text-black focus:ring-black"
+                                                className="w-4 h-4 border-gray-300 rounded-none text-black focus:ring-black"
                                             />
-                                            <span className="text-sm text-gray-600">{item.name}</span>
+                                            <span className="text-[13px] text-gray-600 uppercase tracking-widest">{item.name}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -228,7 +243,7 @@ export default function MobileFilterSheet({
                             onClick={() => toggleFilterSection("color")}
                             className="w-full flex items-center justify-between py-2"
                         >
-                            <span className="font-medium text-sm text-gray-900">COLOR</span>
+                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">COLOR</span>
                             <span className="text-xl text-gray-400 font-light">
                                 {filterSections.find(s => s.id === "color")?.isOpen ? "−" : "+"}
                             </span>
@@ -247,12 +262,12 @@ export default function MobileFilterSheet({
                                                 type="checkbox"
                                                 checked={pendingColors.includes(item.id)}
                                                 onChange={() => toggleFilter('color', item.id)}
-                                                className="w-4 h-4 border-gray-300 rounded text-black focus:ring-black"
+                                                className="w-4 h-4 border-gray-300 rounded-none text-black focus:ring-black"
                                             />
                                             {item.hex && (
-                                                <div className="w-4 h-4 rounded border border-gray-300" style={{ backgroundColor: item.hex }} />
+                                                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: item.hex }} />
                                             )}
-                                            <span className="text-sm text-gray-600">{item.name}</span>
+                                            <span className="text-[13px] text-gray-600 uppercase tracking-widest">{item.name}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -266,7 +281,7 @@ export default function MobileFilterSheet({
                             onClick={() => toggleFilterSection("material")}
                             className="w-full flex items-center justify-between py-2"
                         >
-                            <span className="font-medium text-sm text-gray-900">MATERIAL</span>
+                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">MATERIAL</span>
                             <span className="text-xl text-gray-400 font-light">
                                 {filterSections.find(s => s.id === "material")?.isOpen ? "−" : "+"}
                             </span>
@@ -285,9 +300,9 @@ export default function MobileFilterSheet({
                                                 type="checkbox"
                                                 checked={pendingMaterials.includes(item.id)}
                                                 onChange={() => toggleFilter('material', item.id)}
-                                                className="w-4 h-4 border-gray-300 rounded text-black focus:ring-black"
+                                                className="w-4 h-4 border-gray-300 rounded-none text-black focus:ring-black"
                                             />
-                                            <span className="text-sm text-gray-600">{item.name}</span>
+                                            <span className="text-[13px] text-gray-600 uppercase tracking-widest">{item.name}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -301,7 +316,7 @@ export default function MobileFilterSheet({
                             onClick={() => toggleFilterSection("city")}
                             className="w-full flex items-center justify-between py-2"
                         >
-                            <span className="font-medium text-sm text-gray-900">AVAILABLE CITY</span>
+                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">AVAILABLE CITY</span>
                             <span className="text-xl text-gray-400 font-light">
                                 {filterSections.find(s => s.id === "city")?.isOpen ? "−" : "+"}
                             </span>
@@ -320,9 +335,9 @@ export default function MobileFilterSheet({
                                                 type="checkbox"
                                                 checked={pendingCities.includes(item.id)}
                                                 onChange={() => toggleFilter('city', item.id)}
-                                                className="w-4 h-4 border-gray-300 rounded text-black focus:ring-black"
+                                                className="w-4 h-4 border-gray-300 rounded-none text-black focus:ring-black"
                                             />
-                                            <span className="text-sm text-gray-600">{item.name}</span>
+                                            <span className="text-[13px] text-gray-600 uppercase tracking-widest">{item.name}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -336,7 +351,7 @@ export default function MobileFilterSheet({
                             onClick={() => toggleFilterSection("price")}
                             className="w-full flex items-center justify-between py-2"
                         >
-                            <span className="font-medium text-sm text-gray-900">PRICE</span>
+                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">PRICE</span>
                             <span className="text-xl text-gray-400 font-light">
                                 {filterSections.find(s => s.id === "price")?.isOpen ? "−" : "+"}
                             </span>
@@ -349,9 +364,9 @@ export default function MobileFilterSheet({
                         >
                             <div className="overflow-hidden">
                                 <div className="mt-8 px-2 pb-4">
-                                    <div className="relative h-[2px] bg-gray-200 rounded">
+                                    <div className="relative h-[2px] bg-gray-200">
                                         <div
-                                            className="absolute h-full bg-black rounded"
+                                            className="absolute h-full bg-black"
                                             style={{
                                                 left: `${(pendingPriceRange[0] / maxPrice) * 100}%`,
                                                 width: `${((pendingPriceRange[1] - pendingPriceRange[0]) / maxPrice) * 100}%`
@@ -382,11 +397,11 @@ export default function MobileFilterSheet({
                                         />
                                         {/* Visual Thumbs matching desktop style */}
                                         <div
-                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
                                         />
                                         <div
-                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
                                         />
                                     </div>
@@ -401,17 +416,17 @@ export default function MobileFilterSheet({
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="border-t border-gray-100 bg-white p-4 absolute bottom-0 left-0 right-0" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 20px) + 40px)' }}>
+                <div className="border-t border-gray-100 bg-white p-4 absolute bottom-0 left-0 right-0" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 20px) + 20px)' }}>
                     <div className="flex gap-3">
                         <button
                             onClick={onClear}
-                            className="flex-1 py-3 border border-black text-black font-semibold text-sm uppercase tracking-wider"
+                            className="flex-1 py-3 border border-black text-black font-semibold text-sm uppercase tracking-wider rounded-none"
                         >
                             CLEAR
                         </button>
                         <button
                             onClick={onApply}
-                            className="flex-1 py-3 bg-black text-white font-semibold text-sm uppercase tracking-wider"
+                            className="flex-1 py-3 bg-black text-white font-semibold text-sm uppercase tracking-wider rounded-none"
                         >
                             APPLY ({appliedCount})
                         </button>
