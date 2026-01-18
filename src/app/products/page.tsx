@@ -725,13 +725,13 @@ export default function ProductsPage() {
             <Navbar />
 
             {/* Mobile Header */}
-            <div className="md:hidden sticky top-0 z-10 bg-white shadow-sm">
+            {/* Mobile Header Removed per user request */}
+            {/* <div className="md:hidden sticky top-0 z-10 bg-white shadow-sm">
                 <MobileHeader
                     title={categoryName?.toUpperCase() || "ALL PRODUCTS"}
-                    showBack={true}
-                    onBack={() => router.push("/")}
+                    showBack={false}
                 />
-            </div>
+            </div> */}
 
             <main className="min-h-screen pt-0 md:pt-4 pb-12">
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
