@@ -148,7 +148,7 @@ export default function ProductsPage() {
 
         // Only update URL if it's different from current URL
         if (newUrl !== currentUrl) {
-            router.replace(newUrl);
+            router.push(newUrl);
         }
     }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, maxPrice, router]);
 
@@ -170,7 +170,7 @@ export default function ProductsPage() {
             if (type && !appliedProductTypes.includes(productTypeParam)) {
                 setPendingProductTypes([productTypeParam]);
                 setAppliedProductTypes([productTypeParam]);
-                setShowCategories(false); // Hide categories list to show filtered results
+                setShowCategories(false);
             }
         } else if (productTypeParam && appliedProductTypes.length === 0) {
             // Wait for product types to load
@@ -183,9 +183,16 @@ export default function ProductsPage() {
                     if (data) {
                         setPendingProductTypes([data.id]);
                         setAppliedProductTypes([data.id]);
-                        setShowCategories(false); // Hide categories list to show filtered results
+                        setShowCategories(false);
                     }
                 });
+        } else if (!productTypeParam && appliedProductTypes.length > 0) {
+            // Clear if param missing
+            setPendingProductTypes([]);
+            setAppliedProductTypes([]);
+            setCategoryName("");
+            setActiveTag("ALL");
+            if (!occasionParam && !ownerIdParam) setShowCategories(true);
         }
 
         if (occasionParam && occasions.length > 0) {
@@ -194,7 +201,7 @@ export default function ProductsPage() {
             if (occasion && !appliedOccasions.includes(occasionParam)) {
                 setPendingOccasions([occasionParam]);
                 setAppliedOccasions([occasionParam]);
-                setShowCategories(false); // Hide categories list to show filtered results
+                setShowCategories(false);
             }
         } else if (occasionParam && appliedOccasions.length === 0) {
             // Wait for occasions to load
@@ -207,9 +214,16 @@ export default function ProductsPage() {
                     if (data) {
                         setPendingOccasions([data.id]);
                         setAppliedOccasions([data.id]);
-                        setShowCategories(false); // Hide categories list to show filtered results
+                        setShowCategories(false);
                     }
                 });
+        } else if (!occasionParam && appliedOccasions.length > 0) {
+            // Clear if param missing
+            setPendingOccasions([]);
+            setAppliedOccasions([]);
+            setCategoryName("");
+            setActiveTag("ALL");
+            if (!productTypeParam && !ownerIdParam) setShowCategories(true);
         }
 
         // Read colors from URL
