@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 
 interface MobileFilterSheetProps {
@@ -58,38 +58,104 @@ export default function MobileFilterSheet({
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchEnd, setTouchEnd] = useState<number | null>(null);
     const [translateY, setTranslateY] = useState(0);
+    const [startTime, setStartTime] = useState<number>(0);
+    const [currentSnap, setCurrentSnap] = useState<number>(70); // Default open to 70%
+    const [isDragging, setIsDragging] = useState(false);
+    const contentRef = useRef<HTMLDivElement>(null);
+
+    // Snap points in percentage
+    const SNAP_POINTS = [30, 50, 70, 100];
+    const MIN_SNAP = 30;
 
     if (!isOpen) return null;
 
     const minSwipeDistance = 50;
 
     const onTouchStart = (e: React.TouchEvent) => {
+        // Only allow dragging if we are at the top of the scroll content
+        if (contentRef.current && contentRef.current.scrollTop > 5) return;
+
         setTouchEnd(null);
         setTouchStart(e.targetTouches[0].clientY);
+        setStartTime(Date.now());
+        setIsDragging(true);
     };
 
     const onTouchMove = (e: React.TouchEvent) => {
-        if (!touchStart) return;
+        if (!touchStart || !isDragging) return;
+
+        // If we started scrolling down but content wasn't top, don't drag sheet
+        if (contentRef.current && contentRef.current.scrollTop > 5) return;
+
         const currentTouch = e.targetTouches[0].clientY;
         const diff = currentTouch - touchStart;
-        if (diff > 0) {
-            setTranslateY(diff);
-        }
+
+        // Update translate Y based on drag
+        // Positive diff = dragging down (reducing height)
+        // Negative diff = dragging up (increasing height)
+        setTranslateY(diff);
         setTouchEnd(currentTouch);
     };
 
     const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return;
-        const distance = touchEnd - touchStart;
-        const isSwipeDown = distance > minSwipeDistance;
-
-        if (isSwipeDown) {
-            onClose();
+        if (!touchStart || !isDragging) {
+            setIsDragging(false);
+            setTouchStart(null);
+            setTranslateY(0);
+            return;
         }
 
-        setTranslateY(0);
+        const distance = (touchEnd || touchStart) - touchStart;
+        const time = Date.now() - startTime;
+        const velocity = Math.abs(distance / time);
+        const screenHeight = window.innerHeight;
+
+        // Calculate the effective new percentage after drag
+        // distance > 0 means drag down (reduce height)
+        // newHeightPx = currentHeightPx - distance
+        const currentHeightPx = (currentSnap / 100) * screenHeight;
+        const newHeightPx = currentHeightPx - distance;
+        const newHeightPercent = (newHeightPx / screenHeight) * 100;
+
+        setIsDragging(false);
         setTouchStart(null);
         setTouchEnd(null);
+        setTranslateY(0);
+
+        // Velocity check for quick swipes
+        if (velocity > 0.3) {
+            if (distance > 0) {
+                // Swiped Down
+                // Find next lower snap point
+                const lowerSnaps = SNAP_POINTS.filter(p => p < currentSnap).sort((a, b) => b - a);
+                if (lowerSnaps.length > 0) {
+                    setCurrentSnap(lowerSnaps[0]);
+                } else {
+                    onClose(); // Close if no lower snap (below 30%)
+                }
+            } else {
+                // Swiped Up
+                // Find next higher snap point
+                const higherSnaps = SNAP_POINTS.filter(p => p > currentSnap).sort((a, b) => a - b);
+                if (higherSnaps.length > 0) {
+                    setCurrentSnap(higherSnaps[0]);
+                }
+            }
+            return;
+        }
+
+        // Standard snap to closest logic
+        if (newHeightPercent < (MIN_SNAP - 10)) {
+            onClose();
+            return;
+        }
+
+        // Find closest snap point
+        const closest = SNAP_POINTS.reduce((prev, curr) => {
+            return (Math.abs(curr - newHeightPercent) < Math.abs(prev - newHeightPercent) ? curr : prev);
+        });
+
+        setCurrentSnap(closest);
     };
 
     return (
@@ -102,25 +168,29 @@ export default function MobileFilterSheet({
 
             {/* Sheet */}
             <div
-                className="absolute inset-x-0 bottom-0 h-[70vh] bg-white rounded-t-2xl flex flex-col overflow-hidden animate-slide-up"
+                className="absolute inset-x-0 bottom-0 bg-white rounded-t-2xl flex flex-col overflow-hidden animate-slide-up shadow-2xl"
                 style={{
-                    transform: translateY > 0 ? `translateY(${translateY}px)` : undefined,
-                    transition: translateY === 0 ? 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
-                    borderRadius: '0'
+                    height: `${currentSnap}%`,
+                    transform: isDragging ? `translateY(${translateY}px)` : 'translateY(0)',
+                    transition: isDragging ? 'none' : 'height 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
+                    borderRadius: currentSnap === 100 ? '0' : '16px 16px 0 0'
                 }}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
             >
                 {/* Drag Handle */}
                 <div
                     className="w-full flex justify-center pt-3 pb-2 bg-white sticky top-0 z-10 cursor-grab active:cursor-grabbing"
-                    onTouchStart={onTouchStart}
-                    onTouchMove={onTouchMove}
-                    onTouchEnd={onTouchEnd}
                 >
                     <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto px-4 pb-32">
+                <div
+                    ref={contentRef}
+                    className="flex-1 overflow-y-auto px-4 pb-32"
+                >
                     {/* Reuse the logic from the sidebar but styled for mobile */}
 
                     {/* SORT */}
@@ -397,11 +467,11 @@ export default function MobileFilterSheet({
                                         />
                                         {/* Visual Thumbs matching desktop style */}
                                         <div
-                                            className="absolute w-4 h-4 bg-black border-2 border-white shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
                                         />
                                         <div
-                                            className="absolute w-4 h-4 bg-black border-2 border-white shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
                                         />
                                     </div>
