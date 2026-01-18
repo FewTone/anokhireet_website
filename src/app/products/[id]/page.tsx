@@ -763,7 +763,7 @@ export default function ProductDetailPage() {
             <div className="hidden md:block sticky top-0 z-[1000]">
                 <Navbar />
             </div>
-            <main className="min-h-screen pt-0 pb-12">
+            <main className="min-h-screen pt-0 pb-24 md:pb-12">
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-6">
                         {/* Main Content - Product Images with Thumbnails on Left */}
