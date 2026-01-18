@@ -141,27 +141,72 @@ export default function UserPage() {
     ];
 
     const renderContent = () => {
+        // Mobile Header for navigation
+        const MobileHeader = ({ title, showBack = true }: { title: string, showBack?: boolean }) => (
+            <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-20">
+                {showBack && (
+                    <button
+                        onClick={() => {
+                            setActiveView("menu");
+                            router.push("/user?view=menu", { scroll: false });
+                        }}
+                        className="p-1 -ml-2 text-gray-600"
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                    </button>
+                )}
+                <h1 className="text-lg font-semibold capitalize">{title.replace("-", " ")}</h1>
+            </div>
+        );
+
+        // Content wrapper to ensure consistent mobile padding/layout
+        const ContentWrapper = ({ children, title }: { children: React.ReactNode, title: string }) => (
+            <div className="flex flex-col h-full bg-white">
+                <MobileHeader title={title} />
+                <div className="flex-1">
+                    {children}
+                </div>
+            </div>
+        );
+
         // On mobile, if view is 'menu', we render Sidebar logic inside the main content area
-        // handled in the return statement logic
         switch (activeView) {
             case "my-products":
-                return <MyProductsView />;
+                return (
+                    <ContentWrapper title="My Products">
+                        <MyProductsView />
+                    </ContentWrapper>
+                );
             case "wishlist":
-                return <WishlistView />;
+                return (
+                    <ContentWrapper title="Wish List">
+                        <WishlistView />
+                    </ContentWrapper>
+                );
             case "profile":
-                return <ProfileView
-                    userName={userName}
-                    userPhone={userPhone}
-                    userEmail={userEmail}
-                    userLocation={userLocation}
-                    userGender={userGender}
-                    userBirthdate={userBirthdate}
-                    userAvatar={userAvatar}
-                    userId={userId}
-                    onUpdate={loadUserData}
-                />;
+                return (
+                    <ContentWrapper title="Profile">
+                        <ProfileView
+                            userName={userName}
+                            userPhone={userPhone}
+                            userEmail={userEmail}
+                            userLocation={userLocation}
+                            userGender={userGender}
+                            userBirthdate={userBirthdate}
+                            userAvatar={userAvatar}
+                            userId={userId}
+                            onUpdate={loadUserData}
+                        />
+                    </ContentWrapper>
+                );
             case "settings":
-                return <SettingsView />;
+                return (
+                    <ContentWrapper title="Settings">
+                        <SettingsView />
+                    </ContentWrapper>
+                );
             case "menu":
                 return (
                     <div className="md:hidden">
@@ -203,9 +248,9 @@ export default function UserPage() {
                     </div>
 
                     {/* Main Content */}
-                    <div className={`flex-1 md:p-4 border-gray-100 ${activeView === 'menu' ? 'p-0 border-none' : 'p-2 border-l'}`}>
+                    <div className={`flex-1 md:p-4 border-gray-100 ${activeView === 'menu' ? 'p-0 border-none' : 'p-0 md:p-2 border-l'}`}>
                         {loading ? (
-                            <div className="animate-pulse space-y-8">
+                            <div className="animate-pulse space-y-8 p-4">
                                 <div className="h-48 bg-gray-200 rounded"></div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {[1, 2, 3, 4, 5, 6].map((i) => (
