@@ -159,7 +159,7 @@ export default function Navbar() {
                     // Home Page Overlay Layout OR Products Page Layout (Same structure, diff style)
                     <div className={`md:hidden px-4 transition-all duration-300 ${isHomePage
                         ? "bg-gradient-to-b from-black via-black to-transparent pt-4 pb-12"
-                        : "bg-white border-b border-gray-100 pt-4 pb-1"
+                        : "bg-white border-b border-gray-100 py-1"
                         }`}>
                         {!pathname?.startsWith("/chat") && (
                             <div className="flex flex-col gap-3 w-full">

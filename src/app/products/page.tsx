@@ -10,6 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import MobileFilterSheet from "@/components/MobileFilterSheet";
+import MobileHeader from "@/components/MobileHeader";
 import { supabase } from "@/lib/supabase";
 
 interface Product {
@@ -722,7 +723,17 @@ export default function ProductsPage() {
     return (
         <>
             <Navbar />
-            <main className="min-h-screen pt-4 md:pt-4 pb-12">
+
+            {/* Mobile Header */}
+            <div className="md:hidden sticky top-0 z-10 bg-white shadow-sm">
+                <MobileHeader
+                    title={categoryName?.toUpperCase() || "ALL PRODUCTS"}
+                    showBack={true}
+                    onBack={() => router.push("/")}
+                />
+            </div>
+
+            <main className="min-h-screen pt-0 md:pt-4 pb-12">
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Left Sidebar - Filters */}

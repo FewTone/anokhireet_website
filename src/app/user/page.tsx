@@ -6,6 +6,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
+import MobileHeader from "@/components/MobileHeader";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName } from "@/lib/utils";
 import MyProductsView from "@/components/dashboard/MyProductsView";
@@ -141,30 +142,16 @@ export default function UserPage() {
     ];
 
     const renderContent = () => {
-        // Mobile Header for navigation
-        const MobileHeader = ({ title, showBack = true }: { title: string, showBack?: boolean }) => (
-            <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-20">
-                {showBack && (
-                    <button
-                        onClick={() => {
-                            setActiveView("menu");
-                            router.push("/user?view=menu", { scroll: false });
-                        }}
-                        className="p-1 -ml-2 text-gray-600"
-                    >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M15 18l-6-6 6-6" />
-                        </svg>
-                    </button>
-                )}
-                <h1 className="text-lg font-semibold capitalize">{title.replace("-", " ")}</h1>
-            </div>
-        );
-
         // Content wrapper to ensure consistent mobile padding/layout
-        const ContentWrapper = ({ children, title }: { children: React.ReactNode, title: string }) => (
+        const ContentWrapper = ({ children, title, backLink }: { children: React.ReactNode, title: string, backLink?: string }) => (
             <div className="flex flex-col h-full bg-white">
-                <MobileHeader title={title} />
+                <MobileHeader
+                    title={title}
+                    onBack={() => {
+                        setActiveView("menu");
+                        router.push("/user?view=menu", { scroll: false });
+                    }}
+                />
                 <div className="flex-1">
                     {children}
                 </div>

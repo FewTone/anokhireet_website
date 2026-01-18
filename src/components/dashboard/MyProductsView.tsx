@@ -223,31 +223,31 @@ export default function MyProductsView() {
 
     return (
         <div className="w-full">
-            <div className="mb-4 text-center">
+            <div className="mb-4 text-center hidden md:block">
                 <h2 className="text-2xl font-bold text-gray-900">Project Performance</h2>
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                <div className="border border-gray-100 bg-gray-50/50 p-4 flex flex-col items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Total Products</span>
-                    <span className="text-2xl font-bold text-gray-900">{myProducts.length}</span>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4 md:mb-8">
+                <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Products</span>
+                    <span className="text-xl md:text-2xl font-bold text-gray-900">{myProducts.length}</span>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 p-4 flex flex-col items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Total Views</span>
-                    <span className="text-2xl font-bold text-gray-900">{totalViews.toLocaleString()}</span>
+                <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Views</span>
+                    <span className="text-xl md:text-2xl font-bold text-gray-900">{totalViews.toLocaleString()}</span>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 p-4 flex flex-col items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Total Likes</span>
-                    <span className="text-2xl font-bold text-gray-900">{totalLikes.toLocaleString()}</span>
+                <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Likes</span>
+                    <span className="text-xl md:text-2xl font-bold text-gray-900">{totalLikes.toLocaleString()}</span>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 p-4 flex flex-col items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Total Interest</span>
-                    <span className="text-2xl font-bold text-gray-900">0</span>
+                <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Interest</span>
+                    <span className="text-xl md:text-2xl font-bold text-gray-900">0</span>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 p-4 flex flex-col items-center justify-center col-span-2 md:col-span-1">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Total Inquiry</span>
-                    <span className="text-2xl font-bold text-gray-900">{totalInquiries.toLocaleString()}</span>
+                <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center col-span-2 md:col-span-1">
+                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Inquiry</span>
+                    <span className="text-xl md:text-2xl font-bold text-gray-900">{totalInquiries.toLocaleString()}</span>
                 </div>
             </div>
 
