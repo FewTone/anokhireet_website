@@ -51,11 +51,9 @@ export default function WishlistView() {
                     <p className="text-gray-400 text-sm">Start adding products to your wishlist!</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
                     {wishlist.map((product) => (
-                        <div key={product.id} className="relative group">
-                            <ProductCard product={product} />
-                        </div>
+                        <ProductCard key={product.id} product={product} disableHover={true} />
                     ))}
                 </div>
             )}
