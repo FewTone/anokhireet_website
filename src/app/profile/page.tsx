@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -15,6 +15,18 @@ interface PendingUserData {
 }
 
 export default function Profile() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center w-full h-screen bg-white">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
+            </div>
+        }>
+            <ProfileInner />
+        </Suspense>
+    );
+}
+
+function ProfileInner() {
     const [phone, setPhone] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -98,9 +110,11 @@ export default function Profile() {
     };
 
     const checkSession = async () => {
+        console.log("🔍 [Profile] checkSession started");
         try {
             // Check Supabase Auth session only
             const { data: { session }, error } = await supabase.auth.getSession();
+            console.log("🔍 [Profile] Supabase session:", session ? "Found" : "Not Found", error || "");
 
             if (session?.user && !error) {
                 // Check if user is admin (in admins table)
@@ -111,8 +125,7 @@ export default function Profile() {
                     .maybeSingle();
 
                 if (adminData) {
-                    // Admin detected - don't sign out, just don't redirect
-                    // Admin should use admin panel, not profile page
+                    console.log("🔍 [Profile] Admin detected");
                     setLoading(false);
                     return;
                 }
@@ -124,13 +137,16 @@ export default function Profile() {
                     .eq("auth_user_id", session.user.id)
                     .maybeSingle();
 
+                console.log("🔍 [Profile] User data from DB:", userData ? "Found" : "Not Found");
+
                 // Regular user with active session - redirect to user page or return URL
                 if (userData) {
                     getReturnUrlAndRedirect();
-                    return; // Don't stop loading, let redirect happen
+                    // Keep loading true for redirect, but add a timeout safety
+                    setTimeout(() => setLoading(false), 3000);
+                    return;
                 } else {
-                    // User authenticated (e.g. via Google or Email OTP) but no public profile yet
-                    // Show "Create Account" screen and pre-fill data
+                    // User authenticated but no profile yet
                     setIsNewUser(true);
                     if (session.user.user_metadata?.full_name) {
                         const names = session.user.user_metadata.full_name.split(' ');
@@ -142,10 +158,11 @@ export default function Profile() {
                 }
             }
         } catch (e) {
-            console.error("Session check error:", e);
+            console.error("🔍 [Profile] Session check error:", e);
         }
 
         // If we get here, no valid session found, show login form
+        console.log("🔍 [Profile] No session found, showing login");
         setLoading(false);
     };
 
@@ -634,19 +651,18 @@ export default function Profile() {
 
     return (
         <div className="flex items-center justify-center w-full h-screen bg-[#959393] p-4 font-sans">
-            <div className="max-w-[750px] w-full md:w-[90vw] flex bg-white rounded-none shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden min-h-[50vh] flex-col md:flex-row">
+            <div className={`max-w-[750px] w-full md:w-[90vw] flex bg-white rounded-none shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden transition-all duration-500 ease-in-out ${otpSent ? "min-h-[60vh]" : "min-h-[50vh]"} flex-col md:flex-row`}>
 
                 {/* Left Image Section */}
                 <div className="hidden md:flex w-[58%] relative items-center justify-center bg-white">
                     <div className="flex items-center justify-center w-full h-full p-8 relative">
-                        {/* Rotating Outer Ring */}
                         <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
                             <Image
                                 src="/ring.svg"
                                 alt="Ring"
                                 width={300}
                                 height={300}
-                                className="object-contain brightness-0"
+                                className="object-contain"
                             />
                         </div>
                         {/* Inner Logo */}
@@ -656,7 +672,7 @@ export default function Profile() {
                                 alt="Logo"
                                 width={120}
                                 height={120}
-                                className="object-contain brightness-0"
+                                className="object-contain"
                             />
                         </div>
                     </div>
@@ -679,94 +695,49 @@ export default function Profile() {
 
                     {otpSent ? (
                         <>
-                            <div className="mt-6 space-y-5">
+                            <div className="mt-8 space-y-6">
                                 <div>
-                                    <label className="block text-xs text-[#4d5563] text-left mb-2 font-medium">
+                                    <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1.5 font-medium ml-1">
                                         Phone Number
                                     </label>
-                                    <div className="border border-[#4d5563] p-3 text-[0.8rem] flex items-center bg-gray-50 rounded">
-                                        <span className="font-medium">+91</span>
-                                        <span className="ml-2 text-gray-700 font-medium">{phone}</span>
+                                    <div className="border border-gray-300 p-3 text-[0.85rem] flex items-center bg-[#f9fafb] rounded-none">
+                                        <span className="font-bold text-[#374151]">+91</span>
+                                        <span className="ml-2 text-[#374151] font-medium tracking-wide">{phone}</span>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs text-[#4d5563] text-left mb-2 font-medium">
+                                    <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1.5 font-medium ml-1">
                                         OTP Code <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="grid grid-cols-6 gap-2 mb-2 w-full" onPaste={(e) => {
-                                        e.preventDefault();
-                                        const pasted = e.clipboardData.getData("text").replace(/\D/g, "");
-                                        if (pasted.length > 0) {
-                                            const newOtp = pasted.slice(0, 6);
-                                            setOtp(newOtp);
-                                            // Focus the appropriate input based on length
-                                            const focusIndex = Math.min(newOtp.length, 5);
-                                            const inputs = document.querySelectorAll('input[name^="otp-"]');
-                                            (inputs[focusIndex] as HTMLInputElement)?.focus();
-                                        }
-                                    }}>
-                                        {[0, 1, 2, 3, 4, 5].map((index) => (
-                                            <input
-                                                key={index}
-                                                name={`otp-${index}`}
-                                                type="text"
-                                                maxLength={1}
-                                                autoComplete="off"
-                                                value={otp[index] || ""}
-                                                onChange={(e) => {
-                                                    const value = e.target.value.replace(/\D/g, "");
-                                                    if (value) {
-                                                        const newOtpArray = otp.split("");
-                                                        // Pad with spaces if needed
-                                                        while (newOtpArray.length < index) newOtpArray.push("");
-                                                        newOtpArray[index] = value;
-                                                        const newOtp = newOtpArray.join("");
-                                                        setOtp(newOtp);
-                                                        setError("");
-
-                                                        // Auto focus next input
-                                                        if (index < 5) {
-                                                            const nextInput = document.querySelector(`input[name="otp-${index + 1}"]`) as HTMLInputElement;
-                                                            nextInput?.focus();
-                                                        }
-                                                    }
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    // Handle Backspace
-                                                    if (e.key === "Backspace") {
-                                                        if (!otp[index] && index > 0) {
-                                                            const prevInput = document.querySelector(`input[name="otp-${index - 1}"]`) as HTMLInputElement;
-                                                            prevInput?.focus();
-                                                        } else {
-                                                            const currentArr = otp.split("");
-                                                            currentArr[index] = ""; // Replace char at index with empty
-                                                            setOtp(currentArr.join(""));
-                                                        }
-                                                    }
-                                                    // Handle Enter
-                                                    if (e.key === "Enter" && otp.length === 6) {
-                                                        handleVerifyOtp();
-                                                    }
-                                                }}
-                                                className="w-full h-14 border border-gray-300 text-center text-xl font-bold rounded focus:border-black focus:ring-1 focus:ring-black outline-none transition-all"
-                                                autoFocus={index === 0}
-                                            />
-                                        ))}
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            maxLength={6}
+                                            value={otp}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/\D/g, "");
+                                                setOtp(value);
+                                                setError("");
+                                            }}
+                                            className="w-full h-14 border-2 border-black text-center text-2xl font-bold rounded-none focus:outline-none tracking-[0.75rem] pr-[-0.75rem]"
+                                            autoFocus
+                                            placeholder="------"
+                                        />
                                     </div>
-                                    <p className="text-xs text-[#4d5563] mt-2 text-center">
+                                    <p className="text-[0.7rem] text-[#6b7280] mt-2.5 text-center">
                                         Enter the 6-digit code sent to your phone
                                     </p>
                                 </div>
                             </div>
 
                             {error && (
-                                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
-                                    <p className="text-red-600 text-xs text-left">{error}</p>
+                                <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-none">
+                                    <p className="text-red-600 text-[0.75rem] text-center">{error}</p>
                                 </div>
                             )}
 
-                            <div className="flex gap-3 mt-6">
+                            <div className="flex gap-4 mt-8">
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -776,14 +747,14 @@ export default function Profile() {
                                         setError("");
                                         setPendingUserData(null);
                                     }}
-                                    className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                    className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors uppercase text-[0.8rem] tracking-wider"
                                 >
                                     Back
                                 </button>
                                 <button
                                     onClick={handleVerifyOtp}
                                     disabled={verifyingOtp || !otp || otp.length !== 6}
-                                    className="flex-1 px-4 py-3 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded"
+                                    className="flex-1 px-4 py-3 text-white bg-black border-none cursor-pointer font-bold tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none uppercase text-[0.8rem]"
                                 >
                                     {verifyingOtp ? "VERIFYING..." : "VERIFY OTP"}
                                 </button>
@@ -826,7 +797,7 @@ export default function Profile() {
                             <button
                                 onClick={handleLogin}
                                 disabled={loading || !phone || phone.length !== 10}
-                                className="mt-4 w-full p-4 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="mt-4 w-full p-4 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
                             >
                                 {loading ? "LOGGING IN..." : "LOGIN"}
                             </button>
@@ -855,7 +826,7 @@ export default function Profile() {
                                                 required
                                                 value={firstName}
                                                 onChange={(e) => setFirstName(capitalizeFirstLetter(e.target.value))}
-                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
+                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded-none"
                                                 placeholder="First Name"
                                                 autoFocus
                                             />
@@ -874,7 +845,7 @@ export default function Profile() {
                                                         handleCreateNewUser();
                                                     }
                                                 }}
-                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded"
+                                                className="w-full border border-[#4d5563] p-3 text-[0.8rem] outline-none rounded-none"
                                                 placeholder="Surname"
                                             />
                                         </div>
@@ -896,7 +867,7 @@ export default function Profile() {
                                     </div>
 
                                     {showAddCity && (
-                                        <div className="mb-3 p-2 bg-gray-50 border border-gray-200 rounded">
+                                        <div className="mb-3 p-2 bg-gray-50 border border-gray-200 rounded-none">
                                             <div className="flex gap-2">
                                                 <input
                                                     type="text"
@@ -909,12 +880,12 @@ export default function Profile() {
                                                         }
                                                     }}
                                                     placeholder="City name"
-                                                    className="flex-1 px-3 py-1.5 border border-gray-300 rounded outline-none focus:ring-1 focus:ring-black text-[0.8rem]"
+                                                    className="flex-1 px-3 py-1.5 border border-gray-300 rounded-none outline-none focus:ring-1 focus:ring-black text-[0.8rem]"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={handleAddNewCity}
-                                                    className="px-3 py-1.5 bg-black text-white font-bold rounded hover:opacity-90 transition-all text-[0.8rem]"
+                                                    className="px-3 py-1.5 bg-black text-white font-bold rounded-none hover:opacity-90 transition-all text-[0.8rem]"
                                                 >
                                                     Add
                                                 </button>
@@ -922,7 +893,7 @@ export default function Profile() {
                                         </div>
                                     )}
 
-                                    <div className="border border-[#4d5563] rounded max-h-32 overflow-y-auto p-2 bg-white">
+                                    <div className="border border-[#4d5563] rounded-none max-h-32 overflow-y-auto p-2 bg-white">
                                         {cities.length === 0 ? (
                                             <p className="text-[10px] text-gray-500 uppercase">Loading cities...</p>
                                         ) : (
@@ -932,9 +903,9 @@ export default function Profile() {
                                                     return (
                                                         <label
                                                             key={city.id}
-                                                            className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-1 rounded transition-colors group"
+                                                            className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-1 rounded-none transition-colors group"
                                                         >
-                                                            <div className={`w-3.5 h-3.5 border border-gray-400 rounded-sm flex items-center justify-center transition-colors ${isChecked ? 'bg-black border-black' : 'bg-white group-hover:border-gray-600'}`}>
+                                                            <div className={`w-3.5 h-3.5 border border-gray-400 rounded-none flex items-center justify-center transition-colors ${isChecked ? 'bg-black border-black' : 'bg-white group-hover:border-gray-600'}`}>
                                                                 {isChecked && (
                                                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                                                         <polyline points="20 6 9 17 4 12"></polyline>
@@ -981,14 +952,14 @@ export default function Profile() {
                                         setError("");
                                         setPendingUserData(null);
                                     }}
-                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded hover:bg-gray-300 transition-colors"
+                                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                 >
                                     Back
                                 </button>
                                 <button
                                     onClick={handleCreateNewUser}
                                     disabled={loading || !firstName.trim() || !lastName.trim() || selectedCities.length === 0}
-                                    className="flex-1 px-4 py-2 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 px-4 py-2 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
                                 >
                                     {loading ? "CREATING..." : "CREATE ACCOUNT"}
                                 </button>
@@ -1000,6 +971,6 @@ export default function Profile() {
 
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
