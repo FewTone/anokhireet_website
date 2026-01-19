@@ -696,60 +696,58 @@ export default function LoginModal() {
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
 
-                                    {/* Selected Cities Tags */}
-                                    {selectedCities.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 mb-2">
-                                            {selectedCities.map(cityId => {
-                                                const city = cities.find(c => c.id === cityId);
-                                                return city ? (
-                                                    <div key={cityId} className="flex items-center gap-1 bg-black text-white text-xs px-2 py-1 rounded-sm">
-                                                        {city.name}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setSelectedCities(prev => prev.filter(id => id !== cityId))}
-                                                            className="hover:text-gray-300 ml-1 font-bold"
-                                                        >
-                                                            ×
-                                                        </button>
-                                                    </div>
-                                                ) : null;
-                                            })}
+                                    {selectedCities.length > 0 && selectedCities[0] ? (
+                                        <div className="w-full p-2 border border-gray-300 bg-gray-50 flex justify-between items-center">
+                                            <span className="text-sm text-gray-800 font-medium">
+                                                {cities.find(c => c.id === selectedCities[0])?.name}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedCities([]);
+                                                    setCitySearch("");
+                                                }}
+                                                className="text-gray-500 hover:text-black p-1"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="relative mb-2">
+                                            <input
+                                                type="text"
+                                                value={citySearch}
+                                                onChange={(e) => setCitySearch(e.target.value)}
+                                                className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black text-sm"
+                                                placeholder="Search city..."
+                                            />
+
+                                            {citySearch && (
+                                                <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                                    {cities
+                                                        .filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))
+                                                        .map(city => (
+                                                            <div
+                                                                key={city.id}
+                                                                onClick={() => {
+                                                                    setSelectedCities([city.id]);
+                                                                    setCitySearch("");
+                                                                }}
+                                                                className="p-2 text-sm hover:bg-gray-100 cursor-pointer"
+                                                            >
+                                                                {city.name}
+                                                            </div>
+                                                        ))}
+                                                    {cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase())).length === 0 && (
+                                                        <div className="p-2 text-sm text-gray-500">No matching cities found.</div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
-
-                                    {/* Search Input */}
-                                    <div className="relative mb-2">
-                                        <input
-                                            type="text"
-                                            value={citySearch}
-                                            onChange={(e) => setCitySearch(e.target.value)}
-                                            className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black text-sm"
-                                            placeholder="Search city..."
-                                        />
-
-                                        {/* Filtered List */}
-                                        {citySearch && (
-                                            <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto shadow-lg">
-                                                {cities
-                                                    .filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()) && !selectedCities.includes(c.id))
-                                                    .map(city => (
-                                                        <div
-                                                            key={city.id}
-                                                            onClick={() => {
-                                                                setSelectedCities([city.id]);
-                                                                setCitySearch("");
-                                                            }}
-                                                            className="p-2 text-sm hover:bg-gray-100 cursor-pointer"
-                                                        >
-                                                            {city.name}
-                                                        </div>
-                                                    ))}
-                                                {cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()) && !selectedCities.includes(c.id)).length === 0 && (
-                                                    <div className="p-2 text-sm text-gray-500">No matching cities found.</div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
 
 
                                 </div>
