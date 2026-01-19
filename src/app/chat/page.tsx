@@ -94,21 +94,33 @@ export default function ChatPage() {
     }, []);
 
     // Load chats when user is loaded
+    // Load chats when user is loaded
     useEffect(() => {
         if (currentUser) {
             loadChats();
         }
     }, [currentUser]);
 
+    const selectedChatIdRef = useRef<string | null>(null);
+
+    // Update ref when selectedChat changes
+    useEffect(() => {
+        selectedChatIdRef.current = selectedChat?.id || null;
+    }, [selectedChat]);
+
     // Auto-select chat from URL parameter - Single Source of Truth
     useEffect(() => {
         const chatId = searchParams.get('id');
         if (chatId) {
             // Only update if we have chats and the selection actually changes or is null
-            if (chats.length > 0 && selectedChat?.id !== chatId) {
+            if (chats.length > 0) {
                 const chatToSelect = chats.find(c => c.id === chatId);
                 if (chatToSelect) {
-                    setSelectedChat(chatToSelect);
+                    if (selectedChat?.id !== chatId) {
+                        setSelectedChat(chatToSelect);
+                    }
+                    // ALWAYS mark as read if URL matches, even if already selected
+                    markAsRead(chatId);
                 }
             }
         } else if (selectedChat) {
@@ -117,8 +129,10 @@ export default function ChatPage() {
         }
     }, [chats, searchParams, selectedChat]);
 
-    // Handle chat selection (URL driven)
+    // Handle chat selection (URL driven + Immediate State)
     const handleChatSelect = (chat: Chat) => {
+        setSelectedChat(chat);
+        markAsRead(chat.id);
         router.push(`/chat?id=${chat.id}`);
     };
 
@@ -137,6 +151,21 @@ export default function ChatPage() {
             subscribeToMessages(selectedChat.id);
             setReplyingTo(null);
             setMessageInput("");
+
+            const handleFocus = () => {
+                markAsRead(selectedChat.id);
+            };
+            window.addEventListener("focus", handleFocus);
+            // Also call immediately
+            markAsRead(selectedChat.id);
+
+            return () => {
+                window.removeEventListener("focus", handleFocus);
+                unsubscribeFromMessages();
+                if (chatChannelRef.current) {
+                    chatChannelRef.current.unsubscribe();
+                }
+            };
         }
 
         return () => {
@@ -341,6 +370,10 @@ export default function ChatPage() {
                         .eq("is_read", false)
                         .neq("sender_user_id", currentUser.id);
 
+                    // Use Ref for current selection AND URL param to avoid closure staleness and refresh flickers
+                    const currentId = searchParams.get('id');
+                    const isSelected = selectedChatIdRef.current === chat.id || currentId === chat.id;
+
                     return {
                         ...chat,
                         inquiry: {
@@ -349,7 +382,7 @@ export default function ChatPage() {
                         },
                         other_user: otherUser || { id: otherUserId, name: "Unknown User" },
                         last_message: lastMessages || undefined,
-                        unread_count: (selectedChat?.id === chat.id || lastMessages?.sender_user_id === currentUser.id || lastMessages?.is_read) ? 0 : (unreadCount || 0),
+                        unread_count: (isSelected || lastMessages?.sender_user_id === currentUser.id || lastMessages?.is_read) ? 0 : (unreadCount || 0),
                     };
                 })
             );
@@ -374,15 +407,20 @@ export default function ChatPage() {
         if (!currentUser) return;
 
         try {
+            // Simplest possible update to ensure it works
             const { error } = await supabase
                 .from("messages")
-                .update({ is_read: true, read_at: new Date().toISOString() })
+                .update({ is_read: true })
                 .eq("chat_id", chatId)
                 .eq("is_read", false)
                 .neq("sender_user_id", currentUser.id);
 
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase Error marking read:", error);
+                throw error;
+            }
 
+            // Optimistically update local state
             setChats(prev => prev.map(chat =>
                 chat.id === chatId ? { ...chat, unread_count: 0 } : chat
             ));
@@ -630,9 +668,62 @@ export default function ChatPage() {
                     });
                 }
             });
-
-        return channel;
     };
+
+    // Global listener for new messages (to update sidebar when in other chats)
+    useEffect(() => {
+        if (!currentUser) return;
+
+        const channel = supabase
+            .channel('global_messages')
+            .on(
+                "postgres_changes",
+                {
+                    event: "INSERT",
+                    schema: "public",
+                    table: "messages",
+                },
+                async (payload: any) => {
+                    const newMessage = payload.new as Message;
+
+                    // Update chat list for ALL incoming messages involving me
+                    setChats(prev => prev.map(chat => {
+                        if (chat.id === newMessage.chat_id) {
+                            // If this chat is currently open, don't increment unread (or if I sent it)
+                            const isOpen = selectedChatIdRef.current === chat.id;
+                            const isMyMsg = newMessage.sender_user_id === currentUser.id;
+
+                            const newUnreadCount = (isOpen || isMyMsg) ? 0 : (chat.unread_count + 1);
+
+                            return {
+                                ...chat,
+                                unread_count: newUnreadCount,
+                                last_message: {
+                                    message: newMessage.message,
+                                    created_at: newMessage.created_at,
+                                    sender_user_id: newMessage.sender_user_id,
+                                    is_read: isOpen || isMyMsg ? true : false,
+                                    is_delivered: true
+                                } as any
+                            };
+                        }
+                        return chat;
+                    }).sort((a, b) => {
+                        // Re-sort to put newest at top
+                        const dateA = new Date(a.id === newMessage.chat_id ? newMessage.created_at : (a.last_message?.created_at || a.created_at)).getTime();
+                        const dateB = new Date(b.id === newMessage.chat_id ? newMessage.created_at : (b.last_message?.created_at || b.created_at)).getTime();
+                        return dateB - dateA;
+                    }));
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [currentUser]);
+
+
 
     const unsubscribeFromMessages = () => {
         supabase.removeAllChannels();
@@ -1007,10 +1098,10 @@ export default function ChatPage() {
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between">
                                                         <h3 className="text-[16px] font-normal text-[#111b21] truncate">{formatName(chat.other_user?.name || "User")}</h3>
-                                                        {chat.last_message && <span className={`text-[12px] ${showUnreadBadge ? "text-green-600 font-semibold" : "text-[#667781]"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
+                                                        {chat.last_message && <span className={`text-[12px] whitespace-nowrap ml-2 ${showUnreadBadge ? "text-[#00a884] font-medium" : "text-[#667781]"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
                                                     </div>
                                                     <div className="flex items-center justify-between mt-0.5">
-                                                        <p className="text-[14px] text-[#667781] truncate flex-1">
+                                                        <p className={`text-[14px] truncate flex-1 ${showUnreadBadge ? "text-[#111b21] font-medium" : "text-[#667781]"}`}>
                                                             {(() => {
                                                                 const msg = chat.last_message?.message;
                                                                 if (!msg && chat.last_message?.media_url) return <span className="flex items-center gap-1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Photo</span>;
@@ -1027,7 +1118,7 @@ export default function ChatPage() {
                                                                 return msg;
                                                             })()}
                                                         </p>
-                                                        {showUnreadBadge && <div className="bg-gray-500 text-white text-[12px] font-medium min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 ml-2">{chat.unread_count}</div>}
+                                                        {showUnreadBadge && <div className="bg-[#25D366] text-white text-[12px] font-bold min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 ml-2 shadow-sm">{chat.unread_count}</div>}
                                                     </div>
                                                 </div>
                                             </div>
