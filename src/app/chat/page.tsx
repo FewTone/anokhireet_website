@@ -129,7 +129,7 @@ export default function ChatPage() {
 
     // Load messages when chat is selected
     useEffect(() => {
-        if (selectedChat) {
+        if (selectedChat && currentUser) {
             setMessages([]); // Clear previous messages
             setHasMoreMessages(true);
             setPage(0);
@@ -147,7 +147,9 @@ export default function ChatPage() {
                 }
             }
         };
-    }, [selectedChat]);
+    }, [selectedChat, currentUser]);
+
+
 
     // Handle typing status broadcast
     useEffect(() => {
@@ -195,10 +197,10 @@ export default function ChatPage() {
         const lastMessage = messages[messages.length - 1];
         const isFromMe = lastMessage.sender_user_id === currentUser?.id;
 
-        if (isUserAtBottomRef.current || isFromMe) {
+        if (isUserAtBottomRef.current || isFromMe || (otherUserTyping && isUserAtBottomRef.current)) {
             scrollToBottom();
         }
-    }, [messages]);
+    }, [messages, otherUserTyping]);
 
     // Scroll listener to track position and load more
     const handleScroll = () => {
@@ -347,7 +349,7 @@ export default function ChatPage() {
                         },
                         other_user: otherUser || { id: otherUserId, name: "Unknown User" },
                         last_message: lastMessages || undefined,
-                        unread_count: (selectedChat?.id === chat.id) ? 0 : (unreadCount || 0),
+                        unread_count: (selectedChat?.id === chat.id || lastMessages?.sender_user_id === currentUser.id || lastMessages?.is_read) ? 0 : (unreadCount || 0),
                     };
                 })
             );
@@ -480,7 +482,8 @@ export default function ChatPage() {
                         ...chat.last_message,
                         is_read: updatedMessage.is_read,
                         is_delivered: updatedMessage.is_delivered
-                    } as any
+                    } as any,
+                    unread_count: updatedMessage.is_read ? 0 : chat.unread_count
                 };
             }
             return chat;
@@ -1055,9 +1058,7 @@ export default function ChatPage() {
                                     <div className="flex-1 min-w-0 cursor-pointer">
                                         <h3 className="text-[16px] font-medium text-[#111b21] leading-tight truncate">{selectedChat.other_user?.name}</h3>
                                         <p className="text-[13px] text-gray-500 truncate h-4 flex items-center gap-1">
-                                            {otherUserTyping ? (
-                                                <span className="text-[#00a884] font-medium animate-pulse">typing...</span>
-                                            ) : otherUserOnline ? (
+                                            {otherUserOnline ? (
                                                 <>
                                                     <span className="w-2 h-2 rounded-full bg-[#00a884]"></span>
                                                     <span>Online</span>
@@ -1133,6 +1134,14 @@ export default function ChatPage() {
                                         })}
                                         <div ref={messagesEndRef} />
                                     </div>
+                                    {/* Typing Indicator (Inside Flow) */}
+                                    {otherUserTyping && (
+                                        <div className="flex items-center gap-1 bg-white border border-gray-100 shadow-sm rounded-2xl px-3 py-2 w-fit ml-4 mb-2">
+                                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Reply Preview Banner */}
@@ -1151,6 +1160,9 @@ export default function ChatPage() {
                                         </button>
                                     </div>
                                 )}
+
+                                {/* Typing Indicator (Above Input Bar) */}
+
 
                                 {/* Input Area */}
                                 <div className="bg-[#f0f2f5] px-4 py-2 flex items-center gap-2 relative z-20 flex-shrink-0">
