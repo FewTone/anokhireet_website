@@ -162,122 +162,41 @@ export default function Navbar() {
                 {/* Mobile Layout */}
                 {/* Mobile Layout */}
                 {/* Mobile Layout */}
-                {isHomePage || pathname?.startsWith("/products") ? (
-                    // Home Page Overlay Layout OR Products Page Layout (Same structure, diff style)
-                    <div className={`md:hidden px-4 transition-all duration-300 ${isHomePage
-                        ? "bg-gradient-to-b from-black via-black to-transparent pt-4 pb-12"
-                        : "bg-white border-b border-gray-100 py-1"
-                        }`}>
-                        {!pathname?.startsWith("/chat") && (
-                            <div className="flex flex-col gap-3 w-full">
-                                {/* Top Row: Logo */}
-                                <div className="flex justify-center items-center">
-                                    <Link href="/" className="flex items-center gap-2">
-                                        <Image
-                                            src="/Anokhi reet Logo.svg"
-                                            alt="Anokhi Reet Logo"
-                                            width={40}
-                                            height={40}
-                                            className={`w-10 h-10 object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
-                                            priority
-                                            suppressHydrationWarning
-                                        />
-                                        <Image
-                                            src="/anokhi-reet.svg"
-                                            alt="Anokhi Reet"
-                                            width={120}
-                                            height={18}
-                                            className={`h-4 w-auto object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
-                                            style={{ width: "auto" }}
-                                            priority
-                                            suppressHydrationWarning
-                                        />
-                                    </Link>
-                                </div>
-
-                                {/* Bottom Row: Search & Chat */}
-                                <div className="flex items-center gap-3 w-full">
-                                    <form onSubmit={handleSearch} className={`flex flex-1 h-[40px] border text-sm items-center pl-3 rounded-none ${isHomePage ? 'border-white/30 backdrop-blur-sm bg-white/10' : 'border-[#ccc] bg-white'}`}>
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`opacity-70 ${isHomePage ? 'text-white' : 'text-gray-500'}`}>
-                                            <circle cx="11" cy="11" r="8"></circle>
-                                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                        </svg>
-                                        <input
-                                            type="search"
-                                            placeholder="Search by Product ID or Name"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                            onKeyPress={handleSearchKeyPress}
-                                            className={`h-full flex-1 text-[12px] font-light pl-3 border-none outline-none bg-transparent min-w-0 ${isHomePage ? 'text-white placeholder-white/70' : 'text-black placeholder-gray-400'}`}
-                                        />
-                                        {searchQuery && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setSearchQuery("")}
-                                                className={`p-2 transition-colors focus:outline-none ${isHomePage ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
-                                                aria-label="Clear search"
-                                            >
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                </svg>
-                                            </button>
-                                        )}
-                                        <button type="submit" className="hidden" aria-label="Search" />
-                                    </form>
-                                    <Link href="/chat" className={`flex-shrink-0 p-2 relative ${isHomePage ? 'text-white' : 'text-black'}`}>
-                                        <svg
-                                            width="28"
-                                            height="28"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="1"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        >
-                                            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                                        </svg>
-                                        {unreadCount > 0 && (
-                                            <span className="absolute top-1 right-0.5 bg-[#25D366] text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 border border-white">
-                                                {unreadCount > 99 ? '99+' : unreadCount}
-                                            </span>
-                                        )}
-                                    </Link>
-                                </div>
+                <div className={`md:hidden px-4 transition-all duration-300 ${isHomePage
+                    ? "bg-gradient-to-b from-black via-black to-transparent pt-4 pb-12"
+                    : "bg-white border-b border-gray-100 pt-3 pb-2"
+                    }`}>
+                    {!pathname?.startsWith("/chat") && (
+                        <div className="flex flex-col gap-3 w-full">
+                            {/* Top Row: Logo */}
+                            <div className="flex justify-center items-center">
+                                <Link href="/" className="flex items-center gap-2">
+                                    <Image
+                                        src="/Anokhi reet Logo.svg"
+                                        alt="Anokhi Reet Logo"
+                                        width={40}
+                                        height={40}
+                                        className={`w-10 h-10 object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
+                                        priority
+                                        suppressHydrationWarning
+                                    />
+                                    <Image
+                                        src="/anokhi-reet.svg"
+                                        alt="Anokhi Reet"
+                                        width={120}
+                                        height={18}
+                                        className={`h-4 w-auto object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
+                                        style={{ width: "auto" }}
+                                        priority
+                                        suppressHydrationWarning
+                                    />
+                                </Link>
                             </div>
-                        )}
-                    </div>
-                ) : (
-                    // Standard Mobile Layout (Other Pages)
-                    <div className="md:hidden py-1 px-4">
-                        <div className="flex justify-center items-center mb-3">
-                            <Link href="/" className="flex items-center gap-2">
-                                <Image
-                                    src="/Anokhi reet Logo.svg"
-                                    alt="Anokhi Reet Logo"
-                                    width={40}
-                                    height={40}
-                                    className="w-10 h-10 object-contain cursor-pointer brightness-0"
-                                    priority
-                                    suppressHydrationWarning
-                                />
-                                <Image
-                                    src="/anokhi-reet.svg"
-                                    alt="Anokhi Reet"
-                                    width={120}
-                                    height={18}
-                                    className="h-4 w-auto object-contain cursor-pointer brightness-0"
-                                    style={{ width: "auto" }}
-                                    priority
-                                    suppressHydrationWarning
-                                />
-                            </Link>
-                        </div>
-                        {!pathname?.startsWith("/chat") && (
-                            <div className="flex items-center gap-2">
-                                <form onSubmit={handleSearch} className="flex flex-1 h-[38px] border border-[#ccc] text-sm items-center pl-2 bg-white">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-60 text-black">
+
+                            {/* Bottom Row: Search & Chat */}
+                            <div className="flex items-center gap-3 w-full">
+                                <form onSubmit={handleSearch} className={`flex flex-1 h-[40px] border text-sm items-center pl-3 rounded-none ${isHomePage ? 'border-white/30 backdrop-blur-sm bg-white/10' : 'border-[#ccc] bg-white'}`}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`opacity-70 ${isHomePage ? 'text-white' : 'text-gray-500'}`}>
                                         <circle cx="11" cy="11" r="8"></circle>
                                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                                     </svg>
@@ -287,13 +206,13 @@ export default function Navbar() {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         onKeyPress={handleSearchKeyPress}
-                                        className="h-full flex-1 text-[0.9rem] pl-2 border-none outline-none bg-transparent text-black min-w-0"
+                                        className={`h-full flex-1 text-[12px] font-light pl-3 border-none outline-none bg-transparent min-w-0 ${isHomePage ? 'text-white placeholder-white/70' : 'text-black placeholder-gray-400'}`}
                                     />
                                     {searchQuery && (
                                         <button
                                             type="button"
                                             onClick={() => setSearchQuery("")}
-                                            className="p-2 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                            className={`p-2 transition-colors focus:outline-none ${isHomePage ? 'text-white/70 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
                                             aria-label="Clear search"
                                         >
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -304,10 +223,10 @@ export default function Navbar() {
                                     )}
                                     <button type="submit" className="hidden" aria-label="Search" />
                                 </form>
-                                <Link href="/chat" className="flex-shrink-0 p-2 text-black relative">
+                                <Link href="/chat" className={`flex-shrink-0 p-2 relative ${isHomePage ? 'text-white' : 'text-black'}`}>
                                     <svg
-                                        width="24"
-                                        height="24"
+                                        width="28"
+                                        height="28"
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         stroke="currentColor"
@@ -318,15 +237,15 @@ export default function Navbar() {
                                         <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                                     </svg>
                                     {unreadCount > 0 && (
-                                        <span className="absolute -top-0.5 -right-0.5 bg-[#25D366] text-white text-[10px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full px-1 border border-white">
+                                        <span className="absolute top-1 right-0.5 bg-[#25D366] text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 border border-white">
                                             {unreadCount > 99 ? '99+' : unreadCount}
                                         </span>
                                     )}
                                 </Link>
                             </div>
-                        )}
-                    </div>
-                )}
+                        </div>
+                    )}
+                </div>
             </nav>
         </>
     );
