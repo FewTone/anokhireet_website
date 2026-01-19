@@ -37,7 +37,6 @@ export default function ProductInfo({
                 <div className="mb-6 space-y-1">
                     <div className="flex items-baseline gap-2">
                         <span className="text-md font-semibold text-gray-900 uppercase tracking-wider">RENT</span>
-                        <span className="text-gray-400">•</span>
                         <span className="text-md font-semibold text-gray-900">
                             {formatPrice(price)}
                         </span>
@@ -45,8 +44,7 @@ export default function ProductInfo({
                     {originalPrice && (
                         <div className="flex items-baseline gap-2">
                             <span className="text-sm font-normal text-gray-900 uppercase tracking-wider">MRP</span>
-                            <span className="text-gray-400">•</span>
-                            <span className="text-sm font-normal text-gray-900 line-through opacity-60">
+                            <span className="text-sm font-normal text-gray-900">
                                 {formatPrice(originalPrice)}
                             </span>
                         </div>
