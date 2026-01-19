@@ -31,8 +31,8 @@ export default function LoginModal() {
 
     const [cities, setCities] = useState<any[]>([]);
     const [selectedCities, setSelectedCities] = useState<string[]>([]);
-    const [showAddCity, setShowAddCity] = useState(false);
-    const [newCityName, setNewCityName] = useState("");
+
+    const [citySearch, setCitySearch] = useState("");
 
     useEffect(() => {
         if (showLogin) {
@@ -68,38 +68,7 @@ export default function LoginModal() {
         }
     };
 
-    const handleAddNewCity = async () => {
-        if (!newCityName.trim()) {
-            setError("Please enter a city name");
-            return;
-        }
 
-        if (cities.some(c => c.name.toLowerCase() === newCityName.trim().toLowerCase())) {
-            setError("This city already exists");
-            return;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from("cities")
-                .insert([{
-                    name: newCityName.trim(),
-                    display_order: cities.length
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            setCities(prev => [...prev, data]);
-            setSelectedCities(prev => [...prev, data.id]);
-            setNewCityName("");
-            setShowAddCity(false);
-        } catch (error: any) {
-            console.error("Error adding city:", error);
-            setError(error.message || "Failed to add city");
-        }
-    };
 
     const checkSession = async () => {
         console.log("🔍 [Profile] checkSession started");
@@ -418,6 +387,7 @@ export default function LoginModal() {
     const handleCreateNewUser = async () => {
         if (!firstName.trim()) { setError("Please enter your name"); return; }
         if (!lastName.trim()) { setError("Please enter your surname"); return; }
+        if (selectedCities.length === 0) { setError("Please select at least one city"); return; }
 
         const fullName = `${firstName.trim()} ${lastName.trim()}`;
         setLoading(true);
@@ -541,7 +511,7 @@ export default function LoginModal() {
                                 alt="Ring"
                                 width={300}
                                 height={300}
-                                className="object-contain"
+                                className="object-contain brightness-0"
                             />
                         </div>
                         {/* Inner Logo */}
@@ -551,7 +521,7 @@ export default function LoginModal() {
                                 alt="Logo"
                                 width={120}
                                 height={120}
-                                className="object-contain"
+                                className="object-contain brightness-0"
                             />
                         </div>
                     </div>
@@ -712,78 +682,76 @@ export default function LoginModal() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Surname</label>
                                     <input
                                         type="text"
                                         value={lastName}
                                         onChange={(e) => setLastName(e.target.value)}
                                         className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
-                                        placeholder="Last Name"
+                                        placeholder="Surname"
                                     />
                                 </div>
 
                                 {/* City Selection */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">City (Optional)</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
 
-                                    {cities.length > 0 ? (
-                                        <div className="grid grid-cols-2 gap-2 mb-2 max-h-40 overflow-y-auto">
-                                            {cities.map((city) => (
-                                                <div
-                                                    key={city.id}
-                                                    onClick={() => {
-                                                        setSelectedCities(prev =>
-                                                            prev.includes(city.id)
-                                                                ? prev.filter(id => id !== city.id)
-                                                                : [...prev, city.id]
-                                                        );
-                                                    }}
-                                                    className={`p-2 border text-sm cursor-pointer transition-colors ${selectedCities.includes(city.id)
-                                                        ? "bg-black text-white border-black"
-                                                        : "bg-white text-gray-700 border-gray-200 hover:border-gray-400"
-                                                        }`}
-                                                >
-                                                    {city.name}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-gray-500 mb-2">No cities available.</p>
-                                    )}
-
-                                    {!showAddCity ? (
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowAddCity(true)}
-                                            className="text-sm text-black underline hover:text-gray-700"
-                                        >
-                                            + Add New City
-                                        </button>
-                                    ) : (
-                                        <div className="flex gap-2 mt-2">
-                                            <input
-                                                type="text"
-                                                value={newCityName}
-                                                onChange={(e) => setNewCityName(e.target.value)}
-                                                className="flex-1 p-2 border border-gray-300 text-sm"
-                                                placeholder="Enter city name"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={handleAddNewCity}
-                                                className="px-3 py-2 bg-black text-white text-sm"
-                                            >
-                                                Add
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowAddCity(false)}
-                                                className="px-3 py-2 bg-gray-200 text-gray-800 text-sm"
-                                            >
-                                                Cancel
-                                            </button>
+                                    {/* Selected Cities Tags */}
+                                    {selectedCities.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {selectedCities.map(cityId => {
+                                                const city = cities.find(c => c.id === cityId);
+                                                return city ? (
+                                                    <div key={cityId} className="flex items-center gap-1 bg-black text-white text-xs px-2 py-1 rounded-sm">
+                                                        {city.name}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSelectedCities(prev => prev.filter(id => id !== cityId))}
+                                                            className="hover:text-gray-300 ml-1 font-bold"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                ) : null;
+                                            })}
                                         </div>
                                     )}
+
+                                    {/* Search Input */}
+                                    <div className="relative mb-2">
+                                        <input
+                                            type="text"
+                                            value={citySearch}
+                                            onChange={(e) => setCitySearch(e.target.value)}
+                                            className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black text-sm"
+                                            placeholder="Search city..."
+                                        />
+
+                                        {/* Filtered List */}
+                                        {citySearch && (
+                                            <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                                {cities
+                                                    .filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()) && !selectedCities.includes(c.id))
+                                                    .map(city => (
+                                                        <div
+                                                            key={city.id}
+                                                            onClick={() => {
+                                                                setSelectedCities([city.id]);
+                                                                setCitySearch("");
+                                                            }}
+                                                            className="p-2 text-sm hover:bg-gray-100 cursor-pointer"
+                                                        >
+                                                            {city.name}
+                                                        </div>
+                                                    ))}
+                                                {cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()) && !selectedCities.includes(c.id)).length === 0 && (
+                                                    <div className="p-2 text-sm text-gray-500">No matching cities found.</div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+
+
                                 </div>
 
                                 {error && (
