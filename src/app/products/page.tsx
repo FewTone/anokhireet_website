@@ -143,6 +143,10 @@ export default function ProductsPage() {
         if (appliedOwnerId) {
             params.set("owner_id", appliedOwnerId);
         }
+        // If showing all products (no specific type/occasion) but want to view grid
+        if (activeTag === "ALL" && appliedProductTypes.length === 0 && appliedOccasions.length === 0 && !appliedOwnerId && !searchQuery && !showCategories) {
+            params.set("view", "all");
+        }
         const newUrl = params.toString() ? `/products?${params.toString()}` : '/products';
         const currentUrl = window.location.pathname + window.location.search;
 
@@ -150,7 +154,7 @@ export default function ProductsPage() {
         if (newUrl !== currentUrl) {
             router.push(newUrl);
         }
-    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, maxPrice, router]);
+    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, maxPrice, router, activeTag, showCategories]);
 
     // Check URL params for auto-filtering (runs after filter options are loaded)
     useEffect(() => {
@@ -163,6 +167,13 @@ export default function ProductsPage() {
         const priceMaxParam = searchParams.get("price_max");
         const sortParam = searchParams.get("sort");
         const ownerIdParam = searchParams.get("owner_id");
+        const viewParam = searchParams.get("view");
+
+        // Handle view=all param
+        if (viewParam === "all") {
+            setShowCategories(false);
+            setActiveTag("ALL");
+        }
 
         if (productTypeParam && productTypes.length > 0) {
             const type = productTypes.find(pt => pt.id === productTypeParam);
@@ -192,7 +203,9 @@ export default function ProductsPage() {
             setAppliedProductTypes([]);
             setCategoryName("");
             setActiveTag("ALL");
-            if (!occasionParam && !ownerIdParam) setShowCategories(true);
+            setCategoryName("");
+            setActiveTag("ALL");
+            if (!occasionParam && !ownerIdParam && viewParam !== "all") setShowCategories(true);
         }
 
         if (occasionParam && occasions.length > 0) {
@@ -223,7 +236,9 @@ export default function ProductsPage() {
             setAppliedOccasions([]);
             setCategoryName("");
             setActiveTag("ALL");
-            if (!productTypeParam && !ownerIdParam) setShowCategories(true);
+            setCategoryName("");
+            setActiveTag("ALL");
+            if (!productTypeParam && !ownerIdParam && viewParam !== "all") setShowCategories(true);
         }
 
         // Read colors from URL
@@ -302,6 +317,12 @@ export default function ProductsPage() {
             setShowCategories(false); // Hide categories on mobile to show user products
         } else {
             setAppliedOwnerId("");
+        }
+
+        // Handle clean URL (Back to Categories)
+        if (!viewParam && !productTypeParam && !occasionParam && !ownerIdParam && !searchParam && !colorsParam && !materialsParam && !citiesParam && (!priceMinParam || priceMinParam === '0')) {
+            setShowCategories(true);
+            setActiveTag("ALL");
         }
     }, [searchParams, productTypes, occasions, maxPrice]);
 
