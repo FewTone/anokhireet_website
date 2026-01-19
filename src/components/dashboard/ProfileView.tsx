@@ -174,9 +174,9 @@ export default function ProfileView({
 
     return (
         <div className="w-full">
-            <h2 className="text-2xl font-bold mb-6 text-center">Profile Details</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-center uppercase tracking-wide">Profile Details</h2>
 
-            <div className="bg-white border border-gray-100 rounded-lg p-8 max-w-xl mx-auto min-h-[400px]">
+            <div className="bg-white border border-gray-100 rounded-lg p-8 w-full min-h-[400px]">
                 <div className="space-y-6">
 
                     {/* Avatar Section */}
@@ -192,7 +192,7 @@ export default function ProfileView({
                                         unoptimized
                                     />
                                 ) : (
-                                    <span className="text-2xl font-bold text-gray-400">
+                                    <span className="text-2xl font-semibold text-gray-400 uppercase">
                                         {userName ? userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
                                     </span>
                                 )}
@@ -221,7 +221,7 @@ export default function ProfileView({
                     {/* Read-only Fields */}
                     <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                 Full Name
                             </label>
                             <input
@@ -233,7 +233,7 @@ export default function ProfileView({
                         </div>
 
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                 Mobile Number
                             </label>
                             <input
@@ -249,7 +249,7 @@ export default function ProfileView({
 
                     {/* Editable Fields */}
                     <div className="relative">
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                             Location
                         </label>
                         <input
@@ -295,7 +295,7 @@ export default function ProfileView({
 
                     <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                 Gender
                             </label>
                             {isEditing ? (
@@ -317,7 +317,7 @@ export default function ProfileView({
                         </div>
 
                         <div className={isEditing ? "custom-datepicker-wrapper" : ""}>
-                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2 pointer-events-none">
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 pointer-events-none">
                                 Birthdate
                             </label>
                             {isEditing ? (
@@ -357,7 +357,7 @@ export default function ProfileView({
                             {!isEditing ? (
                                 <button
                                     onClick={() => setIsEditing(true)}
-                                    className="px-8 py-3 bg-black text-white text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
+                                    className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors"
                                 >
                                     Edit Profile
                                 </button>
@@ -366,7 +366,7 @@ export default function ProfileView({
                                     <button
                                         onClick={handleSave}
                                         disabled={loading}
-                                        className="px-8 py-3 bg-black text-white text-sm font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                        className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
                                     >
                                         {loading ? "Saving..." : "Save Changes"}
                                     </button>
@@ -381,7 +381,7 @@ export default function ProfileView({
                                             setStatusMessage(null);
                                         }}
                                         disabled={loading}
-                                        className="px-8 py-3 bg-gray-200 text-gray-900 text-sm font-bold uppercase tracking-wide hover:bg-gray-300 transition-colors"
+                                        className="px-8 py-3 bg-gray-200 text-gray-900 text-sm font-semibold uppercase tracking-wide hover:bg-gray-300 transition-colors"
                                     >
                                         Cancel
                                     </button>

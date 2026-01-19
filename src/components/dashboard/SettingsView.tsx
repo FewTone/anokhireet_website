@@ -46,13 +46,13 @@ export default function SettingsView() {
 
     return (
         <div className="w-full">
-            <h2 className="text-xl font-bold mb-8 text-center tracking-wide uppercase">Settings</h2>
+            <h2 className="text-xl font-semibold mb-8 text-center tracking-wide uppercase">Settings</h2>
 
 
 
 
 
-            <div className="bg-white rounded-md overflow-hidden max-w-2xl mx-auto">
+            <div className="bg-white rounded-md overflow-hidden w-full">
                 {items.map((item, index) => (
                     <div
                         key={index}

@@ -36,7 +36,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
                 <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
                     <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
                         <div className="text-red-500 text-6xl mb-4">⚠️</div>
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 mb-2 uppercase tracking-wide">Something went wrong</h1>
                         <p className="text-gray-600 mb-6">
                             An error occurred. Please refresh the page or try again.
                         </p>

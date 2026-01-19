@@ -44,11 +44,11 @@ export default function WishListPage() {
         <>
             <Navbar />
             <main className="min-h-screen bg-white md:pt-20 pb-12">
-                <div className="max-w-[1400px] mx-auto md:px-4">
-                    <h1 className="text-3xl font-bold mb-4 md:mb-8 px-4 md:px-0 mt-4 md:mt-0">Wish List</h1>
+                <div className="w-full">
+                    <h1 className="text-3xl font-semibold mb-4 md:mb-8 px-4 md:px-0 mt-4 md:mt-0 uppercase tracking-wide">Wish List</h1>
 
                     {loading ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 md:gap-2 px-1">
                             {Array.from({ length: 4 }).map((_, i) => (
                                 <ProductCardSkeleton key={i} />
                             ))}
@@ -72,7 +72,7 @@ export default function WishListPage() {
                             <p className="text-gray-400 text-sm">Start adding products to your wishlist!</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 md:gap-2 px-1">
                             {wishlist.map((product) => (
                                 <ProductCard key={product.id} product={product} disableHover={true} />
                             ))}

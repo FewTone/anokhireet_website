@@ -289,7 +289,7 @@ export default function ManageProductsPage() {
                                     </svg>
                                     Back to Users
                                 </button>
-                                <h1 className="text-3xl font-bold text-gray-900">
+                                <h1 className="text-3xl font-semibold text-gray-900">
                                     Products for {user?.name || "User"}
                                 </h1>
                                 <div className="flex items-center gap-4 mt-2">
@@ -337,7 +337,7 @@ export default function ManageProductsPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Total Products</p>
-                                        <p className="text-2xl font-bold text-gray-900 mt-1">{userProducts.length}</p>
+                                        <p className="text-2xl font-semibold text-gray-900 mt-1">{userProducts.length}</p>
                                     </div>
                                     <div className="p-3 bg-blue-100 rounded-none">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-blue-600">
@@ -350,7 +350,7 @@ export default function ManageProductsPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Total Images</p>
-                                        <p className="text-2xl font-bold text-gray-900 mt-1">
+                                        <p className="text-2xl font-semibold text-gray-900 mt-1">
                                             {userProducts.reduce((sum, p) => {
                                                 const images = p.images && Array.isArray(p.images) ? p.images.length : (p.image ? 1 : 0);
                                                 return sum + images;
@@ -370,7 +370,7 @@ export default function ManageProductsPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Avg. Price</p>
-                                        <p className="text-2xl font-bold text-gray-900 mt-1">
+                                        <p className="text-2xl font-semibold text-gray-900 mt-1">
                                             {(() => {
                                                 const prices = userProducts
                                                     .map(p => parseFloat(p.price.replace(/[₹,]/g, '')) || 0)
@@ -393,7 +393,7 @@ export default function ManageProductsPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Categories</p>
-                                        <p className="text-2xl font-bold text-gray-900 mt-1">
+                                        <p className="text-2xl font-semibold text-gray-900 mt-1">
                                             {(() => {
                                                 const categories = new Set<string>();
                                                 userProducts.forEach(p => {
@@ -442,37 +442,37 @@ export default function ManageProductsPage() {
                                 <table className="w-full">
                                     <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Image
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Product Details
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Types
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Occasions
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Colors
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Materials
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Cities
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Pricing
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Images
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Uploaded
                                             </th>
-                                            <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Actions
                                             </th>
                                         </tr>
@@ -702,7 +702,7 @@ export default function ManageProductsPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Product?</h3>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Product?</h3>
                             <p className="text-gray-600 mb-6">
                                 Are you sure you want to delete <span className="font-semibold text-gray-900">"{deleteConfirmation.productName}"</span>? This action cannot be undone.
                             </p>

@@ -230,7 +230,7 @@ export default function UserPage() {
         <>
             <Navbar />
             <main className="min-h-[calc(100vh-70px)] bg-white">
-                <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)] max-w-[1400px] mx-auto">
+                <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)] w-full">
 
                     {/* Left Sidebar - Desktop Only */}
                     <div className="w-full md:w-[320px] p-6 hidden md:block">
@@ -247,7 +247,7 @@ export default function UserPage() {
                     </div>
 
                     {/* Main Content */}
-                    <div className={`flex-1 md:p-4 border-gray-100 ${activeView === 'menu' ? 'p-0 border-none' : 'p-0 md:p-2 border-l'}`}>
+                    <div className="flex-1 p-0 transition-all duration-300">
                         {loading ? (
                             <div className="animate-pulse space-y-8 p-4">
                                 <div className="h-48 bg-gray-200 rounded"></div>

@@ -69,7 +69,7 @@ const FacetManagementSection: React.FC<FacetManagementSectionProps> = ({
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+                    <h3 className="text-xl font-semibold uppercase tracking-wide text-gray-900">{title}</h3>
                     <p className="text-sm text-gray-600 mt-1">{description}</p>
                 </div>
                 <button
@@ -3275,7 +3275,7 @@ To get these values:
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="bg-white rounded-none shadow-lg p-8 max-w-md w-full">
-                    <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+                    <h2 className="text-2xl font-semibold mb-6 text-center">Admin Login</h2>
                     <form onSubmit={handleAdminLogin} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -3340,7 +3340,7 @@ To get these values:
                 <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <div className="flex items-center gap-4">
-                            <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
+                            <h1 className="text-xl font-semibold uppercase tracking-wide text-gray-900">Admin Panel</h1>
                             <span className="text-sm text-gray-500">Anokhi Reet</span>
                         </div>
                         <div className="flex items-center gap-4">
@@ -3365,7 +3365,7 @@ To get these values:
                         <div className="bg-white rounded-none border border-gray-200 overflow-hidden sticky self-start max-h-[calc(100vh-7rem)] flex flex-col" id="admin-sidebar-container" style={{ top: 'calc(4rem + 2rem)', position: 'sticky' }}>
                             {/* Sidebar Header */}
                             <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
-                                <h2 className="text-lg font-bold text-gray-900">Admin Panel</h2>
+                                <h2 className="text-lg font-semibold text-gray-900">Admin Panel</h2>
                                 <p className="text-xs text-gray-600 mt-1">Navigation</p>
                             </div>
 
@@ -3383,7 +3383,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "dashboard"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "dashboard"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3409,7 +3409,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "products"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "products"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3435,7 +3435,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "users"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "users"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3461,7 +3461,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "featured"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "featured"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3487,7 +3487,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "hero"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "hero"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3510,7 +3510,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "contact"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "contact"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3532,7 +3532,7 @@ To get these values:
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "reports"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "reports"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3581,7 +3581,7 @@ To get these values:
                                 <div className="bg-white rounded-none border border-gray-200 p-6">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
-                                            <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
+                                            <h2 className="text-2xl font-semibold uppercase tracking-wide text-gray-900">Featured Categories</h2>
                                             <p className="text-sm text-gray-600 mt-1">Pin categories to display them in FEATURED CATEGORIES on the home page</p>
                                         </div>
                                         <button
@@ -3633,7 +3633,7 @@ To get these values:
                                                 >
                                                     <div className="flex items-center gap-3 flex-1">
                                                         <div className="flex flex-col items-center gap-1">
-                                                            <div className="text-gray-400 font-bold text-lg w-8 text-center">{index + 1}</div>
+                                                            <div className="text-gray-400 font-semibold text-lg w-8 text-center">{index + 1}</div>
                                                             <svg
                                                                 className="w-5 h-5 text-gray-400 cursor-grab active:cursor-grabbing"
                                                                 fill="none"
@@ -3809,7 +3809,7 @@ To get these values:
                                                 </svg>
                                             </div>
                                         </div>
-                                        <p className="text-4xl font-bold text-gray-900">{totalProducts}</p>
+                                        <p className="text-4xl font-semibold text-gray-900">{totalProducts}</p>
                                         <p className="text-xs text-gray-500 mt-2">
                                             {userProducts.length} user products
                                         </p>
@@ -3826,7 +3826,7 @@ To get these values:
                                                 </svg>
                                             </div>
                                         </div>
-                                        <p className="text-4xl font-bold text-gray-900">{totalUsers}</p>
+                                        <p className="text-4xl font-semibold text-gray-900">{totalUsers}</p>
                                         <div className="text-xs text-gray-500 mt-2 space-y-1">
                                             <p>• Seller users: <span className="font-semibold text-gray-700">{sellerUsersCount}</span></p>
                                             <p>• Visitor users: <span className="font-semibold text-gray-700">{visitorUsersCount}</span></p>
@@ -3844,7 +3844,7 @@ To get these values:
                                                 </svg>
                                             </div>
                                         </div>
-                                        <p className="text-4xl font-bold text-gray-900">
+                                        <p className="text-4xl font-semibold text-gray-900">
                                             {productTypes.length + occasions.length + colors.length + materials.length + cities.length}
                                         </p>
                                         <p className="text-xs text-gray-500 mt-2">
@@ -3862,7 +3862,7 @@ To get these values:
                                                 </svg>
                                             </div>
                                         </div>
-                                        <p className="text-4xl font-bold text-gray-900">{totalViews.toLocaleString()}</p>
+                                        <p className="text-4xl font-semibold text-gray-900">{totalViews.toLocaleString()}</p>
                                         <p className="text-xs text-gray-500 mt-2">
                                             All-time product views (includes deleted)
                                         </p>
@@ -4193,7 +4193,7 @@ To get these values:
                                     <div>
                                         <div className="flex justify-between items-center mb-6">
                                             <div>
-                                                <h2 className="text-xl font-bold text-gray-900">All Products</h2>
+                                                <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">All Products</h2>
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     Showing {displayCount} of {totalProducts} products
                                                 </p>
@@ -5031,19 +5031,19 @@ To get these values:
                                         <table className="w-full">
                                             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                                                 <tr>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                         Name
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                         Phone
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                         Created
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                         Status
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                         Actions
                                                     </th>
                                                 </tr>
@@ -5152,7 +5152,7 @@ To get these values:
                                 <div className="bg-white rounded-none max-w-md w-full">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-2xl font-bold">{editingUser ? "Edit User" : "Create User Account"}</h2>
+                                            <h2 className="text-2xl font-semibold">{editingUser ? "Edit User" : "Create User Account"}</h2>
                                             <button
                                                 onClick={() => {
                                                     setIsUserModalOpen(false);
@@ -5404,7 +5404,7 @@ To get these values:
                                     {/* Modal Header */}
                                     <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                                         <div>
-                                            <h2 className="text-2xl font-bold text-gray-900">
+                                            <h2 className="text-2xl font-semibold uppercase tracking-wide text-gray-900">
                                                 Products for {users.find((u) => u.id === selectedUserId)?.name || "User"}
                                             </h2>
                                             <p className="text-sm text-gray-600 mt-1">
@@ -5441,16 +5441,16 @@ To get these values:
                                                     <table className="w-full">
                                                         <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                                                             <tr>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                     Image
                                                                 </th>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                     Name
                                                                 </th>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                     Price
                                                                 </th>
-                                                                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                                     Actions
                                                                 </th>
                                                             </tr>
@@ -5578,7 +5578,7 @@ To get these values:
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
                                             <div>
-                                                <h2 className="text-2xl font-bold">
+                                                <h2 className="text-2xl font-semibold">
                                                     {editingUserProduct ? "Edit User Product" : "Add User Product"}
                                                 </h2>
                                                 {selectedUserId && (
@@ -5992,7 +5992,7 @@ To get these values:
                                 <div className="bg-white rounded-none border border-gray-200 p-6">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
-                                            <h2 className="text-2xl font-bold text-gray-900">Hero Section Slides</h2>
+                                            <h2 className="text-2xl font-semibold uppercase tracking-wide text-gray-900">Hero Section Slides</h2>
                                             <p className="text-sm text-gray-600 mt-1">Manage hero section images and content. Drag to reorder slides.</p>
                                         </div>
                                         <button
@@ -6132,7 +6132,7 @@ To get these values:
                                 <div className="bg-white rounded-none max-w-md w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-2xl font-bold">
+                                            <h2 className="text-2xl font-semibold">
                                                 {editingFacet ? `Edit ${activeFacetTab === "product_types" ? "Product Type" : activeFacetTab === "occasions" ? "Occasion" : activeFacetTab === "colors" ? "Color" : activeFacetTab === "materials" ? "Material" : "City"}` : `Add ${activeFacetTab === "product_types" ? "Product Type" : activeFacetTab === "occasions" ? "Occasion" : activeFacetTab === "colors" ? "Color" : activeFacetTab === "materials" ? "Material" : "City"}`}
                                             </h2>
                                             <button
@@ -6304,7 +6304,7 @@ To get these values:
                                 <div className="bg-white rounded-none max-w-md w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-2xl font-bold">
+                                            <h2 className="text-2xl font-semibold">
                                                 {editingCategory ? "Edit Category" : "Add Category"}
                                             </h2>
                                             <button
@@ -6423,7 +6423,7 @@ To get these values:
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
                                         </div>
-                                        <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+                                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
                                             Delete User?
                                         </h3>
                                         <p className="text-sm text-gray-600 text-center mb-6">
@@ -6466,7 +6466,7 @@ To get these values:
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
                                         </div>
-                                        <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
+                                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
                                             Delete Product?
                                         </h3>
                                         <p className="text-sm text-gray-600 text-center mb-6">
@@ -6474,7 +6474,7 @@ To get these values:
                                         </p>
                                         <div className="bg-red-50 border border-red-200 rounded-none p-4 mb-6">
                                             <p className="text-sm text-red-800 font-medium mb-1 text-center">This will remove the product from the website permanently.</p>
-                                            <p className="text-xs text-red-600 text-center uppercase tracking-wider font-bold mt-2">This action cannot be undone.</p>
+                                            <p className="text-xs text-red-600 text-center uppercase tracking-wider font-semibold mt-2">This action cannot be undone.</p>
                                         </div>
                                         <div className="flex gap-3">
                                             <button
@@ -6501,7 +6501,7 @@ To get these values:
                                 <div className="bg-white rounded-none max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                                     <div className="p-6">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h2 className="text-2xl font-bold">
+                                            <h2 className="text-2xl font-semibold">
                                                 {editingHeroSlide ? "Edit Hero Slide" : "Add Hero Slide"}
                                             </h2>
                                             <button
@@ -6601,7 +6601,7 @@ To get these values:
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
-                                        <h2 className="text-2xl font-bold text-gray-900">Featured Categories</h2>
+                                        <h2 className="text-2xl font-semibold uppercase tracking-wide text-gray-900">Featured Categories</h2>
                                         <p className="text-sm text-gray-600 mt-1">Pin items from Product Types, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
                                     </div>
                                 </div>
@@ -6644,7 +6644,7 @@ To get these values:
                                         <div className="mb-8 border-2 border-yellow-200 rounded-none p-6 bg-yellow-50">
                                             <div className="flex items-center justify-between mb-4">
                                                 <div>
-                                                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                                                         <span className="px-2 py-0.5 bg-yellow-200 text-yellow-800 text-xs font-medium rounded-none">★</span>
                                                         Featured Items - Reorder Here
                                                     </h3>
@@ -6731,7 +6731,7 @@ To get these values:
                                                                 }`}
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
-                                                                <div className="text-yellow-600 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="text-yellow-600 font-semibold text-sm w-6">{index + 1}</div>
                                                                 <div>
                                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -6798,7 +6798,7 @@ To get these values:
                                     {/* Section 1: Product Types */}
                                     <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-lg font-bold text-gray-900">Product Types</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900">Product Types</h3>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-sm text-gray-500">{productTypes.length} items</span>
                                                 <button
@@ -6835,7 +6835,7 @@ To get these values:
                                                             className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
-                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="text-gray-400 font-semibold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
                                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -6946,7 +6946,7 @@ To get these values:
                                     {/* Section 2: Occasions */}
                                     <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-lg font-bold text-gray-900">Occasions</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900">Occasions</h3>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-sm text-gray-500">{occasions.length} items</span>
                                                 <button
@@ -6983,7 +6983,7 @@ To get these values:
                                                             className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
-                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="text-gray-400 font-semibold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
                                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -7094,7 +7094,7 @@ To get these values:
                                     {/* Section 3: Colors */}
                                     <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-lg font-bold text-gray-900">Colors</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900">Colors</h3>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-sm text-gray-500">{colors.length} items</span>
                                                 <button
@@ -7131,7 +7131,7 @@ To get these values:
                                                             className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
-                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="text-gray-400 font-semibold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
                                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -7201,7 +7201,7 @@ To get these values:
                                     {/* Section 4: Materials */}
                                     <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-lg font-bold text-gray-900">Materials</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900">Materials</h3>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-sm text-gray-500">{materials.length} items</span>
                                                 <button
@@ -7238,7 +7238,7 @@ To get these values:
                                                             className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
-                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="text-gray-400 font-semibold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
                                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -7304,7 +7304,7 @@ To get these values:
                                     {/* Section 5: Cities */}
                                     <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-lg font-bold text-gray-900">Cities</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900">Cities</h3>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-sm text-gray-500">{cities.length} items</span>
                                                 <button
@@ -7341,7 +7341,7 @@ To get these values:
                                                             className="flex items-center gap-4 p-4 rounded-none border transition-all bg-white border-gray-200 hover:shadow-md"
                                                         >
                                                             <div className="flex items-center gap-3 flex-shrink-0">
-                                                                <div className="text-gray-400 font-bold text-sm w-6">{index + 1}</div>
+                                                                <div className="text-gray-400 font-semibold text-sm w-6">{index + 1}</div>
                                                                 <div className="cursor-move">
                                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-gray-400">
                                                                         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -7413,7 +7413,7 @@ To get these values:
                         {activeTab === "contact" && (
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h1 className="text-2xl font-bold text-gray-900">Contact Requests</h1>
+                                    <h1 className="text-2xl font-semibold uppercase tracking-wide text-gray-900">Contact Requests</h1>
                                     <span className="text-sm text-gray-500">{contactRequests.length} messages</span>
                                 </div>
 
@@ -7470,7 +7470,7 @@ To get these values:
                         {activeTab === "reports" && (
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h1 className="text-2xl font-bold text-gray-900">User Reports</h1>
+                                    <h1 className="text-2xl font-semibold uppercase tracking-wide text-gray-900">User Reports</h1>
                                     <span className="text-sm text-gray-500">{reports.length} reports</span>
                                 </div>
 

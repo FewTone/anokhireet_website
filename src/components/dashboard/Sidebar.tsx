@@ -48,7 +48,7 @@ export default function Sidebar({
                     <button
                         key={index}
                         onClick={() => onNavigate(item.id)}
-                        className={`flex items-center justify-between px-5 py-4 text-[13px] font-semibold tracking-wide uppercase transition-colors w-full text-left border-b border-gray-50 last:border-0 ${activeView === item.id
+                        className={`flex items-center justify-between px-5 py-4 text-[13px] font-normal tracking-wide uppercase transition-colors w-full text-left border-b border-gray-50 last:border-0 ${activeView === item.id
                             ? "bg-gray-100 text-black"
                             : "bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                             }`}
@@ -66,7 +66,7 @@ export default function Sidebar({
                     href="https://wa.me/918200647176"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-between px-5 py-4 text-[13px] font-semibold tracking-wide uppercase transition-colors w-full text-left border-b border-gray-50 bg-gray-100 text-black hover:bg-gray-200"
+                    className="flex items-center justify-between px-5 py-4 text-[13px] font-normal tracking-wide uppercase transition-colors w-full text-left border-b border-gray-50 bg-gray-100 text-black hover:bg-gray-200"
                 >
                     <div className="flex items-center gap-2">
                         <span>Quick chat</span>

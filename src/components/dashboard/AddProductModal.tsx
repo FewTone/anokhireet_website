@@ -123,7 +123,7 @@ export default function AddProductModal({ isOpen, onClose, userId, onSuccess }: 
 
             <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                    <h3 className="text-lg font-bold text-gray-900">Add New Product</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 uppercase tracking-wide">Add New Product</h3>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
@@ -214,7 +214,7 @@ export default function AddProductModal({ isOpen, onClose, userId, onSuccess }: 
                         <button
                             type="submit"
                             disabled={loading}
-                            className={`w-full py-3.5 px-4 bg-black text-white font-bold rounded-lg uppercase tracking-wider hover:bg-gray-800 transition-all transform active:scale-[0.98] shadow-lg ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            className={`w-full py-3.5 px-4 bg-black text-white font-semibold uppercase tracking-wide rounded-lg uppercase tracking-wider hover:bg-gray-800 transition-all transform active:scale-[0.98] shadow-lg ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {loading ? "Submitting..." : "Submit for Approval"}
                         </button>

@@ -30,7 +30,7 @@ export default function WishlistView() {
 
     return (
         <div className="w-full">
-            <h2 className="text-2xl font-bold mb-8 text-center hidden md:block">Wish List</h2>
+            <h2 className="text-2xl font-semibold mb-8 text-center hidden md:block uppercase tracking-wide">Wish List</h2>
 
             {wishlist.length === 0 ? (
                 <div className="text-center py-12">
@@ -51,7 +51,7 @@ export default function WishlistView() {
                     <p className="text-gray-400 text-sm">Start adding products to your wishlist!</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-full px-2 md:px-0">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
                     {wishlist.map((product) => (
                         <ProductCard key={product.id} product={product} disableHover={true} />
                     ))}

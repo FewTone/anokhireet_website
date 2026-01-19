@@ -273,9 +273,9 @@ export default function MyProductsPage() {
         <>
             <Navbar />
             <main className="min-h-screen bg-white pt-20 pb-12">
-                <div className="max-w-[1400px] mx-auto px-4">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold mb-2">
+                <div className="w-full">
+                    <div className="mb-8 px-4">
+                        <h1 className="text-3xl font-semibold mb-2 uppercase tracking-wide">
                             {userName ? `${userName}'s Products` : "My Products"}
                         </h1>
                         <p className="text-gray-600 text-sm">
@@ -285,7 +285,7 @@ export default function MyProductsPage() {
 
                     {/* Analytics Section */}
                     {userId && !loading && (
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8 px-4">
                             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center">
                                 <h3 className="text-gray-500 text-[10px] font-semibold uppercase tracking-wider mb-2">Total Products</h3>
                                 <p className="text-2xl font-bold text-gray-900">{myProducts.length}</p>
@@ -312,7 +312,7 @@ export default function MyProductsPage() {
 
 
                     {loading ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4 w-full px-2">
                             {Array.from({ length: 8 }).map((_, i) => (
                                 <ProductCardSkeleton key={i} />
                             ))}
@@ -333,7 +333,7 @@ export default function MyProductsPage() {
 
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4 w-full px-2">
                             {myProducts.map((product) => (
                                 <div key={product.id} className="relative group">
                                     <ProductCard

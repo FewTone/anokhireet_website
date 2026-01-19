@@ -323,7 +323,7 @@ export default function Home() {
                 {/* Section 2: Featured Categories */}
                 {featuredCategories.length > 0 ? (
                     <div className="mt-2 md:mt-8 mb-8 md:mb-8">
-                        <h2 className="text-[16px] leading-[24px] font-bold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>FEATURED CATEGORIES</h2>
+                        <h2 className="text-[16px] leading-[24px] font-semibold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>FEATURED CATEGORIES</h2>
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-[6px] w-full">
                             {featuredCategories.map((cat, idx) => {
                                 return (
@@ -360,7 +360,7 @@ export default function Home() {
 
                 ) : categoriesLoading ? (
                     <div className="mt-2 md:mt-8 mb-8 md:mb-8">
-                        <h2 className="text-[16px] leading-[24px] font-bold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>FEATURED CATEGORIES</h2>
+                        <h2 className="text-[16px] leading-[24px] font-semibold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>FEATURED CATEGORIES</h2>
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-[6px] w-full">
                             {Array.from({ length: 6 }).map((_, i) => (
                                 <div key={i} className="block">
@@ -379,7 +379,7 @@ export default function Home() {
 
                 {/* Section 3: Shop Your Size */}
                 <div className="mt-2 md:mt-8 text-center">
-                    <h2 className="text-[16px] leading-[24px] font-bold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>SHOP YOUR SIZE</h2>
+                    <h2 className="text-[16px] leading-[24px] font-semibold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>SHOP YOUR SIZE</h2>
                     <div className="w-full">
                         <Image
                             src="https://cdn.shopify.com/s/files/1/0420/7073/7058/files/refresh_18_nov_PLP02.jpg?v=1763468105"
@@ -396,7 +396,7 @@ export default function Home() {
                 {/* Section 4: New and Popular */}
                 <div className="mt-2 md:mt-8 pb-12 md:pb-12">
                     <div className="sticky top-0 md:top-[70px] z-30 bg-white mb-0">
-                        <h2 className="text-[16px] leading-[24px] font-bold py-3 text-center uppercase tracking-normal mb-0" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <h2 className="text-[16px] leading-[24px] font-semibold py-3 text-center uppercase tracking-normal mb-0" style={{ fontFamily: 'Inter, sans-serif' }}>
                             NEW AND POPULAR
                         </h2>
 

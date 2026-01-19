@@ -213,26 +213,26 @@ export default function MyProductsView() {
     return (
         <div className="w-full">
             <div className="mb-4 text-center hidden md:block">
-                <h2 className="text-2xl font-bold text-gray-900">Project Performance</h2>
+                <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-wide">Project Performance</h2>
             </div>
 
             {/* Summary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 md:mb-8">
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Products</span>
-                    <span className="text-xl md:text-2xl font-bold text-gray-900">{myProducts.length}</span>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Products</span>
+                    <span className="text-xl md:text-2xl font-semibold text-gray-900">{myProducts.length}</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Views</span>
-                    <span className="text-xl md:text-2xl font-bold text-gray-900">{totalViews.toLocaleString()}</span>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Views</span>
+                    <span className="text-xl md:text-2xl font-semibold text-gray-900">{totalViews.toLocaleString()}</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Likes</span>
-                    <span className="text-xl md:text-2xl font-bold text-gray-900">{totalLikes.toLocaleString()}</span>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Likes</span>
+                    <span className="text-xl md:text-2xl font-semibold text-gray-900">{totalLikes.toLocaleString()}</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center col-span-2 md:col-span-1">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Inquiry</span>
-                    <span className="text-xl md:text-2xl font-bold text-gray-900">{totalInquiries.toLocaleString()}</span>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Inquiry</span>
+                    <span className="text-xl md:text-2xl font-semibold text-gray-900">{totalInquiries.toLocaleString()}</span>
                 </div>
             </div>
 
@@ -254,12 +254,12 @@ export default function MyProductsView() {
                 </div>
             ) : myProducts.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-gray-200 bg-gray-50/30">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">No projects yet</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2 uppercase tracking-wide">No projects yet</h3>
                 </div>
             ) : (
                 <div className="w-full">
                     {/* Table Header */}
-                    <div className="grid grid-cols-10 gap-4 pb-2 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    <div className="grid grid-cols-10 gap-4 pb-2 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                         <div className="col-span-10 md:col-span-4 px-4">Project</div>
                         <div className="col-span-2 text-center hidden md:block">Views</div>
                         <div className="col-span-2 text-center hidden md:block">Likes</div>
@@ -274,10 +274,10 @@ export default function MyProductsView() {
                                 <div className="col-span-10 md:col-span-4 flex gap-3 items-center">
                                     <div className="relative w-12 h-[60px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all">
                                         {product.status === 'draft' && (
-                                            <div className="absolute top-0 right-0 bg-yellow-400 text-white text-[10px] font-bold px-2 py-0.5 z-10">PENDING</div>
+                                            <div className="absolute top-0 right-0 bg-yellow-400 text-white text-[10px] font-semibold px-2 py-0.5 z-10 uppercase tracking-wider">PENDING</div>
                                         )}
                                         {product.status === 'rejected' && (
-                                            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 z-10">REJECTED</div>
+                                            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-semibold px-2 py-0.5 z-10 uppercase tracking-wider">REJECTED</div>
                                         )}
                                         <img
                                             src={product.image}
@@ -292,9 +292,9 @@ export default function MyProductsView() {
                                         <p className="text-[10px] text-gray-500 font-medium mb-0.5">
                                             #{product.product_id || product.id}
                                         </p>
-                                        <p className="text-xs font-semibold text-gray-900 mb-0.5">
+                                        <span className="text-xs font-semibold text-gray-900 mb-0.5 uppercase">
                                             RENT ₹{typeof product.price === 'string' ? Number(product.price).toLocaleString() : product.price}
-                                        </p>
+                                        </span>
                                     </div>
                                     <p className="text-gray-400 text-[10px] font-medium ml-auto whitespace-nowrap">
                                         {new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -303,19 +303,19 @@ export default function MyProductsView() {
 
                                 {/* Stats - Views */}
                                 <div className="col-span-2 flex flex-col items-center justify-center">
-                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Views</span>
+                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-semibold mb-1">Views</span>
                                     <span className="text-sm text-gray-700">{product.views?.toLocaleString() || 0}</span>
                                 </div>
 
                                 {/* Stats - Likes */}
                                 <div className="col-span-2 flex flex-col items-center justify-center">
-                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Likes</span>
+                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-semibold mb-1">Likes</span>
                                     <span className="text-sm text-gray-700">{product.wishlist_count?.toLocaleString() || 0}</span>
                                 </div>
 
                                 {/* Stats - Inquiry */}
                                 <div className="col-span-2 flex flex-col items-center justify-center">
-                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Inquiry</span>
+                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-semibold mb-1">Inquiry</span>
                                     <span className="text-sm text-gray-700">{product.inquiries_count?.toLocaleString() || 0}</span>
                                 </div>
                             </div>

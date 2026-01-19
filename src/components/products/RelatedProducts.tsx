@@ -22,7 +22,7 @@ export default function RelatedProducts({ products, loading }: RelatedProductsPr
 
     return (
         <div className="w-full pb-12 mt-8 border-t border-gray-100 pt-8">
-            <h2 className="text-[16px] leading-[24px] font-bold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <h2 className="text-[16px] leading-[24px] font-semibold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>
                 YOU MIGHT ALSO LIKE
             </h2>
 

@@ -774,7 +774,7 @@ export default function ProductsPage() {
                         {/* Left Sidebar - Filters */}
                         <aside className="hidden lg:block w-64 flex-shrink-0">
                             <div className="sticky top-24 bg-white border border-gray-200 rounded-lg p-4">
-                                <h2 className="text-lg font-bold mb-4">FILTERS</h2>
+                                <h2 className="text-lg font-semibold mb-4">FILTERS</h2>
 
                                 {/* SORT */}
                                 <div className="border-b border-gray-200 pb-3 mb-3">
@@ -1093,7 +1093,7 @@ export default function ProductsPage() {
                         <div className="flex-1">
                             {/* Category Header */}
                             <div className="mb-6">
-                                <h1 className="hidden md:block text-3xl font-bold mb-4">PRODUCTS</h1>
+                                <h1 className="hidden md:block text-3xl font-semibold uppercase tracking-wide mb-4">PRODUCTS</h1>
 
                                 {/* Mobile Filter & View Bar - Only show when NOT in category view */}
                                 {!showCategories && (
@@ -1195,9 +1195,9 @@ export default function ProductsPage() {
                                                         className="w-full flex items-center gap-4 px-4 py-3 bg-white border-b border-gray-200 hover:bg-gray-50 transition-colors"
                                                     >
                                                         <div className="relative w-[72px] h-[96px] flex-shrink-0 bg-black flex items-center justify-center">
-                                                            <span className="text-white text-xs font-bold text-center leading-tight px-1 uppercase tracking-widest">ALL</span>
+                                                            <span className="text-white text-xs font-semibold uppercase tracking-wide text-center leading-tight px-1 uppercase tracking-widest">ALL</span>
                                                         </div>
-                                                        <span className="font-bold text-[13px] uppercase tracking-widest text-left flex-1">ALL PRODUCTS</span>
+                                                        <span className="font-semibold uppercase tracking-wide text-[13px] uppercase tracking-widest text-left flex-1">ALL PRODUCTS</span>
                                                     </button>
                                                     <div className="space-y-0">
                                                         {[...productTypes.filter(p => p.is_featured).map(p => ({ ...p, type: 'product_type' as const })), ...occasions.filter(o => o.is_featured).map(o => ({ ...o, type: 'occasion' as const }))]
@@ -1229,7 +1229,7 @@ export default function ProductsPage() {
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    <span className="font-bold text-[13px] uppercase tracking-widest text-left flex-1">{item.name}</span>
+                                                                    <span className="font-semibold uppercase tracking-wide text-[13px] uppercase tracking-widest text-left flex-1">{item.name}</span>
                                                                 </button>
                                                             ))}
                                                     </div>
@@ -1268,7 +1268,7 @@ export default function ProductsPage() {
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                <span className="font-bold text-[13px] uppercase tracking-widest text-left flex-1">{type.name}</span>
+                                                                <span className="font-semibold uppercase tracking-wide text-[13px] uppercase tracking-widest text-left flex-1">{type.name}</span>
                                                             </button>
                                                         ))}
                                                     </div>
@@ -1305,7 +1305,7 @@ export default function ProductsPage() {
                                                                         </div>
                                                                     )}
                                                                 </div>
-                                                                <span className="font-bold text-left flex-1">{occasion.name.toUpperCase()}</span>
+                                                                <span className="font-semibold uppercase tracking-wide text-left flex-1">{occasion.name.toUpperCase()}</span>
                                                             </button>
                                                         ))}
                                                     </div>
