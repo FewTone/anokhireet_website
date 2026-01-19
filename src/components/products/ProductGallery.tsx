@@ -49,7 +49,7 @@ export default function ProductGallery({
                         {/* Back Button */}
                         <button
                             onClick={onBack}
-                            className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white rounded-full shadow-md z-30"
+                            className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white rounded-full z-30"
                         >
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M15 18l-6-6 6-6" />
@@ -62,7 +62,7 @@ export default function ProductGallery({
                             <button
                                 onClick={onToggleWishlist}
                                 disabled={isWishlistLoading}
-                                className="w-10 h-10 flex items-center justify-center transition-transform active:scale-95 bg-white rounded-full shadow-md"
+                                className="w-10 h-10 flex items-center justify-center transition-transform active:scale-95 bg-white rounded-full border border-gray-100"
                             >
                                 <svg
                                     width="20"
@@ -81,7 +81,7 @@ export default function ProductGallery({
                             {/* Share Button */}
                             <button
                                 onClick={onShare}
-                                className="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-md"
+                                className="w-10 h-10 flex items-center justify-center bg-white rounded-full border border-gray-100"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
@@ -174,7 +174,7 @@ export default function ProductGallery({
                         </div>
 
                         {/* Center - Main Product Image */}
-                        <div className="relative w-full max-w-[500px] aspect-[4/5] bg-gray-100 shadow-sm">
+                        <div className="relative w-full max-w-[500px] aspect-[4/5] bg-gray-100">
                             {selectedImage ? (
                                 <Image
                                     src={selectedImage}
@@ -205,7 +205,7 @@ export default function ProductGallery({
                                     onToggleWishlist(e);
                                 }}
                                 disabled={isWishlistLoading}
-                                className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm group"
+                                className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all group"
                                 title={isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
                             >
                                 <svg
@@ -226,7 +226,7 @@ export default function ProductGallery({
                             {/* Share Button */}
                             <button
                                 onClick={onShare}
-                                className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all shadow-sm group"
+                                className="w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 transition-all group"
                                 title="Share Product"
                             >
                                 <svg

@@ -36,14 +36,14 @@ export default function ProductInfo({
                 {/* Pricing Information */}
                 <div className="mb-6 space-y-1">
                     <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-normal text-gray-900 uppercase tracking-wide">RENT</span>
-                        <span className="text-xl font-bold text-gray-900">
+                        <span className="text-md font-semibold text-gray-900 uppercase tracking-wider">RENT</span>
+                        <span className="text-sm font-bold text-gray-900">
                             {formatPrice(price)}
                         </span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-normal text-gray-900 uppercase tracking-wide">MRP</span>
-                        <span className="text-xl font-normal text-gray-900">
+                        <span className="text-sm font-normal text-gray-900 uppercase tracking-wider">MRP</span>
+                        <span className="text-sm font-normal text-gray-900">
                             {originalPrice ? formatPrice(originalPrice) : ''}
                         </span>
                     </div>
