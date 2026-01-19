@@ -33,6 +33,11 @@ export default function LoginModal() {
     const [selectedCities, setSelectedCities] = useState<string[]>([]);
 
     const [citySearch, setCitySearch] = useState("");
+    const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+    const filteredCities = citySearch
+        ? cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))
+        : [];
 
     useEffect(() => {
         if (showLogin) {
@@ -676,7 +681,10 @@ export default function LoginModal() {
                                     <input
                                         type="text"
                                         value={firstName}
-                                        onChange={(e) => setFirstName(e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setFirstName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+                                        }}
                                         className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
                                         placeholder="First Name"
                                     />
@@ -686,7 +694,10 @@ export default function LoginModal() {
                                     <input
                                         type="text"
                                         value={lastName}
-                                        onChange={(e) => setLastName(e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setLastName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+                                        }}
                                         className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
                                         placeholder="Surname"
                                     />
@@ -706,6 +717,7 @@ export default function LoginModal() {
                                                 onClick={() => {
                                                     setSelectedCities([]);
                                                     setCitySearch("");
+                                                    setHighlightedIndex(-1);
                                                 }}
                                                 className="text-gray-500 hover:text-black p-1"
                                             >
@@ -720,28 +732,52 @@ export default function LoginModal() {
                                             <input
                                                 type="text"
                                                 value={citySearch}
-                                                onChange={(e) => setCitySearch(e.target.value)}
+                                                onChange={(e) => {
+                                                    setCitySearch(e.target.value);
+                                                    setHighlightedIndex(-1);
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (!citySearch) return;
+
+                                                    if (e.key === "ArrowDown") {
+                                                        e.preventDefault();
+                                                        setHighlightedIndex(prev =>
+                                                            prev < filteredCities.length - 1 ? prev + 1 : prev
+                                                        );
+                                                    } else if (e.key === "ArrowUp") {
+                                                        e.preventDefault();
+                                                        setHighlightedIndex(prev => prev > 0 ? prev - 1 : prev);
+                                                    } else if (e.key === "Enter") {
+                                                        e.preventDefault();
+                                                        if (highlightedIndex >= 0 && highlightedIndex < filteredCities.length) {
+                                                            const city = filteredCities[highlightedIndex];
+                                                            setSelectedCities([city.id]);
+                                                            setCitySearch("");
+                                                            setHighlightedIndex(-1);
+                                                        }
+                                                    }
+                                                }}
                                                 className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black text-sm"
                                                 placeholder="Search city..."
                                             />
 
                                             {citySearch && (
                                                 <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto shadow-lg">
-                                                    {cities
-                                                        .filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))
-                                                        .map(city => (
-                                                            <div
-                                                                key={city.id}
-                                                                onClick={() => {
-                                                                    setSelectedCities([city.id]);
-                                                                    setCitySearch("");
-                                                                }}
-                                                                className="p-2 text-sm hover:bg-gray-100 cursor-pointer"
-                                                            >
-                                                                {city.name}
-                                                            </div>
-                                                        ))}
-                                                    {cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase())).length === 0 && (
+                                                    {filteredCities.map((city, index) => (
+                                                        <div
+                                                            key={city.id}
+                                                            onClick={() => {
+                                                                setSelectedCities([city.id]);
+                                                                setCitySearch("");
+                                                                setHighlightedIndex(-1);
+                                                            }}
+                                                            className={`p-2 text-sm cursor-pointer ${index === highlightedIndex ? "bg-gray-100" : "hover:bg-gray-100"
+                                                                }`}
+                                                        >
+                                                            {city.name}
+                                                        </div>
+                                                    ))}
+                                                    {filteredCities.length === 0 && (
                                                         <div className="p-2 text-sm text-gray-500">No matching cities found.</div>
                                                     )}
                                                 </div>
