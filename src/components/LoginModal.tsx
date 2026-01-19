@@ -714,6 +714,11 @@ export default function LoginModal() {
                                             const val = e.target.value;
                                             setFirstName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
                                         }}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && firstName && lastName) {
+                                                handleCreateNewUser();
+                                            }
+                                        }}
                                         className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
                                         placeholder="First Name"
                                     />
@@ -726,6 +731,11 @@ export default function LoginModal() {
                                         onChange={(e) => {
                                             const val = e.target.value;
                                             setLastName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+                                        }}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter' && firstName && lastName) {
+                                                handleCreateNewUser();
+                                            }
                                         }}
                                         className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
                                         placeholder="Surname"
