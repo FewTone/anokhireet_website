@@ -101,7 +101,14 @@ export default function UserPage() {
             // Check user
             const { data: userData, error: userError } = await supabase
                 .from("users")
-                .select("id, name, phone, auth_user_id, location, gender, birthdate, avatar_url")
+                .select(`
+                    id, name, phone, auth_user_id, location, gender, birthdate, avatar_url,
+                    user_cities (
+                        cities (
+                            name
+                        )
+                    )
+                `)
                 .eq("auth_user_id", session.user.id)
                 .maybeSingle();
 
@@ -118,7 +125,12 @@ export default function UserPage() {
             setUserName(userData.name);
             setUserPhone(userData.phone || "");
             setUserEmail(session.user.email || "");
-            setUserLocation(userData.location || "");
+
+            // Prioritize stored location, fallback to selected city from signup
+            // @ts-ignore
+            const cityObj = userData.user_cities?.[0]?.cities;
+            const cityFromSignup = Array.isArray(cityObj) ? cityObj[0]?.name : cityObj?.name;
+            setUserLocation(userData.location || cityFromSignup || "");
             setUserGender(userData.gender || "");
             setUserBirthdate(userData.birthdate || "");
             setUserAvatar(userData.avatar_url || "");

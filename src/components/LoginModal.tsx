@@ -39,10 +39,16 @@ export default function LoginModal() {
         ? cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))
         : [];
 
+    // START: Fix for Flicker Issue
+    const [isSessionChecked, setIsSessionChecked] = useState(false);
+
     useEffect(() => {
         if (showLogin) {
+            setIsSessionChecked(false); // Reset to ensure we don't show modal before checking
             checkSession();
             loadCities();
+        } else {
+            setIsSessionChecked(false);
         }
     }, [showLogin]);
 
@@ -116,11 +122,19 @@ export default function LoginModal() {
                         if (names.length > 0) setFirstName(names[0]);
                         if (names.length > 1) setLastName(names.slice(1).join(' '));
                     }
+                    if (session.user.phone) {
+                        setPhone(session.user.phone.replace(/\D/g, "").slice(-10));
+                    }
+                    setIsSessionChecked(true); // Allow modal to show completion form
                     return;
                 }
+            } else {
+                // No session found, safe to show modal
+                setIsSessionChecked(true);
             }
         } catch (e) {
             console.error("🔍 [Profile] Session check error:", e);
+            setIsSessionChecked(true); // Default to showing modal on error
         }
     };
 
@@ -259,8 +273,8 @@ export default function LoginModal() {
     const handleVerifyOtp = async (e?: React.FormEvent | React.MouseEvent) => {
         if (e && e.preventDefault) e.preventDefault();
 
-        if (!otp || otp.length !== 6) {
-            setError("Please enter a valid 6-digit OTP");
+        if (!otp || otp.length !== 4) {
+            setError("Please enter a valid 4-digit OTP");
             return;
         }
 
@@ -435,6 +449,11 @@ export default function LoginModal() {
             const normalizedPhone = phone.replace(/\D/g, "");
             const phoneNumber = `+91${normalizedPhone}`;
 
+            // Get selected city name for location field
+            const selectedCityName = selectedCities.length > 0
+                ? cities.find(c => c.id === selectedCities[0])?.name
+                : null;
+
             const { data: newUser, error: createError } = await supabase
                 .from("users")
                 .insert([{
@@ -442,6 +461,7 @@ export default function LoginModal() {
                     name: fullName,
                     phone: phoneNumber,
                     auth_user_id: authUserId,
+                    location: selectedCityName
                 }])
                 .select()
                 .single();
@@ -450,7 +470,10 @@ export default function LoginModal() {
                 if (createError.code === "23505") {
                     const { data: linkedUser, error: linkError } = await supabase
                         .from("users")
-                        .update({ auth_user_id: authUserId })
+                        .update({
+                            auth_user_id: authUserId,
+                            location: selectedCityName || undefined // Update location if new one selected
+                        })
                         .eq("phone", phoneNumber)
                         .select()
                         .single();
@@ -484,6 +507,7 @@ export default function LoginModal() {
     };
 
     if (!showLogin) return null;
+    if (!isSessionChecked) return null; // Don't show anything while checking session
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -587,7 +611,7 @@ export default function LoginModal() {
                                     <div className="relative">
                                         <input
                                             type="text"
-                                            maxLength={6}
+                                            maxLength={4}
                                             value={otp}
                                             onChange={(e) => {
                                                 const value = e.target.value.replace(/\D/g, "");
@@ -596,11 +620,16 @@ export default function LoginModal() {
                                             }}
                                             className="w-full h-14 border-2 border-black text-center text-2xl font-normal rounded-none focus:outline-none tracking-[0.75rem] pr-[-0.75rem]"
                                             autoFocus
-                                            placeholder="------"
+                                            placeholder="----"
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter' && otp.length === 4) {
+                                                    handleVerifyOtp();
+                                                }
+                                            }}
                                         />
                                     </div>
                                     <p className="text-[0.7rem] text-[#6b7280] mt-2.5 text-center">
-                                        Enter the 6-digit code sent to your phone
+                                        Enter the 4-digit code sent to your phone
                                     </p>
                                 </div>
                             </div>
@@ -627,7 +656,7 @@ export default function LoginModal() {
                                 </button>
                                 <button
                                     onClick={handleVerifyOtp}
-                                    disabled={verifyingOtp || !otp || otp.length !== 6}
+                                    disabled={verifyingOtp || !otp || otp.length !== 4}
                                     className="flex-1 px-4 py-3 text-white bg-black border-none cursor-pointer font-bold tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none uppercase text-[0.8rem]"
                                 >
                                     {verifyingOtp ? "VERIFYING..." : "VERIFY OTP"}
@@ -640,19 +669,19 @@ export default function LoginModal() {
                                 <span>+91</span>
                                 <input
                                     type="tel"
-                                    pattern="[0-9]{10}"
-                                    maxLength={10}
+                                    pattern="[0-9]*"
+                                    maxLength={15}
                                     inputMode="numeric"
                                     value={phone}
                                     onChange={(e) => {
                                         let val = e.target.value.replace(/\D/g, "");
-                                        if (val.length > 10 && val.startsWith("91")) val = val.substring(2);
-                                        if (val.length > 10) val = val.slice(0, 10);
+                                        if (val.length > 15 && val.startsWith("91")) val = val.substring(2);
+                                        if (val.length > 15) val = val.slice(0, 15);
                                         setPhone(val);
                                         setError("");
                                     }}
                                     onKeyPress={(e) => {
-                                        if (e.key === 'Enter' && phone.length === 10) {
+                                        if (e.key === 'Enter' && phone.length >= 4) {
                                             handleLogin();
                                         }
                                     }}
@@ -667,7 +696,7 @@ export default function LoginModal() {
 
                             <button
                                 onClick={handleLogin}
-                                disabled={loading || !phone || phone.length !== 10}
+                                disabled={loading || !phone || phone.length < 4}
                                 className="mt-4 w-full p-4 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
                             >
                                 {loading ? "SENDING..." : "LOGIN"}

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { supabase } from "@/lib/supabase";
-import AddProductModal from "./AddProductModal";
 
 interface UserProduct {
     id: string;
@@ -30,9 +29,6 @@ export default function MyProductsView() {
     const [totalInquiries, setTotalInquiries] = useState<number>(0);
     const [totalViews, setTotalViews] = useState<number>(0);
     const [totalLikes, setTotalLikes] = useState<number>(0);
-
-    // Modal state
-    const [isAddProductOpen, setIsAddProductOpen] = useState(false);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -215,12 +211,6 @@ export default function MyProductsView() {
         }
     };
 
-    const handleProductAdded = () => {
-        if (userId) {
-            loadUserAndProducts(); // Reload everything (credits + products)
-        }
-    };
-
     return (
         <div className="w-full">
             <div className="mb-4 text-center hidden md:block">
@@ -270,13 +260,6 @@ export default function MyProductsView() {
             ) : myProducts.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-gray-200 bg-gray-50/30">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">No projects yet</h3>
-                    <p className="text-gray-500 mb-6">Start building your portfolio by adding your first project.</p>
-                    <button
-                        onClick={() => setIsAddProductOpen(true)}
-                        className="px-6 py-2 bg-black text-white font-bold hover:bg-gray-800"
-                    >
-                        Create Project
-                    </button>
                 </div>
             ) : (
                 <div className="w-full">
@@ -352,14 +335,6 @@ export default function MyProductsView() {
                     </div>
                 </div>
             )}
-
-            {/* Modal */}
-            <AddProductModal
-                isOpen={isAddProductOpen}
-                onClose={() => setIsAddProductOpen(false)}
-                userId={userId || ""}
-                onSuccess={handleProductAdded}
-            />
         </div>
     );
 }
