@@ -467,11 +467,11 @@ export default function MobileFilterSheet({
                                         />
                                         {/* Visual Thumbs matching desktop style */}
                                         <div
-                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-none shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
                                         />
                                         <div
-                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-none shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
                                         />
                                     </div>

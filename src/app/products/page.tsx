@@ -1052,11 +1052,11 @@ export default function ProductsPage() {
 
                                                     {/* Visual Thumbs - Premium Black Style */}
                                                     <div
-                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-none shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                                         style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
                                                     />
                                                     <div
-                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-none shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                                         style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
                                                     />
                                                 </div>
@@ -1148,6 +1148,171 @@ export default function ProductsPage() {
                                         </button>
                                     </div>
                                 )}
+
+                                {/* Applied Filters Chips - Functional implementation */}
+                                <div className="flex flex-wrap gap-2 mb-6 px-1">
+                                    {/* Product Type Filters */}
+                                    {appliedProductTypes.map(id => {
+                                        const type = productTypes.find(t => t.id === id);
+                                        return type ? (
+                                            <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                    {type.name}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        const newTypes = appliedProductTypes.filter(tId => tId !== id);
+                                                        setAppliedProductTypes(newTypes);
+                                                        setPendingProductTypes(newTypes);
+                                                    }}
+                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ) : null;
+                                    })}
+
+                                    {/* Occasion Filters */}
+                                    {appliedOccasions.map(id => {
+                                        const occasion = occasions.find(o => o.id === id);
+                                        return occasion ? (
+                                            <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                    {occasion.name}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        const newOccasions = appliedOccasions.filter(oId => oId !== id);
+                                                        setAppliedOccasions(newOccasions);
+                                                        setPendingOccasions(newOccasions);
+                                                    }}
+                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ) : null;
+                                    })}
+
+                                    {/* Color Filters */}
+                                    {appliedColors.map(id => {
+                                        const color = colors.find(c => c.id === id);
+                                        return color ? (
+                                            <div key={id} className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                {color.hex && (
+                                                    <div
+                                                        className="w-2 h-2 rounded-full border border-gray-300"
+                                                        style={{ backgroundColor: color.hex }}
+                                                    />
+                                                )}
+                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                    {color.name}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        const newColors = appliedColors.filter(cId => cId !== id);
+                                                        setAppliedColors(newColors);
+                                                        setPendingColors(newColors);
+                                                    }}
+                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ) : null;
+                                    })}
+
+                                    {/* Material Filters */}
+                                    {appliedMaterials.map(id => {
+                                        const material = materials.find(m => m.id === id);
+                                        return material ? (
+                                            <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                    {material.name}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        const newMaterials = appliedMaterials.filter(mId => mId !== id);
+                                                        setAppliedMaterials(newMaterials);
+                                                        setPendingMaterials(newMaterials);
+                                                    }}
+                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ) : null;
+                                    })}
+
+                                    {/* City Filters */}
+                                    {appliedCities.map(id => {
+                                        const city = cities.find(c => c.id === id);
+                                        return city ? (
+                                            <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                    {city.name}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        const newCities = appliedCities.filter(cId => cId !== id);
+                                                        setAppliedCities(newCities);
+                                                        setPendingCities(newCities);
+                                                    }}
+                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                >
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ) : null;
+                                    })}
+
+                                    {/* Price Range Chip - Only if modified from default */}
+                                    {(appliedPriceRange[0] > 0 || appliedPriceRange[1] < maxPrice) && (
+                                        <div className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                            <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                ₹{appliedPriceRange[0]} - ₹{appliedPriceRange[1]}
+                                            </span>
+                                            <button
+                                                onClick={() => {
+                                                    setAppliedPriceRange([0, maxPrice]);
+                                                    setPendingPriceRange([0, maxPrice]);
+                                                }}
+                                                className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                            >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Clear All Option - Only if there are active chips */}
+                                    {(appliedProductTypes.length > 0 || appliedOccasions.length > 0 || appliedColors.length > 0 || appliedMaterials.length > 0 || appliedCities.length > 0 || (appliedPriceRange[0] > 0 || appliedPriceRange[1] < maxPrice)) && (
+                                        <button
+                                            onClick={clearAllFilters}
+                                            className="text-[11px] font-bold text-gray-500 hover:text-black uppercase tracking-wider flex items-center px-1"
+                                        >
+                                            CLEAR ALL
+                                        </button>
+                                    )}
+                                </div>
 
                                 {/* Desktop Category Tags - Now dynamic and functional */}
                                 <div className="hidden md:flex flex-wrap gap-2 mb-4">
