@@ -563,12 +563,6 @@ export default function ProductDetailPage() {
         setShowInquiryModal(true);
     };
 
-    const getMaxEndDate = (startDate: string) => {
-        if (!startDate) return undefined;
-        const date = new Date(startDate);
-        date.setDate(date.getDate() + 6);
-        return date.toISOString().split('T')[0];
-    };
 
     const handleSubmitInquiry = async () => {
         if (!product || !currentUser || !product.db_id || !product.owner_user_id) {
@@ -589,16 +583,7 @@ export default function ProductDetailPage() {
             return;
         }
 
-        // Check max duration (6 days)
-        const start = new Date(inquiryForm.start_date);
-        const end = new Date(inquiryForm.end_date);
-        const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        if (diffDays > 6) {
-            alert("Maximum rental duration is 6 days.");
-            return;
-        }
+        // Limit of maximum 6 days removed
 
         setSubmittingInquiry(true);
 
@@ -921,7 +906,6 @@ export default function ProductDetailPage() {
                                                 }
                                             }}
                                             minDate={inquiryForm.start_date ? new Date(inquiryForm.start_date) : new Date()}
-                                            maxDate={inquiryForm.start_date ? new Date(new Date(inquiryForm.start_date).getTime() + (6 * 24 * 60 * 60 * 1000)) : undefined}
                                             dateFormat="dd/MM/yyyy"
                                             placeholderText="dd/mm/yyyy"
                                             className="w-full px-4 py-2 border border-gray-300 rounded-none text-gray-900 focus:border-black outline-none h-[42px] transition-colors"
@@ -931,11 +915,6 @@ export default function ProductDetailPage() {
                                     </div>
                                 </div>
 
-                                {inquiryForm.start_date && (
-                                    <p className="text-[12px] text-gray-500 mt-[-10px] mb-4">
-                                        * Maximum 6 days allowed (Max: {new Date(getMaxEndDate(inquiryForm.start_date)!).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })})
-                                    </p>
-                                )}
 
                                 <button
                                     onClick={handleSubmitInquiry}
