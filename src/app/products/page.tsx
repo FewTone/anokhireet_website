@@ -1075,13 +1075,13 @@ export default function ProductsPage() {
                                 <div className="flex gap-1.5 mt-4">
                                     <button
                                         onClick={clearAllFilters}
-                                        className="flex-1 px-2 py-2 text-[11px] border border-gray-300 rounded-none hover:bg-gray-50 uppercase tracking-wider font-semibold whitespace-nowrap"
+                                        className="flex-[0.4] px-2 py-2 text-[10px] border border-gray-300 rounded-none hover:bg-gray-50 uppercase tracking-wider font-bold whitespace-nowrap"
                                     >
                                         CLEAR
                                     </button>
                                     <button
                                         onClick={handleApplyFilters}
-                                        className="flex-1 px-2 py-2 text-[11px] bg-black text-white rounded-none hover:bg-gray-800 uppercase tracking-wider font-semibold whitespace-nowrap"
+                                        className="flex-[0.6] px-2 py-2 text-[10px] bg-black text-white rounded-none hover:bg-gray-800 uppercase tracking-wider font-bold whitespace-nowrap"
                                     >
                                         APPLY ({filteredProducts.length})
                                     </button>

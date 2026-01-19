@@ -27,6 +27,8 @@ export default function LoginModal() {
     const [otpSent, setOtpSent] = useState(false);
     const [otp, setOtp] = useState("");
     const [verifyingOtp, setVerifyingOtp] = useState(false);
+    const [timer, setTimer] = useState(30);
+    const [canResend, setCanResend] = useState(false);
     const [pendingUserData, setPendingUserData] = useState<PendingUserData | null>(null);
 
     const [cities, setCities] = useState<any[]>([]);
@@ -34,6 +36,18 @@ export default function LoginModal() {
 
     const [citySearch, setCitySearch] = useState("");
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (otpSent && timer > 0) {
+            interval = setInterval(() => {
+                setTimer((prev) => prev - 1);
+            }, 1000);
+        } else if (timer === 0) {
+            setCanResend(true);
+        }
+        return () => clearInterval(interval);
+    }, [otpSent, timer]);
 
     const filteredCities = citySearch
         ? cities.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase()))
@@ -53,6 +67,8 @@ export default function LoginModal() {
             setLastName("");
             setSelectedCities([]);
             setOtpSent(false);
+            setTimer(30);
+            setCanResend(false);
 
             setIsSessionChecked(false); // Reset to ensure we don't show modal before checking
             checkSession();
@@ -251,6 +267,8 @@ export default function LoginModal() {
                 }
 
                 setOtpSent(true);
+                setTimer(30);
+                setCanResend(false);
                 setIsNewUser(false);
                 setLoading(false);
                 return;
@@ -273,6 +291,8 @@ export default function LoginModal() {
             }
 
             setOtpSent(true);
+            setTimer(30);
+            setCanResend(false);
             setLoading(false);
         } catch (err: any) {
             setError(err.message || "Failed to login. Please try again.");
@@ -528,12 +548,12 @@ export default function LoginModal() {
             ></div>
 
             {/* Modal Content */}
-            <div className={`relative max-w-[750px] w-full md:w-[90vw] flex bg-white shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden transition-all duration-500 ease-in-out ${otpSent ? "min-h-[60vh]" : "min-h-[50vh]"} flex-col md:flex-row z-10 rounded-sm`}>
+            <div className={`relative max-w-[750px] w-full md:w-[90vw] flex bg-white shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden transition-all duration-500 ease-in-out ${otpSent ? "min-h-[60vh]" : "min-h-[50vh]"} flex-col md:flex-row z-10 rounded-none`}>
 
                 {/* Close Button */}
                 <button
                     onClick={handleClose}
-                    className="absolute top-4 right-4 z-20 p-2 hover:bg-gray-100 rounded-full"
+                    className="absolute top-4 right-4 z-20 p-2 hover:bg-gray-100 rounded-none"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -609,7 +629,7 @@ export default function LoginModal() {
                                         Phone Number
                                     </label>
                                     <div className="border border-gray-300 p-3 text-[0.85rem] flex items-center bg-[#f9fafb] rounded-none">
-                                        <span className="font-bold text-[#374151]">+91</span>
+                                        <span className="text-[#374151]">+91</span>
                                         <span className="ml-2 text-[#374151] font-medium tracking-wide">{phone}</span>
                                     </div>
                                 </div>
@@ -618,46 +638,55 @@ export default function LoginModal() {
                                     <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1.5 font-medium ml-1">
                                         OTP Code <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="flex justify-between gap-2 max-w-[280px] mx-auto">
-                                        {[0, 1, 2, 3].map((i) => (
-                                            <input
-                                                key={i}
-                                                id={`otp-${i}`}
-                                                type="text"
-                                                inputMode="numeric"
-                                                maxLength={1}
-                                                value={otp[i] || ""}
-                                                onChange={(e) => {
-                                                    const value = e.target.value.replace(/\D/g, "");
-                                                    if (!value && e.target.value) return; // Ignore non-numeric
-
-                                                    const newOtp = otp.split('');
-                                                    newOtp[i] = value;
-                                                    setOtp(newOtp.join('').slice(0, 4));
-                                                    setError("");
-
-                                                    if (value && i < 3) {
-                                                        const nextInput = document.getElementById(`otp-${i + 1}`);
-                                                        nextInput?.focus();
-                                                    }
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Backspace' && !otp[i] && i > 0) {
-                                                        const prevInput = document.getElementById(`otp-${i - 1}`);
-                                                        prevInput?.focus();
-                                                    }
-                                                    if (e.key === 'Enter' && otp.length === 4) {
-                                                        handleVerifyOtp();
-                                                    }
-                                                }}
-                                                className="w-12 h-14 border border-gray-300 text-center text-xl font-bold bg-[#f9fafb] rounded-none focus:outline-none focus:border-black transition-colors"
-                                                autoFocus={i === 0}
-                                            />
-                                        ))}
+                                    <div className="relative border border-gray-300 bg-[#f9fafb] focus-within:border-black transition-colors h-[48px] flex items-center justify-center rounded-none">
+                                        {/* Display Layer */}
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div className="flex gap-10 text-[0.9rem] text-[#374151] font-medium tracking-normal">
+                                                {[0, 1, 2, 3].map((i) => (
+                                                    <span key={i} className="w-4 text-center">
+                                                        {otp[i] || "-"}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {/* Hidden Input Layer */}
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength={4}
+                                            value={otp}
+                                            onChange={(e) => {
+                                                const value = e.target.value.replace(/\D/g, "").slice(0, 4);
+                                                setOtp(value);
+                                                setError("");
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && otp.length === 4) {
+                                                    handleVerifyOtp();
+                                                }
+                                            }}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-text text-center text-xl"
+                                            autoFocus
+                                        />
                                     </div>
-                                    <p className="text-[0.7rem] text-[#6b7280] mt-2.5 text-center">
-                                        Enter the 4-digit code sent to your phone
-                                    </p>
+                                    <div className="flex justify-between items-center mt-2.5 px-1">
+
+                                        <div className="flex items-center gap-2">
+                                            {otpSent && !canResend ? (
+                                                <span className="text-[0.7rem] text-[#6b7280] font-medium">
+                                                    Resend in {timer}s
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleLogin()}
+                                                    disabled={loading}
+                                                    className="text-[0.7rem] text-black font-semibold hover:underline disabled:opacity-50"
+                                                >
+                                                    RESEND OTP
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -692,7 +721,7 @@ export default function LoginModal() {
                         </>
                     ) : !isNewUser ? (
                         <>
-                            <div className="border border-[#4d5563] mt-4 p-3 text-[0.8rem] flex items-center">
+                            <div className="border border-[#4d5563] mt-4 p-3 text-[0.8rem] flex items-center rounded-none">
                                 <span>+91</span>
                                 <input
                                     type="tel"
@@ -707,12 +736,7 @@ export default function LoginModal() {
                                         setPhone(val);
                                         setError("");
                                     }}
-                                    onKeyPress={(e) => {
-                                        if (e.key === 'Enter' && phone.length >= 4) {
-                                            handleLogin();
-                                        }
-                                    }}
-                                    className="w-full outline-none border-none ml-2"
+                                    className="w-full outline-none border-none ml-2 bg-transparent"
                                     placeholder="Enter phone number"
                                 />
                             </div>
@@ -774,7 +798,7 @@ export default function LoginModal() {
                                     <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
 
                                     {selectedCities.length > 0 && selectedCities[0] ? (
-                                        <div className="w-full p-2 border border-gray-300 bg-gray-50 flex justify-between items-center">
+                                        <div className="w-full p-2 border border-gray-300 bg-gray-50 flex justify-between items-center rounded-none">
                                             <span className="text-sm text-gray-800 font-medium">
                                                 {cities.find(c => c.id === selectedCities[0])?.name}
                                             </span>
@@ -828,7 +852,7 @@ export default function LoginModal() {
                                             />
 
                                             {citySearch && (
-                                                <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                                <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto shadow-lg rounded-none">
                                                     {filteredCities.map((city, index) => (
                                                         <div
                                                             key={city.id}
@@ -861,7 +885,7 @@ export default function LoginModal() {
                                 <button
                                     onClick={handleCreateNewUser}
                                     disabled={loading || !firstName || !lastName}
-                                    className="w-full p-3 bg-black text-white font-bold tracking-wide hover:opacity-90 disabled:opacity-50"
+                                    className="w-full p-3 bg-black text-white font-bold tracking-wide hover:opacity-90 disabled:opacity-50 rounded-none"
                                 >
                                     {loading ? "CREATING..." : "CREATE ACCOUNT"}
                                 </button>
@@ -870,6 +894,6 @@ export default function LoginModal() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
