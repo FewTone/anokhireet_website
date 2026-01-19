@@ -128,7 +128,7 @@ export default function UserPage() {
 
             // Prioritize stored location, fallback to selected city from signup
             // @ts-ignore
-            const cityObj = userData.user_cities?.[0]?.cities;
+            const cityObj: any = userData.user_cities?.[0]?.cities;
             const cityFromSignup = Array.isArray(cityObj) ? cityObj[0]?.name : cityObj?.name;
             setUserLocation(userData.location || cityFromSignup || "");
             setUserGender(userData.gender || "");
