@@ -174,7 +174,7 @@ export default function ProfileView({
 
     return (
         <div className="w-full">
-            <h2 className="text-2xl font-semibold mb-6 text-center uppercase tracking-wide">Profile Details</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-center uppercase tracking-wide hidden md:block">Profile Details</h2>
 
             <div className="max-w-2xl mx-auto">
                 <div className="bg-white border border-gray-100 rounded-lg p-8 w-full min-h-[400px]">

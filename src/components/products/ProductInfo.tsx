@@ -37,7 +37,7 @@ export default function ProductInfo({
                 <div className="mb-6 space-y-1">
                     <div className="flex items-baseline gap-2">
                         <span className="text-md font-semibold text-gray-900 uppercase tracking-wider">RENT</span>
-                        <span className="text-sm font-bold text-gray-900">
+                        <span className="text-md font-semibold text-gray-900">
                             {formatPrice(price)}
                         </span>
                     </div>

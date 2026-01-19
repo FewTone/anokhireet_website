@@ -46,7 +46,7 @@ export default function SettingsView() {
 
     return (
         <div className="w-full">
-            <h2 className="text-xl font-semibold mb-8 text-center tracking-wide uppercase">Settings</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-center tracking-wide uppercase hidden md:block">Settings</h2>
 
 
 

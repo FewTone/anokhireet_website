@@ -34,7 +34,7 @@ export default function MobileHeader({ title, backLink, onBack, showBack = true 
                     </svg>
                 </button>
             )}
-            <h1 className="text-lg font-semibold uppercase">{title.replace("-", " ")}</h1>
+            <h1 className="text-xl font-semibold uppercase">{title.replace("-", " ")}</h1>
         </div>
     );
 }

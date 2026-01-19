@@ -548,7 +548,7 @@ export default function LoginModal() {
             ></div>
 
             {/* Modal Content */}
-            <div className={`relative max-w-[750px] w-full md:w-[90vw] flex bg-white shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden transition-all duration-500 ease-in-out ${otpSent ? "min-h-[60vh]" : "min-h-[50vh]"} flex-col md:flex-row z-10 rounded-none`}>
+            <div className={`relative max-w-[750px] w-full md:w-[90vw] flex bg-white shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden transition-all duration-500 ease-in-out flex-col md:flex-row z-10 rounded-none min-h-[400px] md:min-h-[450px]`}>
 
                 {/* Close Button */}
                 <button
@@ -563,13 +563,13 @@ export default function LoginModal() {
 
                 {/* Left Image Section */}
                 <div className="hidden md:flex w-[58%] relative items-center justify-center bg-white">
-                    <div className="flex items-center justify-center w-full h-full p-8 relative">
+                    <div className="flex items-center justify-center w-full h-full p-10 relative">
                         <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
                             <Image
                                 src="/ring.svg"
                                 alt="Ring"
-                                width={300}
-                                height={300}
+                                width={260}
+                                height={260}
                                 className="object-contain brightness-0"
                             />
                         </div>
@@ -578,8 +578,8 @@ export default function LoginModal() {
                             <Image
                                 src="/rIta.svg"
                                 alt="Logo"
-                                width={120}
-                                height={120}
+                                width={110}
+                                height={110}
                                 className="object-contain brightness-0"
                             />
                         </div>
@@ -587,15 +587,15 @@ export default function LoginModal() {
                 </div>
 
                 {/* Right Form Section */}
-                <div className="w-full md:w-[50%] p-8 md:p-12 text-center flex flex-col justify-center">
+                <div className="w-full md:w-[50%] py-10 px-6 md:py-16 md:px-10 text-center flex flex-col justify-center">
                     {/* Mobile Logo Section */}
-                    <div className="flex md:hidden items-center justify-center w-full mb-6 relative py-4 h-[200px]">
+                    <div className="flex md:hidden items-center justify-center w-full mb-4 relative py-4 h-[160px]">
                         <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
                             <Image
                                 src="/ring.svg"
                                 alt="Ring"
-                                width={200}
-                                height={200}
+                                width={160}
+                                height={160}
                                 className="object-contain brightness-0"
                             />
                         </div>
@@ -603,17 +603,17 @@ export default function LoginModal() {
                             <Image
                                 src="/rIta.svg"
                                 alt="Logo"
-                                width={80}
-                                height={80}
+                                width={65}
+                                height={65}
                                 className="object-contain brightness-0"
                             />
                         </div>
                     </div>
 
-                    <h2 className="text-[1.2rem] font-black mt-4 md:mt-0 text-[#333] uppercase">
+                    <h2 className="text-[1.2rem] font-black mt-2 md:mt-0 text-[#333] uppercase">
                         {otpSent ? "VERIFY OTP" : isNewUser ? "CREATE ACCOUNT" : "LOGIN"}
                     </h2>
-                    <p className="mt-3 text-[#4d5563] text-[0.8rem]">
+                    <p className="mt-1.5 text-[#4d5563] text-[0.8rem]">
                         {otpSent
                             ? "Enter the OTP sent to your phone"
                             : isNewUser
@@ -623,7 +623,7 @@ export default function LoginModal() {
 
                     {otpSent ? (
                         <>
-                            <div className="mt-8 space-y-6">
+                            <div className="mt-6 space-y-4">
                                 <div>
                                     <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1.5 font-medium ml-1">
                                         Phone Number
@@ -635,7 +635,7 @@ export default function LoginModal() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1.5 font-medium ml-1">
+                                    <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1 font-medium ml-1">
                                         OTP Code <span className="text-red-500">*</span>
                                     </label>
                                     <div className="relative border border-gray-300 bg-[#f9fafb] focus-within:border-black transition-colors h-[48px] flex items-center justify-center rounded-none">
@@ -696,7 +696,7 @@ export default function LoginModal() {
                                 </div>
                             )}
 
-                            <div className="flex gap-4 mt-8">
+                            <div className="flex gap-4 mt-6">
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -706,14 +706,14 @@ export default function LoginModal() {
                                         setError("");
                                         setPendingUserData(null);
                                     }}
-                                    className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors uppercase text-[0.8rem] tracking-wider"
+                                    className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors uppercase text-[0.8rem] tracking-wider"
                                 >
                                     Back
                                 </button>
                                 <button
                                     onClick={handleVerifyOtp}
                                     disabled={verifyingOtp || !otp || otp.length !== 4}
-                                    className="flex-1 px-4 py-3 text-white bg-black border-none cursor-pointer font-bold tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none uppercase text-[0.8rem]"
+                                    className="flex-1 px-4 py-2.5 text-white bg-black border-none cursor-pointer font-bold tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none uppercase text-[0.8rem]"
                                 >
                                     {verifyingOtp ? "VERIFYING..." : "VERIFY OTP"}
                                 </button>
@@ -748,7 +748,7 @@ export default function LoginModal() {
                             <button
                                 onClick={handleLogin}
                                 disabled={loading || !phone || phone.length < 4}
-                                className="mt-4 w-full p-4 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
+                                className="mt-4 w-full p-3 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
                             >
                                 {loading ? "SENDING..." : "LOGIN"}
                             </button>
