@@ -21,7 +21,7 @@ interface User {
     id: string;
     name: string;
     phone: string;
-    email: string | null;
+    email?: string | null;
     created_at: string;
     auth_user_id: string | null;
 }
@@ -250,7 +250,7 @@ function AdminContent() {
     const [isUserProductModalOpen, setIsUserProductModalOpen] = useState(false);
     const [isManageProductsModalOpen, setIsManageProductsModalOpen] = useState(false);
     const [editingUserProduct, setEditingUserProduct] = useState<UserProduct | null>(null);
-    const [editingUser, setEditingUser] = useState<{ id: string; name: string; phone: string; email: string | null } | null>(null);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
     const [userFirstName, setUserFirstName] = useState("");
     const [userLastName, setUserLastName] = useState("");
     const [userFormData, setUserFormData] = useState({
@@ -2165,7 +2165,7 @@ To get these values:
 
 
 
-    const handleEditUser = async (user: { id: string; name: string; phone: string; email: string | null }) => {
+    const handleEditUser = async (user: User) => {
         setEditingUser(user);
 
         // Load user cities
@@ -4991,9 +4991,9 @@ To get these values:
                                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                                         Name
                                                     </th>
-                                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                                         Phone
-                                                     </th>
+                                                    <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                                        Phone
+                                                    </th>
                                                     <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                                                         Created
                                                     </th>
@@ -5007,8 +5007,8 @@ To get these values:
                                             </thead>
                                             <tbody className="bg-white divide-y divide-gray-200">
                                                 {users.length === 0 ? (
-                                                     <tr>
-                                                         <td colSpan={5} className="px-6 py-12 text-center">
+                                                    <tr>
+                                                        <td colSpan={5} className="px-6 py-12 text-center">
                                                             <div className="text-gray-500">
                                                                 <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M17 20h5v-2a3 3 0 00-3-3H5a3 3 0 00-3 3v2h5m16 0v-7a2 2 0 00-2-2H3a2 2 0 00-2 2v7m16 0H9" />
@@ -5027,9 +5027,9 @@ To get these values:
                                                                     {user.name}
                                                                 </div>
                                                             </td>
-                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                 <div className="text-sm text-gray-600">{user.phone}</div>
-                                                             </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className="text-sm text-gray-600">{user.phone}</div>
+                                                            </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className="text-sm text-gray-600">
                                                                     {new Date(user.created_at).toLocaleDateString()}

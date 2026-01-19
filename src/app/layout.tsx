@@ -3,6 +3,8 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import WebsiteGuard from "@/components/WebsiteGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import LoginModal from "@/components/LoginModal";
+import { Suspense } from "react";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -39,6 +41,9 @@ export default function RootLayout({
                     <ErrorBoundary>
                         <WebsiteGuard>
                             {children}
+                            <Suspense fallback={null}>
+                                <LoginModal />
+                            </Suspense>
                         </WebsiteGuard>
                     </ErrorBoundary>
                 </div>
