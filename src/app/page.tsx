@@ -322,7 +322,7 @@ export default function Home() {
 
                 {/* Section 2: Featured Categories */}
                 {featuredCategories.length > 0 ? (
-                    <div className="mt-2 md:mt-8 mb-8 md:mb-8">
+                    <div className="mt-6 md:mt-8 mb-8 md:mb-8">
                         <h2 className="text-[16px] leading-[24px] font-semibold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>FEATURED CATEGORIES</h2>
                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-[6px] w-full">
                             {featuredCategories.map((cat, idx) => {
@@ -394,21 +394,22 @@ export default function Home() {
                 </div>
 
                 {/* Section 4: New and Popular */}
-                <div className="mt-2 md:mt-8 pb-12 md:pb-12">
+                <div className="mt-6 md:mt-8 pb-12 md:pb-12">
                     <div className="sticky top-0 md:top-[70px] z-30 bg-white mb-0">
-                        <h2 className="text-[16px] leading-[24px] font-semibold py-3 text-center uppercase tracking-normal mb-0" style={{ fontFamily: 'Inter, sans-serif' }}>
+                        <h2 className="text-[16px] leading-[24px] font-semibold text-center uppercase tracking-normal mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
                             NEW AND POPULAR
                         </h2>
 
                         {/* Filter Tabs */}
-                        <div className="py-2 flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-2 px-4 scrollbar-hide">
+                        <div className="pb-3 flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-[10px] px-4 scrollbar-hide">
                             <span
                                 onClick={() => router.push("/products")}
-                                className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap 
-                  ${activeTab === "ALL"
+                                className={`border border-black h-[26px] flex items-center justify-center px-[12px] text-[11px] cursor-pointer transition-all whitespace-nowrap 
+                                    ${activeTab === "ALL"
                                         ? "bg-black text-white"
-                                        : "bg-white"
+                                        : "bg-white text-black font-light"
                                     }`}
+                                style={{ fontFamily: 'Inter, sans-serif' }}
                             >
                                 ALL
                             </span>
@@ -420,7 +421,8 @@ export default function Home() {
                                             router.push(cat.link_url);
                                         }
                                     }}
-                                    className={`border border-black px-3 md:px-4 py-1.5 text-xs md:text-sm cursor-pointer transition-all whitespace-nowrap bg-white`}
+                                    className={`border border-black h-[26px] flex items-center justify-center px-[12px] text-[11px] cursor-pointer transition-all whitespace-nowrap bg-white text-black font-light`}
+                                    style={{ fontFamily: 'Inter, sans-serif' }}
                                 >
                                     {cat.name?.toUpperCase()}
                                 </span>
