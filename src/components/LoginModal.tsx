@@ -619,7 +619,7 @@ export default function LoginModal() {
                                                 setOtp(value);
                                                 setError("");
                                             }}
-                                            className="w-full h-14 border-2 border-black text-center text-2xl font-bold rounded-none focus:outline-none tracking-[0.75rem] pr-[-0.75rem]"
+                                            className="w-full h-14 border-2 border-black text-center text-2xl font-normal rounded-none focus:outline-none tracking-[0.75rem] pr-[-0.75rem]"
                                             autoFocus
                                             placeholder="------"
                                         />
