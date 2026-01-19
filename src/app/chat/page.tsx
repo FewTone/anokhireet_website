@@ -9,8 +9,6 @@ import { supabase } from "@/lib/supabase";
 import { convertToWebPOptimized } from "@/lib/imageUtils";
 import dynamic from 'next/dynamic';
 
-const EmojiPicker = dynamic(() => import('emoji-picker-react'), { ssr: false });
-
 interface Chat {
     id: string;
     inquiry_id: string;
@@ -76,7 +74,7 @@ export default function ChatPage() {
     const [isTyping, setIsTyping] = useState(false);
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
 
     // Pagination state
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
@@ -87,21 +85,12 @@ export default function ChatPage() {
     const messagesContainerRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const chatChannelRef = useRef<any>(null);
-    const emojiPickerRef = useRef<HTMLDivElement>(null);
+
     const isUserAtBottomRef = useRef(true); // Track if user is at bottom
 
     // Check login status and load chats
     useEffect(() => {
         checkLoginStatus();
-
-        // Click outside to close emoji picker
-        const handleClickOutside = (event: MouseEvent) => {
-            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-                setShowEmojiPicker(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     // Load chats when user is loaded
@@ -358,12 +347,21 @@ export default function ChatPage() {
                         },
                         other_user: otherUser || { id: otherUserId, name: "Unknown User" },
                         last_message: lastMessages || undefined,
-                        unread_count: unreadCount || 0,
+                        unread_count: (selectedChat?.id === chat.id) ? 0 : (unreadCount || 0),
                     };
                 })
             );
 
-            setChats(chatsWithDetails.filter((chat): chat is Chat => chat !== null));
+            const validChats = chatsWithDetails.filter((chat): chat is Chat => chat !== null);
+
+            // Sort by last message time (latest first)
+            validChats.sort((a, b) => {
+                const dateA = new Date(a.last_message?.created_at || a.created_at).getTime();
+                const dateB = new Date(b.last_message?.created_at || b.created_at).getTime();
+                return dateB - dateA;
+            });
+
+            setChats(validChats);
         } catch (error) {
             console.error("Error loading chats:", error);
             setChats([]);
@@ -720,7 +718,7 @@ export default function ChatPage() {
             if (error) throw error;
             setMessageInput("");
             setReplyingTo(null);
-            setShowEmojiPicker(false);
+
 
             if (data) {
                 const newMessage = { ...data, sender: { name: currentUser.name || "Me" } };
@@ -735,9 +733,7 @@ export default function ChatPage() {
         }
     };
 
-    const onEmojiClick = (emojiObject: any) => {
-        setMessageInput(prev => prev + emojiObject.emoji);
-    };
+
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -781,7 +777,7 @@ export default function ChatPage() {
         if (msg.is_read) {
             // Blue Ticks
             return (
-                <div className="flex text-gray-600" title="Read">
+                <div className="flex text-blue-500" title="Read">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M7 12l5 5L22 7" /><path d="M2 12l5 5L22 7" style={{ transform: 'translateX(-6px)' }} /></svg>
                 </div>
             );
@@ -887,6 +883,14 @@ export default function ChatPage() {
         );
     };
 
+    // Format name to "First L."
+    const formatName = (name: string) => {
+        if (!name) return "";
+        const parts = name.trim().split(" ");
+        if (parts.length === 1) return parts[0];
+        return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+    };
+
     // Filter chats based on search
     const filteredChats = chats.filter(chat => {
         const otherName = chat.other_user?.name?.toLowerCase() || "";
@@ -974,6 +978,15 @@ export default function ChatPage() {
                                 filteredChats.map((chat) => {
                                     const isSelected = selectedChat?.id === chat.id;
                                     const productName = chat.inquiry?.product?.title || chat.inquiry?.product?.name || "Product";
+
+                                    // Smart Unread Logic:
+                                    // 1. If chat is selected, 0.
+                                    // 2. If I sent the last message, 0 (assumes I've seen the chat).
+                                    // 3. Otherwise, use DB count.
+                                    const showUnreadBadge = chat.unread_count > 0 &&
+                                        chat.id !== selectedChat?.id &&
+                                        chat.last_message?.sender_user_id !== currentUser?.id;
+
                                     return (
                                         <div key={chat.id} onClick={() => handleChatSelect(chat)} className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? "bg-[#f0f2f5]" : "bg-white hover:bg-[#f5f6f6]"}`}>
                                             <div className="flex items-start gap-3">
@@ -984,14 +997,14 @@ export default function ChatPage() {
                                                         chat.other_user?.avatar_url ? (
                                                             <img src={chat.other_user.avatar_url} alt="" className="w-full h-full object-cover" />
                                                         ) : (
-                                                            chat.other_user?.name?.charAt(0).toUpperCase()
+                                                            formatName(chat.other_user?.name || "").charAt(0).toUpperCase()
                                                         )
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between">
-                                                        <h3 className="text-[16px] font-normal text-[#111b21] truncate">{chat.other_user?.name}</h3>
-                                                        {chat.last_message && <span className={`text-[12px] ${chat.unread_count > 0 ? "text-black font-semibold" : "text-[#667781]"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
+                                                        <h3 className="text-[16px] font-normal text-[#111b21] truncate">{formatName(chat.other_user?.name || "User")}</h3>
+                                                        {chat.last_message && <span className={`text-[12px] ${showUnreadBadge ? "text-green-600 font-semibold" : "text-[#667781]"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
                                                     </div>
                                                     <div className="flex items-center justify-between mt-0.5">
                                                         <p className="text-[14px] text-[#667781] truncate flex-1">
@@ -1011,7 +1024,7 @@ export default function ChatPage() {
                                                                 return msg;
                                                             })()}
                                                         </p>
-                                                        {chat.unread_count > 0 && <div className="bg-gray-500 text-white text-[12px] font-medium min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 ml-2">{chat.unread_count}</div>}
+                                                        {showUnreadBadge && <div className="bg-gray-500 text-white text-[12px] font-medium min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 ml-2">{chat.unread_count}</div>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1041,12 +1054,17 @@ export default function ChatPage() {
                                     </div>
                                     <div className="flex-1 min-w-0 cursor-pointer">
                                         <h3 className="text-[16px] font-medium text-[#111b21] leading-tight truncate">{selectedChat.other_user?.name}</h3>
-                                        <p className="text-[13px] text-gray-500 truncate h-4">
+                                        <p className="text-[13px] text-gray-500 truncate h-4 flex items-center gap-1">
                                             {otherUserTyping ? (
-                                                <span className="text-gray-500 font-medium">typing...</span>
+                                                <span className="text-[#00a884] font-medium animate-pulse">typing...</span>
                                             ) : otherUserOnline ? (
-                                                "Online"
-                                            ) : ""}
+                                                <>
+                                                    <span className="w-2 h-2 rounded-full bg-[#00a884]"></span>
+                                                    <span>Online</span>
+                                                </>
+                                            ) : (
+                                                ""
+                                            )}
                                         </p>
                                     </div>
                                     {/* Action Buttons */}
@@ -1078,7 +1096,7 @@ export default function ChatPage() {
 
                                                         <div className={`relative max-w-[85%] md:max-w-[65%] px-2 py-1 shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] group-hover:shadow-md transition-shadow 
                                                             ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-2"} 
-                                                            ${isSent ? "bg-gray-200 text-black rounded-lg rounded-tr-none" : "bg-gray-100 text-black rounded-lg rounded-tl-none"}`}>
+                                                            ${isSent ? "bg-green-100 text-black rounded-lg rounded-tr-none" : "bg-white text-black rounded-lg rounded-tl-none"}`}>
 
                                                             {/* Reply Context Menu (Visible on Hover) */}
                                                             <button
@@ -1102,9 +1120,9 @@ export default function ChatPage() {
                                                             {(!messages[index + 1] || messages[index + 1].sender_user_id !== message.sender_user_id) && (
                                                                 <div className={`absolute top-0 ${isSent ? "-right-[8px]" : "-left-[8px]"}`}>
                                                                     {isSent ? (
-                                                                        <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1"><path fill="#e5e7eb" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
+                                                                        <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1"><path fill="#dcf8c6" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
                                                                     ) : (
-                                                                        <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1" style={{ transform: "scaleX(-1)" }}><path fill="#f3f4f6" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
+                                                                        <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1" style={{ transform: "scaleX(-1)" }}><path fill="#ffffff" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
                                                                     )}
                                                                 </div>
                                                             )}
@@ -1136,16 +1154,6 @@ export default function ChatPage() {
 
                                 {/* Input Area */}
                                 <div className="bg-[#f0f2f5] px-4 py-2 flex items-center gap-2 relative z-20 flex-shrink-0">
-                                    {showEmojiPicker && (
-                                        <div ref={emojiPickerRef} className="absolute bottom-16 left-4 z-50 shadow-xl rounded-lg overflow-hidden">
-                                            <EmojiPicker onEmojiClick={onEmojiClick} width={300} height={400} previewConfig={{ showPreview: false }} />
-                                        </div>
-                                    )}
-
-                                    <button onClick={() => setShowEmojiPicker(!showEmojiPicker)} className="p-2 text-[#54656f] hover:bg-gray-200 rounded-full transition-colors">
-                                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" /><path d="M8 14s1.5 2 4 2 4-2 4-2" /><path d="M9 9h.01" /><path d="M15 9h.01" /></svg>
-                                    </button>
-
                                     <label className={`cursor-pointer p-2 text-[#54656f] hover:bg-gray-200 rounded-full transition-colors ${sending ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                         <input
                                             type="file"
@@ -1166,15 +1174,9 @@ export default function ChatPage() {
                                         className="flex-1 bg-white px-4 py-2.5 rounded-lg text-[15px] outline-none border-none placeholder-gray-500 shadow-sm"
                                     />
 
-                                    {messageInput.trim() || sending ? (
-                                        <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className="text-[#54656f] p-2.5 rounded-full hover:bg-gray-200 transition-all">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
-                                        </button>
-                                    ) : (
-                                        <button className="text-[#54656f] p-2.5 rounded-full hover:bg-gray-200 transition-all">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></svg>
-                                        </button>
-                                    )}
+                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all ${messageInput.trim() ? "text-[#00a884] hover:bg-gray-200" : "text-[#54656f] opacity-50 cursor-not-allowed"}`}>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                                    </button>
                                 </div>
                             </>
                         ) : (
