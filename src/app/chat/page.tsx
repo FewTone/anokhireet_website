@@ -8,6 +8,7 @@ import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
 import { convertToWebPOptimized } from "@/lib/imageUtils";
 import dynamic from 'next/dynamic';
+import ReportModal from "@/components/ReportModal";
 
 interface Chat {
     id: string;
@@ -74,6 +75,7 @@ export default function ChatPage() {
     const [isTyping, setIsTyping] = useState(false);
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
 
     // Pagination state
@@ -472,7 +474,10 @@ export default function ChatPage() {
                     setHasMoreMessages(false);
                 }
 
-                const uniqueSenderIds = [...new Set(messagesData.map((m: any) => m.sender_user_id))];
+                const uniqueSenderIds = [...new Set([
+                    ...messagesData.map((m: any) => m.sender_user_id),
+                    ...messagesData.filter((m: any) => m.reply_message).map((m: any) => m.reply_message.sender_user_id)
+                ])];
                 const { data: sendersData } = await supabase
                     .from("users")
                     .select("id, name, avatar_url")
@@ -482,10 +487,21 @@ export default function ChatPage() {
                     (sendersData || []).map((s: any) => [s.id, { name: s.name, avatar_url: s.avatar_url }])
                 );
 
-                const messagesWithSenders = messagesData.map((message: any) => ({
-                    ...message,
-                    sender: sendersMap.get(message.sender_user_id) || { name: "Unknown" },
-                })).reverse(); // Reverse back to chronological order for display
+                const messagesWithSenders = messagesData.map((message: any) => {
+                    const enrichedMessage = {
+                        ...message,
+                        sender: sendersMap.get(message.sender_user_id) || { name: "Unknown" },
+                    };
+
+                    if (message.reply_message) {
+                        enrichedMessage.reply_message = {
+                            ...message.reply_message,
+                            sender: sendersMap.get(message.reply_message.sender_user_id) || { name: "User" }
+                        };
+                    }
+
+                    return enrichedMessage;
+                }).reverse(); // Reverse back to chronological order for display
 
                 setMessages(prev => isInitial ? messagesWithSenders : [...messagesWithSenders, ...prev]);
                 setPage(pageNum);
@@ -566,9 +582,8 @@ export default function ChatPage() {
                                 if (replyMsg) {
                                     const msgWithReply = { ...newMessage, reply_message: replyMsg };
                                     // Also need sender info
-                                    const senderName = newMessage.sender_user_id === currentUser?.id ? currentUser?.name : "Loading...";
-                                    // @ts-ignore
-                                    const senderAvatar = newMessage.sender_user_id === currentUser?.id ? currentUser?.avatar_url : undefined;
+                                    const senderName = newMessage.sender_user_id === currentUser?.id ? currentUser?.name : (selectedChat?.other_user?.name || "Loading...");
+                                    const senderAvatar = newMessage.sender_user_id === currentUser?.id ? currentUser?.avatar_url : selectedChat?.other_user?.avatar_url;
                                     return [...prev, { ...msgWithReply, sender: { name: senderName || "Unknown", avatar_url: senderAvatar } }];
                                 }
                             }
@@ -590,8 +605,21 @@ export default function ChatPage() {
                                 .single();
 
                             if (freshMsg) {
-                                const { data: senderData } = await supabase.from("users").select("id, name, avatar_url").eq("id", freshMsg.sender_user_id).single();
-                                setMessages(prev => prev.map(m => m.id === newMessage.id ? { ...freshMsg, sender: senderData || { name: "Unknown" } } : m));
+                                const { data: sendersData } = await supabase.from("users")
+                                    .select("id, name, avatar_url")
+                                    .in("id", [freshMsg.sender_user_id, freshMsg.reply_message.sender_user_id]);
+
+                                const sendersMap = new Map((sendersData || []).map((s: any) => [s.id, { name: s.name, avatar_url: s.avatar_url }]));
+
+                                const enrichedFresh = {
+                                    ...freshMsg,
+                                    sender: sendersMap.get(freshMsg.sender_user_id) || { name: "Unknown" },
+                                    reply_message: {
+                                        ...freshMsg.reply_message,
+                                        sender: sendersMap.get(freshMsg.reply_message.sender_user_id) || { name: "User" }
+                                    }
+                                };
+                                setMessages(prev => prev.map(m => m.id === newMessage.id ? enrichedFresh : m));
                             }
                         } else {
                             // Basic sender fetch
@@ -773,7 +801,19 @@ export default function ChatPage() {
             if (msgError) throw msgError;
 
             if (msgData) {
-                const newMessage = { ...msgData, sender: { name: currentUser.name || "Me" } };
+                const newMessage = {
+                    ...msgData,
+                    sender: { name: currentUser.name || "Me" }
+                };
+
+                // Enrich reply message sender from state
+                if (replyingTo) {
+                    newMessage.reply_message = {
+                        ...msgData.reply_message,
+                        sender: replyingTo.sender || { name: "User" }
+                    };
+                }
+
                 setMessages((prev) => [...prev, newMessage]);
             }
 
@@ -815,7 +855,19 @@ export default function ChatPage() {
 
 
             if (data) {
-                const newMessage = { ...data, sender: { name: currentUser.name || "Me" } };
+                const newMessage = {
+                    ...data,
+                    sender: { name: currentUser.name || "Me" }
+                };
+
+                // Enrich reply message sender from state
+                if (replyingTo) {
+                    newMessage.reply_message = {
+                        ...data.reply_message,
+                        sender: replyingTo.sender || { name: "User" }
+                    };
+                }
+
                 setMessages((prev) => [...prev, newMessage]);
             }
             loadChats();
@@ -1160,9 +1212,17 @@ export default function ChatPage() {
                                         </p>
                                     </div>
                                     {/* Action Buttons */}
-                                    <div className="flex items-center gap-4 text-[#54656f]">
-                                        <button className="hidden sm:block hover:bg-gray-200 p-2 rounded-full"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg></button>
-                                        <button className="hover:bg-gray-200 p-2 rounded-full"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg></button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setIsReportModalOpen(true)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                        >
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                                <line x1="4" y1="22" x2="4" y2="15" />
+                                            </svg>
+                                            Report
+                                        </button>
                                     </div>
                                 </div>
 
@@ -1298,10 +1358,36 @@ export default function ChatPage() {
                     </div>
                 </div>
             </div>
-            {/* Hide BottomNav on mobile when chat is selected */}
-            <div className={`${selectedChat ? 'hidden md:block' : 'block'}`}>
-                <BottomNav />
-            </div>
+            {/* Modals */}
+            <ReportModal
+                isOpen={isReportModalOpen}
+                userName={selectedChat?.other_user?.name || "User"}
+                onClose={() => setIsReportModalOpen(false)}
+                onSubmit={async (reason, details) => {
+                    if (!selectedChat || !currentUser) return;
+
+                    try {
+                        const { error } = await supabase
+                            .from("reports")
+                            .insert({
+                                chat_id: selectedChat.id,
+                                reporter_user_id: currentUser.id,
+                                reported_user_id: selectedChat.other_user?.id,
+                                reason,
+                                details,
+                                status: "new"
+                            });
+
+                        if (error) throw error;
+
+                        setIsReportModalOpen(false);
+                        alert("Thank you for your report. Our team will review this shortly.");
+                    } catch (error) {
+                        console.error("Error submitting report:", error);
+                        alert("Failed to submit report. Please try again.");
+                    }
+                }}
+            />
         </div >
     );
 }

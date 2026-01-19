@@ -52,7 +52,6 @@ export default function MyProductsView() {
             } else {
                 setUserId(null);
                 setUserName("");
-
                 setMyProducts([]);
                 setLoading(false);
             }
@@ -218,7 +217,7 @@ export default function MyProductsView() {
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4 md:mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 md:mb-8">
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
                     <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Products</span>
                     <span className="text-xl md:text-2xl font-bold text-gray-900">{myProducts.length}</span>
@@ -230,10 +229,6 @@ export default function MyProductsView() {
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
                     <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Likes</span>
                     <span className="text-xl md:text-2xl font-bold text-gray-900">{totalLikes.toLocaleString()}</span>
-                </div>
-                <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Interest</span>
-                    <span className="text-xl md:text-2xl font-bold text-gray-900">0</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center col-span-2 md:col-span-1">
                     <span className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Inquiry</span>
@@ -264,20 +259,19 @@ export default function MyProductsView() {
             ) : (
                 <div className="w-full">
                     {/* Table Header */}
-                    <div className="grid grid-cols-12 gap-4 pb-2 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                        <div className="col-span-12 md:col-span-4 px-4">Project</div>
+                    <div className="grid grid-cols-10 gap-4 pb-2 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                        <div className="col-span-10 md:col-span-4 px-4">Project</div>
                         <div className="col-span-2 text-center hidden md:block">Views</div>
                         <div className="col-span-2 text-center hidden md:block">Likes</div>
-                        <div className="col-span-2 text-center hidden md:block">Interest</div>
                         <div className="col-span-2 text-center hidden md:block">Inquiry</div>
                     </div>
 
                     {/* Features List */}
                     <div className="space-y-0">
                         {myProducts.map((product) => (
-                            <div key={product.id} className="group relative grid grid-cols-12 gap-4 items-center border-b border-gray-100 last:border-0 -mx-4 px-4 py-2">
+                            <div key={product.id} className="group relative grid grid-cols-10 gap-4 items-center border-b border-gray-100 last:border-0 -mx-4 px-4 py-2">
                                 {/* Project Info */}
-                                <div className="col-span-12 md:col-span-4 flex gap-3 items-center">
+                                <div className="col-span-10 md:col-span-4 flex gap-3 items-center">
                                     <div className="relative w-12 h-[60px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all">
                                         {product.status === 'draft' && (
                                             <div className="absolute top-0 right-0 bg-yellow-400 text-white text-[10px] font-bold px-2 py-0.5 z-10">PENDING</div>
@@ -308,25 +302,19 @@ export default function MyProductsView() {
                                 </div>
 
                                 {/* Stats - Views */}
-                                <div className="col-span-3 md:col-span-2 flex flex-col items-center justify-center">
+                                <div className="col-span-2 flex flex-col items-center justify-center">
                                     <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Views</span>
                                     <span className="text-sm text-gray-700">{product.views?.toLocaleString() || 0}</span>
                                 </div>
 
                                 {/* Stats - Likes */}
-                                <div className="col-span-3 md:col-span-2 flex flex-col items-center justify-center">
+                                <div className="col-span-2 flex flex-col items-center justify-center">
                                     <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Likes</span>
                                     <span className="text-sm text-gray-700">{product.wishlist_count?.toLocaleString() || 0}</span>
                                 </div>
 
-                                {/* Stats - Interest */}
-                                <div className="col-span-3 md:col-span-2 flex flex-col items-center justify-center">
-                                    <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Interest</span>
-                                    <span className="text-sm text-gray-700">0</span>
-                                </div>
-
                                 {/* Stats - Inquiry */}
-                                <div className="col-span-3 md:col-span-2 flex flex-col items-center justify-center">
+                                <div className="col-span-2 flex flex-col items-center justify-center">
                                     <span className="md:hidden text-[10px] text-gray-400 uppercase font-bold mb-1">Inquiry</span>
                                     <span className="text-sm text-gray-700">{product.inquiries_count?.toLocaleString() || 0}</span>
                                 </div>

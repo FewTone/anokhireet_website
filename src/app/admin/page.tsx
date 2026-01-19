@@ -240,7 +240,8 @@ function AdminContent() {
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured" | "contact">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured" | "contact" | "reports">("dashboard");
+    const [reports, setReports] = useState<any[]>([]);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminEmail, setAdminEmail] = useState("");
@@ -349,7 +350,8 @@ function AdminContent() {
                 loadWebsiteSetting(),
                 loadAllFacets(),
                 loadHeroSlides(),
-                loadContactRequests()
+                loadContactRequests(),
+                loadReports()
             ]).catch((error) => {
                 console.error("Error loading admin data:", error);
             });
@@ -925,6 +927,25 @@ To get these values:
             setContactRequests(data || []);
         } catch (error) {
             console.error("Error loading contact requests:", error);
+        }
+    };
+
+    // Load reports
+    const loadReports = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("reports")
+                .select(`
+                    *,
+                    reporter:reporter_user_id(name),
+                    reported:reported_user_id(name)
+                `)
+                .order("created_at", { ascending: false });
+
+            if (error) throw error;
+            setReports(data || []);
+        } catch (error) {
+            console.error("Error loading reports:", error);
         }
     };
 
@@ -3499,6 +3520,28 @@ To get these values:
                                         <polyline points="22,6 12,13 2,6"></polyline>
                                     </svg>
                                     <span>Messages</span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        const currentScrollY = window.scrollY;
+                                        setActiveTab("reports");
+                                        localStorage.setItem("adminActiveTab", "reports");
+                                        router.replace("/admin?tab=reports");
+                                        requestAnimationFrame(() => {
+                                            window.scrollTo(0, currentScrollY);
+                                        });
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-semibold transition-all duration-200 rounded-none mb-1 ${activeTab === "reports"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        }`}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                                        <line x1="4" y1="22" x2="4" y2="15"></line>
+                                    </svg>
+                                    <span>Reports</span>
                                 </button>
                             </nav>
 
@@ -7422,9 +7465,81 @@ To get these values:
                                     </table>
                                 </div>
                             </div>
-
                         )}
 
+                        {activeTab === "reports" && (
+                            <div className="space-y-6">
+                                <div className="flex items-center justify-between">
+                                    <h1 className="text-2xl font-bold text-gray-900">User Reports</h1>
+                                    <span className="text-sm text-gray-500">{reports.length} reports</span>
+                                </div>
+
+                                <div className="bg-white rounded-none border border-gray-200 overflow-hidden">
+                                    <table className="min-w-full divide-y divide-gray-200">
+                                        <thead className="bg-gray-50">
+                                            <tr>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reporter</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reported User</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="bg-white divide-y divide-gray-200">
+                                            {reports.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                                        No reports found
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                reports.map((report) => (
+                                                    <tr key={report.id} className="hover:bg-gray-50">
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                            {new Date(report.created_at).toLocaleDateString()}
+                                                            <div className="text-xs text-gray-400">{new Date(report.created_at).toLocaleTimeString()}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm font-medium text-gray-900">{report.reporter?.name || "Unknown"}</div>
+                                                            <div className="text-xs text-gray-500 font-mono">{report.reporter_user_id?.substring(0, 8)}...</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <div className="text-sm font-medium text-gray-900">{report.reported?.name || "Unknown"}</div>
+                                                            <div className="text-xs text-gray-500 font-mono">{report.reported_user_id?.substring(0, 8)}...</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                            <span className="px-2 py-1 bg-red-50 text-red-700 text-[11px] font-medium border border-red-100 uppercase tracking-wide">
+                                                                {report.reason}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-sm text-gray-900 max-w-xs truncate" title={report.details}>
+                                                                {report.details || <span className="text-gray-400 italic">No details provided</span>}
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                            <div className="flex flex-col items-end gap-2">
+                                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-none text-xs font-medium capitalize ${report.status === 'new' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                                                                    }`}>
+                                                                    {report.status}
+                                                                </span>
+                                                                <button
+                                                                    onClick={() => router.push(`/chat?id=${report.chat_id}`)}
+                                                                    className="text-[10px] text-black underline uppercase tracking-tighter hover:text-gray-600"
+                                                                >
+                                                                    View Chat
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div >
             </main >
