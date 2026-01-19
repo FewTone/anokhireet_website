@@ -230,38 +230,40 @@ export default function UserPage() {
         <>
             <Navbar />
             <main className="min-h-[calc(100vh-70px)] bg-white">
-                <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)] w-full">
+                <div className="max-w-6xl mx-auto w-full">
+                    <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)] w-full">
 
-                    {/* Left Sidebar - Desktop Only */}
-                    <div className="w-full md:w-[320px] p-6 hidden md:block">
-                        <Sidebar
-                            userName={userName}
-                            userAvatar={userAvatar}
-                            navItems={navItems}
-                            activeView={activeView}
-                            onNavigate={(id) => {
-                                setActiveView(id as View);
-                                router.push(`/user?view=${id}`, { scroll: false });
-                            }}
-                        />
-                    </div>
+                        {/* Left Sidebar - Desktop Only */}
+                        <div className="w-full md:w-[320px] p-6 hidden md:block">
+                            <Sidebar
+                                userName={userName}
+                                userAvatar={userAvatar}
+                                navItems={navItems}
+                                activeView={activeView}
+                                onNavigate={(id) => {
+                                    setActiveView(id as View);
+                                    router.push(`/user?view=${id}`, { scroll: false });
+                                }}
+                            />
+                        </div>
 
-                    {/* Main Content */}
-                    <div className="flex-1 p-0 transition-all duration-300">
-                        {loading ? (
-                            <div className="animate-pulse space-y-8 p-4">
-                                <div className="h-48 bg-gray-200 rounded"></div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                                        <div key={i} className="h-32 bg-gray-200 rounded"></div>
-                                    ))}
+                        {/* Main Content */}
+                        <div className="flex-1 p-0 pt-6 md:pt-16 transition-all duration-300">
+                            {loading ? (
+                                <div className="animate-pulse space-y-8 p-4">
+                                    <div className="h-48 bg-gray-200 rounded"></div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                                            <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ) : (
-                            <div className="w-full fade-in">
-                                {renderContent()}
-                            </div>
-                        )}
+                            ) : (
+                                <div className="w-full fade-in">
+                                    {renderContent()}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </main>

@@ -168,12 +168,12 @@ export default function MobileFilterSheet({
 
             {/* Sheet */}
             <div
-                className="absolute inset-x-0 bottom-0 bg-white rounded-t-2xl flex flex-col overflow-hidden animate-slide-up shadow-2xl"
+                className="absolute inset-x-0 bottom-0 bg-white rounded-none flex flex-col overflow-hidden animate-slide-up shadow-2xl"
                 style={{
                     height: `${currentSnap}%`,
                     transform: isDragging ? `translateY(${translateY}px)` : 'translateY(0)',
                     transition: isDragging ? 'none' : 'height 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
-                    borderRadius: currentSnap === 100 ? '0' : '16px 16px 0 0'
+                    borderRadius: '0'
                 }}
                 onTouchStart={onTouchStart}
                 onTouchMove={onTouchMove}
@@ -183,7 +183,7 @@ export default function MobileFilterSheet({
                 <div
                     className="w-full flex justify-center pt-3 pb-2 bg-white sticky top-0 z-10 cursor-grab active:cursor-grabbing"
                 >
-                    <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+                    <div className="w-12 h-1.5 bg-gray-300 rounded-none"></div>
                 </div>
 
                 {/* Content */}
@@ -467,11 +467,11 @@ export default function MobileFilterSheet({
                                         />
                                         {/* Visual Thumbs matching desktop style */}
                                         <div
-                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-none shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
                                         />
                                         <div
-                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                            className="absolute w-4 h-4 bg-black border-2 border-white rounded-none shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                             style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
                                         />
                                     </div>

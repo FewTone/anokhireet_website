@@ -773,7 +773,7 @@ export default function ProductsPage() {
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Left Sidebar - Filters */}
                         <aside className="hidden lg:block w-64 flex-shrink-0">
-                            <div className="sticky top-24 bg-white border border-gray-200 rounded-lg p-4">
+                            <div className="sticky top-24 bg-white border border-gray-200 rounded-none p-4">
                                 <h2 className="text-lg font-semibold mb-4">FILTERS</h2>
 
                                 {/* SORT */}
@@ -842,7 +842,7 @@ export default function ProductsPage() {
                                                             type="checkbox"
                                                             checked={pendingProductTypes.includes(type.id)}
                                                             onChange={() => toggleFilter('productType', type.id)}
-                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                            className="w-4 h-4 border-gray-300 rounded-none"
                                                         />
                                                         <span className="text-sm">{type.name}</span>
                                                     </label>
@@ -875,7 +875,7 @@ export default function ProductsPage() {
                                                             type="checkbox"
                                                             checked={pendingOccasions.includes(occasion.id)}
                                                             onChange={() => toggleFilter('occasion', occasion.id)}
-                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                            className="w-4 h-4 border-gray-300 rounded-none"
                                                         />
                                                         <span className="text-sm">{occasion.name}</span>
                                                     </label>
@@ -908,12 +908,12 @@ export default function ProductsPage() {
                                                             type="checkbox"
                                                             checked={pendingColors.includes(color.id)}
                                                             onChange={() => toggleFilter('color', color.id)}
-                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                            className="w-4 h-4 border-gray-300 rounded-none"
                                                         />
                                                         <div className="flex items-center gap-2">
                                                             {color.hex && (
                                                                 <div
-                                                                    className="w-4 h-4 rounded border border-gray-300"
+                                                                    className="w-4 h-4 rounded-none border border-gray-300"
                                                                     style={{ backgroundColor: color.hex }}
                                                                 />
                                                             )}
@@ -949,7 +949,7 @@ export default function ProductsPage() {
                                                             type="checkbox"
                                                             checked={pendingMaterials.includes(material.id)}
                                                             onChange={() => toggleFilter('material', material.id)}
-                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                            className="w-4 h-4 border-gray-300 rounded-none"
                                                         />
                                                         <span className="text-sm">{material.name}</span>
                                                     </label>
@@ -982,7 +982,7 @@ export default function ProductsPage() {
                                                             type="checkbox"
                                                             checked={pendingCities.includes(city.id)}
                                                             onChange={() => toggleFilter('city', city.id)}
-                                                            className="w-4 h-4 border-gray-300 rounded"
+                                                            className="w-4 h-4 border-gray-300 rounded-none"
                                                         />
                                                         <span className="text-sm">{city.name}</span>
                                                     </label>
@@ -1013,11 +1013,11 @@ export default function ProductsPage() {
                                                 {/* Dual Range Slider - Ported from Mobile for Perfect Alignment */}
                                                 <div className="relative h-8 mb-2">
                                                     {/* Background track (gray) */}
-                                                    <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gray-200 rounded transform -translate-y-1/2"></div>
+                                                    <div className="absolute top-1/2 left-0 right-0 h-[2px] bg-gray-200 rounded-none transform -translate-y-1/2"></div>
 
                                                     {/* Active range track (thick black line between thumbs) */}
                                                     <div
-                                                        className="absolute top-1/2 h-[2px] bg-black rounded transform -translate-y-1/2"
+                                                        className="absolute top-1/2 h-[2px] bg-black rounded-none transform -translate-y-1/2"
                                                         style={{
                                                             left: `${(pendingPriceRange[0] / maxPrice) * 100}%`,
                                                             width: `${((pendingPriceRange[1] - pendingPriceRange[0]) / maxPrice) * 100}%`
@@ -1052,11 +1052,11 @@ export default function ProductsPage() {
 
                                                     {/* Visual Thumbs - Premium Black Style */}
                                                     <div
-                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-none shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                                         style={{ left: `calc(${(pendingPriceRange[0] / maxPrice) * 100}% - 8px)` }}
                                                     />
                                                     <div
-                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-full shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
+                                                        className="absolute w-4 h-4 bg-black border-2 border-white rounded-none shadow-sm top-1/2 -translate-y-1/2 pointer-events-none z-10"
                                                         style={{ left: `calc(${(pendingPriceRange[1] / maxPrice) * 100}% - 8px)` }}
                                                     />
                                                 </div>
@@ -1072,16 +1072,16 @@ export default function ProductsPage() {
                                 </div>
 
                                 {/* Filter Buttons */}
-                                <div className="flex gap-2 mt-4">
+                                <div className="flex gap-1.5 mt-4">
                                     <button
                                         onClick={clearAllFilters}
-                                        className="flex-1 px-4 py-2 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                                        className="flex-1 px-2 py-2 text-[11px] border border-gray-300 rounded-none hover:bg-gray-50 uppercase tracking-wider font-semibold whitespace-nowrap"
                                     >
                                         CLEAR
                                     </button>
                                     <button
                                         onClick={handleApplyFilters}
-                                        className="flex-1 px-4 py-2 text-sm bg-black text-white rounded hover:bg-gray-800"
+                                        className="flex-1 px-2 py-2 text-[11px] bg-black text-white rounded-none hover:bg-gray-800 uppercase tracking-wider font-semibold whitespace-nowrap"
                                     >
                                         APPLY ({filteredProducts.length})
                                     </button>

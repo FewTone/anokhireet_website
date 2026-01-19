@@ -618,25 +618,42 @@ export default function LoginModal() {
                                     <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1.5 font-medium ml-1">
                                         OTP Code <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            maxLength={4}
-                                            value={otp}
-                                            onChange={(e) => {
-                                                const value = e.target.value.replace(/\D/g, "");
-                                                setOtp(value);
-                                                setError("");
-                                            }}
-                                            className="w-full h-14 border-2 border-black text-center text-2xl font-normal rounded-none focus:outline-none tracking-[0.75rem] pr-[-0.75rem]"
-                                            autoFocus
-                                            placeholder="----"
-                                            onKeyPress={(e) => {
-                                                if (e.key === 'Enter' && otp.length === 4) {
-                                                    handleVerifyOtp();
-                                                }
-                                            }}
-                                        />
+                                    <div className="flex justify-between gap-2 max-w-[280px] mx-auto">
+                                        {[0, 1, 2, 3].map((i) => (
+                                            <input
+                                                key={i}
+                                                id={`otp-${i}`}
+                                                type="text"
+                                                inputMode="numeric"
+                                                maxLength={1}
+                                                value={otp[i] || ""}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/\D/g, "");
+                                                    if (!value && e.target.value) return; // Ignore non-numeric
+
+                                                    const newOtp = otp.split('');
+                                                    newOtp[i] = value;
+                                                    setOtp(newOtp.join('').slice(0, 4));
+                                                    setError("");
+
+                                                    if (value && i < 3) {
+                                                        const nextInput = document.getElementById(`otp-${i + 1}`);
+                                                        nextInput?.focus();
+                                                    }
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Backspace' && !otp[i] && i > 0) {
+                                                        const prevInput = document.getElementById(`otp-${i - 1}`);
+                                                        prevInput?.focus();
+                                                    }
+                                                    if (e.key === 'Enter' && otp.length === 4) {
+                                                        handleVerifyOtp();
+                                                    }
+                                                }}
+                                                className="w-12 h-14 border border-gray-300 text-center text-xl font-bold bg-[#f9fafb] rounded-none focus:outline-none focus:border-black transition-colors"
+                                                autoFocus={i === 0}
+                                            />
+                                        ))}
                                     </div>
                                     <p className="text-[0.7rem] text-[#6b7280] mt-2.5 text-center">
                                         Enter the 4-digit code sent to your phone

@@ -176,223 +176,224 @@ export default function ProfileView({
         <div className="w-full">
             <h2 className="text-2xl font-semibold mb-6 text-center uppercase tracking-wide">Profile Details</h2>
 
-            <div className="bg-white border border-gray-100 rounded-lg p-8 w-full min-h-[400px]">
-                <div className="space-y-6">
+            <div className="max-w-2xl mx-auto">
+                <div className="bg-white border border-gray-100 rounded-lg p-8 w-full min-h-[400px]">
+                    <div className="space-y-6">
+                        {/* Avatar Section */}
+                        <div className="flex justify-center mb-6 relative">
+                            <div className="relative group">
+                                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-100 relative bg-gray-50 flex items-center justify-center">
+                                    {userAvatar ? (
+                                        <Image
+                                            src={userAvatar}
+                                            alt="Profile"
+                                            fill
+                                            className="object-cover"
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <span className="text-2xl font-semibold text-gray-400 uppercase">
+                                            {userName ? userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
+                                        </span>
+                                    )}
+                                </div>
 
-                    {/* Avatar Section */}
-                    <div className="flex justify-center mb-6 relative">
-                        <div className="relative group">
-                            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-100 relative bg-gray-50 flex items-center justify-center">
-                                {userAvatar ? (
-                                    <Image
-                                        src={userAvatar}
-                                        alt="Profile"
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
+                                {isEditing && (
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={uploadingAvatar}
+                                        className="absolute bottom-0 right-0 bg-black text-white px-3 py-1 text-xs rounded-full shadow-md hover:bg-gray-800 transition-colors z-10"
+                                        title="Change Profile Picture"
+                                    >
+                                        {uploadingAvatar ? "Uploading..." : "Edit"}
+                                    </button>
+                                )}
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={handleAvatarUpload}
+                                    className="hidden"
+                                    accept="image/*"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Read-only Fields */}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    Full Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formatUserDisplayName(userName)}
+                                    disabled
+                                    className="w-full text-gray-500 bg-gray-50 border-b border-gray-100 pb-2 focus:outline-none cursor-not-allowed"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    Mobile Number
+                                </label>
+                                <input
+                                    type="text"
+                                    value={userPhone || "Not provided"}
+                                    disabled
+                                    className="w-full text-gray-500 bg-gray-50 border-b border-gray-100 pb-2 focus:outline-none cursor-not-allowed"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Email Field REMOVED */}
+
+                        {/* Editable Fields */}
+                        <div className="relative">
+                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                Location
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.location}
+                                onChange={handleLocationChange}
+                                onFocus={() => {
+                                    if (isEditing && formData.location) {
+                                        const filtered = cities.filter(city =>
+                                            city.name.toLowerCase().includes(formData.location.toLowerCase())
+                                        );
+                                        setFilteredCities(filtered);
+                                        setShowCitySuggestions(true);
+                                    } else if (isEditing) {
+                                        setFilteredCities(cities); // Show all if empty
+                                        setShowCitySuggestions(true);
+                                    }
+                                }}
+                                onBlur={() => {
+                                    // Delay hide to allow click
+                                    setTimeout(() => setShowCitySuggestions(false), 200);
+                                }}
+                                disabled={!isEditing}
+                                placeholder={isEditing ? "Enter your city/location" : "Not provided"}
+                                className={`w-full text-gray-900 border-b pb-2 focus:outline-none transition-colors ${isEditing ? "border-black bg-white" : "border-gray-100 bg-transparent"
+                                    }`}
+                            />
+                            {/* City Suggestions */}
+                            {showCitySuggestions && isEditing && filteredCities.length > 0 && (
+                                <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-lg max-h-48 overflow-y-auto mt-1 rounded text-sm">
+                                    {filteredCities.map((city) => (
+                                        <li
+                                            key={city.id}
+                                            onClick={() => selectCity(city.name)}
+                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800"
+                                        >
+                                            {city.name}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    Gender
+                                </label>
+                                {isEditing ? (
+                                    <select
+                                        value={formData.gender}
+                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                        className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none bg-white py-1"
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
                                 ) : (
-                                    <span className="text-2xl font-semibold text-gray-400 uppercase">
-                                        {userName ? userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'U'}
-                                    </span>
+                                    <p className="text-gray-900 border-b border-gray-100 pb-2 h-8 flex items-center">
+                                        {formData.gender || "Not provided"}
+                                    </p>
                                 )}
                             </div>
 
-                            {isEditing && (
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={uploadingAvatar}
-                                    className="absolute bottom-0 right-0 bg-black text-white px-3 py-1 text-xs rounded-full shadow-md hover:bg-gray-800 transition-colors z-10"
-                                    title="Change Profile Picture"
-                                >
-                                    {uploadingAvatar ? "Uploading..." : "Edit"}
-                                </button>
-                            )}
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleAvatarUpload}
-                                className="hidden"
-                                accept="image/*"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Read-only Fields */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                                Full Name
-                            </label>
-                            <input
-                                type="text"
-                                value={formatUserDisplayName(userName)}
-                                disabled
-                                className="w-full text-gray-500 bg-gray-50 border-b border-gray-100 pb-2 focus:outline-none cursor-not-allowed"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                                Mobile Number
-                            </label>
-                            <input
-                                type="text"
-                                value={userPhone || "Not provided"}
-                                disabled
-                                className="w-full text-gray-500 bg-gray-50 border-b border-gray-100 pb-2 focus:outline-none cursor-not-allowed"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Email Field REMOVED */}
-
-                    {/* Editable Fields */}
-                    <div className="relative">
-                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                            Location
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.location}
-                            onChange={handleLocationChange}
-                            onFocus={() => {
-                                if (isEditing && formData.location) {
-                                    const filtered = cities.filter(city =>
-                                        city.name.toLowerCase().includes(formData.location.toLowerCase())
-                                    );
-                                    setFilteredCities(filtered);
-                                    setShowCitySuggestions(true);
-                                } else if (isEditing) {
-                                    setFilteredCities(cities); // Show all if empty
-                                    setShowCitySuggestions(true);
-                                }
-                            }}
-                            onBlur={() => {
-                                // Delay hide to allow click
-                                setTimeout(() => setShowCitySuggestions(false), 200);
-                            }}
-                            disabled={!isEditing}
-                            placeholder={isEditing ? "Enter your city/location" : "Not provided"}
-                            className={`w-full text-gray-900 border-b pb-2 focus:outline-none transition-colors ${isEditing ? "border-black bg-white" : "border-gray-100 bg-transparent"
-                                }`}
-                        />
-                        {/* City Suggestions */}
-                        {showCitySuggestions && isEditing && filteredCities.length > 0 && (
-                            <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-lg max-h-48 overflow-y-auto mt-1 rounded text-sm">
-                                {filteredCities.map((city) => (
-                                    <li
-                                        key={city.id}
-                                        onClick={() => selectCity(city.name)}
-                                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800"
-                                    >
-                                        {city.name}
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                                Gender
-                            </label>
-                            {isEditing ? (
-                                <select
-                                    value={formData.gender}
-                                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                                    className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none bg-white py-1"
-                                >
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            ) : (
-                                <p className="text-gray-900 border-b border-gray-100 pb-2 h-8 flex items-center">
-                                    {formData.gender || "Not provided"}
-                                </p>
-                            )}
-                        </div>
-
-                        <div className={isEditing ? "custom-datepicker-wrapper" : ""}>
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 pointer-events-none">
-                                Birthdate
-                            </label>
-                            {isEditing ? (
-                                <DatePicker
-                                    selected={formData.birthdate ? new Date(formData.birthdate) : null}
-                                    onChange={(date: Date | null) => {
-                                        if (date) {
-                                            const dateString = date.toLocaleDateString('en-CA');
-                                            setFormData({ ...formData, birthdate: dateString });
-                                        } else {
-                                            setFormData({ ...formData, birthdate: "" });
-                                        }
-                                    }}
-                                    maxDate={new Date()}
-                                    dateFormat="dd/MM/yyyy"
-                                    placeholderText="dd/mm/yyyy"
-                                    className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none transition-colors h-9 bg-white cursor-pointer"
-                                    onKeyDown={(e) => e.preventDefault()}
-                                    showMonthDropdown
-                                    showYearDropdown
-                                    dropdownMode="select"
-                                />
-                            ) : (
-                                <p className="text-gray-900 border-b border-gray-100 pb-2 h-8 flex items-center">
-                                    {formData.birthdate ? new Date(formData.birthdate).toLocaleDateString('en-IN', {
-                                        day: 'numeric',
-                                        month: 'short',
-                                        year: 'numeric'
-                                    }) : "Not provided"}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="pt-4 flex flex-col gap-4">
-                        <div className="flex gap-4">
-                            {!isEditing ? (
-                                <button
-                                    onClick={() => setIsEditing(true)}
-                                    className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors"
-                                >
-                                    Edit Profile
-                                </button>
-                            ) : (
-                                <>
-                                    <button
-                                        onClick={handleSave}
-                                        disabled={loading}
-                                        className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
-                                    >
-                                        {loading ? "Saving..." : "Save Changes"}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setIsEditing(false);
-                                            setFormData({
-                                                location: userLocation || "",
-                                                gender: userGender || "",
-                                                birthdate: userBirthdate || ""
-                                            });
-                                            setStatusMessage(null);
+                            <div className={isEditing ? "custom-datepicker-wrapper" : ""}>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 pointer-events-none">
+                                    Birthdate
+                                </label>
+                                {isEditing ? (
+                                    <DatePicker
+                                        selected={formData.birthdate ? new Date(formData.birthdate) : null}
+                                        onChange={(date: Date | null) => {
+                                            if (date) {
+                                                const dateString = date.toLocaleDateString('en-CA');
+                                                setFormData({ ...formData, birthdate: dateString });
+                                            } else {
+                                                setFormData({ ...formData, birthdate: "" });
+                                            }
                                         }}
-                                        disabled={loading}
-                                        className="px-8 py-3 bg-gray-200 text-gray-900 text-sm font-semibold uppercase tracking-wide hover:bg-gray-300 transition-colors"
+                                        maxDate={new Date()}
+                                        dateFormat="dd/MM/yyyy"
+                                        placeholderText="dd/mm/yyyy"
+                                        className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none transition-colors h-9 bg-white cursor-pointer"
+                                        onKeyDown={(e) => e.preventDefault()}
+                                        showMonthDropdown
+                                        showYearDropdown
+                                        dropdownMode="select"
+                                    />
+                                ) : (
+                                    <p className="text-gray-900 border-b border-gray-100 pb-2 h-8 flex items-center">
+                                        {formData.birthdate ? new Date(formData.birthdate).toLocaleDateString('en-IN', {
+                                            day: 'numeric',
+                                            month: 'short',
+                                            year: 'numeric'
+                                        }) : "Not provided"}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="pt-4 flex flex-col gap-4">
+                            <div className="flex gap-4">
+                                {!isEditing ? (
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors"
                                     >
-                                        Cancel
+                                        Edit Profile
                                     </button>
-                                </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={handleSave}
+                                            disabled={loading}
+                                            className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
+                                        >
+                                            {loading ? "Saving..." : "Save Changes"}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setIsEditing(false);
+                                                setFormData({
+                                                    location: userLocation || "",
+                                                    gender: userGender || "",
+                                                    birthdate: userBirthdate || ""
+                                                });
+                                                setStatusMessage(null);
+                                            }}
+                                            disabled={loading}
+                                            className="px-8 py-3 bg-gray-200 text-gray-900 text-sm font-semibold uppercase tracking-wide hover:bg-gray-300 transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                            {statusMessage && (
+                                <div className={`text-sm ${statusMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                                    {statusMessage.text}
+                                </div>
                             )}
                         </div>
-                        {statusMessage && (
-                            <div className={`text-sm ${statusMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
-                                {statusMessage.text}
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
