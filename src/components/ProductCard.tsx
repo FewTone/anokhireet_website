@@ -25,71 +25,122 @@ export default function ProductCard({ product, hideDetails = false, disableHover
     const router = useRouter();
 
     useEffect(() => {
-        // Check if product is in wishlist
-        const wishlist = localStorage.getItem("wishlist");
-        if (wishlist) {
-            try {
-                const parsed = JSON.parse(wishlist);
-                const productId = product.productId || product.id;
-                const exists = parsed.some((p: any) => (p.id === productId || p.productId === productId));
-                setIsFavorite(exists);
-            } catch (error) {
-                console.error("Error parsing wishlist:", error);
+        const checkWishlistStatus = async () => {
+            // First check localStorage for immediate and legacy support
+            const localWishlist = localStorage.getItem("wishlist");
+            let isLocallyFavorite = false;
+
+            if (localWishlist) {
+                try {
+                    const parsed = JSON.parse(localWishlist);
+                    const productId = product.productId || product.id;
+                    isLocallyFavorite = parsed.some((p: any) => (
+                        p.id === productId ||
+                        p.productId === productId ||
+                        p.id === product.id ||
+                        p.productId === product.id
+                    ));
+                } catch (error) {
+                    console.error("Error parsing wishlist:", error);
+                }
             }
-        }
-    }, [product.productId, product.id]);
+
+            // Then check Supabase if logged in
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (user) {
+                try {
+                    const { data: userData } = await supabase
+                        .from('users')
+                        .select('id')
+                        .eq('auth_user_id', user.id)
+                        .maybeSingle();
+
+                    if (userData) {
+                        const { data } = await supabase
+                            .from('wishlist')
+                            .select('id')
+                            .eq('user_id', userData.id)
+                            .eq('product_id', product.id)
+                            .maybeSingle();
+
+                        if (data) {
+                            setIsFavorite(true);
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking database wishlist:", error);
+                }
+            }
+
+            setIsFavorite(isLocallyFavorite);
+        };
+
+        checkWishlistStatus();
+    }, [product.id, product.productId]);
 
     const toggleFavorite = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
-        // Check authentication first
-        // Check authentication first (getUser is safer than getSession)
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            // Not logged in - redirect to login page with return URL
             const returnUrl = encodeURIComponent(window.location.pathname);
             router.push(`/profile?returnUrl=${returnUrl}`);
             return;
         }
 
-        const productId = product.productId || product.id;
-        const wishlist = localStorage.getItem("wishlist");
-        let updatedWishlist = [];
+        try {
+            const { data: userData } = await supabase
+                .from('users')
+                .select('id')
+                .eq('auth_user_id', user.id)
+                .maybeSingle();
 
-        if (wishlist) {
-            try {
-                updatedWishlist = JSON.parse(wishlist);
-            } catch (error) {
-                console.error("Error parsing wishlist:", error);
-                updatedWishlist = [];
+            if (!userData) return;
+
+            const newFavoriteStatus = !isFavorite;
+            setIsFavorite(newFavoriteStatus);
+
+            if (newFavoriteStatus) {
+                await supabase.from('wishlist').insert({
+                    user_id: userData.id,
+                    product_id: product.id
+                });
+
+                // Sync to localStorage
+                const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+                if (!wishlist.some((p: any) => p.id === product.id)) {
+                    wishlist.push({
+                        id: product.id,
+                        productId: product.productId || product.id,
+                        name: product.name,
+                        price: product.price,
+                        image: product.image,
+                        category: product.category,
+                        original_price: product.original_price,
+                    });
+                    localStorage.setItem("wishlist", JSON.stringify(wishlist));
+                }
+            } else {
+                await supabase.from('wishlist')
+                    .delete()
+                    .eq('user_id', userData.id)
+                    .eq('product_id', product.id);
+
+                // Sync to localStorage
+                const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+                const filtered = wishlist.filter((p: any) =>
+                    p.id !== product.id && p.productId !== product.productId
+                );
+                localStorage.setItem("wishlist", JSON.stringify(filtered));
             }
+        } catch (error) {
+            console.error("Error toggling wishlist:", error);
+            setIsFavorite(!isFavorite);
         }
-
-        const existingIndex = updatedWishlist.findIndex(
-            (p: any) => (p.id === productId || p.productId === productId)
-        );
-
-        if (existingIndex > -1) {
-            // Remove from wishlist
-            updatedWishlist.splice(existingIndex, 1);
-            setIsFavorite(false);
-        } else {
-            // Add to wishlist
-            updatedWishlist.push({
-                id: productId,
-                productId: product.productId || product.id,
-                name: product.name,
-                price: product.price,
-                image: product.image,
-                category: product.category,
-                original_price: product.original_price,
-            });
-            setIsFavorite(true);
-        }
-
-        localStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
     };
 
     // Format price to ensure it has ₹ symbol

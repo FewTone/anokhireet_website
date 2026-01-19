@@ -284,12 +284,32 @@ export default function ProductDetailPage() {
                     user_id: currentUser.id,
                     product_id: product.db_id
                 });
+
+                // Update localStorage
+                const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+                if (!wishlist.some((p: any) => p.id === product.db_id)) {
+                    wishlist.push({
+                        id: product.db_id,
+                        productId: product.productId || product.db_id,
+                        name: product.name,
+                        price: product.price,
+                        image: product.image,
+                        category: product.category,
+                        original_price: product.original_price,
+                    });
+                    localStorage.setItem("wishlist", JSON.stringify(wishlist));
+                }
             } else {
                 // Remove from wishlist
                 await supabase.from('wishlist')
                     .delete()
                     .eq('user_id', currentUser.id)
                     .eq('product_id', product.db_id);
+
+                // Update localStorage
+                const wishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+                const filtered = wishlist.filter((p: any) => p.id !== product.db_id);
+                localStorage.setItem("wishlist", JSON.stringify(filtered));
             }
         } catch (error) {
             console.error('Error toggling wishlist:', error);
