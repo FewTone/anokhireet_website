@@ -44,6 +44,16 @@ export default function LoginModal() {
 
     useEffect(() => {
         if (showLogin) {
+            // Reset form state on open
+            setPhone("");
+            setOtp("");
+            setError("");
+            setIsNewUser(false);
+            setFirstName("");
+            setLastName("");
+            setSelectedCities([]);
+            setOtpSent(false);
+
             setIsSessionChecked(false); // Reset to ensure we don't show modal before checking
             checkSession();
             loadCities();
