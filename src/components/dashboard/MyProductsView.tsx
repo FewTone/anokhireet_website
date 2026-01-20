@@ -472,8 +472,8 @@ export default function MyProductsView() {
     };
 
     return (
-        <div className="w-full px-1 md:px-0">
-            <div className="mb-4 flex justify-between items-center hidden md:flex">
+        <div className="w-full px-1 md:px-0 max-w-[1000px]">
+            <div className="mb-4 flex justify-start items-center gap-6 hidden md:flex">
                 <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
                 <button
                     onClick={handleAddProduct}
@@ -494,26 +494,26 @@ export default function MyProductsView() {
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 md:mb-8 text-center">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 md:mb-8 text-center max-w-[800px]">
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-xl md:text-2xl font-normal text-gray-900 mb-0.5">{myProducts.length}</span>
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Products</span>
+                    <span className="text-sm font-normal text-gray-900 mb-0.5">{myProducts.length}</span>
+                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Products</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-xl md:text-2xl font-normal text-gray-900 mb-0.5">{totalImpressions.toLocaleString()}</span>
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Impressions</span>
+                    <span className="text-sm font-normal text-gray-900 mb-0.5">{totalImpressions.toLocaleString()}</span>
+                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Impressions</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-xl md:text-2xl font-normal text-gray-900 mb-0.5">{totalViews.toLocaleString()}</span>
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Views</span>
+                    <span className="text-sm font-normal text-gray-900 mb-0.5">{totalViews.toLocaleString()}</span>
+                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Views</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-xl md:text-2xl font-normal text-gray-900 mb-0.5">{totalLikes.toLocaleString()}</span>
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Likes</span>
+                    <span className="text-sm font-normal text-gray-900 mb-0.5">{totalLikes.toLocaleString()}</span>
+                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Likes</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center col-span-2 md:col-span-1">
-                    <span className="text-xl md:text-2xl font-normal text-gray-900 mb-0.5">{totalInquiries.toLocaleString()}</span>
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Inquiry</span>
+                    <span className="text-sm font-normal text-gray-900 mb-0.5">{totalInquiries.toLocaleString()}</span>
+                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Inquiry</span>
                 </div>
             </div>
 
@@ -549,9 +549,9 @@ export default function MyProductsView() {
                 </div>
             ) : (
                 <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-                    <div className="min-w-[1100px] px-4">
+                    <div className="min-w-[1000px] px-4">
                         {/* Table Header */}
-                        <div className="grid grid-cols-12 gap-8 pb-2 border-b border-gray-200 text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                        <div className="grid grid-cols-12 gap-6 pb-2 border-b border-gray-200 text-sm font-normal text-gray-500 uppercase tracking-wide mb-2">
                             <div className="col-span-12 md:col-span-3">Products</div>
                             <div className="col-span-1 text-center">Date</div>
                             <div className="col-span-1 text-center">Status</div>
@@ -566,7 +566,7 @@ export default function MyProductsView() {
                         {/* Features List */}
                         <div className="space-y-0">
                             {myProducts.map((product) => (
-                                <div key={product.id} className="group relative grid grid-cols-12 gap-8 items-center border-b border-gray-100 last:border-0 py-3">
+                                <div key={product.id} className="group relative grid grid-cols-12 gap-6 items-center border-b border-gray-100 last:border-0 py-3">
                                     {/* Product Info */}
                                     <div className="col-span-12 md:col-span-3 flex gap-4 items-center">
                                         <div className="relative w-14 h-[70px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all border border-gray-100">
@@ -577,13 +577,13 @@ export default function MyProductsView() {
                                             />
                                         </div>
                                         <div className="flex flex-col justify-center min-w-0">
-                                            <h3 className="font-semibold text-xs md:text-sm text-gray-900 mb-1 leading-snug truncate">
+                                            <h3 className="font-normal text-sm text-gray-900 mb-0.5 leading-snug truncate">
                                                 {product.name}
                                             </h3>
-                                            <p className="text-[11px] text-gray-500 font-medium mb-1">
-                                                ID: <span className="text-black font-bold">{product.product_id || product.id}</span>
+                                            <p className="text-sm text-gray-500 font-normal mb-0.5">
+                                                ID: <span className="text-black font-normal">{product.product_id || product.id}</span>
                                             </p>
-                                            <span className="text-xs md:text-sm font-bold text-gray-900 uppercase tracking-tight">
+                                            <span className="text-sm font-normal text-gray-900 uppercase tracking-tight">
                                                 ₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString() : product.price}
                                             </span>
                                         </div>
@@ -591,7 +591,7 @@ export default function MyProductsView() {
 
                                     {/* Product Create Date */}
                                     <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
-                                        <p className="text-[10px] text-gray-600 font-medium whitespace-nowrap">
+                                        <p className="text-sm text-gray-600 font-normal whitespace-nowrap">
                                             {new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </p>
                                     </div>
@@ -601,45 +601,45 @@ export default function MyProductsView() {
                                     <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
                                         <div className="flex flex-col items-center gap-1.5 w-full">
                                             {product.status === 'draft' && (
-                                                <span className="px-3 py-1 bg-yellow-50 text-yellow-600 text-[10px] font-bold uppercase tracking-wider border border-yellow-200 text-center w-full">DRAFT</span>
+                                                <span className="px-3 py-1 bg-yellow-50 text-yellow-600 text-sm font-normal uppercase tracking-wider border border-yellow-200 text-center w-full">DRAFT</span>
                                             )}
                                             {product.status === 'pending' && (
-                                                <span className="px-3 py-1 bg-yellow-50 text-yellow-600 text-[10px] font-bold uppercase tracking-wider border border-yellow-200 text-center w-full">PENDING</span>
+                                                <span className="px-3 py-1 bg-yellow-50 text-yellow-600 text-sm font-normal uppercase tracking-wider border border-yellow-200 text-center w-full">PENDING</span>
                                             )}
                                             {product.status === 'pending_deactivation' && (
-                                                <span className="px-3 py-1 bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-wider border border-orange-200 text-center w-full">DEACTIVATING</span>
+                                                <span className="px-3 py-1 bg-orange-50 text-orange-600 text-sm font-normal uppercase tracking-wider border border-orange-200 text-center w-full">DEACTIVATING</span>
                                             )}
                                             {product.status === 'pending_reactivation' && (
-                                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider border border-emerald-200 text-center w-full">REACTIVATING</span>
+                                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-sm font-normal uppercase tracking-wider border border-emerald-200 text-center w-full">REACTIVATING</span>
                                             )}
                                             {product.status === 'approved' && product.is_active && (
-                                                <span className="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold uppercase tracking-wider border border-green-200 text-center w-full">LIVE</span>
+                                                <span className="px-3 py-1 bg-green-50 text-green-600 text-sm font-normal uppercase tracking-wider border border-green-200 text-center w-full">LIVE</span>
                                             )}
                                             {((product.status === 'approved' && !product.is_active) || product.status === 'rejected') && (
-                                                <span className="px-3 py-1 bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-wider border border-gray-200 text-center w-full">DEACTIVATED</span>
+                                                <span className="px-3 py-1 bg-gray-50 text-gray-500 text-sm font-normal uppercase tracking-wider border border-gray-200 text-center w-full">DEACTIVATED</span>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Stats - Impressions */}
                                     <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
-                                        <span className="text-sm text-gray-900 font-semibold">{product.impressions?.toLocaleString() || 0}</span>
+                                        <span className="text-sm text-gray-900 font-normal">{product.impressions?.toLocaleString() || 0}</span>
                                     </div>
 
                                     {/* Stats - Views */}
                                     <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
-                                        <span className="text-sm text-gray-900 font-semibold">{product.views?.toLocaleString() || 0}</span>
+                                        <span className="text-sm text-gray-900 font-normal">{product.views?.toLocaleString() || 0}</span>
                                     </div>
 
 
                                     {/* Stats - Likes */}
                                     <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
-                                        <span className="text-sm text-gray-900 font-semibold">{product.wishlist_count?.toLocaleString() || 0}</span>
+                                        <span className="text-sm text-gray-900 font-normal">{product.wishlist_count?.toLocaleString() || 0}</span>
                                     </div>
 
                                     {/* Stats - Inquiry */}
                                     <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
-                                        <span className="text-sm text-gray-900 font-semibold">{product.inquiries_count?.toLocaleString() || 0}</span>
+                                        <span className="text-sm text-gray-900 font-normal">{product.inquiries_count?.toLocaleString() || 0}</span>
                                     </div>
 
                                     {/* Actions Column */}
@@ -650,27 +650,27 @@ export default function MyProductsView() {
                                                     e.stopPropagation();
                                                     toggleProductStatus(product);
                                                 }}
-                                                className="w-[120px] px-4 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors border bg-transparent text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                                                className="w-full max-w-[140px] px-4 py-2 text-sm font-normal uppercase tracking-wider transition-colors border bg-transparent text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
                                             >
                                                 Deactivate
                                             </button>
                                         ) : (product.status === 'pending_deactivation' || product.status === 'pending_reactivation') ? (
-                                            <span className={`w-[120px] inline-flex justify-center items-center px-4 py-2 text-[11px] font-bold uppercase tracking-wider border bg-transparent ${product.status === 'pending_deactivation' ? 'text-orange-500 border-orange-200 bg-orange-50/50' : 'text-emerald-600 border-emerald-200 bg-emerald-50/50'
+                                            <span className={`w-full max-w-[140px] inline-flex justify-center items-center px-4 py-2 text-sm font-normal uppercase tracking-wider border bg-transparent ${product.status === 'pending_deactivation' ? 'text-orange-500 border-orange-200 bg-orange-50/50' : 'text-emerald-600 border-emerald-200 bg-emerald-50/50'
                                                 }`}>
                                                 REQ. SENT
                                             </span>
                                         ) : product.status === 'pending' ? (
-                                            <span className="w-[120px] inline-flex justify-center items-center px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-yellow-600 border border-yellow-200 bg-yellow-50/50">
+                                            <span className="w-full max-w-[140px] inline-flex justify-center items-center px-4 py-2 text-sm font-normal uppercase tracking-wider text-yellow-600 border border-yellow-200 bg-yellow-50/50">
                                                 SUBMITTED
                                             </span>
                                         ) : product.status === 'draft' ? (
-                                            <div className="flex flex-col gap-2">
+                                            <div className="flex flex-col gap-2 w-full items-end">
                                                 <button
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setSubmitConfirmProduct(product);
                                                     }}
-                                                    className="w-[120px] px-4 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors border bg-black text-white border-black hover:opacity-90"
+                                                    className="w-full max-w-[140px] px-4 py-2 text-sm font-normal uppercase tracking-wider transition-colors border bg-black text-white border-black hover:opacity-90"
                                                 >
                                                     Send Request
                                                 </button>
@@ -679,7 +679,7 @@ export default function MyProductsView() {
                                                         e.stopPropagation();
                                                         setDeleteConfirmProduct(product);
                                                     }}
-                                                    className="w-[120px] px-4 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors border bg-transparent text-gray-500 border-gray-300 hover:bg-red-600 hover:text-white hover:border-red-600"
+                                                    className="w-full max-w-[140px] px-4 py-2 text-sm font-normal uppercase tracking-wider transition-colors border bg-transparent text-gray-500 border-gray-300 hover:bg-red-600 hover:text-white hover:border-red-600"
                                                 >
                                                     Delete
                                                 </button>
@@ -690,12 +690,12 @@ export default function MyProductsView() {
                                                     e.stopPropagation();
                                                     toggleProductStatus(product);
                                                 }}
-                                                className="w-[120px] px-4 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors border bg-transparent text-emerald-600 border-emerald-600 hover:bg-emerald-600 hover:text-white"
+                                                className="w-full max-w-[140px] px-4 py-2 text-sm font-normal uppercase tracking-wider transition-colors border bg-transparent text-emerald-600 border-emerald-600 hover:bg-emerald-600 hover:text-white"
                                             >
                                                 Make Live
                                             </button>
                                         ) : (
-                                            <span className="text-xs font-bold uppercase tracking-wider text-gray-400">
+                                            <span className="text-sm font-normal uppercase tracking-wider text-gray-400">
                                                 -
                                             </span>
                                         )}
