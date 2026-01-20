@@ -234,7 +234,7 @@ export default function UserPage() {
                     <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)] w-full">
 
                         {/* Left Sidebar - Desktop Only */}
-                        <div className="w-full md:w-[320px] p-6 hidden md:block">
+                        <div className="w-full md:w-[320px] p-6 hidden md:block flex-shrink-0">
                             <Sidebar
                                 userName={userName}
                                 userAvatar={userAvatar}
@@ -248,7 +248,7 @@ export default function UserPage() {
                         </div>
 
                         {/* Main Content */}
-                        <div className="flex-1 p-0 pt-6 md:pt-16 transition-all duration-300">
+                        <div className="flex-1 p-0 pt-6 md:pt-16 min-w-0 transition-all duration-300">
                             {loading ? (
                                 <div className="animate-pulse space-y-8 p-4">
                                     <div className="h-48 bg-gray-200 rounded"></div>

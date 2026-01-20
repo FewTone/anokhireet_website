@@ -473,6 +473,22 @@ export default function MyProductsView() {
 
     return (
         <div className="w-full px-1 md:px-0">
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    height: 6px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #d1d1d1;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #a1a1a1;
+                }
+            `}</style>
             <div className="mb-4 flex justify-between items-center hidden md:flex">
                 <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
                 <button
@@ -548,11 +564,11 @@ export default function MyProductsView() {
                     </button>
                 </div>
             ) : (
-                <div className="w-full overflow-x-auto pb-4">
-                    <div className="min-w-[1100px]">
+                <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
+                    <div className="min-w-[1100px] px-4">
                         {/* Table Header */}
-                        <div className="grid grid-cols-12 gap-10 pb-2 border-b border-gray-200 text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-4">
-                            <div className="col-span-12 md:col-span-3 pr-4">Products</div>
+                        <div className="grid grid-cols-12 gap-8 pb-2 border-b border-gray-200 text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                            <div className="col-span-12 md:col-span-3">Products</div>
                             <div className="col-span-1 text-center">Date</div>
                             <div className="col-span-1 text-center">Status</div>
                             <div className="col-span-1 text-center">Impressions</div>
@@ -566,7 +582,7 @@ export default function MyProductsView() {
                         {/* Features List */}
                         <div className="space-y-0">
                             {myProducts.map((product) => (
-                                <div key={product.id} className="group relative grid grid-cols-12 gap-10 items-center border-b border-gray-100 last:border-0 -mx-4 px-4 py-3">
+                                <div key={product.id} className="group relative grid grid-cols-12 gap-8 items-center border-b border-gray-100 last:border-0 py-3">
                                     {/* Product Info */}
                                     <div className="col-span-12 md:col-span-3 flex gap-4 items-center">
                                         <div className="relative w-14 h-[70px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all border border-gray-100">
