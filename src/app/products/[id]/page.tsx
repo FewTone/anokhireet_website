@@ -161,7 +161,7 @@ export default function ProductDetailPage() {
                 .select("*")
                 .neq("id", product.db_id) // Exclude current product using DB ID which is safe
                 .eq("is_active", true)
-                .eq("status", "approved")
+                .in("status", ["approved", "pending_deactivation"])
                 .limit(8); // Show 8 related products
 
             if (filteredProductIds) {
@@ -401,7 +401,7 @@ export default function ProductDetailPage() {
                 .from("products")
                 .select("*")
                 .eq("product_id", productId)
-                .eq("status", "approved")
+                .in("status", ["approved", "pending_deactivation"])
                 .eq("is_active", true)
                 .limit(1);
 
@@ -449,7 +449,7 @@ export default function ProductDetailPage() {
                     .from("products")
                     .select("*")
                     .eq("id", productId)
-                    .eq("status", "approved")
+                    .in("status", ["approved", "pending_deactivation"])
                     .eq("is_active", true)
                     .limit(1);
 

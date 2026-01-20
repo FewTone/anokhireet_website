@@ -422,8 +422,8 @@ export default function ProductsPage() {
             const { data: productsData, error } = await supabase
                 .from("products")
                 .select("*")
+                .in("status", ["approved", "pending_deactivation"])
                 .eq("is_active", true)
-                .eq("status", "approved")
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
