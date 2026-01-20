@@ -15,7 +15,14 @@ export default function Hero() {
     const [loading, setLoading] = useState(true);
     const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
     const [isTransitioning, setIsTransitioning] = useState(true);
+    const [transitionDuration, setTransitionDuration] = useState(3000); // Dynamic duration
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Touch handling refs
+    const touchStartX = useRef<number | null>(null);
+    const touchEndX = useRef<number | null>(null);
+    const isDragging = useRef(false);
+    const minSwipeDistance = 50;
 
     useEffect(() => {
         loadHeroSlides();
@@ -49,31 +56,24 @@ export default function Hero() {
         return [...heroSlides, ...heroSlides.slice(0, cloneCount)];
     }, [heroSlides]);
 
+    const resetInterval = () => {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = setInterval(() => {
+            setTransitionDuration(3000);
+            setIsTransitioning(true);
+            setCurrentSlideIndex((prev) => prev + 1);
+        }, 3500);
+    };
+
     useEffect(() => {
         if (heroSlides.length === 0) return;
 
         // Reset state when slides change
         setCurrentSlideIndex(0);
         setIsTransitioning(true);
+        setTransitionDuration(3000);
 
-        const slideDuration = 3500; // Continuous loop (equal to transition)
-
-        const startInterval = () => {
-            // Clear existing interval to avoid duplicates
-            if (intervalRef.current) clearInterval(intervalRef.current);
-
-            intervalRef.current = setInterval(() => {
-                setCurrentSlideIndex((prev) => {
-                    // Logic: Increment. 
-                    // The limit check and reset happens in the other useEffect
-                    return prev + 1;
-                });
-                // Ensure transition is on for the move
-                setIsTransitioning(true);
-            }, slideDuration);
-        };
-
-        startInterval();
+        resetInterval();
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -84,29 +84,21 @@ export default function Hero() {
     useEffect(() => {
         if (heroSlides.length === 0) return;
 
-        // If we have reached the start of the cloned set (which matches index 0)
-        // We let the transition happen (visual move from N-1 to N)
-        // Then we silently jump back to 0
         if (currentSlideIndex === heroSlides.length) {
-            const transitionTime = 3000; // Must match CSS transition duration
-
             const timeout = setTimeout(() => {
                 setIsTransitioning(false); // Turn off transition for instant jump
                 setCurrentSlideIndex(0);   // Jump to real 0
 
-                // Small delay to allow DOM to update with no-transition, then re-enable
-                // requestAnimationFrame is usually safer for this but setTimeout 50ms is robust enough here
+                // Small delay to allow DOM to update, then re-enable
                 setTimeout(() => {
                     setIsTransitioning(true);
                 }, 50);
 
-            }, transitionTime);
+            }, transitionDuration); // Wait for the transition to finish
 
             return () => clearTimeout(timeout);
         }
-    }, [currentSlideIndex, heroSlides.length]);
-
-    const transitionDuration = 3000; // ms
+    }, [currentSlideIndex, heroSlides.length, transitionDuration]);
 
     const loadHeroSlides = async () => {
         try {
@@ -138,15 +130,94 @@ export default function Hero() {
     };
 
     const goToSlide = (index: number) => {
+        setTransitionDuration(500); // 500ms for manual nav
         setIsTransitioning(true);
         setCurrentSlideIndex(index);
-        // Reset interval to avoid immediate jump after manual click
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = setInterval(() => {
-                setCurrentSlideIndex(prev => prev + 1);
+        resetInterval();
+    };
+
+    const nextSlide = () => {
+        goToSlide(currentSlideIndex + 1);
+    };
+
+    const prevSlide = () => {
+        resetInterval();
+        setTransitionDuration(500);
+
+        if (currentSlideIndex === 0) {
+            // Bidirectional loop handling: 0 -> prev must jump to clone first
+            setIsTransitioning(false);
+            setCurrentSlideIndex(heroSlides.length);
+
+            // Wait a frame then animate back
+            setTimeout(() => {
                 setIsTransitioning(true);
-            }, 3000);
+                setCurrentSlideIndex(heroSlides.length - 1);
+            }, 50);
+        } else {
+            setIsTransitioning(true);
+            setCurrentSlideIndex(prev => prev - 1);
+        }
+    };
+
+    // Touch Handlers
+    const onTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.targetTouches[0].clientX;
+        if (intervalRef.current) clearInterval(intervalRef.current); // Pause auto-scroll
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+        touchEndX.current = e.targetTouches[0].clientX;
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStartX.current || !touchEndX.current) {
+            resetInterval();
+            return;
+        }
+
+        const distance = touchStartX.current - touchEndX.current;
+        const isLeftSwipe = distance > minSwipeDistance;
+        const isRightSwipe = distance < -minSwipeDistance;
+
+        if (isLeftSwipe) {
+            nextSlide();
+        } else if (isRightSwipe) {
+            prevSlide();
+        } else {
+            // Keep interval if no valid swipe
+            resetInterval();
+        }
+
+        touchStartX.current = null;
+        touchEndX.current = null;
+    };
+
+    // Mouse Handlers (Desktop Drag)
+    const onMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent text selection/drag native behavior
+        isDragging.current = true;
+        touchStartX.current = e.clientX;
+        touchEndX.current = null; // Reset end
+        if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+
+    const onMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging.current) return;
+        touchEndX.current = e.clientX;
+    };
+
+    const onMouseUp = () => {
+        if (!isDragging.current) return;
+        isDragging.current = false;
+
+        // Reuse onTouchEnd logic since it relies on touchStartX/touchEndX refs which we set up
+        onTouchEnd();
+    };
+
+    const onMouseLeave = () => {
+        if (isDragging.current) {
+            onMouseUp();
         }
     };
 
@@ -192,7 +263,16 @@ export default function Hero() {
     const activeDotIndex = currentSlideIndex % heroSlides.length;
 
     return (
-        <div className="hero-container relative w-full overflow-hidden bg-white pt-20 md:pt-0">
+        <div
+            className="hero-container relative w-full overflow-hidden bg-white pt-20 md:pt-0 cursor-grab active:cursor-grabbing"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            onMouseDown={onMouseDown}
+            onMouseMove={onMouseMove}
+            onMouseUp={onMouseUp}
+            onMouseLeave={onMouseLeave}
+        >
             {/* Hero Slides Track */}
             <div
                 className="hero-scroll-track flex items-start gap-0 md:gap-[10px]"
