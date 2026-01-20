@@ -373,14 +373,13 @@ export default function AddProductModal({ isOpen, onClose, userId, onSuccess }: 
                         .filter(id => id !== undefined);
 
                     if (ids.length > 0) {
-                        facetPromises.push(
-                            supabase.from(tableName).insert(
-                                ids.map(id => ({
-                                    product_id: insertedProduct.id,
-                                    [columnIdName]: id
-                                }))
-                            )
+                        const insertPromise = supabase.from(tableName).insert(
+                            ids.map(id => ({
+                                product_id: insertedProduct.id,
+                                [columnIdName]: id
+                            }))
                         );
+                        facetPromises.push(insertPromise as any);
                     }
                 }
             };

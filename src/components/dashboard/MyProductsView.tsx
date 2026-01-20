@@ -473,22 +473,6 @@ export default function MyProductsView() {
 
     return (
         <div className="w-full px-1 md:px-0">
-            <style jsx>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    height: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: #f1f1f1;
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: #d1d1d1;
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: #a1a1a1;
-                }
-            `}</style>
             <div className="mb-4 flex justify-between items-center hidden md:flex">
                 <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
                 <button
