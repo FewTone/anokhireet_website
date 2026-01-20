@@ -50,10 +50,8 @@ export default function Hero() {
 
     const extendedSlides = useMemo(() => {
         if (heroSlides.length === 0) return [];
-        // Clone the first few slides to ensure seamless looping on desktop (needs 3) and mobile (needs 1)
-        // We clone 4 just to be safe and cover the desktop view width
-        const cloneCount = Math.min(heroSlides.length, 4);
-        return [...heroSlides, ...heroSlides.slice(0, cloneCount)];
+        // Clone the entire list to ensure safe seamless looping for multiple cycles
+        return [...heroSlides, ...heroSlides];
     }, [heroSlides]);
 
     const resetInterval = () => {
@@ -84,17 +82,23 @@ export default function Hero() {
     useEffect(() => {
         if (heroSlides.length === 0) return;
 
-        if (currentSlideIndex === heroSlides.length) {
-            const timeout = setTimeout(() => {
-                setIsTransitioning(false); // Turn off transition for instant jump
-                setCurrentSlideIndex(0);   // Jump to real 0
+        // If we have advanced past the original set (entering the clone zone)
+        if (currentSlideIndex >= heroSlides.length) {
+            // We allow the transition to complete (showing the clone)
+            // Then we silently jump back to the original
 
-                // Small delay to allow DOM to update, then re-enable
+            // Wait for transition to finish
+            const timeout = setTimeout(() => {
+                setIsTransitioning(false); // Turn off transition for silent jump
+                const realIndex = currentSlideIndex % heroSlides.length;
+                setCurrentSlideIndex(realIndex);   // Jump to corresponding real slide
+
+                // Small delay to allow DOM to update, then re-enable transition for next move
                 setTimeout(() => {
                     setIsTransitioning(true);
                 }, 50);
 
-            }, transitionDuration); // Wait for the transition to finish
+            }, transitionDuration);
 
             return () => clearTimeout(timeout);
         }

@@ -37,6 +37,7 @@ export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isFiltering, setIsFiltering] = useState(false); // New state to track filtering process
     const [categoryName, setCategoryName] = useState<string>("");
     const [sortBy, setSortBy] = useState<string>("newest");
 
@@ -108,6 +109,11 @@ export default function ProductsPage() {
         loadFilterOptions();
         loadProducts();
     }, []);
+
+    // Scroll to top when filters change
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, activeTag]);
 
     // Update URL params when applied filters change
     const updateURLParams = useCallback(() => {
@@ -328,7 +334,19 @@ export default function ProductsPage() {
     // Filter products when applied filters, products, sort, or search query change
     useEffect(() => {
         if (!loading && products.length >= 0) {
-            applyFilters();
+            const runFilters = async () => {
+                setIsFiltering(true);
+                // Artificial small delay to let UI show skeletons if desired, 
+                // or just to ensure state update has processed. 
+                // Since applyFilters is async (technically it calls async DB functions inside),
+                // we should await it if we can, or just set filtering false after it returns.
+                // However, applyFilters uses `await` internally but returns void (promise).
+                await applyFilters();
+                setIsFiltering(false);
+            };
+
+            runFilters();
+
             // Only update URL after initial load to prevent loops
             if (!isInitialLoad) {
                 updateURLParams(); // Update URL when filters change
@@ -664,7 +682,7 @@ export default function ProductsPage() {
                 } else {
                     // Close others when opening one
                     // If we are opening the clicked one (!section.isOpen would be true), then close others.
-                    // Actually, the simpler logic is: if we match the ID, toggle. If we don't match, ALWAYS close if the matched one IS OPENING.
+                    // Actually, the simpler logic is: if we match the ID, toggle. If it doesn't match, ALWAYS close if the matched one IS OPENING.
                     // But simpler: "Accordion" usually means only one open at a time.
                     // So if ID matches, toggle. If it doesn't match, set isOpen = false.
                     // However, if we are CLOSING the active one, we don't care about others (they are already closed).
