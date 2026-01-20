@@ -335,6 +335,21 @@ export default function AddProductPage() {
         setIsUploadingImage(true);
 
         try {
+            // 0. Check for existing drafts
+            const { count, error: countError } = await supabase
+                .from("products")
+                .select("*", { count: 'exact', head: true })
+                .eq("owner_user_id", userId)
+                .eq("status", "draft");
+
+            if (countError) throw countError;
+
+            if (count && count >= 1) {
+                setError("You can only have 1 active draft product at a time. Please publish or delete your existing draft.");
+                setIsUploadingImage(false);
+                return;
+            }
+
             // 1. Upload Images
             const uploadedImageUrls: string[] = [];
             for (const file of userProductImageFiles) {
@@ -351,6 +366,10 @@ export default function AddProductPage() {
             const productId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
             // 2. Insert Product
+            const originalPriceVal = userProductFormData.originalPrice ? parseFloat(userProductFormData.originalPrice) : null;
+
+            console.log("Inserting product with owner:", userId);
+
             const { data: insertedProduct, error: insertError } = await supabase
                 .from("products")
                 .insert({
@@ -358,7 +377,7 @@ export default function AddProductPage() {
                     name: userProductFormData.name,
                     title: userProductFormData.name,
                     price: userProductFormData.price,
-                    original_price: userProductFormData.originalPrice || null,
+                    original_price: originalPriceVal,
                     description: userProductFormData.description,
                     image: primaryImageUrl,
                     images: uploadedImageUrls,
@@ -370,7 +389,10 @@ export default function AddProductPage() {
                 .select()
                 .single();
 
-            if (insertError) throw insertError;
+            if (insertError) {
+                console.error("Product insert error:", insertError);
+                throw insertError;
+            }
 
             // 3. Insert Facets
             const facetPromises: Promise<any>[] = [];
@@ -407,8 +429,9 @@ export default function AddProductPage() {
             router.push("/user?view=my-products");
 
         } catch (err: any) {
-            console.error(err);
-            setError(err.message || "Failed to create product.");
+            console.error("Full error object:", JSON.stringify(err, null, 2));
+            console.error("Error details:", err);
+            setError(err.message || err.error_description || (typeof err === 'object' ? JSON.stringify(err) : "Failed to create product."));
         } finally {
             setIsUploadingImage(false);
         }
@@ -495,25 +518,7 @@ export default function AddProductPage() {
                                                 </div>
                                                 <p className="text-xs text-gray-500 mt-2 font-medium">Select the main image to display on the card.</p>
 
-                                                {/* Image Size Comparison */}
-                                                <div className="mt-4 p-3 bg-gray-100 border border-gray-200">
-                                                    <h4 className="text-xs font-semibold text-gray-700 uppercase mb-2">Image Optimization Results</h4>
-                                                    <div className="space-y-1">
-                                                        {imageSizeInfo.map((info, idx) => {
-                                                            const savedPercent = ((info.original - info.converted) / info.original * 100).toFixed(0);
-                                                            return (
-                                                                <div key={idx} className="flex justify-between text-xs text-gray-600">
-                                                                    <span className="truncate max-w-[150px]">{info.name}</span>
-                                                                    <div className="flex gap-2">
-                                                                        <span className="text-gray-400 line-through">{formatFileSize(info.original)}</span>
-                                                                        <span className="font-semibold text-green-600">{formatFileSize(info.converted)}</span>
-                                                                        <span className="text-gray-500">(-{savedPercent}%)</span>
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
+
                                             </div>
                                         )}
                                     </div>
@@ -548,7 +553,7 @@ export default function AddProductPage() {
                             ) : (
                                 <>
                                     {/* Step 2: Facet Selection */}
-                                    <div className="space-y-8">
+                                    <div className="space-y-6">
                                         {[
                                             { label: "Product Type", list: availableProductTypes, key: 'productTypes' as const },
                                             { label: "Occasion", list: availableOccasions, key: 'occasions' as const },
@@ -557,30 +562,43 @@ export default function AddProductPage() {
                                             { label: "City", list: availableCities, key: 'cities' as const }
                                         ].map((section) => (
                                             <div key={section.key}>
-                                                <label className="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wide">{section.label}</label>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {section.list.map((item) => {
-                                                        const isSelected = userProductFormData[section.key].includes(item.name);
-                                                        return (
-                                                            <button
-                                                                key={item.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const current = userProductFormData[section.key];
-                                                                    const updated = isSelected
-                                                                        ? current.filter(n => n !== item.name)
-                                                                        : [...current, item.name];
-                                                                    setUserProductFormData({ ...userProductFormData, [section.key]: updated });
-                                                                }}
-                                                                className={`px-4 py-2 text-sm border transition-all ${isSelected
-                                                                    ? "bg-black text-white border-black shadow-md"
-                                                                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-500"}`}
-                                                            >
-                                                                {item.name}
-                                                            </button>
-                                                        );
-                                                    })}
-                                                    {section.list.length === 0 && <span className="text-gray-400 text-sm italic">No options available</span>}
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700">{section.label}</label>
+                                                </div>
+                                                <div className="w-full border border-gray-300 rounded-none min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
+                                                    {section.list.length === 0 ? (
+                                                        <p className="text-sm text-gray-500 text-center py-4">No options available.</p>
+                                                    ) : (
+                                                        <div className="space-y-2">
+                                                            {section.list.map((item) => {
+                                                                const isSelected = userProductFormData[section.key].includes(item.name);
+                                                                return (
+                                                                    <label
+                                                                        key={item.id}
+                                                                        className={`flex items-center gap-2 p-2 rounded-none cursor-pointer transition-colors ${isSelected
+                                                                            ? "bg-blue-50 border border-blue-200"
+                                                                            : "hover:bg-gray-50 border border-transparent"
+                                                                            }`}
+                                                                    >
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isSelected}
+                                                                            onChange={(e) => {
+                                                                                const current = userProductFormData[section.key];
+                                                                                if (e.target.checked) {
+                                                                                    setUserProductFormData({ ...userProductFormData, [section.key]: [...current, item.name] });
+                                                                                } else {
+                                                                                    setUserProductFormData({ ...userProductFormData, [section.key]: current.filter(n => n !== item.name) });
+                                                                                }
+                                                                            }}
+                                                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded-none focus:ring-blue-500"
+                                                                        />
+                                                                        <span className="text-sm text-gray-700">{item.name}</span>
+                                                                    </label>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

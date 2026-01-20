@@ -284,6 +284,7 @@ function AdminContent() {
     const [isConvertingImage, setIsConvertingImage] = useState(false);
     const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; name: string } | null>(null);
     const [deleteConfirmProduct, setDeleteConfirmProduct] = useState<{ id: string; name: string } | null>(null);
+    const [approveConfirmProduct, setApproveConfirmProduct] = useState<{ id: string; name: string } | null>(null);
     const [popup, setPopup] = useState<{
         isOpen: boolean;
         message: string;
@@ -3192,22 +3193,29 @@ To get these values:
         }
     };
 
-    const handleApproveProduct = async (product: UserProduct) => {
-        if (!confirm(`Are you sure you want to approve "${product.name}"?`)) return;
+    const handleApproveProduct = (product: UserProduct) => {
+        setApproveConfirmProduct({ id: product.id, name: product.name });
+    };
+
+    const confirmApproveProduct = async () => {
+        if (!approveConfirmProduct) return;
+        const { id, name } = approveConfirmProduct;
 
         try {
             const { error } = await supabase
                 .from("products")
                 .update({ status: 'approved', is_active: true })
-                .eq("id", product.id);
+                .eq("id", id);
 
             if (error) throw error;
 
             showPopup("Product approved successfully!", "success");
             loadUserProducts();
+            setApproveConfirmProduct(null);
         } catch (error: any) {
             console.error("Error approving product:", error);
             showPopup(`Error approving product: ${error.message}`, "error");
+            setApproveConfirmProduct(null);
         }
     };
 
@@ -6685,6 +6693,44 @@ To get these values:
                                 </div>
                             </div>
                         )}
+                        {/* Approval Confirmation Modal */}
+                        {approveConfirmProduct && (
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full shadow-2xl">
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-green-100 rounded-full border border-green-200">
+                                            <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
+                                            Approve Product?
+                                        </h3>
+                                        <p className="text-sm text-gray-600 text-center mb-6">
+                                            Are you sure you want to approve <strong>{approveConfirmProduct.name}</strong>?
+                                        </p>
+                                        <div className="bg-green-50 border border-green-200 rounded-none p-4 mb-6">
+                                            <p className="text-sm text-green-800 font-medium mb-1 text-center">This will make the product live on the website.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setApproveConfirmProduct(null)}
+                                                className="flex-1 px-4 py-3 bg-gray-100 text-gray-800 font-bold rounded-none hover:bg-gray-200 transition-colors uppercase tracking-wider text-sm border border-gray-300"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={confirmApproveProduct}
+                                                className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-none hover:bg-green-700 transition-colors shadow-sm hover:shadow-md uppercase tracking-wider text-sm border border-transparent"
+                                            >
+                                                Approve
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
 
                         {/* Hero Slide Add/Edit Modal */}
                         {isHeroModalOpen && (

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { supabase } from "@/lib/supabase";
-import AddProductModal from "./AddProductModal";
+import Popup from "@/components/Popup";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface UserProduct {
@@ -31,6 +31,17 @@ export default function MyProductsView() {
     const [totalInquiries, setTotalInquiries] = useState<number>(0);
     const [totalViews, setTotalViews] = useState<number>(0);
     const [totalLikes, setTotalLikes] = useState<number>(0);
+
+    const [popup, setPopup] = useState<{
+        isOpen: boolean;
+        message: string;
+        type: "error" | "success" | "info" | "warning";
+        title?: string;
+    }>({
+        isOpen: false,
+        message: "",
+        type: "info",
+    });
 
     // Add Product Modal State
     const router = useRouter();
@@ -222,22 +233,39 @@ export default function MyProductsView() {
         }
     };
 
+    const handleAddProduct = () => {
+        // Check for existing drafts in the loaded products
+        const hasDraft = myProducts.some(p => p.status === 'draft');
+        
+        if (hasDraft) {
+            setPopup({
+                isOpen: true,
+                message: "You can only have 1 active draft product at a time.",
+                type: "error",
+                title: "Draft Limit Reached"
+            });
+            return;
+        }
+        
+        router.push('/user/add-product');
+    };
+
     return (
         <div className="w-full px-1 md:px-0">
             <div className="mb-4 flex justify-between items-center hidden md:flex">
                 <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
                 <button
-                    onClick={() => router.push('/user/add-product')}
+                    onClick={handleAddProduct}
                     className="bg-black text-white px-4 py-2 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
                 >
-                    Add Product
+                    + Add Product
                 </button>
             </div>
 
             {/* Mobile Add Product Button */}
             <div className="md:hidden mb-4">
                 <button
-                    onClick={() => router.push('/user/add-product')}
+                    onClick={handleAddProduct}
                     className="w-full bg-black text-white px-4 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
                 >
                     Add Product
@@ -285,7 +313,7 @@ export default function MyProductsView() {
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 uppercase tracking-wide">No products yet</h3>
                     <p className="text-gray-500 mb-6 text-sm">Start by adding your first product.</p>
                     <button
-                        onClick={() => router.push('/user/add-product')}
+                        onClick={handleAddProduct}
                         className="bg-black text-white px-6 py-2.5 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
                     >
                         Add Product
@@ -365,6 +393,13 @@ export default function MyProductsView() {
             )}
 
             {/* Add Product Modal - Removed, using /user/add-product page */}
+            <Popup
+                isOpen={popup.isOpen}
+                onClose={() => setPopup({ ...popup, isOpen: false })}
+                message={popup.message}
+                type={popup.type}
+                title={popup.title}
+            />
         </div>
     );
 }
