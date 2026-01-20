@@ -15,7 +15,9 @@ interface UserProduct {
     product_id?: string;
     created_at: string;
     views?: number;
+    impressions?: number;
     wishlist_count?: number;
+
     inquiries_count?: number;
     db_id?: number;
     status?: string; // approved, draft, rejected
@@ -31,7 +33,9 @@ export default function MyProductsView() {
 
     const [totalInquiries, setTotalInquiries] = useState<number>(0);
     const [totalViews, setTotalViews] = useState<number>(0);
+    const [totalImpressions, setTotalImpressions] = useState<number>(0);
     const [totalLikes, setTotalLikes] = useState<number>(0);
+
 
     const [popup, setPopup] = useState<{
         isOpen: boolean;
@@ -119,6 +123,15 @@ export default function MyProductsView() {
             setUserId(actualUserId);
             setUserName(userData.name || "");
 
+            // Sync guest history to account history immediately on dashboard load
+            const anonId = localStorage.getItem('anokhi_viewer_id');
+            if (anonId) {
+                await supabase.rpc('sync_user_history', {
+                    p_user_id: actualUserId,
+                    p_anonymous_id: anonId
+                });
+            }
+
             loadProducts(actualUserId);
             loadInquiryStats(actualUserId);
         } catch (error) {
@@ -159,19 +172,14 @@ export default function MyProductsView() {
             }
 
             if (productsToSet.length > 0) {
-                // Fetch analytics for these products
-                const productIds = productsToSet.map(p => p.product_id || p.id);
+                // Fetch analytics for these products using database IDs (UUIDs)
                 const dbIds = productsToSet.map(p => p.id);
 
                 const { data: viewsData } = await supabase
                     .from("product_views")
-                    .select("product_id")
-                    .in("product_id", productIds);
+                    .select("product_id, view_type")
+                    .in("product_id", dbIds);
 
-                const { data: viewsDataById } = await supabase
-                    .from("product_views")
-                    .select("product_id")
-                    .in("product_id", dbIds.map(String));
 
                 const { data: wishlistData } = await supabase
                     .from("wishlist")
@@ -185,21 +193,22 @@ export default function MyProductsView() {
 
                 // Map counts and sort
                 const updatedProducts = productsToSet.map((p: any) => {
-                    const pIdStr = String(p.product_id || p.id);
                     const dbIdStr = String(p.id);
 
-                    const viewsCount1 = viewsData?.filter(v => v.product_id === pIdStr).length || 0;
-                    const viewsCount2 = viewsDataById?.filter(v => v.product_id === dbIdStr).length || 0;
-                    const views = Math.max(viewsCount1, viewsCount2);
+                    const productViews = viewsData?.filter(v => String(v.product_id) === dbIdStr) || [];
+                    const viewsCount = productViews.filter(v => v.view_type === 'page_view').length;
+                    const impressionsCount = productViews.filter(v => v.view_type === 'impression').length;
+                    const wishlistCount = wishlistData?.filter(w => String(w.product_id) === dbIdStr).length || 0;
+                    const inquiriesCount = inquiriesData?.filter(i => String(i.product_id) === dbIdStr).length || 0;
 
-                    const wishlistCount = wishlistData?.filter(w => w.product_id === p.id).length || 0;
-                    const inquiriesCount = inquiriesData?.filter(i => String(i.product_id) === String(p.id)).length || 0;
 
                     return {
                         ...p,
-                        views: views,
+                        views: viewsCount,
+                        impressions: impressionsCount,
                         wishlist_count: wishlistCount,
                         inquiries_count: inquiriesCount,
+
                         db_id: p.id,
                         status: p.status || 'approved'
                     };
@@ -231,11 +240,14 @@ export default function MyProductsView() {
 
                 // Calculate totals
                 const totalV = updatedProducts.reduce((sum, p) => sum + (p.views || 0), 0);
+                const totalImp = updatedProducts.reduce((sum, p) => sum + (p.impressions || 0), 0);
                 const totalL = updatedProducts.reduce((sum, p) => sum + (p.wishlist_count || 0), 0);
                 const totalI = updatedProducts.reduce((sum, p) => sum + (p.inquiries_count || 0), 0);
                 setTotalViews(totalV);
+                setTotalImpressions(totalImp);
                 setTotalLikes(totalL);
                 setTotalInquiries(totalI);
+
             } else {
                 setMyProducts([]);
             }
@@ -482,10 +494,14 @@ export default function MyProductsView() {
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 md:mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 md:mb-8 text-center">
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
                     <span className="text-xl md:text-2xl font-normal text-gray-900 mb-0.5">{myProducts.length}</span>
                     <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Products</span>
+                </div>
+                <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
+                    <span className="text-xl md:text-2xl font-normal text-gray-900 mb-0.5">{totalImpressions.toLocaleString()}</span>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Impressions</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
                     <span className="text-xl md:text-2xl font-normal text-gray-900 mb-0.5">{totalViews.toLocaleString()}</span>
@@ -500,6 +516,7 @@ export default function MyProductsView() {
                     <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400">Inquiry</span>
                 </div>
             </div>
+
 
             {loading ? (
                 <div className="space-y-6">
@@ -532,22 +549,24 @@ export default function MyProductsView() {
                 </div>
             ) : (
                 <div className="w-full overflow-x-auto pb-4">
-                    <div className="min-w-[900px]">
+                    <div className="min-w-[1100px]">
                         {/* Table Header */}
-                        <div className="grid grid-cols-12 gap-4 pb-2 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-4">
-                            <div className="col-span-12 md:col-span-3">Products</div>
-                            <div className="col-span-2 text-center">Date</div>
-                            <div className="col-span-2 text-center">Status</div>
+                        <div className="grid grid-cols-12 gap-10 pb-2 border-b border-gray-200 text-[10px] md:text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-4">
+                            <div className="col-span-12 md:col-span-3 pr-4">Products</div>
+                            <div className="col-span-1 text-center">Date</div>
+                            <div className="col-span-1 text-center">Status</div>
+                            <div className="col-span-1 text-center">Impressions</div>
                             <div className="col-span-1 text-center">Views</div>
                             <div className="col-span-1 text-center">Likes</div>
                             <div className="col-span-1 text-center">Inquiry</div>
-                            <div className="col-span-2 text-right">Actions</div>
+                            <div className="col-span-3 text-right">Actions</div>
+
                         </div>
 
                         {/* Features List */}
                         <div className="space-y-0">
                             {myProducts.map((product) => (
-                                <div key={product.id} className="group relative grid grid-cols-12 gap-4 items-center border-b border-gray-100 last:border-0 -mx-4 px-4 py-3">
+                                <div key={product.id} className="group relative grid grid-cols-12 gap-10 items-center border-b border-gray-100 last:border-0 -mx-4 px-4 py-3">
                                     {/* Product Info */}
                                     <div className="col-span-12 md:col-span-3 flex gap-4 items-center">
                                         <div className="relative w-14 h-[70px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all border border-gray-100">
@@ -571,15 +590,16 @@ export default function MyProductsView() {
                                     </div>
 
                                     {/* Product Create Date */}
-                                    <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center">
-                                        <p className="text-xs md:text-sm text-gray-600 font-medium whitespace-nowrap">
-                                            {new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
+                                        <p className="text-[10px] text-gray-600 font-medium whitespace-nowrap">
+                                            {new Date(product.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </p>
                                     </div>
 
+
                                     {/* Status Section */}
-                                    <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center">
-                                        <div className="flex flex-col items-center gap-1.5 w-full max-w-[130px]">
+                                    <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
+                                        <div className="flex flex-col items-center gap-1.5 w-full">
                                             {product.status === 'draft' && (
                                                 <span className="px-3 py-1 bg-yellow-50 text-yellow-600 text-[10px] font-bold uppercase tracking-wider border border-yellow-200 text-center w-full">DRAFT</span>
                                             )}
@@ -601,10 +621,16 @@ export default function MyProductsView() {
                                         </div>
                                     </div>
 
+                                    {/* Stats - Impressions */}
+                                    <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
+                                        <span className="text-sm text-gray-900 font-semibold">{product.impressions?.toLocaleString() || 0}</span>
+                                    </div>
+
                                     {/* Stats - Views */}
                                     <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
                                         <span className="text-sm text-gray-900 font-semibold">{product.views?.toLocaleString() || 0}</span>
                                     </div>
+
 
                                     {/* Stats - Likes */}
                                     <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
@@ -617,7 +643,7 @@ export default function MyProductsView() {
                                     </div>
 
                                     {/* Actions Column */}
-                                    <div className="col-span-12 md:col-span-2 flex flex-col items-end justify-center px-4">
+                                    <div className="col-span-12 md:col-span-3 flex flex-col items-end justify-center px-4">
                                         {(product.status === 'approved' && product.is_active) ? (
                                             <button
                                                 onClick={(e) => {

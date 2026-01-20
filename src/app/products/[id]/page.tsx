@@ -58,6 +58,7 @@ export default function ProductDetailPage() {
         end_date: "",
     });
     const [submittingInquiry, setSubmittingInquiry] = useState(false);
+    const hasTrackedView = useRef<string | null>(null);
     const [isInWishlist, setIsInWishlist] = useState(false);
     const [wishlistLoading, setWishlistLoading] = useState(false);
     const [referrerPath, setReferrerPath] = useState('');
@@ -208,6 +209,7 @@ export default function ProductDetailPage() {
 
     useEffect(() => {
         if (productId) {
+            hasTrackedView.current = null;
             loadProduct();
             checkLoginStatus();
         }
@@ -372,22 +374,35 @@ export default function ProductDetailPage() {
         }
     };
 
-    // Track product view
-    const trackProductView = async (prodId: string) => {
+    // Track product view with 15-minute throttling via database RPC
+    const trackProductView = async (dbId: string) => {
         try {
-            if (!prodId) return;
+            if (!dbId || hasTrackedView.current === dbId) return;
+            hasTrackedView.current = dbId;
 
-            // Record the view (even if product doesn't exist anymore - tracks deleted products too)
-            await supabase
-                .from("product_views")
-                .insert({
-                    product_id: prodId,
-                    product_type: 'user', // All products are user products now
-                    viewed_at: new Date().toISOString(),
+            // 1. Get identifiers for the viewer
+            const authUserId = currentUser?.id;
+            let anonId = typeof window !== 'undefined' ? localStorage.getItem('anokhi_viewer_id') : null;
+
+            // Ensure we have a valid UUID for guest tracking
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!anonId || !uuidRegex.test(anonId)) {
+                anonId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
                 });
+                if (typeof window !== 'undefined') localStorage.setItem('anokhi_viewer_id', anonId);
+            }
+
+            // 2. Call the database function to handle throttling atomically
+            await supabase.rpc('track_product_view', {
+                p_product_id: dbId,
+                p_user_id: authUserId || null,
+                p_anonymous_id: anonId
+            });
         } catch (error) {
             console.error("Error tracking product view:", error);
-            // Silently fail - don't interrupt user experience
         }
     };
 
@@ -555,12 +570,13 @@ export default function ProductDetailPage() {
                 setProductImages(imagesToUse);
 
 
-                // Track view after product is loaded
-                const finalProductId = productData.productId || productId;
-                trackProductView(finalProductId);
+                // Track view after product is loaded using database UUID
+                if (productData.db_id) {
+                    trackProductView(String(productData.db_id));
+                }
             } else {
-                // Even if product not found, track the view (for deleted products)
-                trackProductView(productId);
+                // If product not found, we can't track by UUID
+                // So we do nothing (or we could try to resolve slug to ID, but loadProduct already failed that)
             }
         } catch (error) {
             console.error("Error loading product:", error);
