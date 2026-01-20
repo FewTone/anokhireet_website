@@ -3205,6 +3205,8 @@ To get these values:
 
         try {
             const isDeactivation = status === 'pending_deactivation';
+            const isReactivation = status === 'pending_reactivation';
+
             const updateData = isDeactivation
                 ? { status: 'approved', is_active: false }
                 : { status: 'approved', is_active: true };
@@ -3216,7 +3218,11 @@ To get these values:
 
             if (error) throw error;
 
-            showPopup(isDeactivation ? "Deactivation approved!" : "Product approved successfully!", "success");
+            let successMessage = "Product approved successfully!";
+            if (isDeactivation) successMessage = "Deactivation approved!";
+            if (isReactivation) successMessage = "Reactivation approved!";
+
+            showPopup(successMessage, "success");
             loadUserProducts();
             setApproveConfirmProduct(null);
         } catch (error: any) {
@@ -3232,15 +3238,24 @@ To get these values:
     };
 
     const confirmRejectProduct = async () => {
-        if (!rejectConfirmProduct || !rejectReason.trim()) return;
+        if (!rejectConfirmProduct) return;
 
         const product = rejectConfirmProduct;
         const isDeactivation = product.status === 'pending_deactivation';
+        const isReactivation = product.status === 'pending_reactivation';
 
         try {
-            const updateData = isDeactivation
-                ? { status: 'approved', admin_note: rejectReason, is_active: true }
-                : { status: 'rejected', admin_note: rejectReason, is_active: false };
+            let updateData;
+            if (isDeactivation) {
+                // If deactivation rejected -> it stays approved and active (Live)
+                updateData = { status: 'approved', admin_note: rejectReason, is_active: true };
+            } else if (isReactivation) {
+                // If reactivation rejected -> it stays approved but inactive (Deactivated)
+                updateData = { status: 'approved', admin_note: rejectReason, is_active: false };
+            } else {
+                // If new listing rejected -> it returns to draft so user can edit and resubmit
+                updateData = { status: 'draft', admin_note: rejectReason, is_active: false };
+            }
 
             const { error } = await supabase
                 .from("products")
@@ -3249,7 +3264,11 @@ To get these values:
 
             if (error) throw error;
 
-            showPopup(isDeactivation ? "Deactivation request rejected!" : "Product rejected successfully!", "success");
+            let successMessage = "Product rejected successfully!";
+            if (isDeactivation) successMessage = "Deactivation request rejected!";
+            if (isReactivation) successMessage = "Reactivation request rejected!";
+
+            showPopup(successMessage, "success");
             loadUserProducts();
             setRejectConfirmProduct(null);
             setRejectReason("");
@@ -6768,34 +6787,32 @@ To get these values:
                         {/* Reject Confirmation Modal */}
                         {rejectConfirmProduct && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full shadow-2xl">
+                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
                                     <div className="p-6">
-                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full border border-red-200">
+                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-50 rounded-none border border-red-100">
                                             <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
                                             </svg>
                                         </div>
-                                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                            Reject Product?
+                                        <h3 className="text-lg font-bold text-gray-900 text-center mb-1 uppercase tracking-wider">
+                                            Reject Request?
                                         </h3>
-                                        <p className="text-sm text-gray-600 text-center mb-6">
-                                            Are you sure you want to reject <strong>{rejectConfirmProduct.name}</strong>?
+                                        <p className="text-sm text-gray-500 text-center mb-8">
+                                            Are you sure you want to reject <br /><strong className="text-gray-900">{rejectConfirmProduct.name}</strong>?
                                         </p>
-                                        <div className="bg-red-50 border border-red-200 rounded-none p-4 mb-6">
-                                            <p className="text-sm text-red-800 font-medium mb-1 text-center">This will mark the product as rejected and it will not be visible on the website.</p>
-                                        </div>
+
                                         <div className="flex gap-3">
                                             <button
                                                 onClick={() => setRejectConfirmProduct(null)}
-                                                className="flex-1 px-4 py-3 bg-gray-100 text-gray-800 font-bold rounded-none hover:bg-gray-200 transition-colors uppercase tracking-wider text-sm border border-gray-300"
+                                                className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
                                             >
                                                 Cancel
                                             </button>
                                             <button
                                                 onClick={confirmRejectProduct}
-                                                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-none hover:bg-red-700 transition-colors shadow-sm hover:shadow-md uppercase tracking-wider text-sm border border-transparent"
+                                                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-none hover:bg-red-700 transition-colors shadow-sm uppercase tracking-wider text-xs border border-transparent"
                                             >
-                                                Reject
+                                                Confirm Reject
                                             </button>
                                         </div>
                                     </div>
