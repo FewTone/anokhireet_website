@@ -656,9 +656,15 @@ export default function MyProductsView() {
                         {/* Features List */}
                         <div className="space-y-0">
                             {myProducts.map((product, index) => (
-                                <div key={product.id} className="group relative grid grid-cols-12 gap-12 items-center border-b border-gray-100 last:border-0 py-3">
-                                    {/* Product Info */}
-                                    <div className="col-span-12 md:col-span-3 flex gap-4 items-center">
+                                <div
+                                    key={product.id}
+                                    className="group relative grid grid-cols-12 gap-12 items-center border-b border-gray-100 last:border-0 py-3"
+                                >
+                                    {/* Product Info - ONLY THIS COLUMN IS CLICKABLE */}
+                                    <div
+                                        onClick={() => window.open(`/user/edit-product/${product.id}`, '_blank')}
+                                        className="col-span-12 md:col-span-3 flex gap-4 items-center cursor-pointer group/item"
+                                    >
                                         <div className="relative w-14 h-[70px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all border border-gray-100">
                                             <img
                                                 src={product.image}
@@ -667,7 +673,7 @@ export default function MyProductsView() {
                                             />
                                         </div>
                                         <div className="flex flex-col justify-center min-w-0">
-                                            <h3 className="font-normal text-sm text-gray-900 mb-0.5 leading-snug truncate">
+                                            <h3 className="font-normal text-sm text-gray-900 mb-0.5 leading-snug truncate group-hover/item:underline">
                                                 {product.name}
                                             </h3>
                                             <p className="text-sm text-gray-500 font-normal mb-0.5">
@@ -750,9 +756,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                // Navigate to edit page
-                                                                console.log("Edit clicked for:", product.id);
-                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -775,8 +779,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                console.log("Edit clicked for:", product.id);
-                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -798,8 +801,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                console.log("Edit clicked for:", product.id);
-                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -821,8 +823,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                console.log("Edit clicked for:", product.id);
-                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -855,8 +856,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                console.log("Edit clicked for:", product.id);
-                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -879,8 +879,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                console.log("Edit clicked for:", product.id);
-                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
