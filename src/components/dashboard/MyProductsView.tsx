@@ -472,7 +472,7 @@ export default function MyProductsView() {
     };
 
     return (
-        <div className="w-full px-1 md:px-0 max-w-[1000px]">
+        <div className="w-full px-1 md:px-0">
             <div className="mb-4 flex justify-start items-center gap-6 hidden md:flex">
                 <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
                 <button
@@ -494,7 +494,7 @@ export default function MyProductsView() {
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 md:mb-8 text-center max-w-[800px]">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 md:mb-8 text-center w-full">
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
                     <span className="text-sm font-normal text-gray-900 mb-0.5">{myProducts.length}</span>
                     <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Products</span>
@@ -549,26 +549,26 @@ export default function MyProductsView() {
                 </div>
             ) : (
                 <div className="w-full overflow-x-auto pb-4 custom-scrollbar">
-                    <div className="min-w-[1000px] px-4">
+                    <div className="min-w-[1200px] px-4">
                         {/* Table Header */}
-                        <div className="grid grid-cols-12 gap-6 pb-2 border-b border-gray-200 text-sm font-normal text-gray-500 uppercase tracking-wide mb-2">
-                            <div className="col-span-12 md:col-span-3">Products</div>
+                        <div className="grid grid-cols-12 gap-12 pb-2 border-b border-gray-200 text-sm font-normal text-gray-500 uppercase tracking-wide mb-2">
+                            <div className="col-span-12 md:col-span-4 text-left">Products</div>
                             <div className="col-span-1 text-center">Date</div>
                             <div className="col-span-1 text-center">Status</div>
                             <div className="col-span-1 text-center">Impressions</div>
                             <div className="col-span-1 text-center">Views</div>
                             <div className="col-span-1 text-center">Likes</div>
                             <div className="col-span-1 text-center">Inquiry</div>
-                            <div className="col-span-3 text-right">Actions</div>
+                            <div className="col-span-2 text-right">Actions</div>
 
                         </div>
 
                         {/* Features List */}
                         <div className="space-y-0">
                             {myProducts.map((product) => (
-                                <div key={product.id} className="group relative grid grid-cols-12 gap-6 items-center border-b border-gray-100 last:border-0 py-3">
+                                <div key={product.id} className="group relative grid grid-cols-12 gap-12 items-center border-b border-gray-100 last:border-0 py-3">
                                     {/* Product Info */}
-                                    <div className="col-span-12 md:col-span-3 flex gap-4 items-center">
+                                    <div className="col-span-12 md:col-span-4 flex gap-4 items-center">
                                         <div className="relative w-14 h-[70px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all border border-gray-100">
                                             <img
                                                 src={product.image}
@@ -643,7 +643,7 @@ export default function MyProductsView() {
                                     </div>
 
                                     {/* Actions Column */}
-                                    <div className="col-span-12 md:col-span-3 flex flex-col items-end justify-center px-4">
+                                    <div className="col-span-12 md:col-span-2 flex flex-col items-end justify-center px-4">
                                         {(product.status === 'approved' && product.is_active) ? (
                                             <button
                                                 onClick={(e) => {
