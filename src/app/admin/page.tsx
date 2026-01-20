@@ -241,7 +241,7 @@ function AdminContent() {
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured" | "contact" | "reports">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured" | "contact" | "reports" | "requests">("dashboard");
     const [reports, setReports] = useState<any[]>([]);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -284,7 +284,9 @@ function AdminContent() {
     const [isConvertingImage, setIsConvertingImage] = useState(false);
     const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; name: string } | null>(null);
     const [deleteConfirmProduct, setDeleteConfirmProduct] = useState<{ id: string; name: string } | null>(null);
-    const [approveConfirmProduct, setApproveConfirmProduct] = useState<{ id: string; name: string } | null>(null);
+    const [approveConfirmProduct, setApproveConfirmProduct] = useState<{ id: string; name: string; status?: string } | null>(null);
+    const [rejectConfirmProduct, setRejectConfirmProduct] = useState<UserProduct | null>(null);
+    const [rejectReason, setRejectReason] = useState("");
     const [popup, setPopup] = useState<{
         isOpen: boolean;
         message: string;
@@ -3194,22 +3196,27 @@ To get these values:
     };
 
     const handleApproveProduct = (product: UserProduct) => {
-        setApproveConfirmProduct({ id: product.id, name: product.name });
+        setApproveConfirmProduct({ id: product.id, name: product.name, status: product.status });
     };
 
     const confirmApproveProduct = async () => {
         if (!approveConfirmProduct) return;
-        const { id, name } = approveConfirmProduct;
+        const { id, name, status } = approveConfirmProduct;
 
         try {
+            const isDeactivation = status === 'pending_deactivation';
+            const updateData = isDeactivation
+                ? { status: 'approved', is_active: false }
+                : { status: 'approved', is_active: true };
+
             const { error } = await supabase
                 .from("products")
-                .update({ status: 'approved', is_active: true })
+                .update(updateData)
                 .eq("id", id);
 
             if (error) throw error;
 
-            showPopup("Product approved successfully!", "success");
+            showPopup(isDeactivation ? "Deactivation approved!" : "Product approved successfully!", "success");
             loadUserProducts();
             setApproveConfirmProduct(null);
         } catch (error: any) {
@@ -3219,23 +3226,37 @@ To get these values:
         }
     };
 
-    const handleRejectProduct = async (product: UserProduct) => {
-        const reason = prompt(`Enter reason for rejecting "${product.name}":`);
-        if (reason === null) return; // Cancelled
+    const handleRejectProduct = (product: UserProduct) => {
+        setRejectConfirmProduct(product);
+        setRejectReason("");
+    };
+
+    const confirmRejectProduct = async () => {
+        if (!rejectConfirmProduct || !rejectReason.trim()) return;
+
+        const product = rejectConfirmProduct;
+        const isDeactivation = product.status === 'pending_deactivation';
 
         try {
+            const updateData = isDeactivation
+                ? { status: 'approved', admin_note: rejectReason, is_active: true }
+                : { status: 'rejected', admin_note: rejectReason, is_active: false };
+
             const { error } = await supabase
                 .from("products")
-                .update({ status: 'rejected', admin_note: reason, is_active: false })
+                .update(updateData)
                 .eq("id", product.id);
 
             if (error) throw error;
 
-            showPopup("Product rejected successfully!", "success");
+            showPopup(isDeactivation ? "Deactivation request rejected!" : "Product rejected successfully!", "success");
             loadUserProducts();
+            setRejectConfirmProduct(null);
+            setRejectReason("");
         } catch (error: any) {
             console.error("Error rejecting product:", error);
             showPopup(`Error rejecting product: ${error.message}`, "error");
+            setRejectConfirmProduct(null);
         }
     };
 
@@ -3437,15 +3458,15 @@ To get these values:
                                     onClick={() => {
                                         // Prevent scroll and maintain sidebar position
                                         const currentScrollY = window.scrollY;
-                                        setActiveTab("drafts");
-                                        localStorage.setItem("adminActiveTab", "drafts");
-                                        router.replace("/admin?tab=drafts");
+                                        setActiveTab("requests");
+                                        localStorage.setItem("adminActiveTab", "requests");
+                                        router.replace("/admin?tab=requests");
                                         // Maintain scroll position to prevent sidebar shift
                                         requestAnimationFrame(() => {
                                             window.scrollTo(0, currentScrollY);
                                         });
                                     }}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "drafts"
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "requests"
                                         ? "bg-black text-white shadow-md"
                                         : "text-gray-700 hover:text-black hover:bg-gray-50"
                                         }`}
@@ -3457,10 +3478,10 @@ To get these values:
                                         <line x1="16" y1="17" x2="8" y2="17"></line>
                                         <polyline points="10 9 9 9 8 9"></polyline>
                                     </svg>
-                                    <span>Drafts</span>
-                                    {userProducts.filter(p => p.status === 'draft').length > 0 && (
-                                        <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${activeTab === "drafts" ? "bg-white text-black" : "bg-red-500 text-white"}`}>
-                                            {userProducts.filter(p => p.status === 'draft').length}
+                                    <span>Requests</span>
+                                    {(userProducts.filter(p => p.status === 'pending' || p.status === 'pending_deactivation' || p.status === 'pending_reactivation').length > 0) && (
+                                        <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${activeTab === "requests" ? "bg-white text-black" : "bg-red-500 text-white"}`}>
+                                            {userProducts.filter(p => p.status === 'pending' || p.status === 'pending_deactivation' || p.status === 'pending_reactivation').length}
                                         </span>
                                     )}
                                 </button>
@@ -3520,12 +3541,10 @@ To get these values:
 
                                 <button
                                     onClick={() => {
-                                        // Prevent scroll and maintain sidebar position
                                         const currentScrollY = window.scrollY;
                                         setActiveTab("hero");
                                         localStorage.setItem("adminActiveTab", "hero");
                                         router.replace("/admin?tab=hero");
-                                        // Maintain scroll position to prevent sidebar shift
                                         requestAnimationFrame(() => {
                                             window.scrollTo(0, currentScrollY);
                                         });
@@ -4774,9 +4793,11 @@ To get these values:
                                                                                 ? 'bg-green-100 text-green-800'
                                                                                 : product.status === 'rejected'
                                                                                     ? 'bg-red-100 text-red-800'
-                                                                                    : 'bg-yellow-100 text-yellow-800'
+                                                                                    : product.status === 'pending_deactivation'
+                                                                                        ? 'bg-orange-100 text-orange-800'
+                                                                                        : 'bg-yellow-100 text-yellow-800'
                                                                                 }`}>
-                                                                                {product.status ? capitalizeFirstLetter(product.status) : 'Approved'}
+                                                                                {product.status === 'pending_deactivation' ? 'Deactivation Request' : product.status ? capitalizeFirstLetter(product.status) : 'Approved'}
                                                                             </span>
                                                                             {product.status === 'rejected' && product.admin_note && (
                                                                                 <span className="text-xs text-gray-500 mt-1 max-w-[150px] truncate" title={product.admin_note}>
@@ -4786,17 +4807,20 @@ To get these values:
                                                                         </div>
                                                                     </td>
                                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                                        {product.status === 'draft' && (
+                                                                        {(product.status === 'pending' || product.status === 'pending_deactivation') && (
                                                                             <div className="flex gap-2 mb-2">
                                                                                 <button
                                                                                     onClick={() => handleApproveProduct(product)}
-                                                                                    className="text-white bg-green-600 hover:bg-green-700 px-2 py-1 rounded-none text-xs"
+                                                                                    className={`text-white px-2 py-1 rounded-none text-xs transition ${product.status === 'pending_deactivation'
+                                                                                        ? 'bg-orange-600 hover:bg-orange-700'
+                                                                                        : 'bg-emerald-600 hover:bg-emerald-700'
+                                                                                        }`}
                                                                                 >
-                                                                                    Approve
+                                                                                    {product.status === 'pending_deactivation' ? 'Approve Deactivate' : 'Approve'}
                                                                                 </button>
                                                                                 <button
                                                                                     onClick={() => handleRejectProduct(product)}
-                                                                                    className="text-white bg-red-600 hover:bg-red-700 px-2 py-1 rounded-none text-xs"
+                                                                                    className="text-red-600 bg-white border border-red-200 hover:bg-red-50 px-2 py-1 rounded-none text-xs transition"
                                                                                 >
                                                                                     Reject
                                                                                 </button>
@@ -4840,15 +4864,15 @@ To get these values:
                             );
                         })()}
 
-                        {/* Drafts Tab */}
-                        {activeTab === "drafts" && (() => {
-                            // Filter products to show only drafts
-                            let filteredDrafts = userProducts.filter(p => p.status === 'draft');
+                        {/* Requests Tab (Drafts + Deactivations) */}
+                        {activeTab === "requests" && (() => {
+                            // Filter products to show only new listing (pending), reactivation, and deactivation requests
+                            let filteredRequests = userProducts.filter(p => p.status === 'pending' || p.status === 'pending_deactivation' || p.status === 'pending_reactivation');
 
                             // Apply search query
                             if (searchQuery.trim()) {
                                 const query = searchQuery.toLowerCase();
-                                filteredDrafts = filteredDrafts.filter(p => {
+                                filteredRequests = filteredRequests.filter(p => {
                                     return p.name.toLowerCase().includes(query) ||
                                         (p.product_id && p.product_id.toLowerCase().includes(query)) ||
                                         users.find(u => u.id === p.user_id)?.name.toLowerCase().includes(query) ||
@@ -4858,16 +4882,16 @@ To get these values:
 
                             // Apply User Filter
                             if (filterUserId !== 'all') {
-                                filteredDrafts = filteredDrafts.filter(p => p.user_id === filterUserId);
+                                filteredRequests = filteredRequests.filter(p => p.user_id === filterUserId);
                             }
 
                             return (
                                 <div className="space-y-6">
                                     <div className="flex justify-between items-center bg-white p-6 rounded-none border border-gray-200">
                                         <div>
-                                            <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">Draft Products</h2>
+                                            <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">Pending Requests</h2>
                                             <p className="text-sm text-gray-500 mt-1">
-                                                Review and approve {filteredDrafts.length} pending products
+                                                Review and take action on {filteredRequests.length} pending items (New Listings & Deactivations)
                                             </p>
                                         </div>
                                     </div>
@@ -4877,12 +4901,12 @@ To get these values:
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             {/* Search */}
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-700 mb-1">Search</label>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Search Requests</label>
                                                 <input
                                                     type="text"
                                                     value={searchQuery}
                                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                                    placeholder="Search drafts..."
+                                                    placeholder="Search pending items..."
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-black"
                                                 />
                                             </div>
@@ -4913,12 +4937,12 @@ To get these values:
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-center">Request Type</th>
+                                                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-white divide-y divide-gray-200">
-                                                    {filteredDrafts.map((product) => {
+                                                    {filteredRequests.map((product) => {
                                                         const owner = users.find(u => u.id === (product as any).user_id);
                                                         const primaryImage = (product as any).images && Array.isArray((product as any).images) && (product as any).images.length > 0
                                                             ? ((product as any).primary_image_index !== undefined ? (product as any).images[(product as any).primary_image_index] : (product as any).images[0])
@@ -4951,40 +4975,47 @@ To get these values:
                                                                     <div className="text-xs text-gray-500">{owner ? owner.phone : ''}</div>
                                                                 </td>
                                                                 <td className="px-6 py-4 text-sm font-medium text-gray-900">{product.price}</td>
-                                                                <td className="px-6 py-4">
-                                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-xs font-medium bg-yellow-100 text-yellow-800">
-                                                                        Draft
-                                                                    </span>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    {product.status === 'pending' ? (
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider bg-yellow-100 text-yellow-800 border border-yellow-200">
+                                                                            New Listing
+                                                                        </span>
+                                                                    ) : product.status === 'pending_reactivation' ? (
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                                            Reactivation
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200">
+                                                                            Deactivation
+                                                                        </span>
+                                                                    )}
                                                                 </td>
-                                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                                    <div className="flex gap-2">
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-right">
+                                                                    <div className="flex gap-2 justify-end">
                                                                         <button
                                                                             onClick={() => handleApproveProduct(product)}
-                                                                            className="px-3 py-1 bg-green-600 text-white text-xs hover:bg-green-700 transition"
+                                                                            className={`px-3 py-1.5 text-white text-[10px] uppercase font-bold tracking-wider transition ${product.status === 'pending_deactivation'
+                                                                                ? 'bg-orange-600 hover:bg-orange-700'
+                                                                                : 'bg-emerald-600 hover:bg-emerald-700'
+                                                                                }`}
                                                                         >
-                                                                            Approve
+                                                                            {product.status === 'pending_deactivation' ? 'Approve Deactivate' : product.status === 'pending_reactivation' ? 'Approve Live' : 'Approve'}
                                                                         </button>
                                                                         <button
                                                                             onClick={() => handleRejectProduct(product)}
-                                                                            className="px-3 py-1 bg-red-600 text-white text-xs hover:bg-red-700 transition"
+                                                                            className="px-3 py-1.5 bg-white text-red-600 border border-red-200 text-[10px] uppercase font-bold tracking-wider hover:bg-red-50 transition"
                                                                         >
                                                                             Reject
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleEditUserProduct(product as any)}
-                                                                            className="text-blue-600 hover:text-blue-900 text-xs px-2"
-                                                                        >
-                                                                            Edit
                                                                         </button>
                                                                     </div>
                                                                 </td>
                                                             </tr>
                                                         );
                                                     })}
-                                                    {filteredDrafts.length === 0 && (
+                                                    {filteredRequests.length === 0 && (
                                                         <tr>
-                                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                                                No draft products found.
+                                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-500 font-medium uppercase tracking-wider text-xs">
+                                                                No pending requests found.
                                                             </td>
                                                         </tr>
                                                     )}
@@ -6721,9 +6752,50 @@ To get these values:
                                             </button>
                                             <button
                                                 onClick={confirmApproveProduct}
-                                                className="flex-1 px-4 py-3 bg-green-600 text-white font-bold rounded-none hover:bg-green-700 transition-colors shadow-sm hover:shadow-md uppercase tracking-wider text-sm border border-transparent"
+                                                className={`flex-1 px-4 py-3 text-white font-bold rounded-none hover:opacity-90 transition-colors uppercase tracking-wider text-sm shadow-lg active:scale-[0.98] ${approveConfirmProduct.status === 'pending_deactivation'
+                                                    ? 'bg-orange-600'
+                                                    : 'bg-emerald-600'
+                                                    }`}
                                             >
-                                                Approve
+                                                {approveConfirmProduct.status === 'pending_deactivation' ? 'Confirm Deactivate' : 'Confirm Approve'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Reject Confirmation Modal */}
+                        {rejectConfirmProduct && (
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full shadow-2xl">
+                                    <div className="p-6">
+                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full border border-red-200">
+                                            <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
+                                            Reject Product?
+                                        </h3>
+                                        <p className="text-sm text-gray-600 text-center mb-6">
+                                            Are you sure you want to reject <strong>{rejectConfirmProduct.name}</strong>?
+                                        </p>
+                                        <div className="bg-red-50 border border-red-200 rounded-none p-4 mb-6">
+                                            <p className="text-sm text-red-800 font-medium mb-1 text-center">This will mark the product as rejected and it will not be visible on the website.</p>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setRejectConfirmProduct(null)}
+                                                className="flex-1 px-4 py-3 bg-gray-100 text-gray-800 font-bold rounded-none hover:bg-gray-200 transition-colors uppercase tracking-wider text-sm border border-gray-300"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={confirmRejectProduct}
+                                                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-none hover:bg-red-700 transition-colors shadow-sm hover:shadow-md uppercase tracking-wider text-sm border border-transparent"
+                                            >
+                                                Reject
                                             </button>
                                         </div>
                                     </div>

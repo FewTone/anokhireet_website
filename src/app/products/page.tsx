@@ -423,6 +423,7 @@ export default function ProductsPage() {
                 .from("products")
                 .select("*")
                 .eq("is_active", true)
+                .eq("status", "approved")
                 .order("created_at", { ascending: false });
 
             if (error) throw error;
@@ -808,7 +809,7 @@ export default function ProductsPage() {
                                 <h2 className="text-lg font-semibold mb-4">FILTERS</h2>
 
                                 {/* SORT */}
-                                <div className="border-b border-gray-200 pb-3 mb-3">
+                                <div className="border-b border-gray-200 pb-3 wwwwmb-3">
                                     <button
                                         onClick={() => toggleFilterSection("sort")}
                                         className="w-full flex items-center justify-between text-sm font-medium"

@@ -235,6 +235,8 @@ export default function Home() {
             const { data: dbProducts, error: userError } = await supabase
                 .from("products")
                 .select("*")
+                .eq("status", "approved")
+                .eq("is_active", true)
                 .order("created_at", { ascending: false });
 
             if (userError) {

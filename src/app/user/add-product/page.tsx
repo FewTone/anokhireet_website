@@ -335,17 +335,17 @@ export default function AddProductPage() {
         setIsUploadingImage(true);
 
         try {
-            // 0. Check for existing drafts
+            // 0. Check for existing drafts or pending listings
             const { count, error: countError } = await supabase
                 .from("products")
                 .select("*", { count: 'exact', head: true })
                 .eq("owner_user_id", userId)
-                .eq("status", "draft");
+                .in("status", ["draft", "pending"]);
 
             if (countError) throw countError;
 
             if (count && count >= 1) {
-                setError("You can only have 1 active draft product at a time. Please publish or delete your existing draft.");
+                setError("You already have an active draft or pending listing. Please wait for approval or delete your existing draft.");
                 setIsUploadingImage(false);
                 return;
             }
