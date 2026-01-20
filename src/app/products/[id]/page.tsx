@@ -855,7 +855,7 @@ export default function ProductDetailPage() {
                                 </svg>
                             </button>
 
-                            <h2 className="text-2xl font-semibold uppercase tracking-wide mb-6">Select Date</h2>
+                            <h2 className="text-lg font-semibold uppercase tracking-wide mb-6">Select Date</h2>
 
                             <div className="space-y-4">
                                 <div>
