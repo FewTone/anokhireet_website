@@ -540,7 +540,7 @@ export default function LoginModal() {
     if (!isSessionChecked) return null; // Don't show anything while checking session
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
             {/* Backdrop Blur Layer */}
             <div
                 className="absolute inset-0 bg-black/40 backdrop-blur-md"

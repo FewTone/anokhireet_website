@@ -154,7 +154,7 @@ export default function Popup({
 
     // Minimal toast-style popup
     return (
-        <div className="fixed top-4 right-4 z-[100] animate-slideInRight">
+        <div className="fixed top-4 right-4 z-[3000] animate-slideInRight">
             {/* Minimal Popup - Toast Style */}
             <div className={`bg-white rounded-none shadow-lg border-l-4 ${type === "success" ? "border-green-500" : type === "error" ? "border-red-500" : type === "warning" ? "border-yellow-500" : "border-blue-500"} min-w-[300px] max-w-[400px] flex items-start gap-3 p-4 relative`}>
                 {/* Icon */}

@@ -69,7 +69,7 @@ export default function ProductsPage() {
     const [colors, setColors] = useState<Array<{ id: string; name: string; hex?: string }>>([]);
     const [materials, setMaterials] = useState<Array<{ id: string; name: string }>>([]);
     const [cities, setCities] = useState<Array<{ id: string; name: string }>>([]);
-    const [showCategories, setShowCategories] = useState(true); // Show categories section by default
+    const [showCategories, setShowCategories] = useState(true); // Show products by default, categories on demand
 
     // Filter sections collapse state
     const [filterSections, setFilterSections] = useState<FilterSection[]>([
@@ -205,7 +205,7 @@ export default function ProductsPage() {
             setActiveTag("ALL");
             setCategoryName("");
             setActiveTag("ALL");
-            if (!occasionParam && !ownerIdParam && viewParam !== "all") setShowCategories(true);
+            // Logic to show categories removed to keep product grid as default
         }
 
         if (occasionParam && occasions.length > 0) {
@@ -238,7 +238,7 @@ export default function ProductsPage() {
             setActiveTag("ALL");
             setCategoryName("");
             setActiveTag("ALL");
-            if (!productTypeParam && !ownerIdParam && viewParam !== "all") setShowCategories(true);
+            // Logic to show categories removed to keep product grid as default
         }
 
         // Read colors from URL
@@ -319,9 +319,8 @@ export default function ProductsPage() {
             setAppliedOwnerId("");
         }
 
-        // Handle clean URL (Back to Categories)
         if (!viewParam && !productTypeParam && !occasionParam && !ownerIdParam && !searchParam && !colorsParam && !materialsParam && !citiesParam && (!priceMinParam || priceMinParam === '0')) {
-            setShowCategories(true);
+            // Logic to show categories removed to keep product grid as default
             setActiveTag("ALL");
         }
     }, [searchParams, productTypes, occasions, maxPrice]);
@@ -768,7 +767,7 @@ export default function ProductsPage() {
                 />
             </div> */}
 
-            <main className="min-h-screen pt-0 md:pt-4 pb-12">
+            <main className="min-h-screen pt-0 md:pt-16 pb-12">
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Left Sidebar - Filters */}
@@ -1150,20 +1149,149 @@ export default function ProductsPage() {
                                 )}
 
                                 {/* Applied Filters Chips - Functional implementation */}
-                                <div className="flex flex-wrap gap-2 mb-6 px-1">
-                                    {/* Product Type Filters */}
-                                    {appliedProductTypes.map(id => {
-                                        const type = productTypes.find(t => t.id === id);
-                                        return type ? (
-                                            <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                {(appliedProductTypes.length > 0 || appliedOccasions.length > 0 || appliedColors.length > 0 || appliedMaterials.length > 0 || appliedCities.length > 0 || (appliedPriceRange[0] > 0 || appliedPriceRange[1] < maxPrice)) && (
+                                    <div className="flex flex-wrap gap-2 mb-6 px-1">
+                                        {/* Product Type Filters */}
+                                        {appliedProductTypes.map(id => {
+                                            const type = productTypes.find(t => t.id === id);
+                                            return type ? (
+                                                <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                    <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                        {type.name}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newTypes = appliedProductTypes.filter(tId => tId !== id);
+                                                            setAppliedProductTypes(newTypes);
+                                                            setPendingProductTypes(newTypes);
+                                                        }}
+                                                        className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                    >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ) : null;
+                                        })}
+
+                                        {/* Occasion Filters */}
+                                        {appliedOccasions.map(id => {
+                                            const occasion = occasions.find(o => o.id === id);
+                                            return occasion ? (
+                                                <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                    <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                        {occasion.name}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newOccasions = appliedOccasions.filter(oId => oId !== id);
+                                                            setAppliedOccasions(newOccasions);
+                                                            setPendingOccasions(newOccasions);
+                                                        }}
+                                                        className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                    >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ) : null;
+                                        })}
+
+                                        {/* Color Filters */}
+                                        {appliedColors.map(id => {
+                                            const color = colors.find(c => c.id === id);
+                                            return color ? (
+                                                <div key={id} className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                    {color.hex && (
+                                                        <div
+                                                            className="w-2 h-2 rounded-full border border-gray-300"
+                                                            style={{ backgroundColor: color.hex }}
+                                                        />
+                                                    )}
+                                                    <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                        {color.name}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newColors = appliedColors.filter(cId => cId !== id);
+                                                            setAppliedColors(newColors);
+                                                            setPendingColors(newColors);
+                                                        }}
+                                                        className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                    >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ) : null;
+                                        })}
+
+                                        {/* Material Filters */}
+                                        {appliedMaterials.map(id => {
+                                            const material = materials.find(m => m.id === id);
+                                            return material ? (
+                                                <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                    <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                        {material.name}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newMaterials = appliedMaterials.filter(mId => mId !== id);
+                                                            setAppliedMaterials(newMaterials);
+                                                            setPendingMaterials(newMaterials);
+                                                        }}
+                                                        className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                    >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ) : null;
+                                        })}
+
+                                        {/* City Filters */}
+                                        {appliedCities.map(id => {
+                                            const city = cities.find(c => c.id === id);
+                                            return city ? (
+                                                <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
+                                                    <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
+                                                        {city.name}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            const newCities = appliedCities.filter(cId => cId !== id);
+                                                            setAppliedCities(newCities);
+                                                            setPendingCities(newCities);
+                                                        }}
+                                                        className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                    >
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ) : null;
+                                        })}
+
+                                        {/* Price Range Chip - Only if modified from default */}
+                                        {(appliedPriceRange[0] > 0 || appliedPriceRange[1] < maxPrice) && (
+                                            <div className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
                                                 <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
-                                                    {type.name}
+                                                    ₹{appliedPriceRange[0]} - ₹{appliedPriceRange[1]}
                                                 </span>
                                                 <button
                                                     onClick={() => {
-                                                        const newTypes = appliedProductTypes.filter(tId => tId !== id);
-                                                        setAppliedProductTypes(newTypes);
-                                                        setPendingProductTypes(newTypes);
+                                                        setAppliedPriceRange([0, maxPrice]);
+                                                        setPendingPriceRange([0, maxPrice]);
                                                     }}
                                                     className="ml-1 text-gray-400 hover:text-black transition-colors"
                                                 >
@@ -1173,146 +1301,19 @@ export default function ProductsPage() {
                                                     </svg>
                                                 </button>
                                             </div>
-                                        ) : null;
-                                    })}
+                                        )}
 
-                                    {/* Occasion Filters */}
-                                    {appliedOccasions.map(id => {
-                                        const occasion = occasions.find(o => o.id === id);
-                                        return occasion ? (
-                                            <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
-                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
-                                                    {occasion.name}
-                                                </span>
-                                                <button
-                                                    onClick={() => {
-                                                        const newOccasions = appliedOccasions.filter(oId => oId !== id);
-                                                        setAppliedOccasions(newOccasions);
-                                                        setPendingOccasions(newOccasions);
-                                                    }}
-                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
-                                                >
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ) : null;
-                                    })}
-
-                                    {/* Color Filters */}
-                                    {appliedColors.map(id => {
-                                        const color = colors.find(c => c.id === id);
-                                        return color ? (
-                                            <div key={id} className="flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
-                                                {color.hex && (
-                                                    <div
-                                                        className="w-2 h-2 rounded-full border border-gray-300"
-                                                        style={{ backgroundColor: color.hex }}
-                                                    />
-                                                )}
-                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
-                                                    {color.name}
-                                                </span>
-                                                <button
-                                                    onClick={() => {
-                                                        const newColors = appliedColors.filter(cId => cId !== id);
-                                                        setAppliedColors(newColors);
-                                                        setPendingColors(newColors);
-                                                    }}
-                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
-                                                >
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ) : null;
-                                    })}
-
-                                    {/* Material Filters */}
-                                    {appliedMaterials.map(id => {
-                                        const material = materials.find(m => m.id === id);
-                                        return material ? (
-                                            <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
-                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
-                                                    {material.name}
-                                                </span>
-                                                <button
-                                                    onClick={() => {
-                                                        const newMaterials = appliedMaterials.filter(mId => mId !== id);
-                                                        setAppliedMaterials(newMaterials);
-                                                        setPendingMaterials(newMaterials);
-                                                    }}
-                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
-                                                >
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ) : null;
-                                    })}
-
-                                    {/* City Filters */}
-                                    {appliedCities.map(id => {
-                                        const city = cities.find(c => c.id === id);
-                                        return city ? (
-                                            <div key={id} className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
-                                                <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
-                                                    {city.name}
-                                                </span>
-                                                <button
-                                                    onClick={() => {
-                                                        const newCities = appliedCities.filter(cId => cId !== id);
-                                                        setAppliedCities(newCities);
-                                                        setPendingCities(newCities);
-                                                    }}
-                                                    className="ml-1 text-gray-400 hover:text-black transition-colors"
-                                                >
-                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ) : null;
-                                    })}
-
-                                    {/* Price Range Chip - Only if modified from default */}
-                                    {(appliedPriceRange[0] > 0 || appliedPriceRange[1] < maxPrice) && (
-                                        <div className="flex items-center gap-1 px-3 py-1 bg-gray-100 rounded-full border border-gray-200">
-                                            <span className="text-[11px] font-medium text-gray-700 uppercase tracking-wider">
-                                                ₹{appliedPriceRange[0]} - ₹{appliedPriceRange[1]}
-                                            </span>
+                                        {/* Clear All Option - Only if there are active chips */}
+                                        {(appliedProductTypes.length > 0 || appliedOccasions.length > 0 || appliedColors.length > 0 || appliedMaterials.length > 0 || appliedCities.length > 0 || (appliedPriceRange[0] > 0 || appliedPriceRange[1] < maxPrice)) && (
                                             <button
-                                                onClick={() => {
-                                                    setAppliedPriceRange([0, maxPrice]);
-                                                    setPendingPriceRange([0, maxPrice]);
-                                                }}
-                                                className="ml-1 text-gray-400 hover:text-black transition-colors"
+                                                onClick={clearAllFilters}
+                                                className="text-[11px] font-bold text-gray-500 hover:text-black uppercase tracking-wider flex items-center px-1"
                                             >
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                </svg>
+                                                CLEAR ALL
                                             </button>
-                                        </div>
-                                    )}
-
-                                    {/* Clear All Option - Only if there are active chips */}
-                                    {(appliedProductTypes.length > 0 || appliedOccasions.length > 0 || appliedColors.length > 0 || appliedMaterials.length > 0 || appliedCities.length > 0 || (appliedPriceRange[0] > 0 || appliedPriceRange[1] < maxPrice)) && (
-                                        <button
-                                            onClick={clearAllFilters}
-                                            className="text-[11px] font-bold text-gray-500 hover:text-black uppercase tracking-wider flex items-center px-1"
-                                        >
-                                            CLEAR ALL
-                                        </button>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Desktop Category Tags - Now dynamic and functional */}
                                 <div className="hidden md:flex flex-wrap gap-2 mb-4">
