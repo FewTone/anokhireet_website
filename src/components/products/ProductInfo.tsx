@@ -23,8 +23,9 @@ export default function ProductInfo({
 
     const formatPrice = (priceVal: string | number | undefined) => {
         if (!priceVal) return '';
-        if (typeof priceVal === 'number') return `₹${priceVal}`;
-        return priceVal.startsWith('₹') ? priceVal : `₹${priceVal.replace(/[₹,]/g, '')}`;
+        const val = priceVal.toString().replace(/[^0-9.]/g, '');
+        const number = parseFloat(val);
+        return isNaN(number) ? val : `₹${number.toLocaleString('en-IN')}`;
     };
 
     return (
@@ -70,13 +71,13 @@ export default function ProductInfo({
                             onClick={onMakeInquiry}
                             className="bg-white text-black border-r border-gray-200 font-semibold py-4 px-4 md:py-4 md:px-6 hover:bg-gray-50 transition-all text-center text-sm md:text-base rounded-none md:border md:border-black"
                         >
-                            Send Msg
+                            Send Message
                         </button>
                         <button
                             onClick={onMakeInquiry}
                             className="bg-black text-white font-semibold py-4 px-4 md:py-4 md:px-6 hover:opacity-90 transition-opacity text-center text-sm md:text-base rounded-none"
                         >
-                            Select Date
+                            Make An Inquiry
                         </button>
                     </div>
                 </>

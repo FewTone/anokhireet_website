@@ -768,7 +768,7 @@ To get these values:
             const { data, error } = await supabase
                 .from("products")
                 .select("*")
-                .order("created_at", { ascending: false });
+                .order("updated_at", { ascending: false });
 
             if (error) {
                 const errorStr = JSON.stringify(error);

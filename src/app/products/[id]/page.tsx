@@ -61,6 +61,7 @@ export default function ProductDetailPage() {
     const hasTrackedView = useRef<string | null>(null);
     const [isInWishlist, setIsInWishlist] = useState(false);
     const [wishlistLoading, setWishlistLoading] = useState(false);
+    const [isProcessingWishlist, setIsProcessingWishlist] = useState(false);
     const [referrerPath, setReferrerPath] = useState('');
     const [hasHistory, setHasHistory] = useState(false);
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -283,19 +284,31 @@ export default function ProductDetailPage() {
     };
 
     const toggleWishlist = async () => {
-        if (!isLoggedIn) {
-            router.push(`/profile?returnUrl=${encodeURIComponent(window.location.pathname)}`);
-            return;
-        }
+        if (isProcessingWishlist) return;
 
-        if (!product?.db_id || !currentUser?.id) return;
-
-        setWishlistLoading(true);
+        // 1. Optimistic UI update - happens INSTANTLY
         const newStatus = !isInWishlist;
-        // Optimistic update
         setIsInWishlist(newStatus);
+        setIsProcessingWishlist(true);
 
         try {
+            // 2. Faster session check
+            const { data: { session } } = await supabase.auth.getSession();
+            const user = session?.user;
+
+            if (!user) {
+                // Rollback if not logged in
+                setIsInWishlist(!newStatus);
+                setIsProcessingWishlist(false);
+                router.push(`/profile?returnUrl=${encodeURIComponent(window.location.pathname)}`);
+                return;
+            }
+
+            if (!product?.db_id || !currentUser?.id) {
+                setIsProcessingWishlist(false);
+                return;
+            }
+
             if (newStatus) {
                 // Add to wishlist
                 await supabase.from('wishlist').insert({
@@ -331,10 +344,10 @@ export default function ProductDetailPage() {
             }
         } catch (error) {
             console.error('Error toggling wishlist:', error);
-            // Revert on error
+            // Revert on actual error
             setIsInWishlist(!newStatus);
         } finally {
-            setWishlistLoading(false);
+            setIsProcessingWishlist(false);
         }
     };
 

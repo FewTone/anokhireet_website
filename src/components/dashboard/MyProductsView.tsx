@@ -56,6 +56,7 @@ export default function MyProductsView() {
     // Add Product Modal State
     const router = useRouter();
     const searchParams = useSearchParams();
+    const [activeActionMenuId, setActiveActionMenuId] = useState<string | number | null>(null);
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -95,6 +96,22 @@ export default function MyProductsView() {
             subscription.unsubscribe();
         };
     }, [searchParams, router]);
+
+    // Close Actions menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (target.closest('[data-action-container]')) {
+                return;
+            }
+            setActiveActionMenuId(null);
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, []);
 
     const loadUserAndProducts = async () => {
         try {
@@ -330,7 +347,7 @@ export default function MyProductsView() {
         try {
             const { error } = await supabase
                 .from("products")
-                .update({ status: 'pending_deactivation' })
+                .update({ status: 'pending_deactivation', updated_at: new Date().toISOString() })
                 .eq("id", product.id)
                 .eq("owner_user_id", userId);
 
@@ -361,7 +378,7 @@ export default function MyProductsView() {
 
         // Optimistic update
         const updatedProducts = myProducts.map(p =>
-            p.id === product.id ? { ...p, status: 'pending_reactivation' } : p
+            p.id === product.id ? { ...p, status: 'approved', is_active: true } : p
         );
         const originalProducts = [...myProducts];
         setMyProducts(updatedProducts);
@@ -370,7 +387,11 @@ export default function MyProductsView() {
         try {
             const { error } = await supabase
                 .from("products")
-                .update({ status: 'pending_reactivation' })
+                .update({
+                    status: 'approved',
+                    is_active: true,
+                    updated_at: new Date().toISOString()
+                })
                 .eq("id", product.id)
                 .eq("owner_user_id", userId);
 
@@ -378,9 +399,9 @@ export default function MyProductsView() {
 
             setPopup({
                 isOpen: true,
-                message: "Reactivation request sent to admin.",
+                message: "Product is now live!",
                 type: "success",
-                title: "Request Sent"
+                title: "Product Reactivated"
             });
         } catch (error: any) {
             console.error("Error updating status:", error);
@@ -447,7 +468,7 @@ export default function MyProductsView() {
         try {
             const { error } = await supabase
                 .from("products")
-                .update({ status: 'pending' })
+                .update({ status: 'pending', updated_at: new Date().toISOString() })
                 .eq("id", product.id)
                 .eq("owner_user_id", userId);
 
@@ -471,10 +492,57 @@ export default function MyProductsView() {
         }
     };
 
+    const withdrawRequest = async (product: UserProduct) => {
+        if (!userId) return;
+
+        let newStatus = 'draft';
+        if (product.status === 'pending_deactivation') {
+            newStatus = 'approved'; // Revert to approved (active)
+        } else if (product.status === 'pending_reactivation') {
+            newStatus = 'approved'; // Revert to approved (inactive)
+        } else if (product.status === 'pending') {
+            newStatus = 'draft';
+        }
+
+        // Optimistic update
+        const updatedProducts = myProducts.map(p =>
+            p.id === product.id ? { ...p, status: newStatus } : p
+        );
+        const originalProducts = [...myProducts];
+        setMyProducts(updatedProducts);
+        setActiveActionMenuId(null);
+
+        try {
+            const { error } = await supabase
+                .from("products")
+                .update({ status: newStatus, updated_at: new Date().toISOString() })
+                .eq("id", product.id)
+                .eq("owner_user_id", userId);
+
+            if (error) throw error;
+
+            setPopup({
+                isOpen: true,
+                message: "Request withdrawn.",
+                type: "success",
+                title: "Success"
+            });
+        } catch (error: any) {
+            console.error("Error withdrawing request:", error);
+            setMyProducts(originalProducts); // Revert
+            setPopup({
+                isOpen: true,
+                message: "Failed to withdraw request.",
+                type: "error",
+                title: "Error"
+            });
+        }
+    };
+
     return (
         <div className="w-full px-1 md:px-0">
-            <div className="mb-4 flex justify-start items-center gap-6 hidden md:flex">
-                <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
+            <div className="mb-4 relative flex justify-end items-center h-10 hidden md:flex">
+                <h2 className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
                 <button
                     onClick={handleAddProduct}
                     className="bg-black text-white px-4 py-2 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
@@ -496,24 +564,24 @@ export default function MyProductsView() {
             {/* Summary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 md:mb-8 text-center w-full">
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-sm font-normal text-gray-900 mb-0.5">{myProducts.length}</span>
-                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Products</span>
+                    <span className="text-2xl font-normal text-black mb-0.5">{myProducts.length}</span>
+                    <span className="text-xs uppercase tracking-wider font-normal text-black">Products</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-sm font-normal text-gray-900 mb-0.5">{totalImpressions.toLocaleString()}</span>
-                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Impressions</span>
+                    <span className="text-2xl font-normal text-black mb-0.5">{totalImpressions.toLocaleString()}</span>
+                    <span className="text-xs uppercase tracking-wider font-normal text-black">Impressions</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-sm font-normal text-gray-900 mb-0.5">{totalViews.toLocaleString()}</span>
-                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Views</span>
+                    <span className="text-2xl font-normal text-black mb-0.5">{totalViews.toLocaleString()}</span>
+                    <span className="text-xs uppercase tracking-wider font-normal text-black">Views</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-sm font-normal text-gray-900 mb-0.5">{totalLikes.toLocaleString()}</span>
-                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Likes</span>
+                    <span className="text-2xl font-normal text-black mb-0.5">{totalLikes.toLocaleString()}</span>
+                    <span className="text-xs uppercase tracking-wider font-normal text-black">Likes</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center col-span-2 md:col-span-1">
-                    <span className="text-sm font-normal text-gray-900 mb-0.5">{totalInquiries.toLocaleString()}</span>
-                    <span className="text-sm uppercase tracking-wider font-normal text-gray-400">Inquiry</span>
+                    <span className="text-2xl font-normal text-black mb-0.5">{totalInquiries.toLocaleString()}</span>
+                    <span className="text-xs uppercase tracking-wider font-normal text-black">Inquiry</span>
                 </div>
             </div>
 
@@ -565,7 +633,7 @@ export default function MyProductsView() {
 
                         {/* Features List */}
                         <div className="space-y-0">
-                            {myProducts.map((product) => (
+                            {myProducts.map((product, index) => (
                                 <div key={product.id} className="group relative grid grid-cols-12 gap-12 items-center border-b border-gray-100 last:border-0 py-3">
                                     {/* Product Info */}
                                     <div className="col-span-12 md:col-span-3 flex gap-4 items-center">
@@ -584,7 +652,7 @@ export default function MyProductsView() {
                                                 ID: <span className="text-black font-normal">{product.product_id || product.id}</span>
                                             </p>
                                             <span className="text-sm font-normal text-gray-900 uppercase tracking-tight">
-                                                ₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString() : product.price}
+                                                ₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString('en-IN') : product.price}
                                             </span>
                                         </div>
                                     </div>
@@ -601,22 +669,22 @@ export default function MyProductsView() {
                                     <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center">
                                         <div className="flex flex-col items-center gap-1.5 w-full">
                                             {product.status === 'draft' && (
-                                                <span className="px-3 py-2 bg-yellow-50 text-yellow-600 text-sm font-normal uppercase tracking-wider border border-yellow-200 text-center w-full">DRAFT</span>
+                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-500 text-white uppercase tracking-wider">DRAFT</span>
                                             )}
                                             {product.status === 'pending' && (
-                                                <span className="px-3 py-2 bg-yellow-50 text-yellow-600 text-sm font-normal uppercase tracking-wider border border-yellow-200 text-center w-full">PENDING</span>
+                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-500 text-white uppercase tracking-wider">REVIEWING</span>
                                             )}
                                             {product.status === 'pending_deactivation' && (
-                                                <span className="px-3 py-2 bg-orange-50 text-orange-600 text-sm font-normal uppercase tracking-wider border border-orange-200 text-center w-full">DEACTIVATING</span>
+                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-orange-500 text-white uppercase tracking-wider">DEACTIVATING</span>
                                             )}
                                             {product.status === 'pending_reactivation' && (
-                                                <span className="px-3 py-2 bg-emerald-50 text-emerald-600 text-sm font-normal uppercase tracking-wider border border-emerald-200 text-center w-full">REACTIVATING</span>
+                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500 text-white uppercase tracking-wider">REACTIVATING</span>
                                             )}
                                             {product.status === 'approved' && product.is_active && (
-                                                <span className="px-3 py-2 bg-green-50 text-green-600 text-sm font-normal uppercase tracking-wider border border-green-200 text-center w-full">LIVE</span>
+                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-green-500 text-white uppercase tracking-wider">LIVE</span>
                                             )}
                                             {((product.status === 'approved' && !product.is_active) || product.status === 'rejected') && (
-                                                <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm font-normal uppercase tracking-wider border border-gray-200 text-center w-full">DEACTIVATED</span>
+                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-gray-500 text-white uppercase tracking-wider">DEACTIVATED</span>
                                             )}
                                         </div>
                                     </div>
@@ -642,62 +710,167 @@ export default function MyProductsView() {
                                         <span className="text-sm text-gray-900 font-normal">{product.inquiries_count?.toLocaleString() || 0}</span>
                                     </div>
 
-                                    {/* Actions Column */}
-                                    <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center px-4">
-                                        {(product.status === 'approved' && product.is_active) ? (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleProductStatus(product);
-                                                }}
-                                                className="w-full max-w-[140px] px-4 py-2 text-sm font-normal uppercase tracking-wider transition-colors border bg-transparent text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
-                                            >
-                                                Deactivate
-                                            </button>
-                                        ) : (product.status === 'pending_deactivation' || product.status === 'pending_reactivation') ? (
-                                            <span className={`w-full max-w-[140px] inline-flex justify-center items-center px-4 py-2 text-sm font-normal uppercase tracking-wider border bg-transparent ${product.status === 'pending_deactivation' ? 'text-orange-500 border-orange-200 bg-orange-50/50' : 'text-emerald-600 border-emerald-200 bg-emerald-50/50'
-                                                }`}>
-                                                REQ. SENT
-                                            </span>
-                                        ) : product.status === 'pending' ? (
-                                            <span className="w-full max-w-[140px] inline-flex justify-center items-center px-4 py-2 text-sm font-normal uppercase tracking-wider text-yellow-600 border border-yellow-200 bg-yellow-50/50">
-                                                SUBMITTED
-                                            </span>
-                                        ) : product.status === 'draft' ? (
-                                            <div className="flex flex-col gap-2 w-full items-end">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setSubmitConfirmProduct(product);
-                                                    }}
-                                                    className="w-full max-w-[140px] px-4 py-2 text-sm font-normal uppercase tracking-wider transition-colors border bg-black text-white border-black hover:opacity-90"
-                                                >
-                                                    Send Request
-                                                </button>
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setDeleteConfirmProduct(product);
-                                                    }}
-                                                    className="w-full max-w-[140px] px-4 py-2 text-sm font-normal uppercase tracking-wider transition-colors border bg-transparent text-gray-500 border-gray-300 hover:bg-red-600 hover:text-white hover:border-red-600"
-                                                >
-                                                    Delete
-                                                </button>
+                                    <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center px-4 relative" data-action-container="true">
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveActionMenuId(activeActionMenuId === product.id ? null : product.id);
+                                            }}
+                                            className="px-6 py-2 bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition-colors shadow-sm"
+                                        >
+                                            Actions
+                                        </button>
+
+                                        {activeActionMenuId === product.id && (
+                                            <div className={`absolute ${index >= myProducts.length - 2 ? 'bottom-full mb-2 origin-bottom-right' : 'top-full mt-2 origin-top-right'} right-0 w-48 bg-white border border-gray-100 shadow-xl z-[100] p-1.5 flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-100`}>
+                                                {(product.status === 'approved' && product.is_active) ? (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                // Navigate to edit page
+                                                                console.log("Edit clicked for:", product.id);
+                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleProductStatus(product);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                        >
+                                                            Deactivate
+                                                        </button>
+                                                    </>
+                                                ) : (product.status === 'pending_deactivation' || product.status === 'pending_reactivation') ? (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                console.log("Edit clicked for:", product.id);
+                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                withdrawRequest(product);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-orange-600 hover:bg-orange-50"
+                                                        >
+                                                            Withdraw Request
+                                                        </button>
+                                                    </>
+                                                ) : product.status === 'pending' ? (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                console.log("Edit clicked for:", product.id);
+                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                withdrawRequest(product);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-yellow-600 hover:bg-yellow-50"
+                                                        >
+                                                            Withdraw Request
+                                                        </button>
+                                                    </>
+                                                ) : product.status === 'draft' ? (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                console.log("Edit clicked for:", product.id);
+                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSubmitConfirmProduct(product);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
+                                                        >
+                                                            Submit for Approval
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setDeleteConfirmProduct(product);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-red-600 hover:bg-red-50"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </>
+                                                ) : (((product.status === 'approved' && !product.is_active) || product.status === 'rejected')) ? (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                console.log("Edit clicked for:", product.id);
+                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleProductStatus(product);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-emerald-600 hover:bg-emerald-50"
+                                                        >
+                                                            Make Live
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                console.log("Edit clicked for:", product.id);
+                                                                router.push(`/user/edit-product/${product.id}`);
+                                                                setActiveActionMenuId(null);
+                                                            }}
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                        <div className="px-3 py-2 text-xs font-medium uppercase tracking-wider text-gray-400 cursor-default">
+                                                            No Actions
+                                                        </div>
+                                                    </>
+                                                )}
                                             </div>
-                                        ) : (((product.status === 'approved' && !product.is_active) || product.status === 'rejected')) ? (
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleProductStatus(product);
-                                                }}
-                                                className="w-full max-w-[140px] px-4 py-2 text-sm font-normal uppercase tracking-wider transition-colors border bg-transparent text-emerald-600 border-emerald-600 hover:bg-emerald-600 hover:text-white"
-                                            >
-                                                Make Live
-                                            </button>
-                                        ) : (
-                                            <span className="text-sm font-normal uppercase tracking-wider text-gray-400">
-                                                -
-                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -722,20 +895,18 @@ export default function MyProductsView() {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[4000] p-4">
                     <div className="bg-white rounded-none border border-gray-100 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
                         <div className="p-6">
-                            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-50 rounded-none border border-red-100">
-                                <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-50 rounded-none border border-blue-100">
+                                <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                Delete Draft Product?
+                                Delete Product
                             </h3>
                             <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-                                Are you sure you want to delete <br /><strong className="text-gray-900">{deleteConfirmProduct.name}</strong>?
-                                <br /><br />
-                                This action is permanent and cannot be undone.
+                                Are you sure you want to delete <strong className="text-gray-900">{deleteConfirmProduct.name}</strong>?
                             </p>
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 mb-4">
                                 <button
                                     onClick={() => setDeleteConfirmProduct(null)}
                                     className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
@@ -744,11 +915,14 @@ export default function MyProductsView() {
                                 </button>
                                 <button
                                     onClick={confirmDeleteDraft}
-                                    className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-none hover:bg-red-700 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
+                                    className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
                                 >
                                     Confirm Delete
                                 </button>
                             </div>
+                            <p className="text-xs text-gray-500 text-center">
+                                This action is permanent and cannot be undone.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -765,14 +939,12 @@ export default function MyProductsView() {
                                 </svg>
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                Send for Review?
+                                Ready to Submit
                             </h3>
                             <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-                                Ready to send <br /><strong className="text-gray-900">{submitConfirmProduct.name}</strong> to admin for review?
-                                <br /><br />
-                                You won't be able to edit it until it's approved.
+                                <strong className="text-gray-900">{submitConfirmProduct.name}</strong> for review?
                             </p>
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 mb-4">
                                 <button
                                     onClick={() => setSubmitConfirmProduct(null)}
                                     className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
@@ -783,9 +955,12 @@ export default function MyProductsView() {
                                     onClick={confirmSubmitDraft}
                                     className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
                                 >
-                                    Send Request
+                                    Submit for Approval
                                 </button>
                             </div>
+                            <p className="text-xs text-gray-500 text-center">
+                                You won't be able to edit it until it's approved.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -796,20 +971,18 @@ export default function MyProductsView() {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[4000] p-4">
                     <div className="bg-white rounded-none border border-gray-100 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
                         <div className="p-6">
-                            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-orange-50 rounded-none border border-orange-100">
-                                <svg className="w-6 h-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-50 rounded-none border border-blue-100">
+                                <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                Request Deactivation?
+                                Request Deactivation
                             </h3>
                             <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-                                Are you sure you want to deactivate <br /><strong className="text-gray-900">{deactivateConfirmProduct.name}</strong>?
-                                <br /><br />
-                                A request will be sent to the admin for approval.
+                                Deactivate <strong className="text-gray-900">{deactivateConfirmProduct.name}</strong>?
                             </p>
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 mb-4">
                                 <button
                                     onClick={() => setDeactivateConfirmProduct(null)}
                                     className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
@@ -818,11 +991,14 @@ export default function MyProductsView() {
                                 </button>
                                 <button
                                     onClick={confirmDeactivation}
-                                    className="flex-1 px-4 py-3 bg-orange-600 text-white font-bold rounded-none hover:bg-orange-700 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
+                                    className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
                                 >
                                     Confirm Request
                                 </button>
                             </div>
+                            <p className="text-xs text-gray-500 text-center">
+                                A request will be sent to the admin for approval.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -833,20 +1009,18 @@ export default function MyProductsView() {
                 <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[4000] p-4">
                     <div className="bg-white rounded-none border border-gray-100 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
                         <div className="p-6">
-                            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-emerald-50 rounded-none border border-emerald-100">
-                                <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 13l4 4L19 7" />
+                            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-50 rounded-none border border-blue-100">
+                                <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                Request Reactivation?
+                                Reactivate Product
                             </h3>
                             <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-                                Are you sure you want to make <br /><strong className="text-gray-900">{reactivateConfirmProduct.name}</strong> live again?
-                                <br /><br />
-                                A request will be sent to the admin for approval.
+                                Make <strong className="text-gray-900">{reactivateConfirmProduct.name}</strong> live again?
                             </p>
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 mb-4">
                                 <button
                                     onClick={() => setReactivateConfirmProduct(null)}
                                     className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
@@ -855,11 +1029,14 @@ export default function MyProductsView() {
                                 </button>
                                 <button
                                     onClick={confirmReactivation}
-                                    className="flex-1 px-4 py-3 bg-emerald-600 text-white font-bold rounded-none hover:bg-emerald-700 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
+                                    className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
                                 >
-                                    Confirm Request
+                                    Make Live
                                 </button>
                             </div>
+                            <p className="text-xs text-gray-500 text-center">
+                                A request will be sent to the admin for approval.
+                            </p>
                         </div>
                     </div>
                 </div>

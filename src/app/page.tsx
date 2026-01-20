@@ -35,6 +35,7 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [featuredCategories, setFeaturedCategories] = useState<Array<{ img: string; link_url?: string; name?: string }>>([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
+    const [favoritedIds, setFavoritedIds] = useState<Set<string> | null>(null);
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -51,6 +52,7 @@ export default function Home() {
             console.error("Error loading categories:", error);
             setCategoriesLoading(false);
         }); // Load categories from database
+        loadWishlist(); // Cache wishlist state
 
         // Set up Supabase Realtime subscriptions for instant updates
         const productTypesChannel = supabase
@@ -220,6 +222,41 @@ export default function Home() {
             setFeaturedCategories([]);
         } finally {
             setCategoriesLoading(false);
+        }
+    };
+
+    const loadWishlist = async () => {
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.user) {
+                setFavoritedIds(new Set()); // Guest user, empty wishlist for batch check
+                return;
+            }
+
+            const { data: userData } = await supabase
+                .from('users')
+                .select('id')
+                .eq('auth_user_id', session.user.id)
+                .maybeSingle();
+
+            if (!userData) {
+                setFavoritedIds(new Set());
+                return;
+            }
+
+            const { data } = await supabase
+                .from('wishlist')
+                .select('product_id')
+                .eq('user_id', userData.id);
+
+            if (data) {
+                setFavoritedIds(new Set(data.map(item => String(item.product_id))));
+            } else {
+                setFavoritedIds(new Set());
+            }
+        } catch (error) {
+            console.error("Error loading initial wishlist state:", error);
+            setFavoritedIds(new Set());
         }
     };
 
@@ -406,10 +443,10 @@ export default function Home() {
                         <div className="pb-3 flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-[10px] px-4 scrollbar-hide">
                             <span
                                 onClick={() => router.push("/products")}
-                                className={`border h-[26px] flex items-center justify-center px-[12px] text-[11px] cursor-pointer transition-all whitespace-nowrap 
+                                className={`flex items-center justify-center px-4 py-1.5 text-xs transition-all whitespace-nowrap border uppercase tracking-wide cursor-pointer
                                     ${activeTab === "ALL"
                                         ? "bg-black text-white border-black"
-                                        : "bg-white text-black font-light border-black-300"
+                                        : "bg-white text-black hover:bg-gray-50 border-black"
                                     }`}
                                 style={{ fontFamily: 'Inter, sans-serif' }}
                             >
@@ -423,7 +460,7 @@ export default function Home() {
                                             router.push(cat.link_url);
                                         }
                                     }}
-                                    className={`border border-black-300 h-[26px] flex items-center justify-center px-[12px] text-[11px] cursor-pointer transition-all whitespace-nowrap bg-white text-black font-light`}
+                                    className={`flex items-center justify-center px-4 py-1.5 text-xs transition-all whitespace-nowrap border border-black bg-white text-black hover:bg-gray-50 uppercase tracking-wide cursor-pointer`}
                                     style={{ fontFamily: 'Inter, sans-serif' }}
                                 >
                                     {cat.name?.toUpperCase()}
@@ -442,7 +479,12 @@ export default function Home() {
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
                             {filteredProducts.map((product) => (
-                                <ProductCard key={product.id} product={product} disableHover={true} />
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                    disableHover={true}
+                                    initialFavorite={favoritedIds ? favoritedIds.has(String(product.id)) : undefined}
+                                />
                             ))}
                             {filteredProducts.length === 0 && (
                                 <p className="text-gray-500 mt-10 col-span-full text-center">No products found in this category.</p>

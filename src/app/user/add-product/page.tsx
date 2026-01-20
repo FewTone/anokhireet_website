@@ -164,7 +164,18 @@ export default function AddProductPage() {
     const loadUser = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-            setUserId(session.user.id);
+            const { data: userData } = await supabase
+                .from("users")
+                .select("id")
+                .or(`id.eq.${session.user.id},auth_user_id.eq.${session.user.id}`)
+                .maybeSingle();
+
+            if (userData) {
+                setUserId(userData.id);
+            } else {
+                console.error("User profile not found");
+                // Optionally handle case where profile doesn't exist yet
+            }
             setLoading(false);
         } else {
             router.push("/profile");
