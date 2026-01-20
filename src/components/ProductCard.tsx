@@ -155,7 +155,14 @@ export default function ProductCard({ product, hideDetails = false, disableHover
 
     const searchParams = useSearchParams();
     const currentParams = searchParams ? searchParams.toString() : "";
-    const href = `/products/${product.productId || product.id}${currentParams ? `?${currentParams}` : ''}`;
+
+    // Ensure we have a valid ID to link to
+    const pid = product.productId || product.id;
+    const baseHref = pid ? `/products/${pid}` : '#';
+    // Append params only if we have a valid product link
+    const href = (pid && baseHref !== '#')
+        ? `${baseHref}${currentParams ? `?${currentParams}` : ''}`
+        : '#';
 
     return (
         <Link href={href} className="block bg-white group relative">

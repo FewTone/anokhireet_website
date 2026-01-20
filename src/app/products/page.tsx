@@ -106,14 +106,28 @@ export default function ProductsPage() {
 
     // Load filter options and products
     useEffect(() => {
+        // slight delay to ensure browser scroll restoration doesn't override us
+        setTimeout(() => {
+            const scrollContainer = document.getElementById('app-shell-scroll');
+            if (scrollContainer) {
+                scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            }
+        }, 100);
         loadFilterOptions();
         loadProducts();
     }, []);
 
     // Scroll to top when filters change
     useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'instant' });
-    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, activeTag]);
+        const scrollContainer = document.getElementById('app-shell-scroll');
+        if (scrollContainer) {
+            scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+        } else {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, activeTag, loading, showCategories]);
 
     // Update URL params when applied filters change
     const updateURLParams = useCallback(() => {
@@ -1121,7 +1135,7 @@ export default function ProductsPage() {
                                                 onClick={() => setViewMode('grid')}
                                                 className={`p-1 ${viewMode === 'grid' ? 'opacity-100' : 'opacity-40'}`}
                                             >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                                     <rect x="3" y="3" width="8" height="8" rx="1"></rect>
                                                     <rect x="13" y="3" width="8" height="8" rx="1"></rect>
                                                     <rect x="3" y="13" width="8" height="8" rx="1"></rect>
@@ -1132,7 +1146,7 @@ export default function ProductsPage() {
                                                 onClick={() => setViewMode('grid3')}
                                                 className={`p-1 ${viewMode === 'grid3' ? 'opacity-100' : 'opacity-40'}`}
                                             >
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                                     <rect x="2" y="2" width="6" height="6" rx="1"></rect>
                                                     <rect x="9" y="2" width="6" height="6" rx="1"></rect>
                                                     <rect x="16" y="2" width="6" height="6" rx="1"></rect>
