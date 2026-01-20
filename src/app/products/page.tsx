@@ -320,7 +320,7 @@ export default function ProductsPage() {
         }
 
         if (!viewParam && !productTypeParam && !occasionParam && !ownerIdParam && !searchParam && !colorsParam && !materialsParam && !citiesParam && (!priceMinParam || priceMinParam === '0')) {
-            // Logic to show categories removed to keep product grid as default
+            setShowCategories(true);
             setActiveTag("ALL");
         }
     }, [searchParams, productTypes, occasions, maxPrice]);
@@ -767,7 +767,7 @@ export default function ProductsPage() {
                 />
             </div> */}
 
-            <main className="min-h-screen pt-0 md:pt-16 pb-12">
+            <main className="min-h-screen pt-2 md:pt-16 pb-12">
                 <div className="max-w-[1400px] mx-auto px-0 md:px-4">
                     <div className="flex flex-col lg:flex-row gap-6">
                         {/* Left Sidebar - Filters */}
@@ -1091,12 +1091,12 @@ export default function ProductsPage() {
                         {/* Main Content */}
                         <div className="flex-1">
                             {/* Category Header */}
-                            <div className="mb-6">
+                            <div className="mb-2 md:mb-6">
                                 <h1 className="hidden md:block text-3xl font-semibold uppercase tracking-wide mb-4">PRODUCTS</h1>
 
                                 {/* Mobile Filter & View Bar - Only show when NOT in category view */}
                                 {!showCategories && (
-                                    <div className="flex items-center justify-between mb-4 px-1">
+                                    <div className="flex items-center justify-between mb-2 md:mb-4 px-2">
                                         {/* View Toggles */}
                                         <div className="flex items-center gap-4">
                                             <button
