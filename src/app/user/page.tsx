@@ -230,7 +230,7 @@ export default function UserPage() {
         <>
             <Navbar />
             <main className="min-h-[calc(100vh-70px)] bg-white">
-                <div className="max-w-6xl mx-auto w-full">
+                <div className="max-w-[95%] mx-auto w-full">
                     <div className="flex flex-col md:flex-row min-h-[calc(100vh-70px)] w-full">
 
                         {/* Left Sidebar - Desktop Only */}

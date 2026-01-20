@@ -552,14 +552,14 @@ export default function MyProductsView() {
                     <div className="min-w-[1200px] px-4">
                         {/* Table Header */}
                         <div className="grid grid-cols-12 gap-12 pb-2 border-b border-gray-200 text-sm font-normal text-gray-500 uppercase tracking-wide mb-2">
-                            <div className="col-span-12 md:col-span-4 text-left">Products</div>
+                            <div className="col-span-12 md:col-span-3 text-left">Products</div>
                             <div className="col-span-1 text-center">Date</div>
-                            <div className="col-span-1 text-center">Status</div>
+                            <div className="col-span-2 text-center">Status</div>
                             <div className="col-span-1 text-center">Impressions</div>
                             <div className="col-span-1 text-center">Views</div>
                             <div className="col-span-1 text-center">Likes</div>
                             <div className="col-span-1 text-center">Inquiry</div>
-                            <div className="col-span-2 text-right">Actions</div>
+                            <div className="col-span-2 text-center">Actions</div>
 
                         </div>
 
@@ -568,7 +568,7 @@ export default function MyProductsView() {
                             {myProducts.map((product) => (
                                 <div key={product.id} className="group relative grid grid-cols-12 gap-12 items-center border-b border-gray-100 last:border-0 py-3">
                                     {/* Product Info */}
-                                    <div className="col-span-12 md:col-span-4 flex gap-4 items-center">
+                                    <div className="col-span-12 md:col-span-3 flex gap-4 items-center">
                                         <div className="relative w-14 h-[70px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all border border-gray-100">
                                             <img
                                                 src={product.image}
@@ -598,25 +598,25 @@ export default function MyProductsView() {
 
 
                                     {/* Status Section */}
-                                    <div className="col-span-12 md:col-span-1 flex flex-col items-center justify-center">
+                                    <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center">
                                         <div className="flex flex-col items-center gap-1.5 w-full">
                                             {product.status === 'draft' && (
-                                                <span className="px-3 py-1 bg-yellow-50 text-yellow-600 text-sm font-normal uppercase tracking-wider border border-yellow-200 text-center w-full">DRAFT</span>
+                                                <span className="px-3 py-2 bg-yellow-50 text-yellow-600 text-sm font-normal uppercase tracking-wider border border-yellow-200 text-center w-full">DRAFT</span>
                                             )}
                                             {product.status === 'pending' && (
-                                                <span className="px-3 py-1 bg-yellow-50 text-yellow-600 text-sm font-normal uppercase tracking-wider border border-yellow-200 text-center w-full">PENDING</span>
+                                                <span className="px-3 py-2 bg-yellow-50 text-yellow-600 text-sm font-normal uppercase tracking-wider border border-yellow-200 text-center w-full">PENDING</span>
                                             )}
                                             {product.status === 'pending_deactivation' && (
-                                                <span className="px-3 py-1 bg-orange-50 text-orange-600 text-sm font-normal uppercase tracking-wider border border-orange-200 text-center w-full">DEACTIVATING</span>
+                                                <span className="px-3 py-2 bg-orange-50 text-orange-600 text-sm font-normal uppercase tracking-wider border border-orange-200 text-center w-full">DEACTIVATING</span>
                                             )}
                                             {product.status === 'pending_reactivation' && (
-                                                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-sm font-normal uppercase tracking-wider border border-emerald-200 text-center w-full">REACTIVATING</span>
+                                                <span className="px-3 py-2 bg-emerald-50 text-emerald-600 text-sm font-normal uppercase tracking-wider border border-emerald-200 text-center w-full">REACTIVATING</span>
                                             )}
                                             {product.status === 'approved' && product.is_active && (
-                                                <span className="px-3 py-1 bg-green-50 text-green-600 text-sm font-normal uppercase tracking-wider border border-green-200 text-center w-full">LIVE</span>
+                                                <span className="px-3 py-2 bg-green-50 text-green-600 text-sm font-normal uppercase tracking-wider border border-green-200 text-center w-full">LIVE</span>
                                             )}
                                             {((product.status === 'approved' && !product.is_active) || product.status === 'rejected') && (
-                                                <span className="px-3 py-1 bg-gray-50 text-gray-500 text-sm font-normal uppercase tracking-wider border border-gray-200 text-center w-full">DEACTIVATED</span>
+                                                <span className="px-3 py-2 bg-gray-50 text-gray-500 text-sm font-normal uppercase tracking-wider border border-gray-200 text-center w-full">DEACTIVATED</span>
                                             )}
                                         </div>
                                     </div>
@@ -643,7 +643,7 @@ export default function MyProductsView() {
                                     </div>
 
                                     {/* Actions Column */}
-                                    <div className="col-span-12 md:col-span-2 flex flex-col items-end justify-center px-4">
+                                    <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center px-4">
                                         {(product.status === 'approved' && product.is_active) ? (
                                             <button
                                                 onClick={(e) => {
