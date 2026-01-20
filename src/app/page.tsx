@@ -406,10 +406,10 @@ export default function Home() {
                         <div className="pb-3 flex justify-start md:justify-center flex-nowrap overflow-x-auto gap-[10px] px-4 scrollbar-hide">
                             <span
                                 onClick={() => router.push("/products")}
-                                className={`border border-black h-[26px] flex items-center justify-center px-[12px] text-[11px] cursor-pointer transition-all whitespace-nowrap 
+                                className={`border h-[26px] flex items-center justify-center px-[12px] text-[11px] cursor-pointer transition-all whitespace-nowrap 
                                     ${activeTab === "ALL"
-                                        ? "bg-black text-white"
-                                        : "bg-white text-black font-light"
+                                        ? "bg-black text-white border-black"
+                                        : "bg-white text-black font-light border-black-300"
                                     }`}
                                 style={{ fontFamily: 'Inter, sans-serif' }}
                             >
@@ -423,7 +423,7 @@ export default function Home() {
                                             router.push(cat.link_url);
                                         }
                                     }}
-                                    className={`border border-black h-[26px] flex items-center justify-center px-[12px] text-[11px] cursor-pointer transition-all whitespace-nowrap bg-white text-black font-light`}
+                                    className={`border border-black-300 h-[26px] flex items-center justify-center px-[12px] text-[11px] cursor-pointer transition-all whitespace-nowrap bg-white text-black font-light`}
                                     style={{ fontFamily: 'Inter, sans-serif' }}
                                 >
                                     {cat.name?.toUpperCase()}
