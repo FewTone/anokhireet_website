@@ -738,6 +738,11 @@ export default function LoginModal() {
                                     }}
                                     className="w-full outline-none border-none ml-2 bg-transparent"
                                     placeholder="Enter phone number"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && phone.length >= 10) {
+                                            handleLogin();
+                                        }
+                                    }}
                                 />
                             </div>
 
