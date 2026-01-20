@@ -18,6 +18,8 @@ interface UserProduct {
     product_id?: string;
     category?: string | string[];
     created_at: string;
+    status?: string;
+    is_active?: boolean;
 }
 
 interface User {
@@ -210,6 +212,8 @@ export default function ManageProductsPage() {
                         product_id: p.product_id ?? undefined,
                         category: facets, // Store facets instead of categories
                         created_at: p.created_at,
+                        status: p.status, // Add status
+                        is_active: p.is_active // Add is_active
                     } as UserProduct & { category: typeof facets };
                 });
 
@@ -220,6 +224,32 @@ export default function ManageProductsPage() {
             showPopup("Failed to load products", "error", "Error");
         } finally {
             setLoading(false);
+        }
+    };
+
+    // New function to handle status toggle
+    const handleToggleProductStatus = async (productId: string, newStatus: string) => {
+        try {
+            const isActive = newStatus === 'approved';
+
+            const { error } = await supabase
+                .from("products")
+                .update({
+                    status: newStatus,
+                    is_active: isActive
+                })
+                .eq("id", productId);
+
+            if (error) throw error;
+
+            showPopup(
+                `Product ${isActive ? 'published' : 'moved to drafts'} successfully!`,
+                "success"
+            );
+            loadUserProducts(); // Reload to reflect changes
+        } catch (error: any) {
+            console.error("Error updating product status:", error);
+            showPopup("Failed to update status", "error", "Error");
         }
     };
 
@@ -449,6 +479,9 @@ export default function ManageProductsPage() {
                                                 Product Details
                                             </th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                                Status
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                                 Types
                                             </th>
                                             <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -498,6 +531,11 @@ export default function ManageProductsPage() {
                                                 })
                                                 : 'N/A';
 
+                                            // Status logic
+                                            const isDraft = product.status === 'draft' || product.is_active === false;
+                                            const isLive = product.status === 'approved' && product.is_active === true;
+                                            const isRejected = product.status === 'rejected';
+
                                             return (
                                                 <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
                                                     <td className="px-6 py-4 whitespace-nowrap">
@@ -539,6 +577,27 @@ export default function ManageProductsPage() {
                                                         </div>
                                                     </td>
 
+                                                    {/* Status Column */}
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col gap-2">
+                                                            {isLive ? (
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                    <span className="w-2 h-2 mr-1.5 bg-green-400 rounded-full"></span>
+                                                                    Live
+                                                                </span>
+                                                            ) : isRejected ? (
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                                    Rejected
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                                    Draft
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Product Facets Columns (Types, Occasions, etc.) using same logic... */}
                                                     {/* Types Column */}
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col gap-1">
@@ -655,18 +714,38 @@ export default function ManageProductsPage() {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                        <div className="flex gap-2">
-                                                            <button
-                                                                onClick={() => router.push(`/admin/manage-products/${userId}/add?edit=${product.id}`)}
-                                                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                                                                title="Edit product"
-                                                            >
-                                                                Edit
-                                                            </button>
+                                                        <div className="flex flex-col gap-2">
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={() => router.push(`/admin/manage-products/${userId}/add?edit=${product.id}`)}
+                                                                    className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm"
+                                                                    title="Edit product"
+                                                                >
+                                                                    Edit
+                                                                </button>
+
+                                                                {isLive ? (
+                                                                    <button
+                                                                        onClick={() => handleToggleProductStatus(product.id, 'draft')}
+                                                                        className="px-3 py-1 bg-orange-500 text-white text-xs font-medium rounded-none hover:bg-orange-600 transition-all duration-200 shadow-sm"
+                                                                        title="Move to Draft (Deactivate)"
+                                                                    >
+                                                                        Unpublish
+                                                                    </button>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => handleToggleProductStatus(product.id, 'approved')}
+                                                                        className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-none hover:bg-green-700 transition-all duration-200 shadow-sm"
+                                                                        title="Make Live"
+                                                                    >
+                                                                        Publish
+                                                                    </button>
+                                                                )}
+                                                            </div>
                                                             <button
                                                                 onClick={() => handleDeleteProduct(product.id, product.name)}
-                                                                className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                                                                title="Delete product"
+                                                                className="px-3 py-1 bg-gray-100 text-red-600 text-xs font-medium rounded-none hover:bg-red-50 border border-gray-200 transition-all duration-200 text-center"
+                                                                title="Delete Permanently"
                                                             >
                                                                 Delete
                                                             </button>

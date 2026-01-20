@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { supabase } from "@/lib/supabase";
+import AddProductModal from "./AddProductModal";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface UserProduct {
     id: string;
@@ -29,6 +31,10 @@ export default function MyProductsView() {
     const [totalInquiries, setTotalInquiries] = useState<number>(0);
     const [totalViews, setTotalViews] = useState<number>(0);
     const [totalLikes, setTotalLikes] = useState<number>(0);
+
+    // Add Product Modal State
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -57,11 +63,17 @@ export default function MyProductsView() {
             }
         });
 
+        // Open modal if param exists
+        // Redirect if param exists
+        if (searchParams.get('addProduct') === 'true') {
+            router.push('/user/add-product');
+        }
+
         return () => {
             clearTimeout(timeoutId);
             subscription.unsubscribe();
         };
-    }, []);
+    }, [searchParams, router]);
 
     const loadUserAndProducts = async () => {
         try {
@@ -212,8 +224,24 @@ export default function MyProductsView() {
 
     return (
         <div className="w-full px-1 md:px-0">
-            <div className="mb-4 text-center hidden md:block">
+            <div className="mb-4 flex justify-between items-center hidden md:flex">
                 <h2 className="text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
+                <button
+                    onClick={() => router.push('/user/add-product')}
+                    className="bg-black text-white px-4 py-2 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                >
+                    Add Product
+                </button>
+            </div>
+
+            {/* Mobile Add Product Button */}
+            <div className="md:hidden mb-4">
+                <button
+                    onClick={() => router.push('/user/add-product')}
+                    className="w-full bg-black text-white px-4 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                >
+                    Add Product
+                </button>
             </div>
 
             {/* Summary Stats */}
@@ -255,6 +283,13 @@ export default function MyProductsView() {
             ) : myProducts.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-gray-200 bg-gray-50/30">
                     <h3 className="text-xl font-semibold text-gray-900 mb-2 uppercase tracking-wide">No products yet</h3>
+                    <p className="text-gray-500 mb-6 text-sm">Start by adding your first product.</p>
+                    <button
+                        onClick={() => router.push('/user/add-product')}
+                        className="bg-black text-white px-6 py-2.5 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                    >
+                        Add Product
+                    </button>
                 </div>
             ) : (
                 <div className="w-full">
@@ -273,12 +308,17 @@ export default function MyProductsView() {
                                 {/* Product Info */}
                                 <div className="col-span-10 md:col-span-4 flex gap-3 items-center">
                                     <div className="relative w-12 h-[60px] md:w-16 md:h-20 flex-shrink-0 overflow-hidden bg-gray-100 shadow-sm transition-all">
+                                        {/* Status Badge */}
                                         {product.status === 'draft' && (
-                                            <div className="absolute top-0 right-0 bg-yellow-400 text-white text-[10px] font-semibold px-2 py-0.5 z-10 uppercase tracking-wider">PENDING</div>
+                                            <div className="absolute top-0 right-0 left-0 bg-yellow-400 text-white text-[9px] font-bold py-0.5 text-center z-10 uppercase tracking-wider">PENDING</div>
                                         )}
                                         {product.status === 'rejected' && (
-                                            <div className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-semibold px-2 py-0.5 z-10 uppercase tracking-wider">REJECTED</div>
+                                            <div className="absolute top-0 right-0 left-0 bg-red-500 text-white text-[9px] font-bold py-0.5 text-center z-10 uppercase tracking-wider">REJECTED</div>
                                         )}
+                                        {(!product.status || product.status === 'approved') && (
+                                            <div className="absolute top-0 right-0 left-0 bg-green-500 text-white text-[9px] font-bold py-0.5 text-center z-10 uppercase tracking-wider">LIVE</div>
+                                        )}
+
                                         <img
                                             src={product.image}
                                             alt={product.name}
@@ -323,6 +363,8 @@ export default function MyProductsView() {
                     </div>
                 </div>
             )}
+
+            {/* Add Product Modal - Removed, using /user/add-product page */}
         </div>
     );
 }

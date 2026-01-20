@@ -40,6 +40,7 @@ interface UserProduct {
     category?: string;
     created_at: string;
     status?: string;
+    is_active?: boolean;
     admin_note?: string;
 }
 
@@ -855,6 +856,8 @@ To get these values:
                         product_id: p.product_id,
                         category: facets, // Store facets object instead of category string
                         created_at: p.created_at,
+                        status: p.status,
+                        is_active: p.is_active,
                     } as UserProduct & { category: typeof facets };
                 });
                 setUserProducts(mappedProducts);
@@ -3422,6 +3425,38 @@ To get these values:
                                     <span>Products</span>
                                 </button>
 
+                                <button
+                                    onClick={() => {
+                                        // Prevent scroll and maintain sidebar position
+                                        const currentScrollY = window.scrollY;
+                                        setActiveTab("drafts");
+                                        localStorage.setItem("adminActiveTab", "drafts");
+                                        router.replace("/admin?tab=drafts");
+                                        // Maintain scroll position to prevent sidebar shift
+                                        requestAnimationFrame(() => {
+                                            window.scrollTo(0, currentScrollY);
+                                        });
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "drafts"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        }`}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                                        <polyline points="10 9 9 9 8 9"></polyline>
+                                    </svg>
+                                    <span>Drafts</span>
+                                    {userProducts.filter(p => p.status === 'draft').length > 0 && (
+                                        <span className={`ml-auto text-xs font-bold px-2 py-0.5 rounded-full ${activeTab === "drafts" ? "bg-white text-black" : "bg-red-500 text-white"}`}>
+                                            {userProducts.filter(p => p.status === 'draft').length}
+                                        </span>
+                                    )}
+                                </button>
+
 
                                 <button
                                     onClick={() => {
@@ -4791,6 +4826,162 @@ To get these values:
                                                     </tbody>
                                                 </table>
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        {/* Drafts Tab */}
+                        {activeTab === "drafts" && (() => {
+                            // Filter products to show only drafts
+                            let filteredDrafts = userProducts.filter(p => p.status === 'draft');
+
+                            // Apply search query
+                            if (searchQuery.trim()) {
+                                const query = searchQuery.toLowerCase();
+                                filteredDrafts = filteredDrafts.filter(p => {
+                                    return p.name.toLowerCase().includes(query) ||
+                                        (p.product_id && p.product_id.toLowerCase().includes(query)) ||
+                                        users.find(u => u.id === p.user_id)?.name.toLowerCase().includes(query) ||
+                                        users.find(u => u.id === p.user_id)?.phone.includes(query);
+                                });
+                            }
+
+                            // Apply User Filter
+                            if (filterUserId !== 'all') {
+                                filteredDrafts = filteredDrafts.filter(p => p.user_id === filterUserId);
+                            }
+
+                            return (
+                                <div className="space-y-6">
+                                    <div className="flex justify-between items-center bg-white p-6 rounded-none border border-gray-200">
+                                        <div>
+                                            <h2 className="text-xl font-semibold uppercase tracking-wide text-gray-900">Draft Products</h2>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                Review and approve {filteredDrafts.length} pending products
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Filters */}
+                                    <div className="bg-white rounded-none border border-gray-200 p-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {/* Search */}
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">Search</label>
+                                                <input
+                                                    type="text"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                    placeholder="Search drafts..."
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                                                />
+                                            </div>
+                                            {/* User Filter */}
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-700 mb-1">User</label>
+                                                <select
+                                                    value={filterUserId}
+                                                    onChange={(e) => setFilterUserId(e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                                                >
+                                                    <option value="all">All Users</option>
+                                                    {users.map(user => (
+                                                        <option key={user.id} value={user.id}>{user.name} ({user.phone})</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Table */}
+                                    <div className="bg-white rounded-none border border-gray-200 overflow-hidden">
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full">
+                                                <thead className="bg-gray-50 border-b border-gray-200">
+                                                    <tr>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {filteredDrafts.map((product) => {
+                                                        const owner = users.find(u => u.id === (product as any).user_id);
+                                                        const primaryImage = (product as any).images && Array.isArray((product as any).images) && (product as any).images.length > 0
+                                                            ? ((product as any).primary_image_index !== undefined ? (product as any).images[(product as any).primary_image_index] : (product as any).images[0])
+                                                            : (product as any).image;
+
+                                                        return (
+                                                            <tr key={product.id} className="hover:bg-gray-50">
+                                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                                    <div className="relative w-12 h-16 bg-gray-100 rounded-none overflow-hidden">
+                                                                        {primaryImage && (
+                                                                            <Image
+                                                                                src={primaryImage}
+                                                                                alt={product.name}
+                                                                                fill
+                                                                                className="object-cover"
+                                                                                unoptimized
+                                                                                onError={(e) => {
+                                                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                                                }}
+                                                                            />
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                                                                    <div className="text-xs text-gray-500">ID: {(product as any).product_id || product.id}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <div className="text-sm text-gray-900">{owner ? owner.name : 'Unknown'}</div>
+                                                                    <div className="text-xs text-gray-500">{owner ? owner.phone : ''}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-sm font-medium text-gray-900">{product.price}</td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                        Draft
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                                    <div className="flex gap-2">
+                                                                        <button
+                                                                            onClick={() => handleApproveProduct(product)}
+                                                                            className="px-3 py-1 bg-green-600 text-white text-xs hover:bg-green-700 transition"
+                                                                        >
+                                                                            Approve
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleRejectProduct(product)}
+                                                                            className="px-3 py-1 bg-red-600 text-white text-xs hover:bg-red-700 transition"
+                                                                        >
+                                                                            Reject
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleEditUserProduct(product as any)}
+                                                                            className="text-blue-600 hover:text-blue-900 text-xs px-2"
+                                                                        >
+                                                                            Edit
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                    {filteredDrafts.length === 0 && (
+                                                        <tr>
+                                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                                                No draft products found.
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>

@@ -898,7 +898,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
             // Redirect back to manage products page after a short delay
             setTimeout(() => {
                 router.push(`/admin/manage-products/${userId}`);
-            }, 1500);
+            }, 500);
 
         } catch (error: any) {
             showPopup(error.message || "Failed to save product", "error", "Error");
@@ -1013,12 +1013,12 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     Rental Price *
                                 </label>
                                 <input
-                                    type="text"
+                                    type="number"
                                     required
                                     value={productFormData.price}
                                     onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
-                                    placeholder="e.g., ₹999"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                    placeholder="e.g., 999"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">The rental price for this outfit (required)</p>
                             </div>
