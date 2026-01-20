@@ -33,7 +33,6 @@ export default function ProfileView({
     userId,
     onUpdate
 }: ProfileViewProps) {
-    const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -48,6 +47,11 @@ export default function ProfileView({
     const [cities, setCities] = useState<any[]>([]);
     const [filteredCities, setFilteredCities] = useState<any[]>([]);
     const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+    const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+    const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+    const [activeGenderIndex, setActiveGenderIndex] = useState(-1);
+
+    const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
 
     useEffect(() => {
         setFormData({
@@ -56,6 +60,13 @@ export default function ProfileView({
             birthdate: userBirthdate || ""
         });
     }, [userLocation, userGender, userBirthdate]);
+
+    // Check if form data has changed from props
+    const hasChanges = (
+        (formData.location !== (userLocation || "")) ||
+        (formData.gender !== (userGender || "")) ||
+        (formData.birthdate !== (userBirthdate || ""))
+    );
 
     // Load cities
     useEffect(() => {
@@ -75,6 +86,7 @@ export default function ProfileView({
     const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setFormData({ ...formData, location: value });
+        setActiveSuggestionIndex(-1); // Reset selection on type
 
         if (value.trim()) {
             const filtered = cities.filter(city =>
@@ -87,9 +99,70 @@ export default function ProfileView({
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (!showCitySuggestions || filteredCities.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setActiveSuggestionIndex(prev =>
+                prev < filteredCities.length - 1 ? prev + 1 : prev
+            );
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActiveSuggestionIndex(prev => prev > 0 ? prev - 1 : prev);
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (activeSuggestionIndex >= 0 && activeSuggestionIndex < filteredCities.length) {
+                selectCity(filteredCities[activeSuggestionIndex].name);
+            }
+        } else if (e.key === "Escape") {
+            setShowCitySuggestions(false);
+        }
+    };
+
+    const handleGenderKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (!showGenderDropdown) {
+            if (e.key === "ArrowDown" || e.key === "Enter") {
+                setShowGenderDropdown(true);
+                setActiveGenderIndex(0);
+            }
+            return;
+        }
+
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setActiveGenderIndex(prev =>
+                prev < GENDER_OPTIONS.length - 1 ? prev + 1 : prev
+            );
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setActiveGenderIndex(prev => prev > 0 ? prev - 1 : prev);
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (activeGenderIndex >= 0 && activeGenderIndex < GENDER_OPTIONS.length) {
+                setFormData({ ...formData, gender: GENDER_OPTIONS[activeGenderIndex] });
+                setShowGenderDropdown(false);
+                setActiveGenderIndex(-1);
+            }
+        } else if (e.key === "Escape") {
+            setShowGenderDropdown(false);
+            setActiveGenderIndex(-1);
+        }
+    };
+
     const selectCity = (cityName: string) => {
         setFormData({ ...formData, location: cityName });
         setShowCitySuggestions(false);
+        setActiveSuggestionIndex(-1);
+    };
+
+    const handleCancel = () => {
+        setFormData({
+            location: userLocation || "",
+            gender: userGender || "",
+            birthdate: userBirthdate || ""
+        });
+        setStatusMessage(null);
     };
 
     // Clear status message after 3 seconds
@@ -161,7 +234,6 @@ export default function ProfileView({
 
             if (error) throw error;
 
-            setIsEditing(false);
             if (onUpdate) onUpdate();
             setStatusMessage({ type: 'success', text: 'Profile updated successfully!' });
         } catch (error) {
@@ -171,6 +243,8 @@ export default function ProfileView({
             setLoading(false);
         }
     };
+
+    const isValid = formData.location.trim().length > 0;
 
     return (
         <div className="w-full">
@@ -198,16 +272,15 @@ export default function ProfileView({
                                     )}
                                 </div>
 
-                                {isEditing && (
-                                    <button
-                                        onClick={() => fileInputRef.current?.click()}
-                                        disabled={uploadingAvatar}
-                                        className="absolute bottom-0 right-0 bg-black text-white px-3 py-1 text-xs rounded-full shadow-md hover:bg-gray-800 transition-colors z-10"
-                                        title="Change Profile Picture"
-                                    >
-                                        {uploadingAvatar ? "Uploading..." : "Edit"}
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={uploadingAvatar}
+                                    className="absolute bottom-0 right-0 bg-black text-white px-3 py-1 text-xs rounded-full shadow-md hover:bg-gray-800 transition-colors z-10"
+                                    title="Change Profile Picture"
+                                >
+                                    {uploadingAvatar ? "..." : "Edit"}
+                                </button>
+
                                 <input
                                     type="file"
                                     ref={fileInputRef}
@@ -245,8 +318,6 @@ export default function ProfileView({
                             </div>
                         </div>
 
-                        {/* Email Field REMOVED */}
-
                         {/* Editable Fields */}
                         <div className="relative">
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
@@ -257,13 +328,13 @@ export default function ProfileView({
                                 value={formData.location}
                                 onChange={handleLocationChange}
                                 onFocus={() => {
-                                    if (isEditing && formData.location) {
+                                    if (formData.location) {
                                         const filtered = cities.filter(city =>
                                             city.name.toLowerCase().includes(formData.location.toLowerCase())
                                         );
                                         setFilteredCities(filtered);
                                         setShowCitySuggestions(true);
-                                    } else if (isEditing) {
+                                    } else {
                                         setFilteredCities(cities); // Show all if empty
                                         setShowCitySuggestions(true);
                                     }
@@ -272,19 +343,18 @@ export default function ProfileView({
                                     // Delay hide to allow click
                                     setTimeout(() => setShowCitySuggestions(false), 200);
                                 }}
-                                disabled={!isEditing}
-                                placeholder={isEditing ? "Enter your city/location" : "Not provided"}
-                                className={`w-full text-gray-900 border-b pb-2 focus:outline-none transition-colors ${isEditing ? "border-black bg-white" : "border-gray-100 bg-transparent"
-                                    }`}
+                                onKeyDown={handleKeyDown}
+                                placeholder="Enter your city/location"
+                                className="w-full text-gray-900 border-b border-black bg-white pb-2 focus:outline-none transition-colors"
                             />
                             {/* City Suggestions */}
-                            {showCitySuggestions && isEditing && filteredCities.length > 0 && (
+                            {showCitySuggestions && filteredCities.length > 0 && (
                                 <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-lg max-h-48 overflow-y-auto mt-1 rounded text-sm">
-                                    {filteredCities.map((city) => (
+                                    {filteredCities.map((city, index) => (
                                         <li
                                             key={city.id}
                                             onClick={() => selectCity(city.name)}
-                                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-800"
+                                            className={`px-4 py-2 cursor-pointer text-gray-800 ${index === activeSuggestionIndex ? "bg-gray-100" : "hover:bg-gray-100"}`}
                                         >
                                             {city.name}
                                         </li>
@@ -294,100 +364,91 @@ export default function ProfileView({
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-6">
-                            <div>
+                            <div className="relative">
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                                     Gender
                                 </label>
-                                {isEditing ? (
-                                    <select
-                                        value={formData.gender}
-                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                                        className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none bg-white py-1"
-                                    >
-                                        <option value="">Select Gender</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                ) : (
-                                    <p className="text-gray-900 border-b border-gray-100 pb-2 h-8 flex items-center">
-                                        {formData.gender || "Not provided"}
-                                    </p>
+                                <input
+                                    type="text"
+                                    value={formData.gender}
+                                    readOnly
+                                    placeholder="Select Gender"
+                                    onClick={() => {
+                                        setShowGenderDropdown(!showGenderDropdown);
+                                        setActiveGenderIndex(-1);
+                                    }}
+                                    onKeyDown={handleGenderKeyDown}
+                                    // Use onBlur with delay to allow clicking items
+                                    onBlur={() => setTimeout(() => {
+                                        setShowGenderDropdown(false);
+                                        setActiveGenderIndex(-1);
+                                    }, 200)}
+                                    className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none bg-white cursor-pointer"
+                                />
+                                {showGenderDropdown && (
+                                    <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-lg mt-1 rounded text-sm">
+                                        {GENDER_OPTIONS.map((option, index) => (
+                                            <li
+                                                key={option}
+                                                onClick={() => {
+                                                    setFormData({ ...formData, gender: option });
+                                                    setShowGenderDropdown(false);
+                                                    setActiveGenderIndex(-1);
+                                                }}
+                                                className={`px-4 py-2 cursor-pointer text-gray-800 ${index === activeGenderIndex ? "bg-gray-100" : "hover:bg-gray-100"}`}
+                                            >
+                                                {option}
+                                            </li>
+                                        ))}
+                                    </ul>
                                 )}
                             </div>
 
-                            <div className={isEditing ? "custom-datepicker-wrapper" : ""}>
+                            <div className="custom-datepicker-wrapper">
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 pointer-events-none">
                                     Birthdate
                                 </label>
-                                {isEditing ? (
-                                    <DatePicker
-                                        selected={formData.birthdate ? new Date(formData.birthdate) : null}
-                                        onChange={(date: Date | null) => {
-                                            if (date) {
-                                                const dateString = date.toLocaleDateString('en-CA');
-                                                setFormData({ ...formData, birthdate: dateString });
-                                            } else {
-                                                setFormData({ ...formData, birthdate: "" });
-                                            }
-                                        }}
-                                        maxDate={new Date()}
-                                        dateFormat="dd/MM/yyyy"
-                                        placeholderText="dd/mm/yyyy"
-                                        className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none transition-colors h-9 bg-white cursor-pointer"
-                                        onKeyDown={(e) => e.preventDefault()}
-                                        showMonthDropdown
-                                        showYearDropdown
-                                        dropdownMode="select"
-                                    />
-                                ) : (
-                                    <p className="text-gray-900 border-b border-gray-100 pb-2 h-8 flex items-center">
-                                        {formData.birthdate ? new Date(formData.birthdate).toLocaleDateString('en-IN', {
-                                            day: 'numeric',
-                                            month: 'short',
-                                            year: 'numeric'
-                                        }) : "Not provided"}
-                                    </p>
-                                )}
+                                <DatePicker
+                                    selected={formData.birthdate ? new Date(formData.birthdate) : null}
+                                    onChange={(date: Date | null) => {
+                                        if (date) {
+                                            const dateString = date.toLocaleDateString('en-CA');
+                                            setFormData({ ...formData, birthdate: dateString });
+                                        } else {
+                                            setFormData({ ...formData, birthdate: "" });
+                                        }
+                                    }}
+                                    maxDate={new Date()}
+                                    dateFormat="dd/MM/yyyy"
+                                    placeholderText="dd/mm/yyyy"
+                                    className="w-full text-gray-900 border-b border-black pb-2 focus:outline-none transition-colors h-9 bg-white cursor-pointer"
+                                    onKeyDown={(e) => e.preventDefault()}
+                                    showMonthDropdown
+                                    showYearDropdown
+                                    dropdownMode="select"
+                                />
                             </div>
                         </div>
 
                         <div className="pt-4 flex flex-col gap-4">
-                            <div className="flex gap-4">
-                                {!isEditing ? (
+                            {hasChanges && (
+                                <div className="flex gap-4 fade-in">
                                     <button
-                                        onClick={() => setIsEditing(true)}
-                                        className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors"
+                                        onClick={handleCancel}
+                                        className="px-8 py-3 bg-white text-black border border-black text-sm font-semibold uppercase tracking-wide hover:bg-gray-50 transition-colors"
                                     >
-                                        Edit Profile
+                                        Cancel
                                     </button>
-                                ) : (
-                                    <>
-                                        <button
-                                            onClick={handleSave}
-                                            disabled={loading}
-                                            className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50"
-                                        >
-                                            {loading ? "Saving..." : "Save Changes"}
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                setIsEditing(false);
-                                                setFormData({
-                                                    location: userLocation || "",
-                                                    gender: userGender || "",
-                                                    birthdate: userBirthdate || ""
-                                                });
-                                                setStatusMessage(null);
-                                            }}
-                                            disabled={loading}
-                                            className="px-8 py-3 bg-gray-200 text-gray-900 text-sm font-semibold uppercase tracking-wide hover:bg-gray-300 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </>
-                                )}
-                            </div>
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={loading || !isValid}
+                                        className="px-8 py-3 bg-black text-white text-sm font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {loading ? "Saving..." : "Save Changes"}
+                                    </button>
+                                </div>
+                            )}
+
                             {statusMessage && (
                                 <div className={`text-sm ${statusMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
                                     {statusMessage.text}
