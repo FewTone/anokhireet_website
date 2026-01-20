@@ -27,7 +27,7 @@ export default function UserPage() {
     const [userBirthdate, setUserBirthdate] = useState("");
     const [userAvatar, setUserAvatar] = useState("");
     const [loading, setLoading] = useState(true);
-    const [activeView, setActiveView] = useState<View>("my-products");
+    const [activeView, setActiveView] = useState<View>("profile");
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -147,9 +147,9 @@ export default function UserPage() {
     };
 
     const navItems = [
+        { label: "PROFILE", id: "profile" as View },
         { label: "MY PRODUCTS", id: "my-products" as View },
         { label: "WISHLIST", id: "wishlist" as View },
-        { label: "PROFILE", id: "profile" as View },
         { label: "SETTINGS", id: "settings" as View },
     ];
 

@@ -228,7 +228,7 @@ export default function ProfileView({
                                     type="text"
                                     value={formatUserDisplayName(userName)}
                                     disabled
-                                    className="w-full text-gray-500 bg-gray-50 border-b border-gray-100 pb-2 focus:outline-none cursor-not-allowed"
+                                    className="w-full text-gray-900 bg-transparent border-b border-gray-100 pb-2 focus:outline-none"
                                 />
                             </div>
 
@@ -240,7 +240,7 @@ export default function ProfileView({
                                     type="text"
                                     value={userPhone || "Not provided"}
                                     disabled
-                                    className="w-full text-gray-500 bg-gray-50 border-b border-gray-100 pb-2 focus:outline-none cursor-not-allowed"
+                                    className="w-full text-gray-900 bg-transparent border-b border-gray-100 pb-2 focus:outline-none"
                                 />
                             </div>
                         </div>
