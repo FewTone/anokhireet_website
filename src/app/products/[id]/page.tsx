@@ -214,13 +214,28 @@ export default function ProductDetailPage() {
 
     // Check if user was redirected from login (inquiry parameter)
     useEffect(() => {
-        if (productId && isLoggedIn && searchParams.get('inquiry') === 'true') {
-            // User just logged in and returned - open inquiry modal
-            setTimeout(() => {
-                setShowInquiryModal(true);
-            }, 500);
+        // Strict consistency check: verify we have all data needed to make a decision
+        if (!productId || !isLoggedIn || searchParams.get('inquiry') !== 'true') return;
+
+        // Wait for product and user to be fully loaded
+        if (!product || !currentUser) return;
+
+        // Check if user is owner before opening modal
+        if (product.owner_user_id === currentUser.id) {
+            // Determine if this is the owner - if so, remove inquiry param
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('inquiry');
+            router.replace(`/products/${productId}?${params.toString()}`);
+            return;
         }
-    }, [productId, isLoggedIn, searchParams]);
+
+        // User just logged in and returned - open inquiry modal
+        const timer = setTimeout(() => {
+            setShowInquiryModal(true);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [productId, isLoggedIn, searchParams, currentUser, product]);
 
     // Check wishlist status
     useEffect(() => {
@@ -554,6 +569,11 @@ export default function ProductDetailPage() {
 
 
     const handleMakeInquiry = () => {
+        if (currentUser && product && product.owner_user_id === currentUser.id) {
+            alert("You cannot inquire about your own product.");
+            return;
+        }
+
         if (!isLoggedIn) {
             // Redirect to login page with return URL
             const returnUrl = `/products/${productId}?inquiry=true`;
