@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/lib/supabase";
 import { convertToWebPOptimized } from "@/lib/imageUtils";
+import { formatUserDisplayName } from "@/lib/utils";
 import dynamic from 'next/dynamic';
 import ReportModal from "@/components/ReportModal";
 
@@ -1155,7 +1156,7 @@ export default function ChatPage() {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between">
-                                                        <h3 className="text-[16px] font-normal text-[#111b21] truncate">{formatName(chat.other_user?.name || "User")}</h3>
+                                                        <h3 className="text-[16px] font-normal text-[#111b21] truncate">{formatUserDisplayName(chat.other_user?.name)}</h3>
                                                         {chat.last_message && <span className={`text-[12px] whitespace-nowrap ml-2 ${showUnreadBadge ? "text-[#667781] font-medium" : "text-[#667781]"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
                                                     </div>
                                                     <div className="flex items-center justify-between mt-0.5">
@@ -1205,7 +1206,9 @@ export default function ChatPage() {
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0 cursor-pointer flex flex-col justify-center">
-                                        <h3 className="text-[16px] font-medium text-[#111b21] leading-tight truncate">{selectedChat.other_user?.name}</h3>
+                                        <h3 className="text-[16px] font-medium text-[#111b21] leading-tight truncate">
+                                            {formatUserDisplayName(selectedChat.other_user?.name)}
+                                        </h3>
                                         {otherUserOnline && (
                                             <p className="text-[13px] text-gray-500 truncate mt-0.5 flex items-center gap-1">
                                                 <span className="w-2 h-2 rounded-full bg-[#667781]"></span>

@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import MobileHeader from "@/components/MobileHeader";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
+import { generateCustomProductId } from "@/lib/utils";
 
 // Helper to format file size
 const formatFileSize = (bytes: number): string => {
@@ -125,6 +126,7 @@ export default function AddProductPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [userId, setUserId] = useState<string | null>(null);
+    const [userCustomId, setUserCustomId] = useState<string | null>(null);
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
     // Form Data
@@ -166,12 +168,19 @@ export default function AddProductPage() {
         if (session?.user) {
             const { data: userData } = await supabase
                 .from("users")
-                .select("id")
+                .select("id, custom_id")
                 .or(`id.eq.${session.user.id},auth_user_id.eq.${session.user.id}`)
                 .maybeSingle();
 
             if (userData) {
                 setUserId(userData.id);
+                setUserCustomId(userData.custom_id);
+
+                if (!userData.custom_id) {
+                    alert("Please complete your profile (Select State) to generate your User ID before adding products.");
+                    router.push("/user?view=profile");
+                    return;
+                }
             } else {
                 console.error("User profile not found");
                 // Optionally handle case where profile doesn't exist yet
@@ -361,6 +370,22 @@ export default function AddProductPage() {
                 return;
             }
 
+            // 1.5 Get Product Count for ID generation
+            if (!userCustomId) {
+                setError("User ID not found. Please update your profile.");
+                setIsUploadingImage(false);
+                return;
+            }
+
+            const { count: productCount, error: countError2 } = await supabase
+                .from("products")
+                .select("*", { count: 'exact', head: true })
+                .eq("owner_user_id", userId);
+
+            if (countError2) throw countError2;
+
+            const customProductId = generateCustomProductId(userCustomId, productCount || 0);
+
             // 1. Upload Images
             const uploadedImageUrls: string[] = [];
             for (const file of userProductImageFiles) {
@@ -374,17 +399,19 @@ export default function AddProductPage() {
             }
 
             const primaryImageUrl = uploadedImageUrls[validPrimaryIndex];
+            // Keep the internal product_id as unique string, but also store custom_id
             const productId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
             // 2. Insert Product
             const originalPriceVal = userProductFormData.originalPrice ? parseFloat(userProductFormData.originalPrice) : null;
 
-            console.log("Inserting product with owner:", userId);
+            console.log("Inserting product with owner:", userId, "CustomID:", customProductId);
 
             const { data: insertedProduct, error: insertError } = await supabase
                 .from("products")
                 .insert({
                     product_id: productId,
+                    custom_id: customProductId,
                     name: userProductFormData.name,
                     title: userProductFormData.name,
                     price: userProductFormData.price,

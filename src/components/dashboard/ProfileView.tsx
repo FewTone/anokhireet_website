@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { formatUserDisplayName } from "@/lib/utils";
+import { formatUserDisplayName, generateCustomUserId, INDIAN_STATES } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 
 // Add custom styles for the date picker to match the theme
@@ -18,6 +18,8 @@ interface ProfileViewProps {
     userGender?: string;
     userBirthdate?: string;
     userAvatar?: string;
+    userState?: string;
+    userCustomId?: string;
     userId?: string;
     onUpdate?: () => void;
 }
@@ -30,6 +32,8 @@ export default function ProfileView({
     userGender,
     userBirthdate,
     userAvatar,
+    userState,
+    userCustomId,
     userId,
     onUpdate
 }: ProfileViewProps) {
@@ -41,7 +45,8 @@ export default function ProfileView({
     const [formData, setFormData] = useState({
         location: userLocation || "",
         gender: userGender || "",
-        birthdate: userBirthdate || ""
+        birthdate: userBirthdate || "",
+        state: userState || ""
     });
 
     const [cities, setCities] = useState<any[]>([]);
@@ -50,22 +55,27 @@ export default function ProfileView({
     const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
     const [showGenderDropdown, setShowGenderDropdown] = useState(false);
     const [activeGenderIndex, setActiveGenderIndex] = useState(-1);
+    const [showStateDropdown, setShowStateDropdown] = useState(false);
 
     const GENDER_OPTIONS = ['Male', 'Female', 'Other'];
+
+
 
     useEffect(() => {
         setFormData({
             location: userLocation || "",
             gender: userGender || "",
-            birthdate: userBirthdate || ""
+            birthdate: userBirthdate || "",
+            state: userState || ""
         });
-    }, [userLocation, userGender, userBirthdate]);
+    }, [userLocation, userGender, userBirthdate, userState]);
 
     // Check if form data has changed from props
     const hasChanges = (
         (formData.location !== (userLocation || "")) ||
         (formData.gender !== (userGender || "")) ||
-        (formData.birthdate !== (userBirthdate || ""))
+        (formData.birthdate !== (userBirthdate || "")) ||
+        (formData.state !== (userState || ""))
     );
 
     // Load cities
@@ -151,7 +161,18 @@ export default function ProfileView({
     };
 
     const selectCity = (cityName: string) => {
-        setFormData({ ...formData, location: cityName });
+        // Find city object to get state
+        const cityObj = cities.find(c => c.name.toLowerCase() === cityName.toLowerCase());
+
+        const updates: any = { location: cityName };
+
+        // Auto-populate state if available from city and not already set (or overwrite? Let's overwrite to ensure consistency)
+        // Only overwrite if state is available in city object
+        if (cityObj && cityObj.state) {
+            updates.state = cityObj.state;
+        }
+
+        setFormData(prev => ({ ...prev, ...updates }));
         setShowCitySuggestions(false);
         setActiveSuggestionIndex(-1);
     };
@@ -160,7 +181,8 @@ export default function ProfileView({
         setFormData({
             location: userLocation || "",
             gender: userGender || "",
-            birthdate: userBirthdate || ""
+            birthdate: userBirthdate || "",
+            state: userState || ""
         });
         setStatusMessage(null);
     };
@@ -223,13 +245,31 @@ export default function ProfileView({
         setStatusMessage(null);
 
         try {
+            const updates: any = {
+                location: formData.location,
+                gender: formData.gender,
+                birthdate: formData.birthdate || null,
+                state: formData.state
+            };
+
+            // Generate Custom ID if not present
+            if (!userCustomId) {
+                if (!formData.state) {
+                    setStatusMessage({ type: 'error', text: 'State is required to generate your ID.' });
+                    setLoading(false);
+                    return;
+                }
+
+                // Find state code
+                const stateObj = INDIAN_STATES.find(s => s.name === formData.state);
+                const stateCode = stateObj ? stateObj.code : formData.state.slice(0, 2).toUpperCase();
+
+                updates.custom_id = generateCustomUserId(userName, stateCode);
+            }
+
             const { error } = await supabase
                 .from("users")
-                .update({
-                    location: formData.location,
-                    gender: formData.gender,
-                    birthdate: formData.birthdate || null
-                })
+                .update(updates)
                 .eq("id", userId);
 
             if (error) throw error;
@@ -291,6 +331,18 @@ export default function ProfileView({
                             </div>
                         </div>
 
+                        {/* Custom ID Display - If exists */}
+                        {userCustomId && (
+                            <div className="bg-gray-50 p-4 border border-gray-200 rounded-none mb-2">
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                    Your Unique User ID
+                                </label>
+                                <div className="text-xl font-bold font-mono tracking-wider text-black">
+                                    {userCustomId}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Read-only Fields */}
                         <div className="grid md:grid-cols-2 gap-6">
                             <div>
@@ -319,48 +371,81 @@ export default function ProfileView({
                         </div>
 
                         {/* Editable Fields */}
-                        <div className="relative">
-                            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                                Location
-                            </label>
-                            <input
-                                type="text"
-                                value={formData.location}
-                                onChange={handleLocationChange}
-                                onFocus={() => {
-                                    if (formData.location) {
-                                        const filtered = cities.filter(city =>
-                                            city.name.toLowerCase().includes(formData.location.toLowerCase())
-                                        );
-                                        setFilteredCities(filtered);
-                                        setShowCitySuggestions(true);
-                                    } else {
-                                        setFilteredCities(cities); // Show all if empty
-                                        setShowCitySuggestions(true);
-                                    }
-                                }}
-                                onBlur={() => {
-                                    // Delay hide to allow click
-                                    setTimeout(() => setShowCitySuggestions(false), 200);
-                                }}
-                                onKeyDown={handleKeyDown}
-                                placeholder="Enter your city/location"
-                                className="w-full text-gray-900 border-b border-black bg-white pb-2 focus:outline-none transition-colors"
-                            />
-                            {/* City Suggestions */}
-                            {showCitySuggestions && filteredCities.length > 0 && (
-                                <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-lg max-h-48 overflow-y-auto mt-1 rounded text-sm">
-                                    {filteredCities.map((city, index) => (
-                                        <li
-                                            key={city.id}
-                                            onClick={() => selectCity(city.name)}
-                                            className={`px-4 py-2 cursor-pointer text-gray-800 ${index === activeSuggestionIndex ? "bg-gray-100" : "hover:bg-gray-100"}`}
-                                        >
-                                            {city.name}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="relative">
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    State *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.state}
+                                    readOnly={!!userCustomId} // Lock state if ID generated? Maybe allow edit but warn? User requirement implies ID depends on state created in 2026. Custom ID is usually permanent. Let's lock it if ID exists.
+                                    placeholder={userCustomId ? "" : "Select State"}
+                                    onClick={() => !userCustomId && setShowStateDropdown(!showStateDropdown)}
+                                    className={`w-full text-gray-900 border-b border-black pb-2 focus:outline-none bg-white ${!userCustomId ? "cursor-pointer" : "cursor-default text-gray-500 border-gray-200"}`}
+                                />
+                                {showStateDropdown && !userCustomId && (
+                                    <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-lg mt-1 rounded text-sm max-h-60 overflow-y-auto">
+                                        {INDIAN_STATES.map((state) => (
+                                            <li
+                                                key={state.code}
+                                                onClick={() => {
+                                                    setFormData({ ...formData, state: state.name });
+                                                    setShowStateDropdown(false);
+                                                }}
+                                                className="px-4 py-2 cursor-pointer text-gray-800 hover:bg-gray-100"
+                                            >
+                                                {state.name}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                                {!userCustomId && (
+                                    <p className="text-[10px] text-gray-400 mt-1">Required to generate your unique ID.</p>
+                                )}
+                            </div>
+
+                            <div className="relative">
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                    City / Location
+                                </label>
+                                <input
+                                    type="text"
+                                    value={formData.location}
+                                    onChange={handleLocationChange}
+                                    onFocus={() => {
+                                        if (formData.location) {
+                                            const filtered = cities.filter(city =>
+                                                city.name.toLowerCase().includes(formData.location.toLowerCase())
+                                            );
+                                            setFilteredCities(filtered);
+                                            setShowCitySuggestions(true);
+                                        } else {
+                                            setFilteredCities(cities);
+                                            setShowCitySuggestions(true);
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        setTimeout(() => setShowCitySuggestions(false), 200);
+                                    }}
+                                    onKeyDown={handleKeyDown}
+                                    placeholder="Enter your city"
+                                    className="w-full text-gray-900 border-b border-black bg-white pb-2 focus:outline-none transition-colors"
+                                />
+                                {showCitySuggestions && filteredCities.length > 0 && (
+                                    <ul className="absolute z-50 w-full bg-white border border-gray-200 shadow-lg max-h-48 overflow-y-auto mt-1 rounded text-sm">
+                                        {filteredCities.map((city, index) => (
+                                            <li
+                                                key={city.id}
+                                                onClick={() => selectCity(city.name)}
+                                                className={`px-4 py-2 cursor-pointer text-gray-800 ${index === activeSuggestionIndex ? "bg-gray-100" : "hover:bg-gray-100"}`}
+                                            >
+                                                {city.name}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
                         </div>
 
                         <div className="grid md:grid-cols-2 gap-6">

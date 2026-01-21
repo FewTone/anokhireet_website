@@ -50,7 +50,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit, userName }: Rep
             ></div>
 
             {/* Modal */}
-            <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
+            <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-none shadow-xl overflow-hidden">
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-4">
                         <h2 className="text-xl font-medium text-gray-900 uppercase tracking-tight">Report {userName}</h2>
@@ -73,7 +73,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit, userName }: Rep
                         {REASONS.map((reason) => (
                             <label
                                 key={reason}
-                                className={`flex items-center gap-3 p-3 border cursor-pointer transition-all rounded-md ${selectedReason === reason
+                                className={`flex items-center gap-3 p-3 border cursor-pointer transition-all rounded-none ${selectedReason === reason
                                     ? "border-gray-900 bg-gray-50"
                                     : "bg-white border-gray-200 text-gray-900 hover:border-gray-400"
                                     }`}
@@ -105,7 +105,7 @@ export default function ReportModal({ isOpen, onClose, onSubmit, userName }: Rep
                             <textarea
                                 value={details}
                                 onChange={(e) => setDetails(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-md text-sm focus:bg-gray-50 outline-none min-h-[100px] resize-none focus:border-gray-900 transition-colors"
+                                className="w-full p-3 border border-gray-300 rounded-none text-sm focus:bg-gray-50 outline-none min-h-[100px] resize-none focus:border-gray-900 transition-colors"
                                 placeholder="Please provide more information..."
                             ></textarea>
                         </div>
@@ -120,14 +120,14 @@ export default function ReportModal({ isOpen, onClose, onSubmit, userName }: Rep
                     <div className="flex gap-4">
                         <button
                             onClick={onClose}
-                            className="flex-1 px-4 py-3 text-xs font-medium uppercase tracking-widest text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-colors rounded-lg"
+                            className="flex-1 px-4 py-3 text-xs font-medium uppercase tracking-widest text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition-colors rounded-none"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleSubmit}
                             disabled={submitting}
-                            className={`flex-1 px-4 py-3 text-xs font-medium uppercase tracking-widest text-white transition-colors rounded-lg shadow-sm ${submitting ? "bg-gray-400 cursor-not-allowed" : "bg-gray-900 hover:bg-gray-800"}`}
+                            className={`flex-1 px-4 py-3 text-xs font-medium uppercase tracking-widest text-white transition-colors rounded-none shadow-sm ${submitting ? "bg-gray-400 cursor-not-allowed" : "bg-gray-900 hover:bg-gray-800"}`}
                         >
                             {submitting ? "Submitting..." : "Submit Report"}
                         </button>

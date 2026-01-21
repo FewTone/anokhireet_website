@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
-import { capitalizeFirstLetter } from "@/lib/utils";
+import { capitalizeFirstLetter, INDIAN_STATES } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import Popup from "@/components/Popup";
 import Image from "next/image";
@@ -187,6 +187,9 @@ function AdminContent() {
 
     // Facet management states
     const [activeFacetTab, setActiveFacetTab] = useState<"product_types" | "occasions" | "colors" | "materials" | "cities">("product_types");
+    const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
+    const [stateSearchQuery, setStateSearchQuery] = useState("");
+    const stateDropdownRef = useRef<HTMLDivElement>(null);
     const [productTypes, setProductTypes] = useState<Array<{ id: string; name: string; image_url: string | null; display_order: number; is_featured: boolean }>>([]);
     const [occasions, setOccasions] = useState<Array<{ id: string; name: string; image_url: string | null; display_order: number; is_featured: boolean }>>([]);
     const [colors, setColors] = useState<Array<{ id: string; name: string; hex: string | null; display_order: number }>>([]);
@@ -1460,14 +1463,19 @@ To get these values:
             return;
         }
 
+        if (!facetFormData.state.trim()) {
+            showPopup("Please select a State", "warning", "Validation Error");
+            return;
+        }
+
         try {
             if (editingFacet) {
                 const { error } = await supabase
                     .from("cities")
                     .update({
                         name: facetFormData.name.trim(),
-                        state: facetFormData.state.trim() || null,
-                        country: facetFormData.country.trim() || null,
+                        state: facetFormData.state.trim(),
+                        // country: Removed as requested
                         updated_at: new Date().toISOString()
                     })
                     .eq("id", editingFacet.id);
@@ -1479,8 +1487,8 @@ To get these values:
                     .from("cities")
                     .insert([{
                         name: facetFormData.name.trim(),
-                        state: facetFormData.state.trim() || null,
-                        country: facetFormData.country.trim() || null,
+                        state: facetFormData.state.trim(),
+                        // country: Removed as requested
                         display_order: cities.length
                     }]);
 
@@ -6454,28 +6462,70 @@ To get these values:
                                                 <>
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            State (optional)
+                                                            State *
                                                         </label>
-                                                        <input
-                                                            type="text"
-                                                            value={facetFormData.state}
-                                                            onChange={(e) => setFacetFormData({ ...facetFormData, state: e.target.value })}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
-                                                            placeholder="e.g., Gujarat"
-                                                        />
+                                                        <div className="relative" ref={stateDropdownRef}>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setIsStateDropdownOpen(!isStateDropdownOpen);
+                                                                    if (!isStateDropdownOpen) {
+                                                                        setStateSearchQuery("");
+                                                                    }
+                                                                }}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-none bg-white text-left flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-black"
+                                                            >
+                                                                <span className={facetFormData.state ? "text-gray-900" : "text-gray-500"}>
+                                                                    {facetFormData.state || "Select State"}
+                                                                </span>
+                                                                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                                </svg>
+                                                            </button>
+
+                                                            {isStateDropdownOpen && (
+                                                                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 shadow-lg max-h-60 flex flex-col">
+                                                                    <div className="p-2 border-b border-gray-200 sticky top-0 bg-white">
+                                                                        <input
+                                                                            type="text"
+                                                                            value={stateSearchQuery}
+                                                                            onChange={(e) => setStateSearchQuery(e.target.value)}
+                                                                            placeholder="Search state..."
+                                                                            className="w-full px-2 py-1 text-sm border border-gray-300 focus:outline-none focus:border-black"
+                                                                            autoFocus
+                                                                        />
+                                                                    </div>
+                                                                    <div className="overflow-y-auto flex-1">
+                                                                        {INDIAN_STATES.filter(state =>
+                                                                            state.name.toLowerCase().includes(stateSearchQuery.toLowerCase())
+                                                                        ).map((state) => (
+                                                                            <button
+                                                                                key={state.code}
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setFacetFormData({ ...facetFormData, state: state.name });
+                                                                                    setIsStateDropdownOpen(false);
+                                                                                    setStateSearchQuery("");
+                                                                                }}
+                                                                                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${facetFormData.state === state.name ? 'bg-gray-50 font-medium' : ''
+                                                                                    }`}
+                                                                            >
+                                                                                {state.name}
+                                                                            </button>
+                                                                        ))}
+                                                                        {INDIAN_STATES.filter(state =>
+                                                                            state.name.toLowerCase().includes(stateSearchQuery.toLowerCase())
+                                                                        ).length === 0 && (
+                                                                                <div className="px-4 py-2 text-sm text-gray-500 text-center">
+                                                                                    No states found
+                                                                                </div>
+                                                                            )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                            Country (optional)
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            value={facetFormData.country}
-                                                            onChange={(e) => setFacetFormData({ ...facetFormData, country: e.target.value })}
-                                                            className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
-                                                            placeholder="e.g., India"
-                                                        />
-                                                    </div>
+                                                    {/* Country field removed as requested */}
                                                 </>
                                             )}
 

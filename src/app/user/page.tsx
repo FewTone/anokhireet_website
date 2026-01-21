@@ -26,6 +26,8 @@ export default function UserPage() {
     const [userGender, setUserGender] = useState("");
     const [userBirthdate, setUserBirthdate] = useState("");
     const [userAvatar, setUserAvatar] = useState("");
+    const [userState, setUserState] = useState("");
+    const [userCustomId, setUserCustomId] = useState("");
     const [loading, setLoading] = useState(true);
     const [activeView, setActiveView] = useState<View>("profile");
     const router = useRouter();
@@ -98,11 +100,12 @@ export default function UserPage() {
                 return;
             }
 
+
             // Check user
             const { data: userData, error: userError } = await supabase
                 .from("users")
                 .select(`
-                    id, name, phone, auth_user_id, location, gender, birthdate, avatar_url,
+                    id, name, phone, auth_user_id, location, gender, birthdate, avatar_url, custom_id, state,
                     user_cities (
                         cities (
                             name
@@ -134,7 +137,10 @@ export default function UserPage() {
             setUserGender(userData.gender || "");
             setUserBirthdate(userData.birthdate || "");
             setUserAvatar(userData.avatar_url || "");
+            setUserState(userData.state || "");
+            setUserCustomId(userData.custom_id || "");
             setLoading(false);
+
         } catch (error) {
             console.error("Error loading user data:", error);
             try { await supabase.auth.signOut(); } catch (e) { }
@@ -196,6 +202,8 @@ export default function UserPage() {
                             userBirthdate={userBirthdate}
                             userAvatar={userAvatar}
                             userId={userId}
+                            userState={userState}
+                            userCustomId={userCustomId}
                             onUpdate={loadUserData}
                         />
                     </ContentWrapper>
