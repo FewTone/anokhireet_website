@@ -289,6 +289,12 @@ function AdminContent() {
     const [convertedWebPSize, setConvertedWebPSize] = useState<number>(0);
     const [convertedWebPBlob, setConvertedWebPBlob] = useState<Blob | null>(null);
     const [isConvertingImage, setIsConvertingImage] = useState(false);
+
+
+    // Generic Delete Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: 'city' | 'product_type' | 'occasion' | 'color' | 'material' } | null>(null);
+
     const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; name: string } | null>(null);
     const [deleteConfirmProduct, setDeleteConfirmProduct] = useState<{ id: string; name: string } | null>(null);
     const [approveConfirmProduct, setApproveConfirmProduct] = useState<{ id: string; name: string; status?: string } | null>(null);
@@ -1256,21 +1262,8 @@ To get these values:
     };
 
     const handleDeleteProductType = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete "${name}"? This will remove it from all products.`)) return;
-
-        try {
-            const { error } = await supabase
-                .from("product_types")
-                .delete()
-                .eq("id", id);
-
-            if (error) throw error;
-            showPopup("Product type deleted successfully!", "success");
-            loadProductTypes();
-        } catch (error: any) {
-            showPopup(error.message || "Failed to delete product type", "error", "Error");
-            console.error("Error deleting product type:", error);
-        }
+        setDeleteTarget({ id, name, type: 'product_type' });
+        setIsDeleteModalOpen(true);
     };
 
     // CRUD functions for Occasions
@@ -1332,21 +1325,8 @@ To get these values:
     };
 
     const handleDeleteOccasion = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete "${name}"? This will remove it from all products.`)) return;
-
-        try {
-            const { error } = await supabase
-                .from("occasions")
-                .delete()
-                .eq("id", id);
-
-            if (error) throw error;
-            showPopup("Occasion deleted successfully!", "success");
-            loadOccasions();
-        } catch (error: any) {
-            showPopup(error.message || "Failed to delete occasion", "error", "Error");
-            console.error("Error deleting occasion:", error);
-        }
+        setDeleteTarget({ id, name, type: 'occasion' });
+        setIsDeleteModalOpen(true);
     };
 
     // CRUD functions for Colors
@@ -1392,21 +1372,8 @@ To get these values:
     };
 
     const handleDeleteColor = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete "${name}"? This will remove it from all products.`)) return;
-
-        try {
-            const { error } = await supabase
-                .from("colors")
-                .delete()
-                .eq("id", id);
-
-            if (error) throw error;
-            showPopup("Color deleted successfully!", "success");
-            loadColors();
-        } catch (error: any) {
-            showPopup(error.message || "Failed to delete color", "error", "Error");
-            console.error("Error deleting color:", error);
-        }
+        setDeleteTarget({ id, name, type: 'color' });
+        setIsDeleteModalOpen(true);
     };
 
     // CRUD functions for Materials
@@ -1450,21 +1417,8 @@ To get these values:
     };
 
     const handleDeleteMaterial = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete "${name}"? This will remove it from all products.`)) return;
-
-        try {
-            const { error } = await supabase
-                .from("materials")
-                .delete()
-                .eq("id", id);
-
-            if (error) throw error;
-            showPopup("Material deleted successfully!", "success");
-            loadMaterials();
-        } catch (error: any) {
-            showPopup(error.message || "Failed to delete material", "error", "Error");
-            console.error("Error deleting material:", error);
-        }
+        setDeleteTarget({ id, name, type: 'material' });
+        setIsDeleteModalOpen(true);
     };
 
     // CRUD functions for Cities
@@ -1516,22 +1470,89 @@ To get these values:
         }
     };
 
-    const handleDeleteCity = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete "${name}"? This will remove it from all products.`)) return;
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
 
-        try {
-            const { error } = await supabase
-                .from("cities")
-                .delete()
-                .eq("id", id);
+        setIsDeleteModalOpen(false);
+        const { id, name, type } = deleteTarget;
+        setDeleteTarget(null);
 
-            if (error) throw error;
-            showPopup("City deleted successfully!", "success");
-            loadCities();
-        } catch (error: any) {
-            showPopup(error.message || "Failed to delete city", "error", "Error");
-            console.error("Error deleting city:", error);
+        if (type === 'city') {
+            try {
+                const { error } = await supabase
+                    .from("cities")
+                    .delete()
+                    .eq("id", id);
+
+                if (error) throw error;
+                showPopup("City deleted successfully!", "success");
+                loadCities();
+            } catch (error: any) {
+                showPopup(error.message || "Failed to delete city", "error", "Error");
+                console.error("Error deleting city:", error);
+            }
+        } else if (type === 'product_type') {
+            try {
+                const { error } = await supabase
+                    .from("product_types")
+                    .delete()
+                    .eq("id", id);
+
+                if (error) throw error;
+                showPopup("Product type deleted successfully!", "success");
+                loadProductTypes();
+            } catch (error: any) {
+                showPopup(error.message || "Failed to delete product type", "error", "Error");
+                console.error("Error deleting product type:", error);
+            }
+        } else if (type === 'occasion') {
+            try {
+                const { error } = await supabase
+                    .from("occasions")
+                    .delete()
+                    .eq("id", id);
+
+                if (error) throw error;
+                showPopup("Occasion deleted successfully!", "success");
+                loadOccasions();
+            } catch (error: any) {
+                showPopup(error.message || "Failed to delete occasion", "error", "Error");
+                console.error("Error deleting occasion:", error);
+            }
+        } else if (type === 'color') {
+            try {
+                const { error } = await supabase
+                    .from("colors")
+                    .delete()
+                    .eq("id", id);
+
+                if (error) throw error;
+                showPopup("Color deleted successfully!", "success");
+                loadColors();
+            } catch (error: any) {
+                showPopup(error.message || "Failed to delete color", "error", "Error");
+                console.error("Error deleting color:", error);
+            }
+        } else if (type === 'material') {
+            try {
+                const { error } = await supabase
+                    .from("materials")
+                    .delete()
+                    .eq("id", id);
+
+                if (error) throw error;
+                showPopup("Material deleted successfully!", "success");
+                loadMaterials();
+            } catch (error: any) {
+                showPopup(error.message || "Failed to delete material", "error", "Error");
+                console.error("Error deleting material:", error);
+            }
         }
+    };
+
+    const handleDeleteCity = async (id: string, name: string) => {
+        setDeleteTarget({ id, name, type: 'city' });
+        setIsDeleteModalOpen(true);
     };
 
     const toggleCategoryFeatured = async (categoryId: string, currentStatus: boolean) => {
@@ -6606,6 +6627,34 @@ To get these values:
                         />
 
                         {/* Facet Add/Edit Modal */}
+                        {isDeleteModalOpen && deleteTarget && (
+                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                                <div className="bg-white rounded-none max-w-sm w-full shadow-xl">
+                                    <div className="p-6">
+                                        <h3 className="text-xl font-semibold mb-2">Confirm Delete</h3>
+                                        <p className="text-gray-600 mb-6">
+                                            Are you sure you want to delete <span className="font-semibold">"{deleteTarget.name}"</span>?
+                                            This action cannot be undone.
+                                        </p>
+                                        <div className="flex gap-4">
+                                            <button
+                                                onClick={() => setIsDeleteModalOpen(false)}
+                                                className="flex-1 py-3 border border-gray-300 font-medium hover:bg-gray-50 transition-colors uppercase tracking-wider text-sm"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handleConfirmDelete}
+                                                className="flex-1 py-3 bg-red-600 text-white font-medium hover:bg-red-700 transition-colors uppercase tracking-wider text-sm shadow-md"
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {isFacetModalOpen && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                                 <div className="bg-white rounded-none max-w-md w-full max-h-[90vh] overflow-y-auto">
@@ -6645,7 +6694,7 @@ To get these values:
                                                     type="text"
                                                     required
                                                     value={facetFormData.name}
-                                                    onChange={(e) => setFacetFormData({ ...facetFormData, name: e.target.value })}
+                                                    onChange={(e) => setFacetFormData({ ...facetFormData, name: capitalizeFirstLetter(e.target.value) })}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                     placeholder={activeFacetTab === "product_types" ? "e.g., Choly, Western, Sari" : activeFacetTab === "occasions" ? "e.g., Navratri, Marriage" : activeFacetTab === "colors" ? "e.g., Red, Blue, Green" : activeFacetTab === "materials" ? "e.g., Cotton, Silk, Linen" : "e.g., Rajkot, Surat, Ahmedabad"}
                                                 />

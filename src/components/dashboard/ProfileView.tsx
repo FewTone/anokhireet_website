@@ -328,7 +328,7 @@ export default function ProfileView({
             <h2 className="text-2xl font-semibold mb-4 text-center uppercase tracking-wide hidden md:block">Profile Details</h2>
 
             <div className="max-w-2xl mx-auto">
-                <div className="bg-white border border-gray-100 rounded-lg p-8 w-full min-h-[400px]">
+                <div className="bg-white border border-gray-100 p-8 w-full min-h-[400px]">
                     <div className="space-y-6">
                         {/* Avatar Section */}
                         <div className="flex justify-center mb-6 relative">
@@ -370,11 +370,11 @@ export default function ProfileView({
 
                         {/* Custom ID Display - If exists */}
                         {userCustomId && (
-                            <div className="bg-gray-50 p-4 border border-gray-200 rounded-none mb-2">
+                            <div className="mb-6">
                                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
                                     Your Unique User ID
                                 </label>
-                                <div className="text-xl font-bold font-mono tracking-wider text-black">
+                                <div className="text-black pt-1 pb-2 border-b border-gray-100">
                                     {userCustomId}
                                 </div>
                             </div>
@@ -419,6 +419,7 @@ export default function ProfileView({
                                     readOnly={!!userCustomId} // Lock state if ID generated? Maybe allow edit but warn? User requirement implies ID depends on state created in 2026. Custom ID is usually permanent. Let's lock it if ID exists.
                                     placeholder={userCustomId ? "" : "Select State"}
                                     onClick={() => !userCustomId && setShowStateDropdown(!showStateDropdown)}
+                                    onChange={(e) => !userCustomId && setFormData({ ...formData, state: e.target.value })}
                                     className={`w-full text-gray-900 border-b border-black pb-2 focus:outline-none bg-white ${!userCustomId ? "cursor-pointer" : "cursor-default text-gray-500 border-gray-200"}`}
                                 />
                                 {showStateDropdown && !userCustomId && (

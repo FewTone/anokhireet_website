@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import ProductCard from "@/components/ProductCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { supabase } from "@/lib/supabase";
+import { generateCustomProductId } from "@/lib/utils";
 import Popup from "@/components/Popup";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -127,7 +128,7 @@ export default function MyProductsView() {
             const authUserId = session.user.id;
             const { data: userData, error: userError } = await supabase
                 .from("users")
-                .select("id, name, auth_user_id")
+                .select("id, name, auth_user_id, custom_id")
                 .or(`id.eq.${authUserId},auth_user_id.eq.${authUserId}`)
                 .maybeSingle();
 
@@ -150,7 +151,7 @@ export default function MyProductsView() {
                 });
             }
 
-            loadProducts(actualUserId);
+            loadProducts(actualUserId, userData.custom_id);
             loadInquiryStats(actualUserId);
         } catch (error) {
             console.error("Error loading user:", error);
@@ -158,7 +159,7 @@ export default function MyProductsView() {
         }
     };
 
-    const loadProducts = async (uid: string) => {
+    const loadProducts = async (uid: string, userCustomId?: string) => {
         try {
             setLoading(true);
 
@@ -186,6 +187,46 @@ export default function MyProductsView() {
                     setMyProducts([]);
                     setLoading(false);
                     return;
+                }
+            }
+
+            // Auto-heal: Backfill missing custom_ids
+            if (productsToSet.length > 0 && userCustomId) {
+                const productsMissingId = productsToSet.filter((p: any) => !p.custom_id || !p.custom_id.startsWith("AR-"));
+
+                if (productsMissingId.length > 0) {
+                    console.log(`Found ${productsMissingId.length} products missing custom_id. Auto-healing...`);
+
+                    // Find highest existing count
+                    const validIds = productsToSet
+                        .map((p: any) => p.custom_id)
+                        .filter((id: string) => id && id.startsWith("AR-"));
+
+                    let maxCount = 0;
+                    validIds.forEach((id: string) => {
+                        const parts = id.split('-');
+                        const lastPart = parts[parts.length - 1];
+                        const count = parseInt(lastPart, 10);
+                        if (!isNaN(count) && count > maxCount) {
+                            maxCount = count;
+                        }
+                    });
+
+                    // Update missing IDs
+                    for (let i = 0; i < productsMissingId.length; i++) {
+                        const product = productsMissingId[i];
+                        const newCustomId = generateCustomProductId(userCustomId, maxCount + i); // generateCustomProductId adds +1 internally, so pass current max + index
+
+                        // Update in DB
+                        await supabase
+                            .from('products')
+                            .update({ custom_id: newCustomId })
+                            .eq('id', product.id);
+
+                        // Update local object
+                        product.custom_id = newCustomId;
+                    }
+                    console.log("Auto-healing complete.");
                 }
             }
 
@@ -543,7 +584,7 @@ export default function MyProductsView() {
     return (
         <div className="w-full px-1 md:px-0">
             <div className="relative mb-3 md:mb-4 flex items-center justify-center min-h-[40px]">
-                <h2 className="text-[16px] leading-[24px] font-semibold text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>MY PRODUCTS</h2>
+                <h2 className="text-[16px] md:text-2xl leading-[24px] md:leading-normal font-semibold text-center uppercase tracking-normal md:tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>MY PRODUCTS</h2>
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:block">
                     <button
                         onClick={handleAddProduct}
@@ -937,31 +978,32 @@ export default function MyProductsView() {
                                             }
                                             window.open(`/user/edit-product/${product.id}`, '_blank');
                                         }} className="cursor-pointer">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <p className="text-sm text-gray-500 font-mono">ID: {product.custom_id || product.product_id || <span className="text-gray-400 italic">Pending</span>}</p>
+                                                {product.status === 'draft' && (
+                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-800 text-gray-100 uppercase tracking-wider">DRAFT</span>
+                                                )}
+                                                {product.status === 'pending' && (
+                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-900 text-amber-50 uppercase tracking-wider">REVIEWING</span>
+                                                )}
+                                                {product.status === 'pending_deactivation' && (
+                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-900 text-orange-50 uppercase tracking-wider">DEACTIVATING</span>
+                                                )}
+                                                {product.status === 'pending_reactivation' && (
+                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900 text-emerald-50 uppercase tracking-wider">REACTIVATING</span>
+                                                )}
+                                                {product.status === 'approved' && product.is_active && (
+                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-900 text-green-50 uppercase tracking-wider">LIVE</span>
+                                                )}
+                                                {product.status === 'approved' && !product.is_active && (
+                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-900 text-red-50 uppercase tracking-wider">INACTIVE</span>
+                                                )}
+                                                {product.status === 'rejected' && (
+                                                    <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-900 text-red-50 uppercase tracking-wider">REJECTED</span>
+                                                )}
+                                            </div>
                                             <h3 className="font-medium text-base text-gray-900 leading-tight mb-1 truncate pr-6">{product.name}</h3>
-                                            <p className="text-sm text-gray-500 font-mono mb-1">ID: {product.custom_id || product.product_id || <span className="text-gray-400 italic">Pending</span>}</p>
                                             <p className="text-base font-semibold text-gray-900">₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString('en-IN') : product.price}</p>
-                                        </div>
-
-                                        {/* Status Badge */}
-                                        <div className="mt-1">
-                                            {product.status === 'draft' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-800 text-gray-100 uppercase tracking-wider">DRAFT</span>
-                                            )}
-                                            {product.status === 'pending' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-900 text-amber-50 uppercase tracking-wider">REVIEWING</span>
-                                            )}
-                                            {product.status === 'pending_deactivation' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-900 text-orange-50 uppercase tracking-wider">DEACTIVATING</span>
-                                            )}
-                                            {product.status === 'pending_reactivation' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900 text-emerald-50 uppercase tracking-wider">REACTIVATING</span>
-                                            )}
-                                            {product.status === 'approved' && product.is_active && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-900 text-green-50 uppercase tracking-wider">LIVE</span>
-                                            )}
-                                            {((product.status === 'approved' && !product.is_active) || product.status === 'rejected') && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-900 text-red-50 uppercase tracking-wider">DEACTIVATED</span>
-                                            )}
                                         </div>
                                     </div>
 

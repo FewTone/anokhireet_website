@@ -180,15 +180,19 @@ export default function UserPage() {
         switch (activeView) {
             case "my-products":
                 return (
-                    <ContentWrapper title="My Products">
-                        <MyProductsView />
-                    </ContentWrapper>
+                    <div className="flex flex-col h-full bg-white">
+                        <div className="flex-1">
+                            <MyProductsView />
+                        </div>
+                    </div>
                 );
             case "wishlist":
                 return (
-                    <ContentWrapper title="Wish List">
-                        <WishlistView />
-                    </ContentWrapper>
+                    <div className="flex flex-col h-full bg-white">
+                        <div className="flex-1">
+                            <WishlistView />
+                        </div>
+                    </div>
                 );
             case "profile":
                 return (
@@ -255,14 +259,8 @@ export default function UserPage() {
                                 navItems={navItems}
                                 activeView={activeView}
                                 onNavigate={(id) => {
-                                    if (id === "wishlist") {
-                                        router.push("/wishlist");
-                                    } else if (id === "my-products") {
-                                        router.push("/my-products");
-                                    } else {
-                                        setActiveView(id as View);
-                                        router.push(`/user?view=${id}`, { scroll: false });
-                                    }
+                                    setActiveView(id as View);
+                                    router.push(`/user?view=${id}`, { scroll: false });
                                 }}
                             />
                         </div>

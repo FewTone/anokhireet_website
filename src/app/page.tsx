@@ -305,7 +305,7 @@ export default function Home() {
 
                     allProducts.push({
                         id: uniqueId, // Use unique string ID
-                        productId: p.product_id || p.id, // Use product_id if available, otherwise use id
+                        productId: p.custom_id || p.product_id || p.id, // Use custom_id (AR-...) if available
                         name: p.title || p.name,
                         price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
                         image: primaryImage, // Use primary image for home page
@@ -484,6 +484,7 @@ export default function Home() {
                                     product={product}
                                     disableHover={true}
                                     initialFavorite={favoritedIds ? favoritedIds.has(String(product.id)) : undefined}
+                                    useCompactPrice={true}
                                 />
                             ))}
                             {filteredProducts.length === 0 && (

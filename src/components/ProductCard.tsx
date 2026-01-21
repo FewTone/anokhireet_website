@@ -21,9 +21,10 @@ interface ProductProps {
     hideDetails?: boolean;
     disableHover?: boolean;
     initialFavorite?: boolean;
+    useCompactPrice?: boolean;
 }
 
-export default function ProductCard({ product, hideDetails = false, disableHover = false, initialFavorite }: ProductProps) {
+export default function ProductCard({ product, hideDetails = false, disableHover = false, initialFavorite, useCompactPrice = false }: ProductProps) {
     const [isFavorite, setIsFavorite] = useState(initialFavorite || false);
     const [isProcessing, setIsProcessing] = useState(false);
     const router = useRouter();
@@ -177,11 +178,18 @@ export default function ProductCard({ product, hideDetails = false, disableHover
     };
 
     // Format price to ensure it has ₹ symbol
-    const formatPrice = (price: string): string => {
+    const formatPrice = (price: string, compact: boolean = false): string => {
         if (!price || price.trim() === "") return "";
         const cleanPrice = price.replace(/[₹,]/g, '').trim();
         const number = parseFloat(cleanPrice);
+
         if (isNaN(number)) return `₹${cleanPrice}`;
+
+        // Compact formatting for MRP (if enabled and >= 1000)
+        if (compact && number >= 1000) {
+            return `₹${(number / 1000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}k`;
+        }
+
         return `₹${number.toLocaleString('en-IN')}`;
     };
 
@@ -257,14 +265,12 @@ export default function ProductCard({ product, hideDetails = false, disableHover
                             <div className="text-right">
                                 <p className="text-sm md:text-base font-normal text-neutral-900 whitespace-nowrap">
                                     <span className="text-xs text-neutral-500 uppercase tracking-wider mr-1">RENT</span>
-                                    {formatPrice(product.price)}
+                                    {formatPrice(product.price, false)}
                                 </p>
                                 {product.original_price && (
                                     <p className="text-xs text-neutral-500 mt-0.5">
                                         <span className="uppercase tracking-wider mr-1">MRP</span>
-                                        ₹{typeof product.original_price === 'number'
-                                            ? product.original_price.toLocaleString()
-                                            : parseFloat(String(product.original_price)).toLocaleString()}
+                                        {formatPrice(String(product.original_price), useCompactPrice)}
                                     </p>
                                 )}
                             </div>
