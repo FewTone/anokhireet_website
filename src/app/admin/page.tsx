@@ -5021,6 +5021,12 @@ To get these values:
                                                                             {product.status === 'pending_deactivation' ? 'Approve Deactivate' : product.status === 'pending_reactivation' ? 'Approve Live' : 'Approve'}
                                                                         </button>
                                                                         <button
+                                                                            onClick={() => handleEditUserProduct(product as any)}
+                                                                            className="px-3 py-1.5 bg-white text-blue-600 border border-blue-200 text-[10px] uppercase font-bold tracking-wider hover:bg-blue-50 transition"
+                                                                        >
+                                                                            Edit
+                                                                        </button>
+                                                                        <button
                                                                             onClick={() => handleRejectProduct(product)}
                                                                             className="px-3 py-1.5 bg-white text-red-600 border border-red-200 text-[10px] uppercase font-bold tracking-wider hover:bg-red-50 transition"
                                                                         >
