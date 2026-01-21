@@ -726,13 +726,15 @@ export default function LoginModal() {
                                 <input
                                     type="tel"
                                     pattern="[0-9]*"
-                                    maxLength={15}
+                                    maxLength={10}
                                     inputMode="numeric"
                                     value={phone}
                                     onChange={(e) => {
                                         let val = e.target.value.replace(/\D/g, "");
-                                        if (val.length > 15 && val.startsWith("91")) val = val.substring(2);
-                                        if (val.length > 15) val = val.slice(0, 15);
+                                        // If user pastes 918888888888, remove the 91
+                                        if (val.length > 10 && val.startsWith("91")) val = val.substring(2);
+                                        // Slice to 10 digits
+                                        if (val.length > 10) val = val.slice(0, 10);
                                         setPhone(val);
                                         setError("");
                                     }}
