@@ -274,7 +274,34 @@ export default function ProfileView({
                 const stateObj = INDIAN_STATES.find(s => s.name === formData.state);
                 const stateCode = stateObj ? stateObj.code : formData.state.slice(0, 2).toUpperCase();
 
-                updates.custom_id = generateCustomUserId(userName, stateCode);
+                // Generate unique custom ID
+                let isUnique = false;
+                let newCustomId = "";
+                let attempts = 0;
+
+                while (!isUnique && attempts < 5) {
+                    newCustomId = generateCustomUserId(userName, stateCode);
+
+                    // Check if exists
+                    const { data: existing } = await supabase
+                        .from("users")
+                        .select("id")
+                        .eq("custom_id", newCustomId)
+                        .maybeSingle();
+
+                    if (!existing) {
+                        isUnique = true;
+                    }
+                    attempts++;
+                }
+
+                if (!isUnique) {
+                    setStatusMessage({ type: 'error', text: 'Failed to generate unique ID. Please try again.' });
+                    setLoading(false);
+                    return;
+                }
+
+                updates.custom_id = newCustomId;
             }
 
             const { error } = await supabase
