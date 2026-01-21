@@ -697,22 +697,22 @@ export default function MyProductsView() {
                                     <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center">
                                         <div className="flex flex-col items-center gap-1.5 w-full">
                                             {product.status === 'draft' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500 text-white uppercase tracking-wider">DRAFT</span>
+                                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gray-800 text-gray-100 uppercase tracking-wider">DRAFT</span>
                                             )}
                                             {product.status === 'pending' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500 text-white uppercase tracking-wider">REVIEWING</span>
+                                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-900 text-amber-50 uppercase tracking-wider">REVIEWING</span>
                                             )}
                                             {product.status === 'pending_deactivation' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500 text-white uppercase tracking-wider">DEACTIVATING</span>
+                                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-900 text-orange-50 uppercase tracking-wider">DEACTIVATING</span>
                                             )}
                                             {product.status === 'pending_reactivation' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500 text-white uppercase tracking-wider">REACTIVATING</span>
+                                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900 text-emerald-50 uppercase tracking-wider">REACTIVATING</span>
                                             )}
                                             {product.status === 'approved' && product.is_active && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500 text-white uppercase tracking-wider">LIVE</span>
+                                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-900 text-green-50 uppercase tracking-wider">LIVE</span>
                                             )}
                                             {((product.status === 'approved' && !product.is_active) || product.status === 'rejected') && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-500 text-white uppercase tracking-wider">DEACTIVATED</span>
+                                                <span className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-900 text-red-50 uppercase tracking-wider">DEACTIVATED</span>
                                             )}
                                         </div>
                                     </div>

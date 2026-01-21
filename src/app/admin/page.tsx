@@ -4996,15 +4996,15 @@ To get these values:
                                                                 <td className="px-6 py-4 text-sm font-medium text-gray-900">{product.price}</td>
                                                                 <td className="px-6 py-4 text-center">
                                                                     {product.status === 'pending' ? (
-                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider bg-yellow-100 text-yellow-800 border border-yellow-200">
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-900 text-amber-50">
                                                                             New Listing
                                                                         </span>
                                                                     ) : product.status === 'pending_reactivation' ? (
-                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-900 text-emerald-50">
                                                                             Reactivation
                                                                         </span>
                                                                     ) : (
-                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-none text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-800 border border-orange-200">
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-orange-900 text-orange-50">
                                                                             Deactivation
                                                                         </span>
                                                                     )}
