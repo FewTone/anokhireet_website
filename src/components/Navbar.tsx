@@ -166,34 +166,34 @@ export default function Navbar() {
                     ? "bg-gradient-to-b from-black via-black to-transparent pt-4 pb-12"
                     : "bg-white border-b border-gray-100 pt-3 pb-2"
                     }`}>
-                    {!pathname?.startsWith("/chat") && (
-                        <div className="flex flex-col gap-3 w-full">
-                            {/* Top Row: Logo */}
-                            <div className="flex justify-center items-center">
-                                <Link href="/" className="flex items-center gap-2">
-                                    <Image
-                                        src="/Anokhi reet Logo.svg"
-                                        alt="Anokhi Reet Logo"
-                                        width={40}
-                                        height={40}
-                                        className={`w-10 h-10 object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
-                                        priority
-                                        suppressHydrationWarning
-                                    />
-                                    <Image
-                                        src="/anokhi-reet.svg"
-                                        alt="Anokhi Reet"
-                                        width={120}
-                                        height={18}
-                                        className={`h-4 w-auto object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
-                                        style={{ width: "auto" }}
-                                        priority
-                                        suppressHydrationWarning
-                                    />
-                                </Link>
-                            </div>
+                    <div className="flex flex-col gap-3 w-full">
+                        {/* Top Row: Logo - ALWAYS VISIBLE */}
+                        <div className="flex justify-center items-center">
+                            <Link href="/" className="flex items-center gap-2">
+                                <Image
+                                    src="/Anokhi reet Logo.svg"
+                                    alt="Anokhi Reet Logo"
+                                    width={40}
+                                    height={40}
+                                    className={`w-10 h-10 object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
+                                    priority
+                                    suppressHydrationWarning
+                                />
+                                <Image
+                                    src="/anokhi-reet.svg"
+                                    alt="Anokhi Reet"
+                                    width={120}
+                                    height={18}
+                                    className={`h-4 w-auto object-contain cursor-pointer ${isHomePage ? 'grayscale brightness-0 invert' : 'brightness-0'}`}
+                                    style={{ width: "auto" }}
+                                    priority
+                                    suppressHydrationWarning
+                                />
+                            </Link>
+                        </div>
 
-                            {/* Bottom Row: Search & Chat */}
+                        {/* Bottom Row: Search & Chat - HIDDEN IN CHAT */}
+                        {!pathname?.startsWith("/chat") && (
                             <div className="flex items-center gap-3 w-full">
                                 <form onSubmit={handleSearch} className={`flex flex-1 h-[40px] border text-sm items-center pl-3 rounded-none ${isHomePage ? 'border-white/30 backdrop-blur-sm bg-white/10' : 'border-[#ccc] bg-white'}`}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`opacity-70 ${isHomePage ? 'text-white' : 'text-gray-500'}`}>
@@ -243,8 +243,8 @@ export default function Navbar() {
                                     )}
                                 </Link>
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </nav>
         </>

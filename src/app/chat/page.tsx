@@ -1006,7 +1006,12 @@ export default function ChatPage() {
             return (
                 <div className="mb-1 w-full">
                     {replyContext}
-                    <div className="bg-gray-50 rounded p-2 mb-2 flex gap-3 border border-gray-200 overflow-hidden w-full max-w-[300px]">
+                    <a
+                        href={`/products/${cardData.product.id || cardData.product.productId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-gray-50 rounded p-2 mb-2 flex gap-3 border border-gray-200 overflow-hidden w-full max-w-[300px] hover:bg-gray-100 transition-colors cursor-pointer text-inherit no-underline block"
+                    >
                         {cardData.product.image && (
                             <div className="w-16 h-20 relative flex-shrink-0 bg-gray-200 rounded overflow-hidden">
                                 <img src={cardData.product.image} alt={cardData.product.name} className="w-full h-full object-cover" />
@@ -1017,7 +1022,7 @@ export default function ChatPage() {
                             <p className="text-[10px] text-gray-400 mt-0.5">ID: {cardData.product.productId}</p>
                             {cardData.product.price && <p className="text-xs font-medium mt-1 text-gray-900">Price: {cardData.product.price}</p>}
                         </div>
-                    </div>
+                    </a>
                 </div>
             );
         }
@@ -1073,8 +1078,8 @@ export default function ChatPage() {
 
     return (
         <div className="flex-1 flex flex-col h-[100dvh] bg-white">
-            {/* Hide Navbar on mobile when chat is selected */}
-            <div className={`${selectedChat ? 'hidden md:block' : 'block'}`}>
+            {/* Navbar - Always visible */}
+            <div className="block">
                 <Navbar />
             </div>
 
@@ -1151,7 +1156,7 @@ export default function ChatPage() {
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center justify-between">
                                                         <h3 className="text-[16px] font-normal text-[#111b21] truncate">{formatName(chat.other_user?.name || "User")}</h3>
-                                                        {chat.last_message && <span className={`text-[12px] whitespace-nowrap ml-2 ${showUnreadBadge ? "text-[#00a884] font-medium" : "text-[#667781]"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
+                                                        {chat.last_message && <span className={`text-[12px] whitespace-nowrap ml-2 ${showUnreadBadge ? "text-[#667781] font-medium" : "text-[#667781]"}`}>{formatChatTimestamp(chat.last_message.created_at)}</span>}
                                                     </div>
                                                     <div className="flex items-center justify-between mt-0.5">
                                                         <p className={`text-[14px] truncate flex-1 ${showUnreadBadge ? "text-[#111b21] font-medium" : "text-[#667781]"}`}>
@@ -1171,7 +1176,7 @@ export default function ChatPage() {
                                                                 return msg;
                                                             })()}
                                                         </p>
-                                                        {showUnreadBadge && <div className="bg-[#25D366] text-white text-[12px] font-bold min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 ml-2 shadow-sm">{chat.unread_count}</div>}
+                                                        {showUnreadBadge && <div className="bg-[#667781] text-white text-[12px] font-bold min-w-[20px] h-[20px] rounded-full flex items-center justify-center px-1 ml-2 shadow-sm">{chat.unread_count}</div>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1190,7 +1195,7 @@ export default function ChatPage() {
 
                         {selectedChat ? (
                             <>
-                                <div className="bg-[#f0f2f5] px-4 py-2.5 border-b border-gray-300 flex items-center gap-3 relative z-10 shadow-sm flex-shrink-0">
+                                <div className="bg-[#f0f2f5] px-4 py-2.5 border-b border-gray-300 flex items-center gap-3 relative z-[50] flex-shrink-0">
                                     <button onClick={handleBack} className="md:hidden p-1 -ml-1 text-gray-600 mr-1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7" /></svg></button>
                                     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center overflow-hidden cursor-pointer">
                                         {selectedChat.other_user?.avatar_url ? (
@@ -1199,18 +1204,14 @@ export default function ChatPage() {
                                             <span className="text-gray-600 font-semibold">{selectedChat.other_user?.name?.charAt(0).toUpperCase()}</span>
                                         )}
                                     </div>
-                                    <div className="flex-1 min-w-0 cursor-pointer">
+                                    <div className="flex-1 min-w-0 cursor-pointer flex flex-col justify-center">
                                         <h3 className="text-[16px] font-medium text-[#111b21] leading-tight truncate">{selectedChat.other_user?.name}</h3>
-                                        <p className="text-[13px] text-gray-500 truncate h-4 flex items-center gap-1">
-                                            {otherUserOnline ? (
-                                                <>
-                                                    <span className="w-2 h-2 rounded-full bg-[#00a884]"></span>
-                                                    <span>Online</span>
-                                                </>
-                                            ) : (
-                                                ""
-                                            )}
-                                        </p>
+                                        {otherUserOnline && (
+                                            <p className="text-[13px] text-gray-500 truncate mt-0.5 flex items-center gap-1">
+                                                <span className="w-2 h-2 rounded-full bg-[#667781]"></span>
+                                                <span>Online</span>
+                                            </p>
+                                        )}
                                     </div>
                                     {/* Action Buttons */}
                                     <div className="flex items-center gap-2 relative">
@@ -1228,18 +1229,22 @@ export default function ChatPage() {
                                         {isMenuOpen && (
                                             <>
                                                 <div
-                                                    className="fixed inset-0 z-10 cursor-default"
+                                                    className="fixed inset-0 z-[10000] cursor-default"
                                                     onClick={() => setIsMenuOpen(false)}
                                                 ></div>
-                                                <div className="absolute top-10 right-0 bg-white shadow-lg rounded-lg py-2 min-w-[160px] z-20 border border-gray-100">
+                                                <div className="absolute top-10 right-0 bg-white shadow-lg rounded-lg py-1 min-w-[180px] z-[10001] border border-gray-100 overflow-hidden ring-1 ring-black/5">
                                                     <button
-                                                        onClick={() => {
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            console.log("Report User clicked");
                                                             setIsReportModalOpen(true);
-                                                            setIsMenuOpen(false);
+                                                            // Close menu on next tick to allow event to finish
+                                                            setTimeout(() => setIsMenuOpen(false), 0);
                                                         }}
-                                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"
+                                                        className="w-full text-left px-4 py-3 text-[14px] text-red-600 hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center gap-3 font-medium cursor-pointer"
                                                     >
-                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                             <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
                                                             <line x1="4" y1="22" x2="4" y2="15" />
                                                         </svg>
@@ -1273,7 +1278,7 @@ export default function ChatPage() {
 
                                                         <div className={`relative max-w-[85%] md:max-w-[65%] px-2 py-1 shadow-[0_1px_0.5px_rgba(0,0,0,0.13)] group-hover:shadow-md transition-shadow 
                                                             ${index > 0 && messages[index - 1].sender_user_id === message.sender_user_id && !showDateSeparator ? "mt-0.5" : "mt-2"} 
-                                                            ${isSent ? "bg-green-100 text-black rounded-lg rounded-tr-none" : "bg-white text-black rounded-lg rounded-tl-none"}`}>
+                                                            ${isSent ? "bg-gray-100 text-gray-900 rounded-lg rounded-tr-none" : "bg-white text-gray-900 rounded-lg rounded-tl-none"}`}>
 
                                                             {/* Reply Context Menu (Visible on Hover) */}
                                                             <button
@@ -1289,7 +1294,7 @@ export default function ChatPage() {
                                                             </div>
 
                                                             <div className="flex items-center justify-end gap-1 mt-0.5 pl-4 pb-0.5 select-none">
-                                                                <span className={`text-[11px] min-w-fit ${isSent ? "text-gray-700" : "text-gray-500"}`}>{formatTime(message.created_at)}</span>
+                                                                <span className={`text-[11px] min-w-fit ${isSent ? "text-gray-500" : "text-gray-500"}`}>{formatTime(message.created_at)}</span>
                                                                 {isSent && renderMessageStatus(message)}
                                                             </div>
 
@@ -1297,7 +1302,7 @@ export default function ChatPage() {
                                                             {(!messages[index + 1] || messages[index + 1].sender_user_id !== message.sender_user_id) && (
                                                                 <div className={`absolute top-0 ${isSent ? "-right-[8px]" : "-left-[8px]"}`}>
                                                                     {isSent ? (
-                                                                        <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1"><path fill="#dcf8c6" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
+                                                                        <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1"><path fill="#f3f4f6" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
                                                                     ) : (
                                                                         <svg viewBox="0 0 8 13" height="13" width="8" preserveAspectRatio="xMidYMid slice" version="1.1" style={{ transform: "scaleX(-1)" }}><path fill="#ffffff" d="M5.188,0H0v11.193l6.467-8.625C7.526,1.156,6.958,0,5.188,0z"></path></svg>
                                                                     )}
@@ -1322,9 +1327,9 @@ export default function ChatPage() {
 
                                 {/* Reply Preview Banner */}
                                 {replyingTo && (
-                                    <div className="bg-[#f0f2f5] border-l-4 border-l-[#00a884] p-3 mx-4 mt-2 rounded-lg flex justify-between items-center relative z-20 shadow-sm mb-2">
+                                    <div className="bg-[#f0f2f5] border-l-4 border-l-gray-400 p-3 mx-4 mt-2 rounded-lg flex justify-between items-center relative z-20 shadow-sm mb-2">
                                         <div className="flex-1 overflow-hidden bg-white/50 p-2 rounded">
-                                            <div className="text-sm font-medium text-[#00a884] mb-0.5">
+                                            <div className="text-sm font-medium text-black mb-0.5">
                                                 {replyingTo.sender_user_id === currentUser.id ? "You" : replyingTo.sender?.name}
                                             </div>
                                             <div className="text-xs text-gray-600 truncate">
@@ -1362,7 +1367,7 @@ export default function ChatPage() {
                                         className="flex-1 bg-white px-4 py-2.5 rounded-lg text-[15px] outline-none border-none placeholder-gray-500 shadow-sm"
                                     />
 
-                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all ${messageInput.trim() ? "text-[#00a884] hover:bg-gray-200" : "text-[#54656f] opacity-50 cursor-not-allowed"}`}>
+                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all ${messageInput.trim() ? "text-gray-600 hover:bg-gray-200" : "text-[#54656f] opacity-50 cursor-not-allowed"}`}>
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
                                     </button>
                                 </div>
@@ -1371,7 +1376,7 @@ export default function ChatPage() {
                             <div className="flex-1 flex flex-col items-center justify-center bg-[#f0f2f5] relative overflow-hidden">
                                 <div className="absolute inset-0 bg-[#e5ddd5] opacity-30 z-0" style={{ backgroundImage: "url('https://repo.sourcelink.com/whatsapp-bg.png')", backgroundSize: "300px" }}></div>
                                 <div className="z-10 bg-white/80 p-8 rounded-2xl shadow-sm max-w-md text-center mx-4">
-                                    <div className="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
+                                    <div className="w-20 h-20 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-md">
                                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
                                     </div>
                                     <h2 className="text-3xl font-light text-gray-700 mb-4">Anokhi Reet Web</h2>
@@ -1416,8 +1421,3 @@ export default function ChatPage() {
         </div >
     );
 }
-
-// Add these styles to global CSS or a module if not present
-// .scrollbar-thin::-webkit-scrollbar { width: 6px; }
-// .scrollbar-thin::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.2); border-radius: 3px; }
-// .scrollbar-thin::-webkit-scrollbar-track { background-color: transparent; }
