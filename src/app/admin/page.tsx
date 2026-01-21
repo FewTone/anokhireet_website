@@ -266,6 +266,8 @@ function AdminContent() {
     });
     const [showAddCity, setShowAddCity] = useState(false);
     const [newCityName, setNewCityName] = useState("");
+    const [newCityState, setNewCityState] = useState("");
+
     const [userProductFormData, setUserProductFormData] = useState({
         name: "",
         price: "",
@@ -1107,6 +1109,11 @@ To get these values:
             return;
         }
 
+        if (!newCityState.trim()) {
+            showPopup("Please enter a state name", "warning", "Validation Error");
+            return;
+        }
+
         if (cities.some(c => c.name.toLowerCase() === newCityName.trim().toLowerCase())) {
             showPopup("This city already exists", "warning", "Duplicate");
             return;
@@ -1117,6 +1124,7 @@ To get these values:
                 .from("cities")
                 .insert([{
                     name: newCityName.trim(),
+                    state: newCityState.trim(),
                     display_order: cities.length
                 }])
                 .select()
@@ -1127,13 +1135,14 @@ To get these values:
             // Reload cities to get the updated list
             await loadCities();
 
-            // Automatically select the newly created city
+            // Automatically select the newly created city (clearing others for single select)
             setUserFormData((prev) => ({
                 ...prev,
-                cities: [...prev.cities, data.id]
+                cities: [data.id]
             }));
 
             setNewCityName("");
+            setNewCityState("");
             setShowAddCity(false);
             showPopup("City added and selected!", "success");
         } catch (error: any) {
@@ -2406,7 +2415,55 @@ To get these values:
         const { id: userId, name: userName } = deleteConfirmUser;
 
         try {
-            // First, delete all user products
+            // 1. Delete Reports involving the user (as reporter or reported)
+            const { error: reportsError } = await supabase
+                .from("reports")
+                .delete()
+                .or(`reporter_user_id.eq.${userId},reported_user_id.eq.${userId}`);
+
+            if (reportsError) {
+                console.error("Error deleting user reports:", reportsError);
+                // Continue even if reports fail, though it might cause issues later if FK exists
+            }
+
+            // 2. Delete Messages sent by the user
+            const { error: messagesError } = await supabase
+                .from("messages")
+                .delete()
+                .eq("sender_user_id", userId);
+
+            if (messagesError) {
+                console.error("Error deleting user messages:", messagesError);
+            }
+
+            // 3. Handle Inquiries and Chats
+            // First, find all inquiries where user is owner or renter
+            const { data: userInquiries, error: inquiriesFetchError } = await supabase
+                .from("inquiries")
+                .select("id")
+                .or(`owner_user_id.eq.${userId},renter_user_id.eq.${userId}`);
+
+            if (userInquiries && userInquiries.length > 0) {
+                const inquiryIds = userInquiries.map(i => i.id);
+
+                // Delete Chats associated with these inquiries
+                const { error: chatsError } = await supabase
+                    .from("chats")
+                    .delete()
+                    .in("inquiry_id", inquiryIds);
+
+                if (chatsError) console.error("Error deleting user chats:", chatsError);
+
+                // Delete the Inquiries themselves
+                const { error: inquiriesDeleteError } = await supabase
+                    .from("inquiries")
+                    .delete()
+                    .in("id", inquiryIds);
+
+                if (inquiriesDeleteError) console.error("Error deleting user inquiries:", inquiriesDeleteError);
+            }
+
+            // 4. Delete user products (Existing logic)
             const { error: productsError } = await supabase
                 .from("products")
                 .delete()
@@ -2417,7 +2474,7 @@ To get these values:
                 throw productsError;
             }
 
-            // Delete the user from users table
+            // 5. Delete the user from users table
             const { error: userError } = await supabase
                 .from("users")
                 .delete()
@@ -2428,11 +2485,8 @@ To get these values:
                 throw userError;
             }
 
-            // Optionally delete from Supabase Auth (admin can do this via Supabase dashboard if needed)
-            // Note: We don't delete from auth.users here as it requires admin privileges
-            // The user will remain in auth.users but won't be able to access the app
-
-            showPopup(`User "${userName}" and all their products have been deleted successfully!`, "success");
+            // User deleted successfully
+            showPopup(`User "${userName}" has been fully deleted.`, "success");
 
             // Close confirmation
             setDeleteConfirmUser(null);
@@ -5425,6 +5479,7 @@ To get these values:
                                                     setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
                                                     setShowAddCity(false);
                                                     setNewCityName("");
+                                                    setNewCityState("");
                                                 }}
                                                 className="text-gray-400 hover:text-gray-600"
                                             >
@@ -5504,24 +5559,6 @@ To get these values:
                                             </div>
 
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Email (Optional)
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    value={userFormData.email}
-                                                    onChange={(e) =>
-                                                        setUserFormData({ ...userFormData, email: e.target.value })
-                                                    }
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
-                                                    placeholder="user@example.com (optional)"
-                                                />
-                                                <p className="text-xs text-gray-500 mt-1">
-                                                    Email is optional, but recommended as an alternative login method.
-                                                </p>
-                                            </div>
-
-                                            <div>
                                                 <div className="flex items-center justify-between mb-1">
                                                     <label className="block text-sm font-medium text-gray-700">
                                                         From Where (Cities) *
@@ -5532,6 +5569,7 @@ To get these values:
                                                             setShowAddCity(!showAddCity);
                                                             if (showAddCity) {
                                                                 setNewCityName("");
+                                                                setNewCityState("");
                                                             }
                                                         }}
                                                         className="text-xs text-blue-600 hover:text-blue-800 font-medium"
@@ -5542,26 +5580,33 @@ To get these values:
 
                                                 {showAddCity && (
                                                     <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-none">
-                                                        <div className="flex gap-2">
+                                                        <div className="flex flex-col gap-2">
                                                             <input
                                                                 type="text"
                                                                 value={newCityName}
                                                                 onChange={(e) => setNewCityName(e.target.value)}
+                                                                placeholder="City Name"
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                            />
+                                                            <input
+                                                                type="text"
+                                                                value={newCityState}
+                                                                onChange={(e) => setNewCityState(e.target.value)}
                                                                 onKeyPress={(e) => {
                                                                     if (e.key === 'Enter') {
                                                                         e.preventDefault();
                                                                         handleAddNewCity();
                                                                     }
                                                                 }}
-                                                                placeholder="Enter new city name"
-                                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                                placeholder="State *"
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                             />
                                                             <button
                                                                 type="button"
                                                                 onClick={handleAddNewCity}
-                                                                className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
+                                                                className="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-colors text-sm"
                                                             >
-                                                                Add
+                                                                Add City
                                                             </button>
                                                         </div>
                                                     </div>
@@ -5578,61 +5623,37 @@ To get these values:
                                                                     key={city.id}
                                                                     className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 px-2 rounded-none"
                                                                 >
+                                                                    <div className={`w-4 h-4 border flex items-center justify-center rounded-full ${isChecked ? 'border-black' : 'border-gray-300'}`}>
+                                                                        {isChecked && <div className="w-2 h-2 bg-black rounded-full" />}
+                                                                    </div>
                                                                     <input
-                                                                        type="checkbox"
+                                                                        type="radio"
                                                                         checked={isChecked}
+                                                                        name="userCity"
                                                                         value={city.id}
-                                                                        onChange={(e) => {
-                                                                            const checked = e.target.checked;
-                                                                            const cityId = city.id;
-
-                                                                            setUserFormData((prev) => {
-                                                                                const currentCities = prev.cities || [];
-
-                                                                                if (checked) {
-                                                                                    // Add city if not already in array
-                                                                                    if (currentCities.includes(cityId)) {
-                                                                                        return prev;
-                                                                                    }
-                                                                                    return {
-                                                                                        ...prev,
-                                                                                        cities: [...currentCities, cityId]
-                                                                                    };
-                                                                                } else {
-                                                                                    // Remove city from array
-                                                                                    return {
-                                                                                        ...prev,
-                                                                                        cities: currentCities.filter(id => id !== cityId)
-                                                                                    };
-                                                                                }
-                                                                            });
+                                                                        onChange={() => {
+                                                                            setUserFormData(prev => ({
+                                                                                ...prev,
+                                                                                cities: [city.id]
+                                                                            }));
                                                                         }}
-                                                                        className="w-4 h-4 border-gray-300 rounded-none text-black focus:ring-2 focus:ring-black cursor-pointer"
+                                                                        className="hidden"
                                                                     />
-                                                                    <span className="text-sm text-gray-700 select-none">{city.name}</span>
+                                                                    <span className="text-sm text-gray-700 select-none">
+                                                                        {city.name}
+                                                                        {city.state && <span className="text-gray-400 text-xs ml-1">({city.state})</span>}
+                                                                    </span>
                                                                 </label>
                                                             );
                                                         })
                                                     )}
-                                                    {cities.length > 0 && userFormData.cities.length > 0 && (
-                                                        <div className="mt-2 pt-2 border-t border-gray-200">
-                                                            <p className="text-xs text-gray-600">
-                                                                Selected: {userFormData.cities.length} city{userFormData.cities.length !== 1 ? 'ies' : ''}
-                                                            </p>
-                                                        </div>
-                                                    )}
                                                 </div>
                                                 <p className="text-xs text-gray-500 mt-1">
-                                                    Select one or more cities where the user is from (e.g., Ahmedabad, Surat, Rajkot).
+                                                    Select the city where the user is from.
                                                 </p>
                                             </div>
 
-                                            <div className="bg-blue-50 border border-blue-200 rounded-none p-3 mt-4">
-                                                <p className="text-sm text-blue-800">
-                                                    <strong>Note:</strong> User will be created without authentication.
-                                                    They can log in later using their phone number or email.
-                                                </p>
-                                            </div>
+
 
                                             <div className="flex gap-4 pt-4">
                                                 <button

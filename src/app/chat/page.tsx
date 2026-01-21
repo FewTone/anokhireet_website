@@ -1310,7 +1310,7 @@ export default function ChatPage() {
                                                     className="fixed inset-0 z-[10000] cursor-default"
                                                     onClick={() => setIsMenuOpen(false)}
                                                 ></div>
-                                                <div className="absolute top-10 right-0 bg-white shadow-lg rounded-lg py-1 min-w-[180px] z-[10001] border border-gray-100 overflow-hidden ring-1 ring-black/5">
+                                                <div className="absolute top-10 right-0 bg-white shadow-lg rounded-none py-1 min-w-[180px] z-[10001] border border-gray-100 overflow-hidden ring-1 ring-black/5">
                                                     <button
                                                         type="button"
                                                         onClick={(e) => {
