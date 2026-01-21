@@ -433,8 +433,8 @@ export default function Home() {
                 </div>
 
                 {/* Section 4: New and Popular */}
-                <div className="mt-6 md:mt-8 pb-12 md:pb-12">
-                    <div className="sticky top-0 md:top-[70px] z-30 bg-white mb-0">
+                <div className="pb-12 md:pb-12">
+                    <div className="sticky top-0 md:top-[70px] z-30 bg-white mb-0 pt-8">
                         <h2 className="text-[16px] leading-[24px] font-semibold text-center uppercase tracking-normal mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
                             NEW AND POPULAR
                         </h2>
