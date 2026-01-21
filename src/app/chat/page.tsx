@@ -10,6 +10,7 @@ import { convertToWebPOptimized } from "@/lib/imageUtils";
 import { formatUserDisplayName } from "@/lib/utils";
 import dynamic from 'next/dynamic';
 import ReportModal from "@/components/ReportModal";
+import SuccessModal from "@/components/SuccessModal";
 
 interface Chat {
     id: string;
@@ -77,6 +78,7 @@ export default function ChatPage() {
     const [replyingTo, setReplyingTo] = useState<Message | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
 
@@ -116,22 +118,95 @@ export default function ChatPage() {
     useEffect(() => {
         const chatId = searchParams.get('id');
         if (chatId) {
-            // Only update if we have chats and the selection actually changes or is null
-            if (chats.length > 0) {
-                const chatToSelect = chats.find(c => c.id === chatId);
-                if (chatToSelect) {
-                    if (selectedChat?.id !== chatId) {
-                        setSelectedChat(chatToSelect);
-                    }
-                    // ALWAYS mark as read if URL matches, even if already selected
-                    markAsRead(chatId);
+            // Check if we have the chat in our list
+            const existingChat = chats.find(c => c.id === chatId);
+
+            if (existingChat) {
+                if (selectedChat?.id !== chatId) {
+                    setSelectedChat(existingChat);
                 }
+                markAsRead(chatId);
+            } else if (currentUser) {
+                // Chat ID in URL but not in list - likely Admin viewing reported chat
+                // OR user just clicked a link and list hasn't loaded yet
+                loadSpecificChat(chatId);
             }
         } else if (selectedChat) {
-            // Only clear if we currently have a selection but URL has no ID
             setSelectedChat(null);
         }
-    }, [chats, searchParams, selectedChat]);
+    }, [chats, searchParams, currentUser]);
+
+    const loadSpecificChat = async (chatId: string) => {
+        try {
+            const { data: chatData, error } = await supabase
+                .from("chats")
+                .select("*")
+                .eq("id", chatId)
+                .single();
+
+            if (error || !chatData) {
+                console.error("Error loading specific chat:", error);
+                return;
+            }
+
+            const { data: inquiry } = await supabase
+                .from("inquiries")
+                .select("*")
+                .eq("id", chatData.inquiry_id)
+                .single();
+
+            if (!inquiry) return;
+
+            let otherUserId = inquiry.owner_user_id === currentUser?.id
+                ? inquiry.renter_user_id
+                : inquiry.owner_user_id;
+
+            // If neither matches (Admin view), duplicate logic: show Reporter or Reported?
+            // For now, let's just show the Owner as "other user" if we are Admin
+            if (currentUser?.id !== inquiry.owner_user_id && currentUser?.id !== inquiry.renter_user_id) {
+                otherUserId = inquiry.owner_user_id;
+            }
+
+            const { data: otherUser } = await supabase
+                .from("users")
+                .select("id, name, phone, avatar_url")
+                .eq("id", otherUserId)
+                .single();
+
+            let product = null;
+            if (inquiry.product_id) {
+                const { data: productData } = await supabase
+                    .from("products")
+                    .select("id, title, name, price, product_media")
+                    .eq("id", inquiry.product_id)
+                    .single();
+
+                let image = null;
+                if (productData?.product_media && Array.isArray(productData.product_media) && productData.product_media.length > 0) {
+                    image = productData.product_media[0].url;
+                }
+                product = { ...productData, image };
+            }
+
+            const fullChat: Chat = {
+                ...chatData,
+                inquiry: { ...inquiry, product: product || null },
+                other_user: otherUser || { id: otherUserId, name: "Unknown User" },
+                unread_count: 0
+            };
+
+            // Add to chats list to prevent re-fetching and allow switching back
+            setChats(prev => {
+                if (prev.find(c => c.id === fullChat.id)) return prev;
+                return [fullChat, ...prev];
+            });
+
+            setSelectedChat(fullChat);
+
+        } catch (error) {
+            console.error("Error loading specific chat details:", error);
+        }
+    };
 
     // Handle chat selection (URL driven + Immediate State)
     const handleChatSelect = (chat: Chat) => {
@@ -1414,12 +1489,19 @@ export default function ChatPage() {
                         if (error) throw error;
 
                         setIsReportModalOpen(false);
-                        alert("Thank you for your report. Our team will review this shortly.");
+                        setIsSuccessModalOpen(true);
                     } catch (error) {
                         console.error("Error submitting report:", error);
                         alert("Failed to submit report. Please try again.");
                     }
                 }}
+            />
+
+            <SuccessModal
+                isOpen={isSuccessModalOpen}
+                onClose={() => setIsSuccessModalOpen(false)}
+                title="Report Submitted"
+                message="Thank you for your report. Our team will review this shortly."
             />
         </div >
     );

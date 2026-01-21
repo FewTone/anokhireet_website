@@ -946,8 +946,8 @@ To get these values:
                 .from("reports")
                 .select(`
                     *,
-                    reporter:reporter_user_id(name),
-                    reported:reported_user_id(name)
+                    reporter:users!fk_reports_reporter(name),
+                    reported:users!fk_reports_reported(name)
                 `)
                 .order("created_at", { ascending: false });
 
