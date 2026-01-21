@@ -13,6 +13,7 @@ export default function Navbar() {
     const isHomePage = pathname === "/";
     const [searchQuery, setSearchQuery] = useState("");
     const unreadCount = useTotalUnreadCount();
+    const isProfileSection = pathname?.startsWith("/user") || pathname?.startsWith("/wishlist") || pathname?.startsWith("/my-products");
 
 
     // Initialize search query from URL if on products page
@@ -166,7 +167,7 @@ export default function Navbar() {
                     }`}>
                     <div className="flex flex-col gap-3 w-full">
                         {/* Top Row: Logo - ALWAYS VISIBLE */}
-                        <div className="flex justify-center items-center">
+                        <div className="flex justify-center items-center relative">
                             <Link href="/" className="flex items-center gap-2">
                                 <Image
                                     src="/Anokhi reet Logo.svg"
@@ -188,10 +189,33 @@ export default function Navbar() {
                                     suppressHydrationWarning
                                 />
                             </Link>
+
+                            {/* Chat Icon - VISIBLE HERE ONLY ON PROFILE PAGES */}
+                            {isProfileSection && (
+                                <Link href="/chat" className="absolute right-0 p-2 text-black">
+                                    <svg
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                    </svg>
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-1 right-0.5 bg-black text-white text-[10px] font-bold min-w-[16px] h-[16px] flex items-center justify-center rounded-full px-1 border border-white">
+                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
                         </div>
 
-                        {/* Bottom Row: Search & Chat - HIDDEN IN CHAT */}
-                        {!pathname?.startsWith("/chat") && (
+                        {/* Bottom Row: Search & Chat - HIDDEN ON PROFILE PAGES & CHAT */}
+                        {!pathname?.startsWith("/chat") && !isProfileSection && (
                             <div className="flex items-center gap-3 w-full">
                                 <form onSubmit={handleSearch} className={`flex flex-1 h-[40px] border text-sm items-center pl-3 rounded-none ${isHomePage ? 'border-white/30 backdrop-blur-sm bg-white/10' : 'border-[#ccc] bg-white'}`}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className={`opacity-70 ${isHomePage ? 'text-white' : 'text-gray-500'}`}>

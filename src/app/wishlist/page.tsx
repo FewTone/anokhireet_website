@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import MobileHeader from "@/components/MobileHeader";
-import MyProductsView from "@/components/dashboard/MyProductsView";
+import WishlistView from "@/components/dashboard/WishlistView";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 
-export default function MyProductsPage() {
+export default function WishlistPage() {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
@@ -26,6 +26,7 @@ export default function MyProductsPage() {
         checkAuth();
     }, [router]);
 
+
     if (loading) {
         return (
             <div className="min-h-screen bg-white flex items-center justify-center">
@@ -41,10 +42,10 @@ export default function MyProductsPage() {
             <Navbar />
 
             <main className="flex-1 pt-0 md:pt-24 pb-20 px-0 md:px-4 max-w-7xl mx-auto w-full">
-                {/* MyProductsView handles its own padding/layout nicely usually, but let's ensure mobile padding is handled if the component expects it from parent */}
-                <div className="w-full">
-                    <MyProductsView />
+                <div className="md:hidden mt-4">
+                    {/* Mobile specific padding/margin adjustment if needed */}
                 </div>
+                <WishlistView />
             </main>
 
             <div className="hidden md:block">
@@ -54,4 +55,3 @@ export default function MyProductsPage() {
         </div>
     );
 }
-
