@@ -925,9 +925,9 @@ export default function MyProductsView() {
                                     {/* Info */}
                                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                                         <div onClick={() => window.open(`/user/edit-product/${product.id}`, '_blank')} className="cursor-pointer">
-                                            <h3 className="font-medium text-sm text-gray-900 leading-tight mb-1 truncate pr-6">{product.name}</h3>
-                                            <p className="text-xs text-gray-500 font-mono mb-1">ID: {product.custom_id || product.product_id || <span className="text-gray-400 italic">Pending</span>}</p>
-                                            <p className="text-sm font-semibold text-gray-900">₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString('en-IN') : product.price}</p>
+                                            <h3 className="font-medium text-base text-gray-900 leading-tight mb-1 truncate pr-6">{product.name}</h3>
+                                            <p className="text-sm text-gray-500 font-mono mb-1">ID: {product.custom_id || product.product_id || <span className="text-gray-400 italic">Pending</span>}</p>
+                                            <p className="text-base font-semibold text-gray-900">₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString('en-IN') : product.price}</p>
                                         </div>
 
                                         {/* Status Badge */}
