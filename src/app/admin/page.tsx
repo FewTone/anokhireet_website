@@ -2254,43 +2254,25 @@ To get these values:
         const hasPhone = digitsOnly.length > 0;
         let userPhone: string | null = null;
 
-        // Get Email
-        // Email is valid if it's not empty and matches regex
-        const rawEmail = userFormData.email?.trim() || "";
-        const hasEmail = rawEmail.length > 0;
-        let userEmail: string | null = null;
-
-        // 1. Check if at least one contact method is provided
-        if (!hasPhone && !hasEmail) {
-            showPopup("Please provide either a phone number or an email address (or both).", "error", "Validation Error");
+        // Validate Phone (Mandatory now)
+        if (!hasPhone) {
+            showPopup("Phone number is required", "error", "Validation Error");
             return;
         }
 
-        // 2. Validate Phone (if provided)
-        if (hasPhone) {
-            if (!rawPhone.startsWith('+91')) {
-                showPopup("Phone number must start with +91", "error", "Validation Error");
-                return;
-            }
-            if (digitsOnly.length !== 10) {
-                showPopup("Phone number must be exactly 10 digits after +91", "error", "Validation Error");
-                return;
-            }
-            if (!/^\d+$/.test(digitsOnly)) {
-                showPopup("Phone number must contain only numbers", "error", "Validation Error");
-                return;
-            }
-            userPhone = rawPhone;
+        if (!rawPhone.startsWith('+91')) {
+            showPopup("Phone number must start with +91", "error", "Validation Error");
+            return;
         }
-
-        // 3. Validate Email (if provided)
-        if (hasEmail) {
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
-                showPopup("Please enter a valid email address", "error", "Validation Error");
-                return;
-            }
-            userEmail = rawEmail;
+        if (digitsOnly.length !== 10) {
+            showPopup("Phone number must be exactly 10 digits after +91", "error", "Validation Error");
+            return;
         }
+        if (!/^\d+$/.test(digitsOnly)) {
+            showPopup("Phone number must contain only numbers", "error", "Validation Error");
+            return;
+        }
+        userPhone = rawPhone;
 
         // Validate cities
         if (!userFormData.cities || userFormData.cities.length === 0) {
@@ -2306,15 +2288,10 @@ To get these values:
                     const { data: conflict } = await supabase.from("users").select("id").eq("phone", userPhone).neq("id", editingUser.id).maybeSingle();
                     if (conflict) { showPopup("Phone number already exists for another user", "error", "Validation Error"); return; }
                 }
-                if (userEmail && userEmail !== editingUser.email) {
-                    const { data: conflict } = await supabase.from("users").select("id").eq("email", userEmail).neq("id", editingUser.id).maybeSingle();
-                    if (conflict) { showPopup("Email already exists for another user", "error", "Validation Error"); return; }
-                }
 
                 const userData = {
                     name: fullName,
                     phone: userPhone,
-                    email: userEmail,
                 };
 
                 // Update
@@ -2336,25 +2313,18 @@ To get these values:
             }
 
             // Create New User
-            // Check if existing user (by phone or email)
+            // Check if existing user (by phone)
             let existingUser = null;
             if (userPhone) {
                 const { data } = await supabase.from("users").select("*").eq("phone", userPhone).maybeSingle();
                 existingUser = data;
             }
-            if (!existingUser && userEmail) {
-                const { data } = await supabase.from("users").select("*").eq("email", userEmail).maybeSingle();
-                existingUser = data;
-            }
 
             if (existingUser) {
-                // Existing user logic - Update existing
-                // Merge logic: Don't overwrite existing info if new info is null, but if new info is present, use it.
-
+                // Existing user logic - Update name if needed
                 const userData = {
                     name: fullName,
                     phone: userPhone || existingUser.phone,
-                    email: userEmail || existingUser.email
                 };
 
                 const { data: updateData, error: updateError } = await supabase.from("users").update(userData).eq("id", existingUser.id).select().single();
@@ -2367,36 +2337,40 @@ To get these values:
                     await supabase.from("user_cities").insert(userFormData.cities.map(cityId => ({ user_id: finalUserId, city_id: cityId })));
                 }
 
-                showPopup("User information updated successfully!", "success");
+                showPopup("User created successfully (merged with existing phone record)!", "success");
+                setIsUserModalOpen(false);
+                setEditingUser(null);
+                setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
+                await loadUsers();
+            } else {
+                // Create completely new user
+                const userId = crypto.randomUUID();
+                const userData = {
+                    id: userId,
+                    name: fullName,
+                    phone: userPhone,
+                };
+
+                const { error: userError } = await supabase.from("users").insert([userData]);
+                if (userError) {
+                    throw userError;
+                }
+
+                // Insert cities
+                if (userFormData.cities.length > 0) {
+                    await supabase.from("user_cities").insert(
+                        userFormData.cities.map(cityId => ({
+                            user_id: userId,
+                            city_id: cityId
+                        }))
+                    );
+                }
+
+                showPopup("User created successfully!", "success");
                 setIsUserModalOpen(false);
                 setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
                 await loadUsers();
-                return;
             }
-
-            // Insert New User
-            const userId = crypto.randomUUID();
-            const userData = {
-                id: userId,
-                name: fullName,
-                phone: userPhone,
-                email: userEmail,
-            };
-
-            const { error: userError } = await supabase.from("users").insert([userData]);
-            if (userError) {
-                throw userError;
-            }
-
-            // Cities
-            if (userFormData.cities.length > 0) {
-                await supabase.from("user_cities").insert(userFormData.cities.map(cityId => ({ user_id: userId, city_id: cityId })));
-            }
-            showPopup("User created successfully!", "success");
-
-            setIsUserModalOpen(false);
-            setUserFormData({ name: "", phone: "+91", email: "", cities: [] });
-            await loadUsers();
 
         } catch (error: any) {
             showPopup(error.message || "Unknown error", "error", editingUser ? "Error Updating User" : "Error Creating User");

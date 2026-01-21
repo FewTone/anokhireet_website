@@ -22,8 +22,14 @@ export function useTotalUnreadCount() {
                 .eq('auth_user_id', session.user.id)
                 .maybeSingle();
 
-            if (userError || !userData) {
+            if (userError) {
                 console.error("Error fetching public user id for unread count:", userError);
+                return;
+            }
+
+            if (!userData) {
+                // Not a public user (e.g. admin), so no unread count
+                setUnreadCount(0);
                 return;
             }
 

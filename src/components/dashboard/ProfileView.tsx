@@ -93,6 +93,16 @@ export default function ProfileView({
         loadCities();
     }, []);
 
+    // Auto-fill state if location matches a known city and state is empty
+    useEffect(() => {
+        if (!formData.location || formData.state) return;
+
+        const matchingCity = cities.find(c => c.name.toLowerCase() === formData.location.toLowerCase());
+        if (matchingCity && matchingCity.state) {
+            setFormData(prev => ({ ...prev, state: matchingCity.state }));
+        }
+    }, [formData.location, formData.state, cities]);
+
     const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setFormData({ ...formData, location: value });
