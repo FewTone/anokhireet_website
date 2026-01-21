@@ -912,7 +912,13 @@ export default function MyProductsView() {
                                 <div className="flex gap-3 mb-3">
                                     {/* Image */}
                                     <div
-                                        onClick={() => window.open(`/user/edit-product/${product.id}`, '_blank')}
+                                        onClick={(e) => {
+                                            if (activeActionMenuId === product.id) {
+                                                setActiveActionMenuId(null);
+                                                return;
+                                            }
+                                            window.open(`/user/edit-product/${product.id}`, '_blank');
+                                        }}
                                         className="relative w-20 h-24 bg-gray-100 flex-shrink-0 cursor-pointer border border-gray-100"
                                     >
                                         <img
@@ -924,7 +930,13 @@ export default function MyProductsView() {
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0 flex flex-col justify-between">
-                                        <div onClick={() => window.open(`/user/edit-product/${product.id}`, '_blank')} className="cursor-pointer">
+                                        <div onClick={(e) => {
+                                            if (activeActionMenuId === product.id) {
+                                                setActiveActionMenuId(null);
+                                                return;
+                                            }
+                                            window.open(`/user/edit-product/${product.id}`, '_blank');
+                                        }} className="cursor-pointer">
                                             <h3 className="font-medium text-base text-gray-900 leading-tight mb-1 truncate pr-6">{product.name}</h3>
                                             <p className="text-sm text-gray-500 font-mono mb-1">ID: {product.custom_id || product.product_id || <span className="text-gray-400 italic">Pending</span>}</p>
                                             <p className="text-base font-semibold text-gray-900">₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString('en-IN') : product.price}</p>
@@ -954,7 +966,7 @@ export default function MyProductsView() {
                                     </div>
 
                                     {/* Action Button */}
-                                    <div className="relative" data-action-container>
+                                    <div className="relative self-start" data-action-container>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -1100,7 +1112,7 @@ export default function MyProductsView() {
                                         <p className="text-sm font-medium text-gray-900">{product.views || 0}</p>
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">Imps</p>
+                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">Impressions</p>
                                         <p className="text-sm font-medium text-gray-900">{product.impressions || 0}</p>
                                     </div>
                                     <div className="text-center">
