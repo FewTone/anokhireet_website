@@ -223,8 +223,14 @@ export default function UserPage() {
                             navItems={navItems}
                             activeView={activeView}
                             onNavigate={(id) => {
-                                setActiveView(id as View);
-                                router.push(`/user?view=${id}`, { scroll: false });
+                                if (id === "wishlist") {
+                                    router.push("/wishlist");
+                                } else if (id === "my-products") {
+                                    router.push("/my-products");
+                                } else {
+                                    setActiveView(id as View);
+                                    router.push(`/user?view=${id}`, { scroll: false });
+                                }
                             }}
                         />
                     </div>
@@ -249,8 +255,14 @@ export default function UserPage() {
                                 navItems={navItems}
                                 activeView={activeView}
                                 onNavigate={(id) => {
-                                    setActiveView(id as View);
-                                    router.push(`/user?view=${id}`, { scroll: false });
+                                    if (id === "wishlist") {
+                                        router.push("/wishlist");
+                                    } else if (id === "my-products") {
+                                        router.push("/my-products");
+                                    } else {
+                                        setActiveView(id as View);
+                                        router.push(`/user?view=${id}`, { scroll: false });
+                                    }
                                 }}
                             />
                         </div>

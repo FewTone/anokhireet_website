@@ -13,6 +13,7 @@ interface UserProduct {
     price: string;
     image: string;
     product_id?: string;
+    custom_id?: string;
     created_at: string;
     views?: number;
     impressions?: number;
@@ -541,21 +542,23 @@ export default function MyProductsView() {
 
     return (
         <div className="w-full px-1 md:px-0">
-            <div className="mb-4 relative flex justify-end items-center h-10 hidden md:flex">
-                <h2 className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl font-semibold text-gray-900 uppercase tracking-wide">Product Performance</h2>
-                <button
-                    onClick={handleAddProduct}
-                    className="bg-black text-white px-4 py-2 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
-                >
-                    Add Product
-                </button>
+            <div className="relative mb-3 md:mb-4 flex items-center justify-center min-h-[40px]">
+                <h2 className="text-[16px] leading-[24px] font-semibold text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>MY PRODUCTS</h2>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:block">
+                    <button
+                        onClick={handleAddProduct}
+                        className="bg-black text-white px-4 py-2 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                    >
+                        Add Product
+                    </button>
+                </div>
             </div>
 
             {/* Mobile Add Product Button */}
-            <div className="md:hidden mb-4">
+            <div className="md:hidden mb-4 flex justify-center">
                 <button
                     onClick={handleAddProduct}
-                    className="w-full bg-black text-white px-4 py-3 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                    className="w-auto bg-black text-white px-8 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
                 >
                     Add Product
                 </button>
@@ -679,7 +682,7 @@ export default function MyProductsView() {
                                                     {product.name}
                                                 </h3>
                                                 <p className="text-sm text-gray-500 font-normal mb-0.5">
-                                                    ID: <span className="text-black font-normal">{product.product_id || product.id}</span>
+                                                    ID: <span className="text-black font-normal">{product.custom_id || product.product_id || <span className="text-gray-400 italic">Pending</span>}</span>
                                                 </p>
                                                 <span className="text-sm font-normal text-gray-900 uppercase tracking-tight">
                                                     ₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString('en-IN') : product.price}
@@ -840,7 +843,7 @@ export default function MyProductsView() {
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
                                                             >
-                                                                Submit for REVIEW
+                                                                Submit for Review
                                                             </button>
                                                             <button
                                                                 onClick={(e) => {
@@ -923,35 +926,35 @@ export default function MyProductsView() {
                                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                                         <div onClick={() => window.open(`/user/edit-product/${product.id}`, '_blank')} className="cursor-pointer">
                                             <h3 className="font-medium text-sm text-gray-900 leading-tight mb-1 truncate pr-6">{product.name}</h3>
-                                            <p className="text-xs text-gray-500 font-mono mb-1">ID: {product.product_id || product.id}</p>
+                                            <p className="text-xs text-gray-500 font-mono mb-1">ID: {product.custom_id || product.product_id || <span className="text-gray-400 italic">Pending</span>}</p>
                                             <p className="text-sm font-semibold text-gray-900">₹ {typeof product.price === 'string' ? Number(product.price).toLocaleString('en-IN') : product.price}</p>
                                         </div>
 
                                         {/* Status Badge */}
                                         <div className="mt-1">
                                             {product.status === 'draft' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-800 uppercase tracking-wider border border-gray-200">DRAFT</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-800 text-gray-100 uppercase tracking-wider">DRAFT</span>
                                             )}
                                             {product.status === 'pending' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-900 uppercase tracking-wider border border-amber-100">REVIEWING</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-900 text-amber-50 uppercase tracking-wider">REVIEWING</span>
                                             )}
                                             {product.status === 'pending_deactivation' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold bg-orange-50 text-orange-900 uppercase tracking-wider border border-orange-100">DEACTIVATING</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-900 text-orange-50 uppercase tracking-wider">DEACTIVATING</span>
                                             )}
                                             {product.status === 'pending_reactivation' && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-900 uppercase tracking-wider border border-emerald-100">REACTIVATING</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-900 text-emerald-50 uppercase tracking-wider">REACTIVATING</span>
                                             )}
                                             {product.status === 'approved' && product.is_active && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-900 uppercase tracking-wider border border-green-100">LIVE</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-900 text-green-50 uppercase tracking-wider">LIVE</span>
                                             )}
                                             {((product.status === 'approved' && !product.is_active) || product.status === 'rejected') && (
-                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-900 uppercase tracking-wider border border-red-100">DEACTIVATED</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-900 text-red-50 uppercase tracking-wider">DEACTIVATED</span>
                                             )}
                                         </div>
                                     </div>
 
                                     {/* Action Button */}
-                                    <div className="relative">
+                                    <div className="relative" data-action-container>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -1056,9 +1059,9 @@ export default function MyProductsView() {
                                                                     setSubmitConfirmProduct(product);
                                                                     setActiveActionMenuId(null);
                                                                 }}
-                                                                className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-blue-600 hover:bg-blue-50"
+                                                                className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"
                                                             >
-                                                                Submit Listing
+                                                                Submit for Review
                                                             </button>
                                                         )}
                                                         {((product.status === 'approved' && !product.is_active) || product.status === 'rejected') && (

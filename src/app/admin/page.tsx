@@ -250,6 +250,8 @@ function AdminContent() {
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [adminEmail, setAdminEmail] = useState("");
     const [adminPassword, setAdminPassword] = useState("");
+    // Mobile action menu state
+    const [activeActionId, setActiveActionId] = useState<string | null>(null);
 
     const [isUserModalOpen, setIsUserModalOpen] = useState(false);
     const [isUserProductModalOpen, setIsUserProductModalOpen] = useState(false);
@@ -4409,7 +4411,7 @@ To get these values:
                                         </div>
 
                                         <div className="bg-white rounded-none border border-gray-200 overflow-hidden">
-                                            <div className="overflow-x-auto">
+                                            <div className="overflow-x-auto hidden md:block">
                                                 <table className="w-full">
                                                     <thead className="bg-gray-50 border-b border-gray-200">
                                                         <tr>
@@ -4913,6 +4915,141 @@ To get these values:
                                                     </tbody>
                                                 </table>
                                             </div>
+
+                                            {/* Mobile Card View for Products */}
+                                            <div className="md:hidden space-y-4 p-4">
+                                                {allFilteredProducts.map((product) => {
+                                                    const owner = users.find(u => u.id === (product as any).user_id);
+                                                    const primaryImage = (product as any).images && Array.isArray((product as any).images) && (product as any).images.length > 0
+                                                        ? ((product as any).primary_image_index !== undefined && (product as any).primary_image_index >= 0 && (product as any).primary_image_index < (product as any).images.length
+                                                            ? (product as any).images[(product as any).primary_image_index]
+                                                            : (product as any).images[0])
+                                                        : (product as any).image;
+
+                                                    return (
+                                                        <div key={`mobile-prod-${product.id}`} className="bg-white border border-gray-200 rounded-none overflow-hidden relative shadow-sm">
+                                                            <div className="flex p-3 gap-3">
+                                                                {/* Product Image */}
+                                                                <div className="w-20 h-24 bg-gray-100 flex-shrink-0 relative overflow-hidden rounded-none">
+                                                                    {primaryImage && (
+                                                                        <Image
+                                                                            src={primaryImage}
+                                                                            alt={product.name}
+                                                                            fill
+                                                                            className="object-cover"
+                                                                            unoptimized
+                                                                            onError={(e) => {
+                                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                </div>
+
+                                                                {/* Details */}
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex justify-between items-start">
+                                                                        <div>
+                                                                            <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</h3>
+                                                                            <div className="text-sm font-medium text-gray-900">{product.price}</div>
+                                                                        </div>
+
+                                                                        {/* 3-Dot Action Menu */}
+                                                                        <div className="relative ml-2">
+                                                                            <button
+                                                                                onClick={() => setActiveActionId(activeActionId === product.id ? null : product.id)}
+                                                                                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                                                                            >
+                                                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                                                                                    <circle cx="12" cy="12" r="1" />
+                                                                                    <circle cx="12" cy="5" r="1" />
+                                                                                    <circle cx="12" cy="19" r="1" />
+                                                                                </svg>
+                                                                            </button>
+
+                                                                            {activeActionId === product.id && (
+                                                                                <>
+                                                                                    <div
+                                                                                        className="fixed inset-0 z-40"
+                                                                                        onClick={() => setActiveActionId(null)}
+                                                                                    ></div>
+                                                                                    <div className="absolute right-0 top-6 w-48 bg-white border border-gray-200 shadow-xl rounded-none z-50">
+                                                                                        <div className="py-1">
+                                                                                            {(product.status === 'pending' || product.status === 'pending_deactivation') && (
+                                                                                                <>
+                                                                                                    <button
+                                                                                                        onClick={() => {
+                                                                                                            handleApproveProduct(product);
+                                                                                                            setActiveActionId(null);
+                                                                                                        }}
+                                                                                                        className={`w-full text-left px-4 py-2 text-sm ${product.status === 'pending_deactivation' ? 'text-orange-600 hover:bg-orange-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
+                                                                                                    >
+                                                                                                        {product.status === 'pending_deactivation' ? 'Approve Deactivate' : 'Approve'}
+                                                                                                    </button>
+                                                                                                    <button
+                                                                                                        onClick={() => {
+                                                                                                            handleRejectProduct(product);
+                                                                                                            setActiveActionId(null);
+                                                                                                        }}
+                                                                                                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                                                                    >
+                                                                                                        Reject
+                                                                                                    </button>
+                                                                                                </>
+                                                                                            )}
+                                                                                            <button
+                                                                                                onClick={() => {
+                                                                                                    handleEditUserProduct(product as any);
+                                                                                                    setActiveActionId(null);
+                                                                                                }}
+                                                                                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                                                                            >
+                                                                                                Edit
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={() => {
+                                                                                                    handleDeleteUserProduct((product as any).id, (product as any).name);
+                                                                                                    setActiveActionId(null);
+                                                                                                }}
+                                                                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                                                            >
+                                                                                                Delete
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div className="mt-2 text-xs text-gray-500 flex flex-col gap-1">
+                                                                        <div className="flex items-center gap-1">
+                                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                                                            {owner ? owner.name : 'Unknown'}
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-none text-[10px] font-medium ${product.status === 'approved'
+                                                                                ? 'bg-green-100 text-green-800'
+                                                                                : product.status === 'rejected'
+                                                                                    ? 'bg-red-100 text-red-800'
+                                                                                    : product.status === 'pending_deactivation'
+                                                                                        ? 'bg-orange-100 text-orange-800'
+                                                                                        : 'bg-yellow-100 text-yellow-800'
+                                                                                }`}>
+                                                                                {product.status === 'pending_deactivation' ? 'Deactivation Request' : product.status ? capitalizeFirstLetter(product.status) : 'Approved'}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                                {allFilteredProducts.length === 0 && (
+                                                    <div className="text-center py-8 bg-white border border-gray-200">
+                                                        <p className="text-gray-500">No products found</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -5318,7 +5455,7 @@ To get these values:
                                 </div>
 
                                 <div className="bg-white rounded-none border border-gray-200 overflow-hidden mb-6">
-                                    <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto hidden md:block">
                                         <table className="w-full">
                                             <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                                                 <tr>
@@ -5429,6 +5566,90 @@ To get these values:
                                                 )}
                                             </tbody>
                                         </table>
+                                    </div>
+
+                                    {/* Mobile Card View for Users */}
+                                    <div className="md:hidden space-y-4 p-4">
+                                        {users.length === 0 ? (
+                                            <div className="text-center py-8 bg-white border border-gray-200">
+                                                <p className="text-gray-500">No users found</p>
+                                            </div>
+                                        ) : (
+                                            users.map((user) => (
+                                                <div key={`mobile-user-${user.id}`} className="bg-white border border-gray-200 rounded-none overflow-hidden relative shadow-sm p-4">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div>
+                                                            <h3 className="text-sm font-semibold text-gray-900">{user.name}</h3>
+                                                            <p className="text-sm text-gray-500">{user.phone}</p>
+                                                        </div>
+                                                        <div className="relative">
+                                                            <button
+                                                                onClick={() => setActiveActionId(activeActionId === user.id ? null : user.id)}
+                                                                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                                                            >
+                                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+                                                                    <circle cx="12" cy="12" r="1" />
+                                                                    <circle cx="12" cy="5" r="1" />
+                                                                    <circle cx="12" cy="19" r="1" />
+                                                                </svg>
+                                                            </button>
+
+                                                            {activeActionId === user.id && (
+                                                                <>
+                                                                    <div
+                                                                        className="fixed inset-0 z-40"
+                                                                        onClick={() => setActiveActionId(null)}
+                                                                    ></div>
+                                                                    <div className="absolute right-0 top-6 w-48 bg-white border border-gray-200 shadow-xl rounded-none z-50">
+                                                                        <div className="py-1">
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleEditUser(user);
+                                                                                    setActiveActionId(null);
+                                                                                }}
+                                                                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                                                                            >
+                                                                                Edit
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    router.push(`/admin/manage-products/${user.id}`);
+                                                                                    setActiveActionId(null);
+                                                                                }}
+                                                                                className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+                                                                            >
+                                                                                Manage Products
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleDeleteUser(user.id, user.name);
+                                                                                    setActiveActionId(null);
+                                                                                }}
+                                                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                                                            >
+                                                                                Delete
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
+                                                        <span>{new Date(user.created_at).toLocaleDateString()}</span>
+                                                        {user.auth_user_id ? (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-medium bg-green-100 text-green-800">
+                                                                Authenticated
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-medium bg-gray-100 text-gray-800">
+                                                                Not Auth
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
 
