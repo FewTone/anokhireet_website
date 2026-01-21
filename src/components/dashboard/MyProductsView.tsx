@@ -582,7 +582,7 @@ export default function MyProductsView() {
     };
 
     return (
-        <div className="w-full px-1 md:px-0">
+        <div className="w-full md:px-0">
             <div className="relative mb-3 md:mb-4 flex items-center justify-center min-h-[40px]">
                 <h2 className="text-[16px] md:text-2xl leading-[24px] md:leading-normal font-semibold text-center uppercase tracking-normal md:tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>MY PRODUCTS</h2>
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 hidden md:block">
@@ -596,10 +596,10 @@ export default function MyProductsView() {
             </div>
 
             {/* Mobile Add Product Button */}
-            <div className="md:hidden mb-4 flex justify-center">
+            <div className="md:hidden mb-4">
                 <button
                     onClick={handleAddProduct}
-                    className="w-auto bg-black text-white px-8 py-2 text-xs font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                    className="w-full bg-black text-white py-3 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
                 >
                     Add Product
                 </button>
@@ -1150,20 +1150,20 @@ export default function MyProductsView() {
                                 {/* Stats Grid */}
                                 <div className="grid grid-cols-4 gap-2 pt-3 border-t border-gray-100">
                                     <div className="text-center">
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">Views</p>
-                                        <p className="text-sm font-medium text-gray-900">{product.views || 0}</p>
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Views</p>
+                                        <p className="text-lg font-bold text-gray-900">{product.views || 0}</p>
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">Impressions</p>
-                                        <p className="text-sm font-medium text-gray-900">{product.impressions || 0}</p>
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Impressions</p>
+                                        <p className="text-lg font-bold text-gray-900">{product.impressions || 0}</p>
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">Likes</p>
-                                        <p className="text-sm font-medium text-gray-900">{product.wishlist_count || 0}</p>
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Likes</p>
+                                        <p className="text-lg font-bold text-gray-900">{product.wishlist_count || 0}</p>
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-wide">Inquiry</p>
-                                        <p className="text-sm font-medium text-gray-900">{product.inquiries_count || 0}</p>
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Inquiry</p>
+                                        <p className="text-lg font-bold text-gray-900">{product.inquiries_count || 0}</p>
                                     </div>
                                 </div>
                             </div>

@@ -440,7 +440,7 @@ export default function ProductsPage() {
 
                     return {
                         id: typeof p.id === 'string' ? p.id : `product-${Date.now()}-${index}`,
-                        productId: p.product_id || p.id,
+                        productId: p.custom_id || p.product_id || p.id,
                         name: p.title || p.name,
                         price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
                         image: primaryImage,
@@ -1560,6 +1560,7 @@ export default function ProductsPage() {
                                             product={product}
                                             hideDetails={viewMode === 'grid3'}
                                             disableHover={true}
+                                            useCompactPrice={true}
                                         />
                                     ))}
                                 </div>

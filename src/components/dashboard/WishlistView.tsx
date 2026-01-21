@@ -164,7 +164,9 @@ export default function WishlistView() {
 
     return (
         <div className="w-full min-h-[400px]">
-            <h2 className="text-[16px] md:text-2xl leading-[24px] md:leading-normal font-semibold mb-3 md:mb-4 text-center uppercase tracking-normal md:tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>WISH LIST</h2>
+            <div className="relative mb-3 md:mb-4 flex items-center justify-center min-h-[40px]">
+                <h2 className="text-[16px] md:text-2xl leading-[24px] md:leading-normal font-semibold text-center uppercase tracking-normal md:tracking-wide" style={{ fontFamily: 'Inter, sans-serif' }}>WISH LIST</h2>
+            </div>
 
             <div className="w-full">
                 {loading ? (
