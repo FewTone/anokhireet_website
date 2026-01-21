@@ -749,7 +749,57 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 ]);
             } else {
                 // Create new product
-                const productId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+                // Generate Custom Product ID: AR-UserSuffix-Count
+                // FIX: Use MAX existing ID instead of Count to avoid duplicates when products are deleted
+                const { data: userProducts } = await supabase
+                    .from("products")
+                    .select("product_id")
+                    .eq("owner_user_id", userId);
+
+                // Need user's custom ID. We loaded user earlier but might not have custom_id.
+                // Let's ensure we fetch it.
+                const { data: userDataForId } = await supabase.from("users").select("custom_id").eq("id", userId).single();
+
+                let productId = "";
+                if (userDataForId?.custom_id) {
+                    const userSuffix = userDataForId.custom_id.slice(-3);
+
+                    // Find the highest sequence number currently in use for this user suffix
+                    let maxSequence = 0;
+                    if (userProducts && userProducts.length > 0) {
+                        userProducts.forEach(p => {
+                            if (p.product_id && p.product_id.includes(userSuffix)) {
+                                // Expected format: AR-XXX01
+                                // Extract the last digits
+                                const parts = p.product_id.split('-');
+                                if (parts.length >= 2) {
+                                    const suffixPart = parts[parts.length - 1]; // e.g. XXX01
+                                    // The suffix part contains the user last 3 chars (XXX) + sequence (01)
+                                    // User suffix is known "userSuffix".
+                                    // Let's try to slice it out.
+                                    // Actually, generated ID is `AR-${userSuffix}${countStr}`
+                                    // So suffixPart starts with userSuffix.
+                                    if (suffixPart.startsWith(userSuffix)) {
+                                        const numPart = suffixPart.slice(userSuffix.length);
+                                        const num = parseInt(numPart, 10);
+                                        if (!isNaN(num) && num > maxSequence) {
+                                            maxSequence = num;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    const nextSequence = maxSequence + 1;
+                    const countStr = nextSequence.toString().padStart(2, '0');
+                    productId = `AR-${userSuffix}${countStr}`;
+                } else {
+                    // Fallback if no custom ID
+                    const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+                    productId = `PROD-${randomPart}`;
+                }
+
                 productData.product_id = productId;
 
                 const insertData: any = {
