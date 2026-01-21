@@ -338,7 +338,7 @@ export default function MyProductsView() {
 
         // Optimistic update
         const updatedProducts = myProducts.map(p =>
-            p.id === product.id ? { ...p, status: 'pending_deactivation' } : p
+            p.id === product.id ? { ...p, is_active: false } : p
         );
         const originalProducts = [...myProducts];
         setMyProducts(updatedProducts);
@@ -347,7 +347,7 @@ export default function MyProductsView() {
         try {
             const { error } = await supabase
                 .from("products")
-                .update({ status: 'pending_deactivation', updated_at: new Date().toISOString() })
+                .update({ is_active: false, updated_at: new Date().toISOString() })
                 .eq("id", product.id)
                 .eq("owner_user_id", userId);
 
@@ -355,16 +355,16 @@ export default function MyProductsView() {
 
             setPopup({
                 isOpen: true,
-                message: "Deactivation request sent to admin.",
+                message: "Product deactivated.",
                 type: "success",
-                title: "Request Sent"
+                title: "Deactivated"
             });
         } catch (error: any) {
             console.error("Error updating status:", error);
             setMyProducts(originalProducts); // Revert
             setPopup({
                 isOpen: true,
-                message: "Failed to send request. Please try again.",
+                message: "Failed to deactivate. Please try again.",
                 type: "error",
                 title: "Error"
             });
@@ -564,23 +564,23 @@ export default function MyProductsView() {
             {/* Summary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 md:mb-8 text-center w-full">
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-normal text-black mb-0.5">{myProducts.length}</span>
+                    <span className="text-2xl font-medium text-black mb-0.5">{myProducts.length}</span>
                     <span className="text-xs uppercase tracking-wider font-normal text-black">Products</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-normal text-black mb-0.5">{totalImpressions.toLocaleString()}</span>
+                    <span className="text-2xl font-medium text-black mb-0.5">{totalImpressions.toLocaleString()}</span>
                     <span className="text-xs uppercase tracking-wider font-normal text-black">Impressions</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-normal text-black mb-0.5">{totalViews.toLocaleString()}</span>
+                    <span className="text-2xl font-medium text-black mb-0.5">{totalViews.toLocaleString()}</span>
                     <span className="text-xs uppercase tracking-wider font-normal text-black">Views</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-normal text-black mb-0.5">{totalLikes.toLocaleString()}</span>
+                    <span className="text-2xl font-medium text-black mb-0.5">{totalLikes.toLocaleString()}</span>
                     <span className="text-xs uppercase tracking-wider font-normal text-black">Likes</span>
                 </div>
                 <div className="border border-gray-100 bg-gray-50/50 p-3 flex flex-col items-center justify-center col-span-2 md:col-span-1">
-                    <span className="text-2xl font-normal text-black mb-0.5">{totalInquiries.toLocaleString()}</span>
+                    <span className="text-2xl font-medium text-black mb-0.5">{totalInquiries.toLocaleString()}</span>
                     <span className="text-xs uppercase tracking-wider font-normal text-black">Inquiry</span>
                 </div>
             </div>
@@ -697,22 +697,22 @@ export default function MyProductsView() {
                                     <div className="col-span-12 md:col-span-2 flex flex-col items-center justify-center">
                                         <div className="flex flex-col items-center gap-1.5 w-full">
                                             {product.status === 'draft' && (
-                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-500 text-white uppercase tracking-wider">DRAFT</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500 text-white uppercase tracking-wider">DRAFT</span>
                                             )}
                                             {product.status === 'pending' && (
-                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-500 text-white uppercase tracking-wider">REVIEWING</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500 text-white uppercase tracking-wider">REVIEWING</span>
                                             )}
                                             {product.status === 'pending_deactivation' && (
-                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-orange-500 text-white uppercase tracking-wider">DEACTIVATING</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-500 text-white uppercase tracking-wider">DEACTIVATING</span>
                                             )}
                                             {product.status === 'pending_reactivation' && (
-                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-500 text-white uppercase tracking-wider">REACTIVATING</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500 text-white uppercase tracking-wider">REACTIVATING</span>
                                             )}
                                             {product.status === 'approved' && product.is_active && (
-                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-green-500 text-white uppercase tracking-wider">LIVE</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500 text-white uppercase tracking-wider">LIVE</span>
                                             )}
                                             {((product.status === 'approved' && !product.is_active) || product.status === 'rejected') && (
-                                                <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium bg-gray-500 text-white uppercase tracking-wider">DEACTIVATED</span>
+                                                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-500 text-white uppercase tracking-wider">DEACTIVATED</span>
                                             )}
                                         </div>
                                     </div>
@@ -813,7 +813,7 @@ export default function MyProductsView() {
                                                                 e.stopPropagation();
                                                                 withdrawRequest(product);
                                                             }}
-                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-yellow-600 hover:bg-yellow-50"
+                                                            className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
                                                         >
                                                             Withdraw Request
                                                         </button>
@@ -838,7 +838,7 @@ export default function MyProductsView() {
                                                             }}
                                                             className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
                                                         >
-                                                            Submit for Approval
+                                                            Submit for REVIEW
                                                         </button>
                                                         <button
                                                             onClick={(e) => {
@@ -976,7 +976,7 @@ export default function MyProductsView() {
                                     onClick={confirmSubmitDraft}
                                     className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
                                 >
-                                    Submit for Approval
+                                    Submit for Review
                                 </button>
                             </div>
                             <p className="text-xs text-gray-500 text-center">
@@ -998,7 +998,7 @@ export default function MyProductsView() {
                                 </svg>
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                Request Deactivation
+                                Deactivate Product
                             </h3>
                             <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
                                 Deactivate <strong className="text-gray-900">{deactivateConfirmProduct.name}</strong>?
@@ -1014,11 +1014,11 @@ export default function MyProductsView() {
                                     onClick={confirmDeactivation}
                                     className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
                                 >
-                                    Confirm Request
+                                    Deactivate
                                 </button>
                             </div>
                             <p className="text-xs text-gray-500 text-center">
-                                A request will be sent to the admin for approval.
+                                This will hide the product from the marketplace.
                             </p>
                         </div>
                     </div>
