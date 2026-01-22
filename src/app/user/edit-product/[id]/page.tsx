@@ -317,12 +317,36 @@ export default function EditProductPage() {
         }
     };
 
-    const FacetSelector = ({ label, selected, options, onChange }: { label?: string, selected: string[], options: Facet[], onChange: (newSelected: string[]) => void }) => {
+    const FacetSelector = ({ label, selected, options, onChange, searchable = false }: { label?: string, selected: string[], options: Facet[], onChange: (newSelected: string[]) => void, searchable?: boolean }) => {
+        const [searchTerm, setSearchTerm] = useState("");
+
+        const filteredOptions = options.filter(option => {
+            if (!searchable) return true;
+            // If searchable:
+            // 1. Always show selected options
+            if (selected.includes(option.name)) return true;
+            // 2. If valid search term, show matches
+            if (searchTerm.trim() !== "") {
+                return option.name.toLowerCase().includes(searchTerm.toLowerCase());
+            }
+            // 3. Otherwise (empty search), hide unselected options
+            return false;
+        });
+
         return (
             <div className="mb-4">
                 {label && <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>}
-                <div className="flex flex-wrap gap-2">
-                    {options.map((option) => {
+                {searchable && (
+                    <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder={`Search ${label || "options"}...`}
+                        className="w-full mb-3 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black"
+                    />
+                )}
+                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                    {filteredOptions.map((option) => {
                         const isSelected = selected.includes(option.name);
                         return (
                             <button
@@ -334,15 +358,24 @@ export default function EditProductPage() {
                                         onChange([...selected, option.name]);
                                     }
                                 }}
-                                className={`px-3 py-1 text-xs border transition-colors rounded-full ${isSelected
+                                className={`px-3 py-1 text-xs border transition-colors rounded-full flex items-center gap-1 ${isSelected
                                     ? "bg-black text-white border-black"
                                     : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                                     }`}
                             >
                                 {option.name}
+                                {isSelected && (
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                )}
                             </button>
                         );
                     })}
+                    {filteredOptions.length === 0 && (
+                        <p className="text-xs text-gray-500 italic">No matches found</p>
+                    )}
                 </div>
             </div>
         );
@@ -607,7 +640,7 @@ export default function EditProductPage() {
                                                 <div className={`grid transition-all duration-300 ease-in-out ${expandedSections.availability ? 'grid-rows-[1fr] opacity-100 mb-4' : 'grid-rows-[0fr] opacity-0'}`}>
                                                     <div className="overflow-hidden">
                                                         {isEditing ? (
-                                                            <FacetSelector selected={selectedCities} options={availableCities} onChange={setSelectedCities} />
+                                                            <FacetSelector selected={selectedCities} options={availableCities} onChange={setSelectedCities} searchable={true} label="Cities" />
                                                         ) : (
                                                             product.cities && product.cities.length > 0 ? (
                                                                 <div className="flex flex-wrap gap-2 text-sm text-gray-600">
@@ -639,7 +672,7 @@ export default function EditProductPage() {
                                                                         <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={6} className="w-full p-2 border border-gray-300 rounded focus:border-black outline-none resize-none bg-white text-sm" placeholder="Enter product detailed description..." />
                                                                     </div>
                                                                     <FacetSelector label="Type" selected={selectedProductTypes} options={availableProductTypes} onChange={setSelectedProductTypes} />
-                                                                    <FacetSelector label="Color" selected={selectedColors} options={availableColors} onChange={setSelectedColors} />
+                                                                    <FacetSelector label="Color" selected={selectedColors} options={availableColors} onChange={setSelectedColors} searchable={true} />
                                                                     <FacetSelector label="Material" selected={selectedMaterials} options={availableMaterials} onChange={setSelectedMaterials} />
                                                                 </>
                                                             ) : (
