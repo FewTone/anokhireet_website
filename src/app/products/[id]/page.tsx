@@ -53,8 +53,6 @@ export default function ProductDetailPage() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
     // const endDateInputRef = useRef<HTMLInputElement>(null); // Removed native ref
-    const startDatePickerRef = useRef<any>(null);
-    const endDatePickerRef = useRef<any>(null);
     const [inquiryForm, setInquiryForm] = useState({
         start_date: "",
         end_date: "",
@@ -944,7 +942,68 @@ export default function ProductDetailPage() {
             {
                 showInquiryModal && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-none max-w-md w-full p-6 relative">
+                        <style>
+                            {`
+                                .react-datepicker {
+                                    border: 1px solid #e5e7eb;
+                                    font-family: inherit;
+                                    border-radius: 0 !important;
+                                    margin: 0 auto !important;
+
+                                }
+                                .react-datepicker__header {
+                                    background-color: white;
+                                    border-bottom: 1px solid #e5e7eb;
+                                }
+                                .react-datepicker__month-container {
+                                    width: 100% !important;
+                                }
+                                .react-datepicker__day-name, .react-datepicker__day {
+                                    width: 2rem !important;
+                                    line-height: 2rem !important;
+                                    margin: 0.05rem !important;
+                                    font-size: 0.875rem !important;
+                                }
+                                .react-datepicker__day--selected, 
+                                .react-datepicker__day--in-selecting-range,
+                                .react-datepicker__day--in-range,
+                                .react-datepicker__month-text--selected,
+                                .react-datepicker__month-text--in-selecting-range,
+                                .react-datepicker__month-text--in-range {
+                                    background-color: #e5e7eb !important;
+                                    color: #1f2937 !important;
+                                    border-radius: 0.375rem !important;
+                                    border: none !important;
+                                }
+                                .react-datepicker__day--range-start {
+                                    background-color: #e5e7eb !important;
+                                    color: #1f2937 !important;
+                                    border-radius: 0.375rem !important;
+                                    border: none !important;
+                                }
+                                .react-datepicker__day--range-end {
+                                    background-color: #e5e7eb !important;
+                                    color: #1f2937 !important;
+                                    border-radius: 0.375rem !important;
+                                    border: 1px solid #9ca3af !important;
+                                }
+                                .react-datepicker__day--in-selecting-range {
+                                    background-color: #d1d5db !important;
+                                    color: #374151 !important;
+                                    border: 1px solid #9ca3af !important;
+                                }
+                                .react-datepicker__day--in-range:not(.react-datepicker__day--selected) {
+                                    background-color: #e5e7eb !important;
+                                    color: #1f2937 !important;
+                                    border: none !important;
+                                }
+                                .react-datepicker__day:hover {
+                                    background-color: #f3f4f6 !important;
+                                    border-radius: 0.375rem !important;
+                                }
+                            `}
+                        </style>
+                        <div className="bg-white rounded-none max-w-xl w-full p-8 relative">
                             <button
                                 onClick={() => {
                                     setShowInquiryModal(false);
@@ -958,63 +1017,38 @@ export default function ProductDetailPage() {
                                 </svg>
                             </button>
 
-                            <h2 className="text-lg font-semibold uppercase tracking-wide mb-6">Select Date</h2>
+                            <h2 className="text-lg font-semibold uppercase tracking-wide mb-6 text-center">Select Rental Period</h2>
 
                             <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Start Date <span className="text-red-500">*</span>
-                                    </label>
-
-                                    <div className="relative group custom-datepicker-wrapper">
-                                        <DatePicker
-                                            selected={inquiryForm.start_date ? new Date(inquiryForm.start_date) : null}
-                                            onChange={(date: Date | null) => {
-                                                if (date) {
-                                                    // Normalize to YYYY-MM-DD local time to avoid timezone shifts
-                                                    const dateString = date.toLocaleDateString('en-CA'); // en-CA gives YYYY-MM-DD
-                                                    setInquiryForm(prev => ({ ...prev, start_date: dateString }));
-
-                                                    // Auto open end date picker
-                                                    setTimeout(() => {
-                                                        endDatePickerRef.current?.setOpen(true);
-                                                    }, 50);
-                                                } else {
-                                                    setInquiryForm(prev => ({ ...prev, start_date: "" }));
-                                                }
-                                            }}
-                                            minDate={new Date()}
-                                            dateFormat="dd/MM/yyyy"
-                                            placeholderText="dd/mm/yyyy"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-none text-gray-900 focus:border-black outline-none h-[42px] transition-colors"
-                                            ref={startDatePickerRef}
-                                            onKeyDown={(e) => e.preventDefault()} // Block typing
-                                        />
-                                    </div>
+                                <div className="relative group custom-datepicker-wrapper flex justify-center">
+                                    <DatePicker
+                                        selected={inquiryForm.start_date ? new Date(inquiryForm.start_date) : null}
+                                        onChange={(update: [Date | null, Date | null]) => {
+                                            const [start, end] = update;
+                                            setInquiryForm({
+                                                start_date: start ? start.toLocaleDateString('en-CA') : "",
+                                                end_date: end ? end.toLocaleDateString('en-CA') : ""
+                                            });
+                                        }}
+                                        startDate={inquiryForm.start_date ? new Date(inquiryForm.start_date) : null}
+                                        endDate={inquiryForm.end_date ? new Date(inquiryForm.end_date) : null}
+                                        selectsRange
+                                        inline
+                                        minDate={new Date()}
+                                        monthsShown={1}
+                                        dateFormat="dd/MM/yyyy"
+                                        className="w-full"
+                                    />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        End Date <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="relative group custom-datepicker-wrapper">
-                                        <DatePicker
-                                            selected={inquiryForm.end_date ? new Date(inquiryForm.end_date) : null}
-                                            onChange={(date: Date | null) => {
-                                                if (date) {
-                                                    const dateString = date.toLocaleDateString('en-CA');
-                                                    setInquiryForm(prev => ({ ...prev, end_date: dateString }));
-                                                } else {
-                                                    setInquiryForm(prev => ({ ...prev, end_date: "" }));
-                                                }
-                                            }}
-                                            minDate={inquiryForm.start_date ? new Date(inquiryForm.start_date) : new Date()}
-                                            dateFormat="dd/MM/yyyy"
-                                            placeholderText="dd/mm/yyyy"
-                                            className="w-full px-4 py-2 border border-gray-300 rounded-none text-gray-900 focus:border-black outline-none h-[42px] transition-colors"
-                                            ref={endDatePickerRef}
-                                            onKeyDown={(e) => e.preventDefault()} // Block typing
-                                        />
+                                <div className="grid grid-cols-2 gap-4 mt-4">
+                                    <div className="border border-black bg-white p-3">
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Start Date</p>
+                                        <p className="text-sm font-medium">{inquiryForm.start_date ? new Date(inquiryForm.start_date).toLocaleDateString('en-GB') : "Select date"}</p>
+                                    </div>
+                                    <div className="border border-black bg-white p-3">
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">End Date</p>
+                                        <p className="text-sm font-medium">{inquiryForm.end_date ? new Date(inquiryForm.end_date).toLocaleDateString('en-GB') : "Select date"}</p>
                                     </div>
                                 </div>
 
@@ -1022,7 +1056,7 @@ export default function ProductDetailPage() {
                                 <button
                                     onClick={handleSubmitInquiry}
                                     disabled={submittingInquiry || !inquiryForm.start_date || !inquiryForm.end_date}
-                                    className="w-full bg-black text-white font-semibold py-3 px-4 rounded-none hover:opacity-90 transition-opacity disabled:opacity-50"
+                                    className="w-full bg-black text-white font-semibold py-3 px-4 rounded-none hover:bg-gray-800 transition-colors disabled:opacity-50"
                                 >
                                     {submittingInquiry ? "Submitting..." : "Confirm Selection"}
                                 </button>
