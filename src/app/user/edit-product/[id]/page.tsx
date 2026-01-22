@@ -545,6 +545,14 @@ export default function EditProductPage() {
         return isNaN(number) ? val : `₹${number.toLocaleString('en-IN')}`;
     };
 
+    const handleBack = () => {
+        if (typeof window !== 'undefined' && window.history.length > 1) {
+            router.back();
+        } else {
+            router.push('/user?view=my-products');
+        }
+    };
+
     if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     if (!product) return <div className="min-h-screen flex items-center justify-center">Product not found</div>;
 
@@ -566,7 +574,7 @@ export default function EditProductPage() {
                                 {/* Mobile Carousel */}
                                 <div className="md:hidden w-full relative">
                                     <div className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-start pointer-events-none">
-                                        <button onClick={() => router.back()} className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white rounded-full z-30 shadow-sm">
+                                        <button onClick={handleBack} className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white/40 backdrop-blur-md border border-white/30 rounded-full z-30 shadow-sm">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
                                         </button>
                                     </div>
