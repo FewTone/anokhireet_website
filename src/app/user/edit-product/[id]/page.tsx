@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -38,12 +38,19 @@ interface Facet {
 export default function EditProductPage() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const productId = params?.id as string;
 
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+
+    useEffect(() => {
+        if (searchParams?.get("edit") === "true") {
+            setIsEditing(true);
+        }
+    }, [searchParams]);
 
     // Form States
     const [name, setName] = useState("");

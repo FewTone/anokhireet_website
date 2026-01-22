@@ -802,7 +802,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -825,7 +825,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -847,7 +847,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -869,7 +869,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -902,7 +902,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -925,7 +925,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -1031,7 +1031,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"
@@ -1054,7 +1054,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"
@@ -1076,7 +1076,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"
@@ -1099,7 +1099,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                window.open(`/user/edit-product/${product.id}`, '_blank');
+                                                                window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"
