@@ -253,22 +253,28 @@ export default function ProductCard({ product, hideDetails = false, disableHover
 
                 {!hideDetails && (
                     <div className="px-2 pb-2">
-                        <div className="flex justify-between items-start mb-1">
-                            <div className="flex-1 pr-2">
-                                <h4 className="text-sm md:text-base font-medium tracking-tight text-neutral-900 line-clamp-2">
+                        <div className="flex justify-between items-start">
+                            <div className="flex-1 pr-2 min-w-0">
+                                <h4 className="text-sm md:text-base font-medium tracking-tight text-neutral-900 truncate">
                                     {product.name}
                                 </h4>
-                                <p className="text-xs text-neutral-500 mt-1">
-                                    #{product.productId || product.id}
-                                </p>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex-shrink-0">
                                 <p className="text-sm md:text-base font-normal text-neutral-900 whitespace-nowrap">
                                     <span className="text-xs text-neutral-500 uppercase tracking-wider mr-1">RENT</span>
                                     {formatPrice(product.price, false)}
                                 </p>
+                            </div>
+                        </div>
+                        <div className="flex justify-between items-center mt-1">
+                            <div className="flex-1 pr-2 min-w-0">
+                                <p className="text-xs text-neutral-500 truncate">
+                                    #{product.productId || product.id}
+                                </p>
+                            </div>
+                            <div className="text-right flex-shrink-0">
                                 {product.original_price && (
-                                    <p className="text-xs text-neutral-500 mt-0.5">
+                                    <p className="text-xs text-neutral-500">
                                         <span className="uppercase tracking-wider mr-1">MRP</span>
                                         {formatPrice(String(product.original_price), useCompactPrice)}
                                     </p>
