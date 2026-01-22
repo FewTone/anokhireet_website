@@ -31,7 +31,7 @@ export default function ProductInfo({
     return (
         <div className="bg-white space-y-6">
             <div>
-                <h2 className="text-2xl font-semibold mb-1 uppercase tracking-wide">{title}</h2>
+                <h2 className="text-lg font-semibold mb-1 uppercase tracking-wide">{title}</h2>
                 <p className="text-sm text-gray-500 mb-4">Product ID: {productId}</p>
 
                 {/* Pricing Information */}

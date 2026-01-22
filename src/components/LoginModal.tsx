@@ -925,6 +925,6 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
                 </div>
             </div>
         </div>,
-        document.body
+        document.getElementById('modal-root') || document.body
     );
 }

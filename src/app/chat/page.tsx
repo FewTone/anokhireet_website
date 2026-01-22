@@ -363,10 +363,13 @@ export default function ChatPage() {
                 }
             } else {
                 setCurrentUser(null);
+                // Redirect unauthenticated users to home with login modal
+                router.replace("/?login=true");
             }
         } catch (error) {
             console.error("Error checking login status:", error);
             setCurrentUser(null);
+            router.replace("/?login=true");
         } finally {
             setLoading(false);
         }

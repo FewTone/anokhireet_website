@@ -47,6 +47,7 @@ export default function RootLayout({
                         </WebsiteGuard>
                     </ErrorBoundary>
                 </div>
+                <div id="modal-root" />
             </body>
         </html>
     );

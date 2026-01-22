@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useTotalUnreadCount } from "@/hooks/useTotalUnreadCount";
+import { supabase } from "@/lib/supabase";
 
 export default function Navbar() {
     const router = useRouter();
@@ -13,7 +14,22 @@ export default function Navbar() {
     const isHomePage = pathname === "/";
     const [searchQuery, setSearchQuery] = useState("");
     const unreadCount = useTotalUnreadCount();
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
     const isProfileSection = pathname?.startsWith("/user") || pathname?.startsWith("/wishlist") || pathname?.startsWith("/my-products");
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setIsLoggedIn(!!session);
+        };
+        checkAuth();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setIsLoggedIn(!!session);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
 
 
     // Initialize search query from URL if on products page
@@ -39,6 +55,13 @@ export default function Navbar() {
     const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
             handleSearch(e);
+        }
+    };
+
+    const handleChatClick = (e: React.MouseEvent) => {
+        if (isLoggedIn === false) {
+            e.preventDefault();
+            router.push("/?login=true");
         }
     };
 
@@ -135,7 +158,11 @@ export default function Navbar() {
                             </form>
                         )}
 
-                        <Link href="/chat" className="bg-transparent border-none cursor-pointer relative">
+                        <Link
+                            href="/chat"
+                            onClick={handleChatClick}
+                            className="bg-transparent border-none cursor-pointer relative"
+                        >
                             <svg
                                 width="24"
                                 height="24"
@@ -192,7 +219,11 @@ export default function Navbar() {
 
                             {/* Chat Icon - VISIBLE HERE ONLY ON PROFILE PAGES */}
                             {isProfileSection && (
-                                <Link href="/chat" className="absolute right-0 p-2 text-black">
+                                <Link
+                                    href="/chat"
+                                    onClick={handleChatClick}
+                                    className="absolute right-0 p-2 text-black"
+                                >
                                     <svg
                                         width="24"
                                         height="24"
@@ -245,7 +276,11 @@ export default function Navbar() {
                                     )}
                                     <button type="submit" className="hidden" aria-label="Search" />
                                 </form>
-                                <Link href="/chat" className={`flex-shrink-0 p-2 relative ${isHomePage ? 'text-white' : 'text-black'}`}>
+                                <Link
+                                    href="/chat"
+                                    onClick={handleChatClick}
+                                    className={`flex-shrink-0 p-2 relative ${isHomePage ? 'text-white' : 'text-black'}`}
+                                >
                                     <svg
                                         width="28"
                                         height="28"
