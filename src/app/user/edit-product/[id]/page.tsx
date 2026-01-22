@@ -317,35 +317,179 @@ export default function EditProductPage() {
         }
     };
 
-    const FacetSelector = ({ label, selected, options, onChange, searchable = false }: { label?: string, selected: string[], options: Facet[], onChange: (newSelected: string[]) => void, searchable?: boolean }) => {
+    // Helper for Emoji assignment
+    const getEmoji = (name: string) => {
+        const n = name.toLowerCase();
+        if (n.includes('party')) return '🎉';
+        if (n.includes('wedding') || n.includes('marriage')) return '💍';
+        if (n.includes('casual')) return '☕';
+        if (n.includes('formal')) return '👔';
+        if (n.includes('ethnic') || n.includes('traditional')) return '🪔';
+        if (n.includes('festival') || n.includes('navratri') || n.includes('diwali')) return '✨';
+        if (n.includes('winter')) return '❄️';
+        if (n.includes('summer')) return '☀️';
+        if (n.includes('vacation') || n.includes('holiday')) return '🏖️';
+        if (n.includes('work') || n.includes('office')) return '💼';
+        if (n.includes('date')) return '🍷';
+        if (n.includes('gym') || n.includes('sport')) return '💪';
+        return '🏷️';
+    };
+
+    const FacetSelector = ({
+        label,
+        selected,
+        options,
+        onChange,
+        searchable = false,
+        variant = 'default'
+    }: {
+        label?: string,
+        selected: string[],
+        options: Facet[],
+        onChange: (newSelected: string[]) => void,
+        searchable?: boolean,
+        variant?: 'default' | 'card' | 'emoji' | 'minimal' | 'checkbox-list'
+    }) => {
         const [searchTerm, setSearchTerm] = useState("");
 
         const filteredOptions = options.filter(option => {
+            if (variant === 'checkbox-list') {
+                if (searchable && searchTerm.trim() !== "") {
+                    return option.name.toLowerCase().includes(searchTerm.toLowerCase());
+                }
+                return true;
+            }
+
             if (!searchable) return true;
-            // If searchable:
-            // 1. Always show selected options
             if (selected.includes(option.name)) return true;
-            // 2. If valid search term, show matches
             if (searchTerm.trim() !== "") {
                 return option.name.toLowerCase().includes(searchTerm.toLowerCase());
             }
-            // 3. Otherwise (empty search), hide unselected options
             return false;
         });
 
+        if (variant === 'checkbox-list') {
+            return (
+                <div className="mb-6">
+                    {label && <label className="block text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">{label}</label>}
+
+                    {/* Selected Pills */}
+                    {selected.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {selected.map(item => (
+                                <button
+                                    key={item}
+                                    onClick={() => onChange(selected.filter(s => s !== item))}
+                                    className="px-3 py-1 text-xs bg-black text-white border border-black rounded-full flex items-center gap-1 hover:bg-gray-800 transition-colors"
+                                >
+                                    {item}
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Search (Conditional for this variant) */}
+                    {searchable && (
+                        <div className="relative mb-3">
+                            <input
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                placeholder={`Search ${label || "options"}...`}
+                                className="w-full pl-3 pr-8 py-2 text-sm border border-gray-300 rounded-md focus:border-black focus:outline-none placeholder-gray-400"
+                            />
+                            <svg className="absolute right-2 top-2.5 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg>
+                        </div>
+                    )}
+
+                    {/* Checkbox List */}
+                    <div className="border border-gray-200 rounded-md max-h-60 overflow-y-auto bg-gray-50/30">
+                        {filteredOptions.length > 0 ? (
+                            <div className="divide-y divide-gray-100">
+                                {filteredOptions.map((option) => {
+                                    const isSelected = selected.includes(option.name);
+                                    return (
+                                        <div
+                                            key={option.id}
+                                            className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
+                                            onClick={() => {
+                                                if (isSelected) {
+                                                    onChange(selected.filter(s => s !== option.name));
+                                                } else {
+                                                    onChange([...selected, option.name]);
+                                                }
+                                            }}
+                                        >
+                                            <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-black border-black text-white' : 'bg-white border-gray-300'}`}>
+                                                {isSelected && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                            </div>
+                                            <span className={`text-sm ${isSelected ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>{option.name}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div className="p-4 text-center text-sm text-gray-500 italic">No options found</div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // Dynamic classes based on variant
+        const containerClass = variant === 'card'
+            ? "grid grid-cols-2 gap-3 max-h-60 overflow-y-auto"
+            : "flex flex-wrap gap-2 max-h-48 overflow-y-auto";
+
+        const getItemClass = (isSelected: boolean) => {
+            const base = "transition-all duration-200 flex items-center justify-center gap-2";
+
+            if (variant === 'card') {
+                return `${base} p-4 border rounded-lg text-sm font-medium ${isSelected
+                    ? "bg-black text-white border-black shadow-md"
+                    : "bg-white text-gray-900 border-gray-200 hover:border-black hover:shadow-sm"
+                    }`;
+            }
+            if (variant === 'emoji') {
+                return `${base} px-4 py-2 border rounded-full text-sm ${isSelected
+                    ? "bg-rose-50 text-rose-900 border-rose-200 font-medium"
+                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                    }`;
+            }
+            if (variant === 'minimal') {
+                return `${base} px-2.5 py-1 text-xs border rounded-sm uppercase tracking-wider font-medium ${isSelected
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-400"
+                    }`;
+            }
+            // default
+            return `${base} px-3 py-1 text-xs border rounded-full ${isSelected
+                ? "bg-black text-white border-black"
+                : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                }`;
+        };
+
         return (
-            <div className="mb-4">
-                {label && <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>}
+            <div className="mb-6">
+                {label && <label className="block text-xs font-bold text-gray-900 uppercase tracking-wider mb-3">{label}</label>}
                 {searchable && (
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder={`Search ${label || "options"}...`}
-                        className="w-full mb-3 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:border-black"
-                    />
+                    <div className="relative mb-3">
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={`Search ${label || "options"}...`}
+                            className="w-full pl-3 pr-8 py-2 text-sm border-b border-gray-200 bg-transparent focus:border-black focus:outline-none placeholder-gray-400"
+                        />
+                        <svg className="absolute right-2 top-2.5 text-gray-300 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg>
+                    </div>
                 )}
-                <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+
+                <div className={containerClass}>
                     {filteredOptions.map((option) => {
                         const isSelected = selected.includes(option.name);
                         return (
@@ -358,14 +502,12 @@ export default function EditProductPage() {
                                         onChange([...selected, option.name]);
                                     }
                                 }}
-                                className={`px-3 py-1 text-xs border transition-colors rounded-full flex items-center gap-1 ${isSelected
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                                    }`}
+                                className={getItemClass(isSelected)}
                             >
-                                {option.name}
+                                {variant === 'emoji' && <span className="text-lg leading-none">{getEmoji(option.name)}</span>}
+                                <span>{option.name}</span>
                                 {isSelected && (
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
                                         <line x1="18" y1="6" x2="6" y2="18"></line>
                                         <line x1="6" y1="6" x2="18" y2="18"></line>
                                     </svg>
@@ -374,7 +516,7 @@ export default function EditProductPage() {
                         );
                     })}
                     {filteredOptions.length === 0 && (
-                        <p className="text-xs text-gray-500 italic">No matches found</p>
+                        <p className="text-xs text-gray-500 italic py-2 col-span-full text-center">No matches found</p>
                     )}
                 </div>
             </div>
@@ -565,7 +707,7 @@ export default function EditProductPage() {
                                     </div>
 
                                     {/* Actions Bar - MATCHING PDP ProductInfo logic for 'Your Product' button placement */}
-                                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-[1001] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none md:static md:bottom-auto md:left-auto md:right-auto md:p-0 md:bg-transparent md:border-none md:z-auto md:mt-4 grid grid-cols-2 gap-3">
+                                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-[1001] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none md:static md:bottom-auto md:left-auto md:right-auto md:p-0 md:bg-transparent md:border-none md:z-auto md:mt-4 grid grid-cols-2 gap-0 md:gap-3">
                                         {isEditing ? (
                                             <>
                                                 <button
@@ -671,9 +813,9 @@ export default function EditProductPage() {
                                                                         <label className="block text-xs font-medium text-gray-900 mb-2">Description</label>
                                                                         <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={6} className="w-full p-2 border border-gray-300 rounded focus:border-black outline-none resize-none bg-white text-sm" placeholder="Enter product detailed description..." />
                                                                     </div>
-                                                                    <FacetSelector label="Type" selected={selectedProductTypes} options={availableProductTypes} onChange={setSelectedProductTypes} />
-                                                                    <FacetSelector label="Color" selected={selectedColors} options={availableColors} onChange={setSelectedColors} searchable={true} />
-                                                                    <FacetSelector label="Material" selected={selectedMaterials} options={availableMaterials} onChange={setSelectedMaterials} />
+                                                                    <FacetSelector label="Color" selected={selectedColors} options={availableColors} onChange={setSelectedColors} searchable={true} variant="checkbox-list" />
+                                                                    <FacetSelector label="Type" selected={selectedProductTypes} options={availableProductTypes} onChange={setSelectedProductTypes} variant="checkbox-list" />
+                                                                    <FacetSelector label="Material" selected={selectedMaterials} options={availableMaterials} onChange={setSelectedMaterials} variant="checkbox-list" />
                                                                 </>
                                                             ) : (
                                                                 <>
@@ -724,7 +866,7 @@ export default function EditProductPage() {
                                                 <div className={`grid transition-all duration-300 ease-in-out ${expandedSections.occasion ? 'grid-rows-[1fr] opacity-100 mb-4' : 'grid-rows-[0fr] opacity-0'}`}>
                                                     <div className="overflow-hidden">
                                                         {isEditing ? (
-                                                            <FacetSelector selected={selectedOccasions} options={availableOccasions} onChange={setSelectedOccasions} />
+                                                            <FacetSelector selected={selectedOccasions} options={availableOccasions} onChange={setSelectedOccasions} variant="checkbox-list" />
                                                         ) : (
                                                             product.occasions && product.occasions.length > 0 ? (
                                                                 <div className="text-sm text-gray-600"><p>{product.occasions.map((o: any) => typeof o === 'string' ? o : o.name).join(", ")}</p></div>

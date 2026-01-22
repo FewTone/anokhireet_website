@@ -472,17 +472,17 @@ export default function ProductDetailPage() {
                     db_id: p.id,
                 };
             } else {
-                // Try direct id match
-                const { data: productsById, error: productsByIdError } = await supabase
+                // Try custom_id match
+                let { data: productsByCustomId, error: productsByCustomIdError } = await supabase
                     .from("products")
                     .select("*")
-                    .eq("id", productId)
+                    .eq("custom_id", productId)
                     .in("status", ["approved", "pending_deactivation"])
                     .eq("is_active", true)
                     .limit(1);
 
-                if (!productsByIdError && productsById && productsById.length > 0) {
-                    const p = productsById[0];
+                if (!productsByCustomIdError && productsByCustomId && productsByCustomId.length > 0) {
+                    const p = productsByCustomId[0];
                     // Get all images from images array or fallback to single image
                     if (p.images && Array.isArray(p.images) && p.images.length > 0) {
                         productImages = p.images;
@@ -508,7 +508,7 @@ export default function ProductDetailPage() {
 
                     productData = {
                         id: typeof p.id === 'string' ? p.id : 0,
-                        productId: p.product_id || p.id,
+                        productId: p.custom_id || p.product_id, // prioritize custom_id
                         name: p.title || p.name,
                         price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
                         image: productImages.length > 0 ? productImages[0] : p.image || "",
@@ -519,6 +519,55 @@ export default function ProductDetailPage() {
                         ownerAvatar: fetchedOwnerAvatar,
                         db_id: p.id,
                     };
+                } else {
+                    // Try direct id match
+                    const { data: productsById, error: productsByIdError } = await supabase
+                        .from("products")
+                        .select("*")
+                        .eq("id", productId)
+                        .in("status", ["approved", "pending_deactivation"])
+                        .eq("is_active", true)
+                        .limit(1);
+
+                    if (!productsByIdError && productsById && productsById.length > 0) {
+                        const p = productsById[0];
+                        // Get all images from images array or fallback to single image
+                        if (p.images && Array.isArray(p.images) && p.images.length > 0) {
+                            productImages = p.images;
+                        } else if (p.image) {
+                            productImages = [p.image];
+                        }
+
+                        // Fetch owner name and avatar if owner_user_id exists
+                        let fetchedOwnerName = "";
+                        let fetchedOwnerAvatar = "";
+                        if (p.owner_user_id) {
+                            const { data: ownerData } = await supabase
+                                .from('users')
+                                .select('name, avatar_url')
+                                .eq('id', p.owner_user_id)
+                                .single();
+
+                            if (ownerData) {
+                                fetchedOwnerName = ownerData.name;
+                                fetchedOwnerAvatar = ownerData.avatar_url;
+                            }
+                        }
+
+                        productData = {
+                            id: typeof p.id === 'string' ? p.id : 0,
+                            productId: p.product_id || p.id,
+                            name: p.title || p.name,
+                            price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
+                            image: productImages.length > 0 ? productImages[0] : p.image || "",
+                            category: p.category || p.category_id,
+                            original_price: p.original_price,
+                            owner_user_id: p.owner_user_id,
+                            ownerName: fetchedOwnerName,
+                            ownerAvatar: fetchedOwnerAvatar,
+                            db_id: p.id,
+                        };
+                    }
                 }
             }
 

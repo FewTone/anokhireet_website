@@ -49,7 +49,7 @@ export default function ProductGallery({
                         {/* Back Button */}
                         <button
                             onClick={onBack}
-                            className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white rounded-full z-30"
+                            className="w-10 h-10 flex items-center justify-center pointer-events-auto bg-white/40 backdrop-blur-md border border-white/30 rounded-full z-30 shadow-sm"
                         >
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M15 18l-6-6 6-6" />
@@ -62,7 +62,7 @@ export default function ProductGallery({
                             <button
                                 onClick={onToggleWishlist}
                                 disabled={isWishlistLoading}
-                                className="w-10 h-10 flex items-center justify-center transition-transform active:scale-95 bg-white rounded-full border border-gray-100"
+                                className="w-10 h-10 flex items-center justify-center transition-transform active:scale-95 bg-white/40 backdrop-blur-md border border-white/30 rounded-full shadow-sm"
                             >
                                 <svg
                                     width="20"
@@ -81,7 +81,7 @@ export default function ProductGallery({
                             {/* Share Button */}
                             <button
                                 onClick={onShare}
-                                className="w-10 h-10 flex items-center justify-center bg-white rounded-full border border-gray-100"
+                                className="w-10 h-10 flex items-center justify-center bg-white/40 backdrop-blur-md border border-white/30 rounded-full shadow-sm"
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
