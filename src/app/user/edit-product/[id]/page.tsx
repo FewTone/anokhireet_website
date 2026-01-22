@@ -8,6 +8,8 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName, getUserInitials } from "@/lib/utils";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface Product {
     id: number | string;
@@ -45,6 +47,11 @@ export default function EditProductPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [showInquiryModal, setShowInquiryModal] = useState(false);
+    const [bookedDates, setBookedDates] = useState<[Date | null, Date | null]>([null, null]);
+    const [dbBookings, setDbBookings] = useState<any[]>([]);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [bookingToCancel, setBookingToCancel] = useState<any>(null);
 
     useEffect(() => {
         if (searchParams?.get("edit") === "true") {
@@ -72,6 +79,70 @@ export default function EditProductPage() {
     const [availableOccasions, setAvailableOccasions] = useState<Facet[]>([]);
     const [availableProductTypes, setAvailableProductTypes] = useState<Facet[]>([]);
 
+    // Function to get current product bookings for display
+    const getProductBookings = () => {
+        return [...dbBookings].sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    };
+
+    // Function to cancel a booking
+    const cancelBooking = async (booking: any) => {
+        try {
+            const { error } = await supabase
+                .from('inquiries')
+                .update({ status: 'rejected' })
+                .eq('id', booking.id);
+
+            if (error) throw error;
+
+            // Refresh bookings
+            await fetchDBBookings();
+        } catch (err: any) {
+            console.error("Error cancelling booking:", err);
+            alert(`Failed to cancel booking: ${err.message || "Unknown error"}`);
+        }
+    };
+
+    const fetchDBBookings = async () => {
+        if (!productId) return;
+        try {
+            const { data, error } = await supabase
+                .from('inquiries')
+                .select('id, start_date, end_date, status')
+                .eq('product_id', productId)
+                .neq('status', 'rejected');
+
+            if (!error && data) {
+                setDbBookings(data);
+            }
+        } catch (err) {
+            console.error("Error fetching bookings:", err);
+        }
+    };
+
+    // Function to get all booked dates globally
+    const getAllBookedDates = () => {
+        const excludedDates: Date[] = [];
+
+        // Add DB
+        dbBookings.forEach((booking: any) => {
+            const startParts = booking.start_date.split('-').map(Number);
+            const endParts = booking.end_date.split('-').map(Number);
+
+            const start = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+            const end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+
+            const current = new Date(start);
+            const last = new Date(end);
+
+            while (current <= last) {
+                excludedDates.push(new Date(current));
+                current.setDate(current.getDate() + 1);
+            }
+        });
+
+        return excludedDates;
+    };
+
 
     // Gallery State
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -95,6 +166,7 @@ export default function EditProductPage() {
         if (productId) {
             fetchProduct();
             fetchFacets();
+            fetchDBBookings();
         }
     }, [productId]);
 
@@ -747,17 +819,61 @@ export default function EditProductPage() {
                                                 </button>
                                             </>
                                         ) : (
-                                            <button
-                                                onClick={() => setIsEditing(true)}
-                                                // MATCHING "Your Product" box style from PDP but active
-                                                // PDP: w-full bg-gray-100 text-gray-500 font-semibold py-4 px-6 ... border md:rounded-none
-                                                className="col-span-2 w-full bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity text-center uppercase tracking-wider text-sm md:text-base md:rounded-none"
-                                            >
-                                                Edit Product
-                                            </button>
+                                            <div className="col-span-2 grid grid-cols-2 gap-4">
+                                                <button
+                                                    onClick={() => setShowInquiryModal(true)}
+                                                    className="w-full bg-white text-black font-semibold py-4 px-6 hover:bg-gray-100 transition-colors text-center uppercase tracking-wider text-sm md:text-base md:rounded-none border border-black"
+                                                >
+                                                    Book Slot
+                                                </button>
+                                                <button
+                                                    onClick={() => setIsEditing(true)}
+                                                    // MATCHING "Your Product" box style from PDP but active
+                                                    // PDP: w-full bg-gray-100 text-gray-500 font-semibold py-4 px-6 ... border md:rounded-none
+                                                    className="w-full bg-black text-white font-semibold py-4 px-6 hover:opacity-90 transition-opacity text-center uppercase tracking-wider text-sm md:text-base md:rounded-none"
+                                                >
+                                                    Edit Product
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
+
+                                {getProductBookings().length > 0 && (
+                                    <div className="mt-6 p-4 bg-gray-50 border border-gray-200">
+                                        <h3 className="text-sm font-semibold uppercase tracking-wide mb-3">Booked Slots</h3>
+                                        <div className="space-y-2">
+                                            {getProductBookings().map((booking: any, index: number) => (
+                                                <div key={index} className="flex items-center justify-between bg-white p-3 border border-gray-300">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="text-sm">
+                                                            <span className="font-medium">
+                                                                {(() => {
+                                                                    const [sY, sM, sD] = booking.start_date.split('-').map(Number);
+                                                                    const [eY, eM, eD] = booking.end_date.split('-').map(Number);
+                                                                    return `${new Date(sY, sM - 1, sD).toLocaleDateString('en-GB')} - ${new Date(eY, eM - 1, eD).toLocaleDateString('en-GB')}`;
+                                                                })()}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            setBookingToCancel(booking);
+                                                            setShowCancelModal(true);
+                                                        }}
+                                                        className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                                        title="Cancel booking"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Product Details Section Container - Matches PDP surrounding div */}
                                 <div className="space-y-4 border-t border-gray-200 pt-6">
@@ -895,6 +1011,200 @@ export default function EditProductPage() {
 
                     </div>
                 </div>
+
+                {/* Inquiry Modal */}
+                {showInquiryModal && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <style>
+                            {`
+                                .react-datepicker {
+                                    border: 1px solid #e5e7eb;
+                                    font-family: inherit;
+                                    border-radius: 0 !important;
+                                    margin: 0 auto !important;
+                                }
+                                .react-datepicker__header {
+                                    background-color: white;
+                                    border-bottom: 1px solid #e5e7eb;
+                                }
+                                .react-datepicker__month-container {
+                                    width: 100% !important;
+                                }
+                                .react-datepicker__day-name, .react-datepicker__day {
+                                    width: 2rem !important;
+                                    line-height: 2rem !important;
+                                    margin: 0.05rem !important;
+                                    font-size: 0.875rem !important;
+                                }
+                                .react-datepicker__day--selected, 
+                                .react-datepicker__day--in-selecting-range, 
+                                .react-datepicker__day--in-range,
+                                .react-datepicker__month-text--selected,
+                                .react-datepicker__month-text--in-selecting-range,
+                                .react-datepicker__month-text--in-range {
+                                    background-color: #e5e7eb !important;
+                                    color: #1f2937 !important;
+                                    border-radius: 0.375rem !important;
+                                    border: none !important;
+                                }
+                                .react-datepicker__day--range-start {
+                                    background-color: #e5e7eb !important;
+                                    color: #1f2937 !important;
+                                    border-radius: 0.375rem !important;
+                                    border: none !important;
+                                }
+                                .react-datepicker__day--range-end {
+                                    background-color: #e5e7eb !important;
+                                    color: #1f2937 !important;
+                                    border-radius: 0.375rem !important;
+                                    border: 1px solid #9ca3af !important;
+                                }
+                                .react-datepicker__day--in-selecting-range {
+                                    background-color: #d1d5db !important;
+                                    color: #374151 !important;
+                                    border: 1px solid #9ca3af !important;
+                                }
+                                .react-datepicker__day--in-range:not(.react-datepicker__day--selected) {
+                                    background-color: #e5e7eb !important;
+                                    color: #1f2937 !important;
+                                    border: none !important;
+                                }
+                                .react-datepicker__day:hover {
+                                    background-color: #f3f4f6 !important;
+                                    border-radius: 0.375rem !important;
+                                }
+                            `}
+                        </style>
+                        <div className="bg-white rounded-none max-w-xl w-full p-8 relative">
+                            <button
+                                onClick={() => {
+                                    setShowInquiryModal(false);
+                                }}
+                                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+                            >
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+
+                            <h2 className="text-lg font-semibold uppercase tracking-wide mb-6 text-center">Book Rental Period</h2>
+
+                            <div className="space-y-4">
+                                <div className="relative group custom-datepicker-wrapper flex justify-center">
+                                    <DatePicker
+                                        selected={bookedDates[0]}
+                                        onChange={(update: [Date | null, Date | null]) => {
+                                            const [start, end] = update;
+                                            setBookedDates([start, end]);
+                                        }}
+                                        startDate={bookedDates[0]}
+                                        endDate={bookedDates[1]}
+                                        selectsRange
+                                        inline
+                                        minDate={new Date()}
+                                        monthsShown={1}
+                                        dateFormat="dd/MM/yyyy"
+                                        className="w-full"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 mt-4">
+                                    <div className="border border-black bg-white p-3">
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Start Date</p>
+                                        <p className="text-sm font-medium">{bookedDates[0] ? bookedDates[0].toLocaleDateString('en-GB') : "Select date"}</p>
+                                    </div>
+                                    <div className="border border-black bg-white p-3">
+                                        <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">End Date</p>
+                                        <p className="text-sm font-medium">{bookedDates[1] ? bookedDates[1].toLocaleDateString('en-GB') : "Select date"}</p>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={async () => {
+                                        if (bookedDates[0] && bookedDates[1]) {
+                                            try {
+                                                const { data: { user } } = await supabase.auth.getUser();
+                                                if (!user) {
+                                                    alert("You must be logged in to book.");
+                                                    return;
+                                                }
+
+                                                const { error } = await supabase
+                                                    .from('inquiries')
+                                                    .insert([{
+                                                        product_id: productId,
+                                                        owner_user_id: product.owner_user_id,
+                                                        renter_user_id: product.owner_user_id, // Owner booking for themselves
+                                                        start_date: `${bookedDates[0].getFullYear()}-${String(bookedDates[0].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[0].getDate()).padStart(2, '0')}`,
+                                                        end_date: `${bookedDates[1].getFullYear()}-${String(bookedDates[1].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[1].getDate()).padStart(2, '0')}`,
+                                                        status: 'confirmed'
+                                                    }]);
+
+                                                if (error) throw error;
+
+                                                fetchDBBookings();
+                                                console.log('Booking confirmed in DB:', bookedDates);
+                                                alert("Booking confirmed successfully.");
+                                            } catch (err: any) {
+                                                console.error('Error confirming booking:', err);
+                                                alert(`Failed to confirm booking: ${err.message || "Unknown error"}`);
+                                            }
+                                        }
+                                        setShowInquiryModal(false);
+                                    }}
+                                    className="w-full bg-black text-white font-semibold py-3 px-4 rounded-none disabled:opacity-50"
+                                >
+                                    Confirm Booking
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {/* Cancel Confirmation Modal */}
+                {showCancelModal && (
+                    <div className="fixed inset-0 bg-black/50 z-[2000] flex items-center justify-center p-4 backdrop-blur-sm">
+                        <div className="bg-white rounded-none max-w-sm w-full p-8 shadow-2xl border border-gray-100">
+                            <h2 className="text-lg font-semibold uppercase tracking-wider mb-4 text-center">Confirm Cancellation</h2>
+                            <p className="text-gray-600 text-center mb-8 text-sm leading-relaxed">
+                                Are you sure you want to cancel the booking for <br />
+                                <span className="font-semibold text-black">
+                                    {bookingToCancel && (() => {
+                                        const [sY, sM, sD] = bookingToCancel.start_date.split('-').map(Number);
+                                        const [eY, eM, eD] = bookingToCancel.end_date.split('-').map(Number);
+                                        return `${new Date(sY, sM - 1, sD).toLocaleDateString('en-GB')} - ${new Date(eY, eM - 1, eD).toLocaleDateString('en-GB')}`;
+                                    })()}
+                                </span>?
+                                <br /><br />
+                                This action cannot be undone and these dates will be opened for other users.
+                            </p>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => {
+                                        if (bookingToCancel) {
+                                            cancelBooking(bookingToCancel);
+                                        }
+                                        setShowCancelModal(false);
+                                        setBookingToCancel(null);
+                                    }}
+                                    className="w-full bg-black text-white font-semibold py-4 px-4 hover:bg-gray-800 transition-colors uppercase tracking-widest text-xs"
+                                >
+                                    Yes, Cancel Slot
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setShowCancelModal(false);
+                                        setBookingToCancel(null);
+                                    }}
+                                    className="w-full bg-white text-black border border-gray-200 font-semibold py-4 px-4 hover:bg-gray-50 transition-colors uppercase tracking-widest text-xs"
+                                >
+                                    No, Keep Booking
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
             <Footer />
         </div>

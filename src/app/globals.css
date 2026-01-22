@@ -145,6 +145,20 @@ input[type="search"]::-webkit-search-results-decoration {
   display: none;
 }
 
+/* Mandatory Strikethrough for booked/disabled dates */
+.react-datepicker__day--disabled {
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  text-decoration: line-through !important;
+  text-decoration-thickness: 1px !important;
+}
+
+.react-datepicker__day--disabled:hover {
+  background-color: transparent !important;
+  color: #9ca3af !important;
+}
+
 /* Custom Scrollbar for Chat */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
@@ -158,6 +172,7 @@ input[type="search"]::-webkit-search-results-decoration {
 .scrollbar-thin::-webkit-scrollbar-track {
   background-color: transparent;
 }
+
 /* Custom Scrollbar for Dashboard Table */
 .custom-scrollbar::-webkit-scrollbar {
   height: 6px;

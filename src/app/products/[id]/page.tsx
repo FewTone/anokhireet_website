@@ -49,6 +49,31 @@ export default function ProductDetailPage() {
     const [loading, setLoading] = useState(true);
     const [productImages, setProductImages] = useState<string[]>([]);
     const [showInquiryModal, setShowInquiryModal] = useState(false);
+    const [dbBookedDates, setDbBookedDates] = useState<any[]>([]);
+
+    // Function to get booked dates for this product
+    const getBookedDates = () => {
+        const excludedDates: Date[] = [];
+
+        dbBookedDates.forEach(dbBooking => {
+            // Robust parsing of YYYY-MM-DD to avoid UTC shifts
+            const startParts = dbBooking.start_date.split('-').map(Number);
+            const endParts = dbBooking.end_date.split('-').map(Number);
+
+            const start = new Date(startParts[0], startParts[1] - 1, startParts[2]);
+            const end = new Date(endParts[0], endParts[1] - 1, endParts[2]);
+
+            const current = new Date(start);
+            const last = new Date(end);
+
+            while (current <= last) {
+                excludedDates.push(new Date(current));
+                current.setDate(current.getDate() + 1);
+            }
+        });
+
+        return excludedDates;
+    };
     const [showLoginPopup, setShowLoginPopup] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
@@ -215,6 +240,34 @@ export default function ProductDetailPage() {
             checkLoginStatus();
         }
     }, [productId]);
+
+    // Fetch booked dates from Supabase
+    useEffect(() => {
+        const fetchBookedDatesFromDB = async () => {
+            if (!product?.db_id) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('inquiries')
+                    .select('start_date, end_date, status')
+                    .eq('product_id', product.db_id)
+                    .neq('status', 'rejected');
+
+                if (error) {
+                    console.error("Error fetching booked dates:", error);
+                    return;
+                }
+
+                if (data) {
+                    setDbBookedDates(data);
+                }
+            } catch (err) {
+                console.error("Error fetching booked dates:", err);
+            }
+        };
+
+        fetchBookedDatesFromDB();
+    }, [product?.db_id]);
 
     // Check if user was redirected from login (inquiry parameter)
     useEffect(() => {
@@ -1022,19 +1075,29 @@ export default function ProductDetailPage() {
                             <div className="space-y-4">
                                 <div className="relative group custom-datepicker-wrapper flex justify-center">
                                     <DatePicker
-                                        selected={inquiryForm.start_date ? new Date(inquiryForm.start_date) : null}
+                                        selected={inquiryForm.start_date ? (() => {
+                                            const [y, m, d] = inquiryForm.start_date.split('-').map(Number);
+                                            return new Date(y, m - 1, d);
+                                        })() : null}
                                         onChange={(update: [Date | null, Date | null]) => {
                                             const [start, end] = update;
                                             setInquiryForm({
-                                                start_date: start ? start.toLocaleDateString('en-CA') : "",
-                                                end_date: end ? end.toLocaleDateString('en-CA') : ""
+                                                start_date: start ? `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}` : "",
+                                                end_date: end ? `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}` : ""
                                             });
                                         }}
-                                        startDate={inquiryForm.start_date ? new Date(inquiryForm.start_date) : null}
-                                        endDate={inquiryForm.end_date ? new Date(inquiryForm.end_date) : null}
+                                        startDate={inquiryForm.start_date ? (() => {
+                                            const [y, m, d] = inquiryForm.start_date.split('-').map(Number);
+                                            return new Date(y, m - 1, d);
+                                        })() : null}
+                                        endDate={inquiryForm.end_date ? (() => {
+                                            const [y, m, d] = inquiryForm.end_date.split('-').map(Number);
+                                            return new Date(y, m - 1, d);
+                                        })() : null}
                                         selectsRange
                                         inline
                                         minDate={new Date()}
+                                        excludeDates={getBookedDates()}
                                         monthsShown={1}
                                         dateFormat="dd/MM/yyyy"
                                         className="w-full"
@@ -1044,11 +1107,17 @@ export default function ProductDetailPage() {
                                 <div className="grid grid-cols-2 gap-4 mt-4">
                                     <div className="border border-black bg-white p-3">
                                         <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Start Date</p>
-                                        <p className="text-sm font-medium">{inquiryForm.start_date ? new Date(inquiryForm.start_date).toLocaleDateString('en-GB') : "Select date"}</p>
+                                        <p className="text-sm font-medium">{inquiryForm.start_date ? (() => {
+                                            const [y, m, d] = inquiryForm.start_date.split('-').map(Number);
+                                            return new Date(y, m - 1, d).toLocaleDateString('en-GB');
+                                        })() : "Select date"}</p>
                                     </div>
                                     <div className="border border-black bg-white p-3">
                                         <p className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">End Date</p>
-                                        <p className="text-sm font-medium">{inquiryForm.end_date ? new Date(inquiryForm.end_date).toLocaleDateString('en-GB') : "Select date"}</p>
+                                        <p className="text-sm font-medium">{inquiryForm.end_date ? (() => {
+                                            const [y, m, d] = inquiryForm.end_date.split('-').map(Number);
+                                            return new Date(y, m - 1, d).toLocaleDateString('en-GB');
+                                        })() : "Select date"}</p>
                                     </div>
                                 </div>
 
