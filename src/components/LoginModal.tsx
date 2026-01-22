@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -13,10 +14,16 @@ interface PendingUserData {
     auth_user_id: string | null;
 }
 
-export default function LoginModal() {
+interface LoginModalProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+    onLoginSuccess?: () => void;
+}
+
+export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginModalProps = {}) {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const showLogin = searchParams.get('login') === 'true';
+    const showLogin = isOpen ?? (searchParams.get('login') === 'true');
 
     const [phone, setPhone] = useState("");
     const [loading, setLoading] = useState(false); // Changed default to false
@@ -36,6 +43,12 @@ export default function LoginModal() {
 
     const [citySearch, setCitySearch] = useState("");
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -79,13 +92,22 @@ export default function LoginModal() {
     }, [showLogin]);
 
     const handleClose = () => {
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete('login');
-        router.push(params.toString() ? `/?${params.toString()}` : '/');
+        if (onClose) {
+            onClose();
+        } else {
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('login');
+            router.push(params.toString() ? `/?${params.toString()}` : '/');
+        }
     };
 
     // Helper function to get return URL and redirect
     const getReturnUrlAndRedirect = () => {
+        if (onLoginSuccess) {
+            onLoginSuccess();
+            return;
+        }
+
         const returnUrl = searchParams.get('returnUrl');
         const target = returnUrl ? decodeURIComponent(returnUrl) : "/user";
         console.log("🚀 Redirecting to:", target);
@@ -516,7 +538,7 @@ export default function LoginModal() {
                             selectedCities.map(cityId => ({ user_id: linkedUser.id, city_id: cityId }))
                         );
                     }
-                    router.push("/user");
+                    getReturnUrlAndRedirect();
                     return;
                 }
                 throw createError;
@@ -528,7 +550,7 @@ export default function LoginModal() {
                 );
             }
 
-            router.push("/user");
+            getReturnUrlAndRedirect();
         } catch (err: any) {
             setError(err.message || "Failed to create account. Please try again.");
         } finally {
@@ -538,8 +560,9 @@ export default function LoginModal() {
 
     if (!showLogin) return null;
     if (!isSessionChecked) return null; // Don't show anything while checking session
+    if (!mounted) return null;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
             {/* Backdrop Blur Layer */}
             <div
@@ -901,6 +924,7 @@ export default function LoginModal() {
                     )}
                 </div>
             </div>
-        </div >
+        </div>,
+        document.body
     );
 }

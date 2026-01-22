@@ -11,6 +11,7 @@ import { formatUserDisplayName } from "@/lib/utils";
 import dynamic from 'next/dynamic';
 import ReportModal from "@/components/ReportModal";
 import SuccessModal from "@/components/SuccessModal";
+import LoginModal from "@/components/LoginModal";
 
 interface Chat {
     id: string;
@@ -80,6 +81,7 @@ export default function ChatPage() {
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showLoginPopup, setShowLoginPopup] = useState(false);
 
 
     // Pagination state
@@ -1142,12 +1144,21 @@ export default function ChatPage() {
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
                     <h2 className="text-2xl font-bold mb-4">Please log in to chat</h2>
-                    <button onClick={() => router.push("/profile")} className="bg-black text-white px-6 py-2 rounded-full font-semibold hover:opacity-90">
+                    <button onClick={() => setShowLoginPopup(true)} className="bg-black text-white px-6 py-2 rounded-full font-semibold hover:opacity-90">
                         Log In
                     </button>
                 </div>
                 <Footer />
                 <BottomNav />
+
+                <LoginModal
+                    isOpen={showLoginPopup}
+                    onClose={() => setShowLoginPopup(false)}
+                    onLoginSuccess={async () => {
+                        await checkLoginStatus();
+                        setShowLoginPopup(false);
+                    }}
+                />
             </div>
         );
     }

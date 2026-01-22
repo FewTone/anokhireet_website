@@ -13,6 +13,7 @@ import ProductGallery from "@/components/products/ProductGallery";
 import ProductInfo from "@/components/products/ProductInfo";
 import RelatedProducts from "@/components/products/RelatedProducts";
 import ProductAccordions from "@/components/products/ProductAccordions";
+import LoginModal from "@/components/LoginModal";
 import { supabase } from "@/lib/supabase";
 import { formatUserDisplayName, getUserInitials } from "@/lib/utils";
 import DatePicker from "react-datepicker";
@@ -48,6 +49,7 @@ export default function ProductDetailPage() {
     const [loading, setLoading] = useState(true);
     const [productImages, setProductImages] = useState<string[]>([]);
     const [showInquiryModal, setShowInquiryModal] = useState(false);
+    const [showLoginPopup, setShowLoginPopup] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
     // const endDateInputRef = useRef<HTMLInputElement>(null); // Removed native ref
@@ -658,9 +660,7 @@ export default function ProductDetailPage() {
         }
 
         if (!isLoggedIn) {
-            // Redirect to login page with return URL
-            const returnUrl = `/products/${productId}?inquiry=true`;
-            router.push(`/profile?returnUrl=${encodeURIComponent(returnUrl)}`);
+            setShowLoginPopup(true);
             return;
         }
         setShowInquiryModal(true);
@@ -1031,6 +1031,18 @@ export default function ProductDetailPage() {
                     </div>
                 )
             }
+
+            {/* Login Popup */}
+            {/* Login Popup */}
+            <LoginModal
+                isOpen={showLoginPopup}
+                onClose={() => setShowLoginPopup(false)}
+                onLoginSuccess={async () => {
+                    await checkLoginStatus();
+                    setShowLoginPopup(false);
+                    setShowInquiryModal(true);
+                }}
+            />
         </>
     );
 }
