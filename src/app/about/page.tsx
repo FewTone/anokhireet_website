@@ -63,7 +63,7 @@ export default function AboutPage() {
             <div
                 className="absolute inset-0 z-0"
                 style={{
-                    background: 'radial-gradient(ellipse 100% 100% at 50% 0%, #890304 3%, #300000 20%, #2E0000 36%, #1A0000 100%)'
+                    background: 'radial-gradient(ellipse 80% 100% at 50% 0%, #890304 3%, #300000 20%, #2E0000 36%, #1A0000 100%)'
                 }}
             />
             <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-24 flex flex-col gap-24 md:gap-40 items-center">
@@ -76,7 +76,7 @@ export default function AboutPage() {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-10">
                         {/* The Glow */}
                         <div
-                            className="absolute w-[600px] h-[600px] md:w-[600px] md:h-[600px] lg:w-[1500px] lg:h-[1500px] rounded-full opacity-60"
+                            className="absolute w-[500px] h-[500px] md:w-[800px] md:h-[800px] lg:w-[1200px] lg:h-[1200px] rounded-full"
                             style={{
                                 background: 'radial-gradient(circle at 50% 50%, #890304 0%, #300000 45%, rgba(15, 0, 0, 0) 100%)',
                                 filter: 'blur(60px)'
