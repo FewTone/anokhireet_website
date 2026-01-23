@@ -59,9 +59,12 @@ export default function AboutPage() {
         <main className="min-h-screen text-white overflow-x-hidden relative">
 
 
-            {/* Background Page Base Color */}
+            {/* Background Page Radial Gradient - Top to Bottom (from Figma) */}
             <div
-                className="absolute inset-0 z-0 bg-[#0F0000]"
+                className="absolute inset-0 z-0"
+                style={{
+                    background: 'radial-gradient(ellipse 100% 100% at 50% 0%, #890304 3%, #300000 20%, #2E0000 36%, #1A0000 100%)'
+                }}
             />
             <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-24 flex flex-col gap-24 md:gap-40 items-center">
 
@@ -73,9 +76,9 @@ export default function AboutPage() {
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-10">
                         {/* The Glow */}
                         <div
-                            className="absolute w-[600px] h-[600px] md:w-[1000px] md:h-[1000px] lg:w-[1400px] lg:h-[1400px] rounded-full opacity-70"
+                            className="absolute w-[600px] h-[600px] md:w-[600px] md:h-[600px] lg:w-[1500px] lg:h-[1500px] rounded-full opacity-60"
                             style={{
-                                background: 'radial-gradient(circle at 50% 50%, #890304 0%, #300000 50%, rgba(15, 0, 0, 0) 80%)',
+                                background: 'radial-gradient(circle at 50% 50%, #890304 0%, #300000 45%, rgba(15, 0, 0, 0) 100%)',
                                 filter: 'blur(60px)'
                             }}
                         />
@@ -131,7 +134,7 @@ export default function AboutPage() {
                     {storySections.map((section) => (
                         <section
                             key={section.id}
-                            className={`w-full flex ${section.align === "left" ? "justify-start" : "justify-end"}`}
+                            className={`w-full flex ${section.align === "left" ? "justify-start" : "justify-end"} ${section.id === "journey" ? "pr-12 md:pr-40" : ""}`}
                         >
                             <div
                                 style={{ maxWidth: section.maxWidth }}
@@ -151,29 +154,28 @@ export default function AboutPage() {
                     ))}
                 </div>
 
-                {/* Bottom Section - Join the Story */}
-                <section className="w-full max-w-[1000px] flex flex-col items-center pt-20 pb-32">
-                    <div className="relative w-full flex flex-col items-center px-4">
-                        <div className="w-full max-w-[713px] relative z-20">
-                            <Image
-                                src="/images/Group%2066.png"
-                                alt="Join the story"
-                                width={713}
-                                height={164}
-                                className="w-full h-auto drop-shadow-lg"
-                            />
-                        </div>
+                {/* Bottom Section - Join the Story - Side by Side layout */}
+                <section className="w-full max-w-[1200px] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+                    {/* Bottom Envelope - Decorative Static with Rotation */}
+                    <div className="w-[180px] md:w-[350px] lg:w-[450px] shrink-0">
+                        <Image
+                            src="/images/Group%2038.png"
+                            alt="Envelope"
+                            width={427}
+                            height={395}
+                            className="w-full h-auto drop-shadow-[0_45px_45px_rgba(0,0,0,0.6)] rotate-[5deg]"
+                        />
+                    </div>
 
-                        {/* Bottom Envelope - Decorative Static */}
-                        <div className="absolute -top-32 -left-10 md:-top-48 md:-left-20 w-[140px] md:w-[280px] lg:w-[350px] z-10 opacity-70">
-                            <Image
-                                src="/images/Group%2038.png"
-                                alt=""
-                                width={427}
-                                height={395}
-                                className="w-full h-auto drop-shadow-2xl grayscale-[0.2]"
-                            />
-                        </div>
+                    {/* Join Text - Group 66 */}
+                    <div className="w-full max-w-[713px]">
+                        <Image
+                            src="/images/Group%2066.png"
+                            alt="Join the story"
+                            width={713}
+                            height={164}
+                            className="w-full h-auto drop-shadow-lg"
+                        />
                     </div>
                 </section>
             </div>
