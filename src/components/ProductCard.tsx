@@ -186,8 +186,13 @@ export default function ProductCard({ product, hideDetails = false, disableHover
         if (isNaN(number)) return `₹${cleanPrice}`;
 
         // Compact formatting for MRP (if enabled and >= 1000)
-        if (compact && number >= 1000) {
-            return `₹${(number / 1000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}k`;
+        if (compact) {
+            if (number >= 1000000) {
+                return `₹${(number / 1000000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}m`;
+            }
+            if (number >= 1000) {
+                return `₹${(number / 1000).toLocaleString('en-IN', { maximumFractionDigits: 1 })}k`;
+            }
         }
 
         return `₹${number.toLocaleString('en-IN')}`;
@@ -253,33 +258,22 @@ export default function ProductCard({ product, hideDetails = false, disableHover
 
                 {!hideDetails && (
                     <div className="px-2 pb-2">
-                        <div className="flex justify-between items-start">
-                            <div className="flex-1 pr-2 min-w-0">
-                                <h4 className="text-sm md:text-base font-medium tracking-tight text-neutral-900 truncate">
-                                    {product.name}
-                                </h4>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                                <p className="text-sm md:text-base font-normal text-neutral-900 whitespace-nowrap">
-                                    <span className="text-xs text-neutral-500 uppercase tracking-wider mr-1">RENT</span>
-                                    {formatPrice(product.price, false)}
-                                </p>
-                            </div>
+                        <div className="mb-2">
+                            <h4 className="text-base md:text-lg font-semibold tracking-tight text-neutral-900">
+                                #{product.productId || product.id}
+                            </h4>
                         </div>
-                        <div className="flex justify-between items-center mt-1">
-                            <div className="flex-1 pr-2 min-w-0">
-                                <p className="text-xs text-neutral-500 truncate">
-                                    #{product.productId || product.id}
+                        <div className="flex items-baseline justify-between w-full">
+                            <p className="text-sm md:text-base whitespace-nowrap">
+                                <span className="text-md uppercase tracking-wider mr-1 text-neutral-500">RENT</span>
+                                <span className="text-neutral-900 font-medium">{formatPrice(product.price, false)}</span>
+                            </p>
+                            {product.original_price && (
+                                <p className="text-sm md:text-base whitespace-nowrap text-right">
+                                    <span className="text-md uppercase tracking-wider mr-1 text-neutral-500">MRP</span>
+                                    <span className="text-neutral-500 font-medium">{formatPrice(String(product.original_price), useCompactPrice)}</span>
                                 </p>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                                {product.original_price && (
-                                    <p className="text-xs text-neutral-500">
-                                        <span className="uppercase tracking-wider mr-1">MRP</span>
-                                        {formatPrice(String(product.original_price), useCompactPrice)}
-                                    </p>
-                                )}
-                            </div>
+                            )}
                         </div>
                     </div>
                 )}

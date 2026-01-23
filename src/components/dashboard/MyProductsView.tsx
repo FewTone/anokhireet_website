@@ -595,15 +595,6 @@ export default function MyProductsView() {
                 </div>
             </div>
 
-            {/* Mobile Add Product Button */}
-            <div className="md:hidden mb-4">
-                <button
-                    onClick={handleAddProduct}
-                    className="w-full bg-black text-white py-3 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
-                >
-                    Add Product
-                </button>
-            </div>
 
             {/* Summary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 md:mb-8 text-center w-full">
@@ -947,7 +938,7 @@ export default function MyProductsView() {
                     </div>
 
                     {/* Mobile Card View */}
-                    <div className="md:hidden space-y-4 px-4 pb-20">
+                    <div className="md:hidden space-y-4 px-4 pb-36">
                         {myProducts.map((product) => (
                             <div key={product.id} className="border border-gray-200 bg-white p-3 shadow-sm rounded-sm">
                                 <div className="flex gap-3 mb-3">
@@ -1341,6 +1332,15 @@ export default function MyProductsView() {
                     </div>
                 )
             }
+            {/* Mobile Add Product Button - Fixed Bottom */}
+            <div className="md:hidden fixed bottom-[64px] left-0 right-0 z-[50] bg-white border-t border-gray-100 p-3 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)]">
+                <button
+                    onClick={handleAddProduct}
+                    className="w-full bg-black text-white py-3 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                >
+                    Add Product
+                </button>
+            </div>
         </div >
     );
 }

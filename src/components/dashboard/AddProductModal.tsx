@@ -511,7 +511,7 @@ export default function AddProductModal({ isOpen, onClose, userId, onSuccess }: 
                                 {/* Step 2: Facet Selection */}
                                 <div className="space-y-6">
                                     {[
-                                        { label: "Product Type", list: availableProductTypes, key: 'productTypes' as const },
+                                        { label: "Category", list: availableProductTypes, key: 'productTypes' as const },
                                         { label: "Occasion", list: availableOccasions, key: 'occasions' as const },
                                         { label: "Color", list: availableColors, key: 'colors' as const },
                                         { label: "Material", list: availableMaterials, key: 'materials' as const },

@@ -746,7 +746,7 @@ export default function EditProductPage() {
                                             </div>
 
                                             {originalPrice && (
-                                                <div className="flex items-baseline gap-2">
+                                                <div className="flex items-baseline gap-2 mt-4">
                                                     <span className="text-sm font-normal text-gray-900 uppercase tracking-wider">MRP</span>
                                                     {isEditing ? (
                                                         <input
@@ -819,7 +819,7 @@ export default function EditProductPage() {
                                                 </button>
                                             </>
                                         ) : (
-                                            <div className="col-span-2 grid grid-cols-2 gap-4">
+                                            <div className="col-span-2 grid grid-cols-2 gap-0">
                                                 <button
                                                     onClick={() => setShowInquiryModal(true)}
                                                     className="w-full bg-white text-black font-semibold py-4 px-6 hover:bg-gray-100 transition-colors text-center uppercase tracking-wider text-sm md:text-base md:rounded-none border border-black"
@@ -938,7 +938,7 @@ export default function EditProductPage() {
                                                                         <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={6} className="w-full p-2 border border-gray-300 rounded focus:border-black outline-none resize-none bg-white text-sm" placeholder="Enter product detailed description..." />
                                                                     </div>
                                                                     <FacetSelector label="Color" selected={selectedColors} options={availableColors} onChange={setSelectedColors} searchable={true} variant="checkbox-list" />
-                                                                    <FacetSelector label="Type" selected={selectedProductTypes} options={availableProductTypes} onChange={setSelectedProductTypes} variant="checkbox-list" />
+                                                                    <FacetSelector label="Category" selected={selectedProductTypes} options={availableProductTypes} onChange={setSelectedProductTypes} variant="checkbox-list" />
                                                                     <FacetSelector label="Material" selected={selectedMaterials} options={availableMaterials} onChange={setSelectedMaterials} variant="checkbox-list" />
                                                                 </>
                                                             ) : (

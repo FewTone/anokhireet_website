@@ -1206,7 +1206,7 @@ To get these values:
     // CRUD functions for Product Types
     const handleSaveProductType = async () => {
         if (!facetFormData.name.trim()) {
-            showPopup("Please enter a product type name", "warning", "Validation Error");
+            showPopup("Please enter a category name", "warning", "Validation Error");
             return;
         }
 
@@ -1236,7 +1236,7 @@ To get these values:
                     .eq("id", editingFacet.id);
 
                 if (error) throw error;
-                showPopup("Product type updated successfully!", "success");
+                showPopup("Category updated successfully!", "success");
             } else {
                 const { error } = await supabase
                     .from("product_types")
@@ -1247,7 +1247,7 @@ To get these values:
                     }]);
 
                 if (error) throw error;
-                showPopup("Product type added successfully!", "success");
+                showPopup("Category added successfully!", "success");
             }
             setIsFacetModalOpen(false);
             setEditingFacet(null);
@@ -1499,7 +1499,7 @@ To get these values:
                     .eq("id", id);
 
                 if (error) throw error;
-                showPopup("Product type deleted successfully!", "success");
+                showPopup("Category deleted successfully!", "success");
                 loadProductTypes();
             } catch (error: any) {
                 showPopup(error.message || "Failed to delete product type", "error", "Error");
@@ -4381,7 +4381,7 @@ To get these values:
                                                         className="w-full px-3 py-2 border border-gray-300 rounded-none text-sm focus:outline-none focus:ring-2 focus:ring-black"
                                                     >
                                                         <option value="all">All Facets</option>
-                                                        <optgroup label="Product Types">
+                                                        <optgroup label="Categories">
                                                             {productTypes.map(pt => (
                                                                 <option key={pt.id} value={pt.id}>{pt.name}</option>
                                                             ))}
@@ -5260,7 +5260,7 @@ To get these values:
                                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                                 }`}
                                         >
-                                            Product Types
+                                            Categories
                                         </button>
                                         <button
                                             onClick={() => setActiveFacetTab("occasions")}
@@ -5303,8 +5303,8 @@ To get these values:
                                     {/* Product Types Section */}
                                     {activeFacetTab === "product_types" && (
                                         <FacetManagementSection
-                                            title="Product Types"
-                                            description="Manage product types like Choly, Western, Sari, Patola, etc."
+                                            title="Categories"
+                                            description="Manage categories like Choly, Western, Sari, Patola, etc."
                                             items={productTypes}
                                             onAdd={() => {
                                                 setEditingFacet(null);
@@ -7249,7 +7249,7 @@ To get these values:
                                 <div className="flex items-center justify-between mb-6">
                                     <div>
                                         <h2 className="text-2xl font-semibold uppercase tracking-wide text-gray-900">Featured Categories</h2>
-                                        <p className="text-sm text-gray-600 mt-1">Pin items from Product Types, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
+                                        <p className="text-sm text-gray-600 mt-1">Pin items from Categories, Occasions, Colors, Materials, and Cities to display them in FEATURED CATEGORIES on the home page</p>
                                     </div>
                                 </div>
 
@@ -7445,7 +7445,7 @@ To get these values:
                                     {/* Section 1: Product Types */}
                                     <div className="border border-gray-200 rounded-none p-6">
                                         <div className="flex items-center justify-between mb-6">
-                                            <h3 className="text-lg font-semibold text-gray-900">Product Types</h3>
+                                            <h3 className="text-lg font-semibold text-gray-900">Categories</h3>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-sm text-gray-500">{productTypes.length} items</span>
                                                 <button

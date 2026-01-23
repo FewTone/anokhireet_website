@@ -1350,7 +1350,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                 <div>
                                     <div className="flex items-center justify-between mb-2">
                                         <label className="block text-sm font-medium text-gray-700">
-                                            Product Type
+                                            Category
                                         </label>
                                         <button
                                             type="button"
@@ -1382,7 +1382,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                                             handleAddNewProductType();
                                                         }
                                                     }}
-                                                    placeholder="Enter new product type"
+                                                    placeholder="Enter new category"
                                                     className="flex-1 px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                                                 />
                                                 <button
@@ -1398,7 +1398,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
 
                                     <div className="w-full border border-gray-300 rounded-none min-h-[100px] max-h-[150px] overflow-y-auto p-2 bg-white">
                                         {availableProductTypes.length === 0 ? (
-                                            <p className="text-sm text-gray-500 text-center py-4">No product types available. Add them from the admin panel.</p>
+                                            <p className="text-sm text-gray-500 text-center py-4">No categories available. Add them from the admin panel.</p>
                                         ) : (
                                             <div className="space-y-2">
                                                 {availableProductTypes.map((pt) => {

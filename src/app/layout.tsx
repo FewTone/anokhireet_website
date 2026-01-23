@@ -29,6 +29,8 @@ export const metadata: Metadata = {
     },
 };
 
+import ScrollRestoration from "@/components/ScrollRestoration";
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -40,6 +42,7 @@ export default function RootLayout({
                 <div id="app-shell-scroll" className="w-full h-full overflow-y-auto overflow-x-hidden scrollbar-hide overscroll-y-none relative">
                     <ErrorBoundary>
                         <WebsiteGuard>
+                            <ScrollRestoration />
                             {children}
                             <Suspense fallback={null}>
                                 <LoginModal />

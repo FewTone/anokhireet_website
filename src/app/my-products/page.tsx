@@ -42,6 +42,7 @@ export default function MyProductsPage() {
 
             <main className="flex-1 pt-0 md:pt-24 pb-20 px-0 md:px-4 max-w-7xl mx-auto w-full">
                 {/* MyProductsView handles its own padding/layout nicely usually, but let's ensure mobile padding is handled if the component expects it from parent */}
+                <div className="md:hidden mt-4"></div>
                 <div className="w-full">
                     <MyProductsView />
                 </div>

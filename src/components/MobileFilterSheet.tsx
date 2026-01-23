@@ -237,13 +237,13 @@ export default function MobileFilterSheet({
                         </div>
                     </div>
 
-                    {/* PRODUCT TYPE */}
+                    {/* CATEGORY */}
                     <div className="border-b border-gray-100 pb-4">
                         <button
                             onClick={() => toggleFilterSection("product_type")}
                             className="w-full flex items-center justify-between py-2"
                         >
-                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">PRODUCT TYPE</span>
+                            <span className="font-medium text-sm text-gray-900 text-[11px] tracking-[0.2em]">CATEGORY</span>
                             <span className="text-xl text-gray-400 font-light">
                                 {filterSections.find(s => s.id === "product_type")?.isOpen ? "−" : "+"}
                             </span>

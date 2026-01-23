@@ -75,7 +75,7 @@ export default function ProductsPage() {
     // Filter sections collapse state
     const [filterSections, setFilterSections] = useState<FilterSection[]>([
         { id: "sort", title: "SORT", isOpen: false },
-        { id: "product_type", title: "PRODUCT TYPE", isOpen: false },
+        { id: "product_type", title: "CATEGORY", isOpen: false },
         { id: "occasion", title: "OCCASION", isOpen: false },
         { id: "color", title: "COLOR", isOpen: false },
         { id: "material", title: "MATERIAL", isOpen: false },
@@ -106,7 +106,8 @@ export default function ProductsPage() {
 
     // Load filter options and products
     useEffect(() => {
-        // slight delay to ensure browser scroll restoration doesn't override us
+        // Removed: Manual scroll to top on mount overrides browser scroll restoration
+        /*
         setTimeout(() => {
             const scrollContainer = document.getElementById('app-shell-scroll');
             if (scrollContainer) {
@@ -115,19 +116,23 @@ export default function ProductsPage() {
                 window.scrollTo({ top: 0, behavior: 'instant' });
             }
         }, 100);
+        */
         loadFilterOptions();
         loadProducts();
     }, []);
 
-    // Scroll to top when filters change
+    // Scroll to top when filters change - but avoid resetting on initial load or simple loading state changes
     useEffect(() => {
+        // Only scroll to top if a filter is actually applied, skip on initial mount/loading finish
+        if (loading || isInitialLoad) return;
+
         const scrollContainer = document.getElementById('app-shell-scroll');
         if (scrollContainer) {
             scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
         } else {
             window.scrollTo({ top: 0, behavior: 'instant' });
         }
-    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, activeTag, loading, showCategories]);
+    }, [appliedProductTypes, appliedOccasions, appliedColors, appliedMaterials, appliedCities, appliedPriceRange, sortBy, searchQuery, appliedOwnerId, activeTag]); // Removed 'loading' and 'showCategories' from dependencies to prevent unintended resets
 
     // Update URL params when applied filters change
     const updateURLParams = useCallback(() => {
@@ -809,7 +814,7 @@ export default function ProductsPage() {
                                 <h2 className="text-lg font-semibold mb-4">FILTERS</h2>
 
                                 {/* SORT */}
-                                <div className="border-b border-gray-200 pb-3 wwwwmb-3">
+                                <div className="border-b border-gray-200 pb-3 mb-3">
                                     <button
                                         onClick={() => toggleFilterSection("sort")}
                                         className="w-full flex items-center justify-between text-sm font-medium"
@@ -851,13 +856,13 @@ export default function ProductsPage() {
                                     </div>
                                 </div>
 
-                                {/* PRODUCT TYPE */}
+                                {/* CATEGORY */}
                                 <div className="border-b border-gray-200 pb-3 mb-3">
                                     <button
                                         onClick={() => toggleFilterSection("product_type")}
                                         className="w-full flex items-center justify-between text-sm font-medium"
                                     >
-                                        <span>PRODUCT TYPE</span>
+                                        <span>CATEGORY</span>
                                         <span>{filterSections.find(s => s.id === "product_type")?.isOpen ? "−" : "+"}</span>
                                     </button>
                                     <div
@@ -1435,7 +1440,7 @@ export default function ProductsPage() {
                                                 </div>
                                             )}
 
-                                            {/* PRODUCT TYPES (Remaining) */}
+                                            {/* CATEGORIES (Remaining) */}
                                             {productTypes.filter(p => !p.is_featured).length > 0 && (
                                                 <div>
                                                     {/* Title Removed */}

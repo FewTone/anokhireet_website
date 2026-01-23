@@ -70,7 +70,7 @@ export default function PrivacyPolicy() {
                                             <li>Contact number (including WhatsApp, if provided)</li>
                                         </ul>
                                         <div className="mt-4 p-4 bg-gray-50 border border-gray-100 rounded-none">
-                                            <p className="font-bold text-red-700 mb-1 uppercase text-[10px] tracking-[0.2em]">We do not collect:</p>
+                                            <p className="font-bold text-black mb-1 uppercase text-[10px] tracking-[0.2em]">We do not collect:</p>
                                             <ul className="list-disc list-inside space-y-1 ml-2 text-gray-600">
                                                 <li>Bank details</li>
                                                 <li>Payment credentials</li>
@@ -141,7 +141,7 @@ export default function PrivacyPolicy() {
                                     <li>Feature selected products on Instagram and Facebook</li>
                                     <li>Use images or videos in promotional or advertising content</li>
                                 </ul>
-                                <div className="mt-4 space-y-1 text-[10px] text-gray-400 uppercase tracking-widest leading-relaxed">
+                                <div className="mt-4 space-y-1 text-[10px] text-black uppercase tracking-widest leading-relaxed">
                                     <p>• Promotional use is selective and occasional</p>
                                     <p>• Not all listings are used for marketing</p>
                                     <p>• Content is used respectfully and aligned with brand values</p>

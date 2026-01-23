@@ -56,30 +56,26 @@ const storySections = [
 
 export default function AboutPage() {
     return (
-        <main className="min-h-screen text-white overflow-x-hidden relative">
-
-
-            {/* Background Page Radial Gradient - Top to Bottom (from Figma) */}
-            <div
-                className="absolute inset-0 z-0"
-                style={{
-                    background: 'radial-gradient(ellipse 80% 100% at 50% 0%, #890304 3%, #300000 20%, #2E0000 36%, #1A0000 100%)'
-                }}
-            />
-            <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-24 flex flex-col gap-24 md:gap-40 items-center">
+        <main
+            className="min-h-screen text-white relative w-full overflow-x-hidden pb-20"
+            style={{
+                background: 'linear-gradient(to bottom, #890304 0%, #300000 20%, #1A0000 60%, #0F0000 100%)'
+            }}
+        >
+            {/* Content Container - Ensure it scrolls over the fixed background */}
+            <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 md:py-24 flex flex-col gap-24 md:gap-40 items-center overflow-x-hidden">
 
                 {/* Hero Section - Static & Precise */}
                 <section className="w-full relative flex items-center justify-center py-20 md:py-32 lg:py-48 overflow-visible">
 
-
                     {/* Mandala Background & Radial Glow - Centered together */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-10">
-                        {/* The Glow */}
+                        {/* The Glow - Re-enabled for mobile, positioned absolutely so it scrolls with the content */}
                         <div
-                            className="absolute w-[500px] h-[500px] md:w-[800px] md:h-[800px] lg:w-[1200px] lg:h-[1200px] rounded-full"
+                            className="absolute w-[400px] h-[400px] md:w-[800px] md:h-[800px] lg:w-[1200px] lg:h-[1200px] rounded-full opacity-80 md:opacity-100"
                             style={{
                                 background: 'radial-gradient(circle at 50% 50%, #890304 0%, #300000 45%, rgba(15, 0, 0, 0) 100%)',
-                                filter: 'blur(60px)'
+                                filter: 'blur(50px)'
                             }}
                         />
 
