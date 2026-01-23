@@ -155,7 +155,7 @@ export default function AboutPage() {
                 </div>
 
                 {/* Bottom Section - Join the Story - Side by Side layout */}
-                <section className="w-full max-w-[1200px] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16">
+                <section className="w-full max-w-[1200px] flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 -mt-10 md:-mt-20">
                     {/* Bottom Envelope - Decorative Static with Rotation */}
                     <div className="w-[180px] md:w-[350px] lg:w-[450px] shrink-0">
                         <Image
@@ -168,7 +168,7 @@ export default function AboutPage() {
                     </div>
 
                     {/* Join Text - Group 66 */}
-                    <div className="w-full max-w-[713px]">
+                    <div className="w-full max-w-[713px] md:mt-20">
                         <Image
                             src="/images/Group%2066.png"
                             alt="Join the story"
