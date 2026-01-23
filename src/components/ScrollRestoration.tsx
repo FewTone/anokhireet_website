@@ -1,70 +1,112 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
+
+// Store positions globally to survive component remounts within the same session
+const globalScrollPositions: { [key: string]: number } = {};
 
 export default function ScrollRestoration() {
     const pathname = usePathname();
-    const scrollPositions = useRef<{ [key: string]: number }>({});
-    const lastPathname = useRef<string>("");
+    const searchParams = useSearchParams();
+    const isTracking = useRef(true);
+
+    // Create a unique key for the current page
+    const currentKey = pathname + searchParams.toString();
 
     useEffect(() => {
         const scrollContainer = document.getElementById('app-shell-scroll');
         if (!scrollContainer) return;
 
         // Function to save scroll position
-        const handleScroll = () => {
-            if (pathname) {
-                scrollPositions.current[pathname] = scrollContainer.scrollTop;
+        const handleSaveScroll = () => {
+            if (isTracking.current && scrollContainer.scrollTop > 0) {
+                globalScrollPositions[currentKey] = scrollContainer.scrollTop;
+                // Also save to sessionStorage as a backup
+                try {
+                    sessionStorage.setItem(`scroll_${currentKey}`, scrollContainer.scrollTop.toString());
+                } catch (e) { }
             }
         };
 
-        // Function to attempt scroll restoration with retries
-        const attemptRestoration = () => {
-            const savedPos = scrollPositions.current[pathname];
-            if (savedPos === undefined || savedPos <= 0) return;
+        scrollContainer.addEventListener('scroll', handleSaveScroll);
 
-            // Try to restore immediately
-            scrollContainer.scrollTop = savedPos;
-
-            // If it didn't STICK (meaning content isn't long enough yet), retry
-            let attempts = 0;
-            const maxAttempts = 20; // 2 seconds total (100ms intervals)
-
-            const interval = setInterval(() => {
-                attempts++;
-
-                // If scroll matches saved OR we hit max attempts OR content is long enough
-                if (scrollContainer.scrollTop === savedPos || attempts >= maxAttempts) {
-                    clearInterval(interval);
-                    return;
-                }
-
-                // Attempt to set it again (in case height grew)
-                scrollContainer.scrollTop = savedPos;
-            }, 100);
-
-            return () => clearInterval(interval);
-        };
-
-        // When pathname changes
-        if (pathname !== lastPathname.current) {
-            // Give a small delay for the initial render
-            const timer = setTimeout(attemptRestoration, 50);
-            lastPathname.current = pathname;
-
-            scrollContainer.addEventListener('scroll', handleScroll);
-
-            return () => {
-                scrollContainer.removeEventListener('scroll', handleScroll);
-                clearTimeout(timer);
-            };
+        // RESTORATION LOGIC
+        // Priority: Global JS object > Session Storage
+        let savedPos = globalScrollPositions[currentKey];
+        if (savedPos === undefined) {
+            try {
+                const stored = sessionStorage.getItem(`scroll_${currentKey}`);
+                if (stored) savedPos = parseInt(stored, 10);
+            } catch (e) { }
         }
 
-        // Keep scroll listener active
-        scrollContainer.addEventListener('scroll', handleScroll);
-        return () => scrollContainer.removeEventListener('scroll', handleScroll);
-    }, [pathname]);
+        if (savedPos !== undefined && savedPos > 0) {
+            // We are starting a restoration - stop tracking scroll events to avoid overwriting with 0
+            isTracking.current = false;
+
+            let restorationComplete = false;
+            let attempts = 0;
+            const maxAttempts = 30; // 3 seconds at 100ms
+
+            const tryRestore = () => {
+                if (restorationComplete) return;
+
+                // Attempt to scroll
+                scrollContainer.scrollTop = savedPos;
+
+                // Check if we reached it
+                // We add a small tolerance for scroll precision
+                if (Math.abs(scrollContainer.scrollTop - savedPos) < 2) {
+                    restorationComplete = true;
+                    observer.disconnect();
+                    clearInterval(interval);
+                    // Page has settled - resume tracking
+                    isTracking.current = true;
+                }
+            };
+
+            // Use MutationObserver to react to dynamic content loading (e.g., product lists)
+            const observer = new MutationObserver(() => {
+                tryRestore();
+            });
+
+            observer.observe(scrollContainer, {
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+
+            // Fallback interval for things that don't trigger observer (like images loading without layout change)
+            const interval = setInterval(() => {
+                attempts++;
+                tryRestore();
+                if (attempts >= maxAttempts) {
+                    restorationComplete = true;
+                    observer.disconnect();
+                    clearInterval(interval);
+                    isTracking.current = true; // Fallback to tracking even if we didn't reach it
+                }
+            }, 100);
+
+            // Immediate attempt
+            tryRestore();
+
+            return () => {
+                scrollContainer.removeEventListener('scroll', handleSaveScroll);
+                observer.disconnect();
+                clearInterval(interval);
+            };
+        } else {
+            // New page or top of page
+            scrollContainer.scrollTop = 0;
+            isTracking.current = true;
+        }
+
+        return () => {
+            scrollContainer.removeEventListener('scroll', handleSaveScroll);
+        };
+    }, [currentKey]);
 
     return null;
 }
