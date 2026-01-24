@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import Popup from "@/components/Popup";
@@ -29,10 +29,10 @@ interface User {
     email?: string | null;
 }
 
-export default function ManageProductsPage() {
-    const params = useParams();
+export default function ManageProductsClient() {
+    const searchParams = useSearchParams();
     const router = useRouter();
-    const userId = params?.userId as string;
+    const userId = searchParams.get("userId");
 
     const [user, setUser] = useState<User | null>(null);
     const [userProducts, setUserProducts] = useState<UserProduct[]>([]);
@@ -288,7 +288,7 @@ export default function ManageProductsPage() {
 
 
     const handleOpenAddProduct = () => {
-        router.push(`/admin/manage-products/${userId}/add`);
+        router.push(`/admin/manage-products/add?userId=${userId}`);
     };
 
     if (loading) {

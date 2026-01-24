@@ -14,11 +14,10 @@ interface User {
     email?: string | null;
 }
 
-export default function AddProductPage() {
-    const params = useParams();
+export default function AddProductClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const userId = params?.userId as string;
+    const userId = searchParams.get("userId");
     const editProductId = searchParams.get("edit");
 
     const [user, setUser] = useState<User | null>(null);
@@ -158,7 +157,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
 
             if (productError || !product) {
                 showPopup("Failed to load product for editing", "error", "Error");
-                router.push(`/admin/manage-products/${userId}`);
+                router.push(`/admin/manage-products?userId=${userId}`);
                 return;
             }
 
@@ -206,7 +205,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
         } catch (error) {
             console.error("Error loading product for edit:", error);
             showPopup("Failed to load product for editing", "error", "Error");
-            router.push(`/admin/manage-products/${userId}`);
+            router.push(`/admin/manage-products?userId=${userId}`);
         }
     };
 
@@ -947,7 +946,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
 
             // Redirect back to manage products page after a short delay
             setTimeout(() => {
-                router.push(`/admin/manage-products/${userId}`);
+                router.push(`/admin/manage-products?userId=${userId}`);
             }, 500);
 
         } catch (error: any) {
@@ -1839,4 +1838,3 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
         </div>
     );
 }
-

@@ -37,11 +37,11 @@ interface Facet {
     name: string;
 }
 
-export default function EditProductPage() {
-    const params = useParams();
+export default function EditProductClient() {
+    // const params = useParams(); // Not used
     const router = useRouter();
     const searchParams = useSearchParams();
-    const productId = params?.id as string;
+    const productId = searchParams.get("id");
 
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);

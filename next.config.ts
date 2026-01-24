@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "d2d5n4ft74bagm.cloudfront.net" },
       { protocol: "https", hostname: "cdn.shopify.com" },

@@ -495,7 +495,7 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
                 setConvertedWebPSize(0);
                 setConvertedWebPBlob(null);
                 setIsConvertingImage(false);
-                router.push(`/admin/manage-products/${userIdParam}/add`);
+                router.push(`/admin/manage-products/add?userId=${userIdParam}`);
                 // Switch to users tab and keep userId for redirect back
                 setActiveTab("users");
                 localStorage.setItem("adminActiveTab", "users");
@@ -506,7 +506,7 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
         const addProduct = searchParams.get("addProduct");
         if (addProduct && userIdParam) {
             // Navigate to add product page instead of opening modal
-            router.push(`/admin/manage-products/${userIdParam}/add`);
+            router.push(`/admin/manage-products/add?userId=${userIdParam}`);
         }
     }, [searchParams, userProducts, isAuthenticated, router]);
 
@@ -2504,7 +2504,7 @@ To get these values:
     const handleEditUserProduct = (product: UserProduct) => {
         // Navigate to the add product page with edit parameter
         if (product.user_id) {
-            router.push(`/admin/manage-products/${product.user_id}/add?edit=${product.id}`);
+            router.push(`/admin/manage-products/add?userId=${product.user_id}&edit=${product.id}`);
         } else {
             console.error("Product missing user_id, cannot navigate to edit page");
         }
@@ -2986,7 +2986,7 @@ To get these values:
 
             if (userIdToRedirect) {
                 // Redirect back to manage products page (whether editing or adding)
-                router.push(`/admin/manage-products/${userIdToRedirect}`);
+                router.push(`/admin/manage-products?userId=${userIdToRedirect}`);
                 return; // Don't reload products here, let the manage products page handle it
             } else {
                 // Stay on admin page and reload products

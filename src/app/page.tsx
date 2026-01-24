@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -355,7 +355,9 @@ export default function Home() {
 
     return (
         <>
-            <Navbar />
+            <Suspense fallback={<div className="h-[70px] bg-white" />}>
+                <Navbar />
+            </Suspense>
             <main className="min-h-screen pb-12 md:pb-0 bg-white">
                 <Hero />
 
