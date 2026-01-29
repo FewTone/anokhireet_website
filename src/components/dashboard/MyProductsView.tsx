@@ -1333,7 +1333,7 @@ export default function MyProductsView() {
                 )
             }
             {/* Mobile Add Product Button - Fixed Bottom */}
-            <div className="md:hidden fixed bottom-[64px] left-0 right-0 z-[50] bg-white border-t border-gray-100 p-3 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)]">
+            <div className="md:hidden fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-[50] bg-white border-t border-gray-100 p-3 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)]">
                 <button
                     onClick={handleAddProduct}
                     className="w-full bg-black text-white py-3 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
