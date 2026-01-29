@@ -38,18 +38,16 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body suppressHydrationWarning className={`${inter.variable} ${playfairDisplay.variable} ${inter.className} antialiased w-full mx-auto bg-gray-100 md:bg-white h-dvh overflow-hidden overscroll-none`}>
-                <div id="app-shell-scroll" className="w-full h-full overflow-y-auto overflow-x-hidden scrollbar-hide overscroll-y-none relative">
-                    <ErrorBoundary>
-                        <WebsiteGuard>
-                            <ScrollRestoration />
-                            {children}
-                            <Suspense fallback={null}>
-                                <LoginModal />
-                            </Suspense>
-                        </WebsiteGuard>
-                    </ErrorBoundary>
-                </div>
+            <body suppressHydrationWarning className={`${inter.variable} ${playfairDisplay.variable} ${inter.className} antialiased w-full mx-auto bg-gray-100 md:bg-white`}>
+                <ErrorBoundary>
+                    <WebsiteGuard>
+                        <ScrollRestoration />
+                        {children}
+                        <Suspense fallback={null}>
+                            <LoginModal />
+                        </Suspense>
+                    </WebsiteGuard>
+                </ErrorBoundary>
                 <div id="modal-root" />
             </body>
         </html>
