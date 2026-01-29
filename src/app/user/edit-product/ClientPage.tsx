@@ -14,6 +14,7 @@ import "react-datepicker/dist/react-datepicker.css";
 interface Product {
     id: number | string;
     productId?: string;
+    custom_id?: string;
     name: string;
     price: string;
     image: string;
@@ -724,7 +725,7 @@ export default function EditProductClient() {
                                         ) : (
                                             <h2 className="text-2xl font-semibold mb-1 uppercase tracking-wide">{name}</h2>
                                         )}
-                                        <p className="text-sm text-gray-500 mb-4">Product ID: {product.productId || product.id}</p>
+                                        <p className="text-sm text-gray-500 mb-4">Product ID: {product.custom_id || product.productId || product.id}</p>
 
                                         {/* Pricing Information */}
                                         <div className="mb-6 space-y-1">
