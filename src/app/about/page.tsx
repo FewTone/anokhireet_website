@@ -57,7 +57,7 @@ export default function AboutPage() {
             {/* Content Sections */}
             <div className="relative z-30 pt-[110vmin] max-w-[1440px] mx-auto px-[100px] text-[#FFDCB5]">
                 {/* The Origin Section */}
-                <section className="mb-24">
+                <section className="mb-[120px]">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -97,7 +97,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* The Thought Section */}
-                <section className="mb-24 pt-32 flex justify-end">
+                <section className="mb-[120px] flex justify-end">
                     <div className="max-w-[867px] w-full pl-[60px]">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -149,7 +149,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* THE BUSINESS PERSPECTIVE Section */}
-                <section className="mb-16">
+                <section className="mb-[120px]">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -190,7 +190,7 @@ export default function AboutPage() {
                     </div>
                 </section>
                 {/* THE SOLUTION Section */}
-                <section className="mb-24 flex justify-end">
+                <section className="mb-[120px] flex justify-end">
                     <div className="max-w-[900px] w-full">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -231,7 +231,7 @@ export default function AboutPage() {
                     </div>
                 </section>
                 {/* WOMEN EMPOWERMENT Section */}
-                <section className="mb-24">
+                <section className="mb-[120px]">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -270,7 +270,7 @@ export default function AboutPage() {
                     </div>
                 </section>
                 {/* OUR JOURNEY FORWARD Section */}
-                <section className="mb-24 flex justify-end">
+                <section className="mb-[120px] flex justify-end">
                     <div className="max-w-[867px] w-full">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -305,7 +305,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* OUR BELIEF Section */}
-                <section className="mb-10">
+                <section className="mb-[120px]">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -334,7 +334,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* Final Closing Section */}
-                <section className="flex items-center gap-[39px] pb-[40px] pt-20">
+                <section className="flex items-center gap-[39px] pb-[40px] pt-0">
                     <div className="w-[420px] flex-shrink-0">
                         <img src="/images/Group 38.png" alt="Envelope" className="w-full object-contain" />
                     </div>
