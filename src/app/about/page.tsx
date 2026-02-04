@@ -330,12 +330,12 @@ export default function AboutPage() {
                 </section>
 
                 {/* Final Closing Section */}
-                <section className="flex flex-col md:flex-row items-center gap-10 md:gap-[39px] pb-[60px] md:pb-[40px] pt-0 text-center md:text-left">
-                    <div className="w-full max-w-[320px] md:w-[420px] flex-shrink-0">
+                <section className="flex flex-col md:flex-row items-center gap-6 md:gap-[39px] pb-[60px] md:pb-[40px] pt-0 text-center md:text-left">
+                    <div className="hidden md:block w-full md:w-[420px] flex-shrink-0">
                         <img src="/images/Group 38.png" alt="Envelope" className="w-full object-contain" />
                     </div>
                     <div
-                        className="text-[28px] md:text-[40px] leading-snug md:leading-[60px] font-normal"
+                        className="text-[20px] md:text-[40px] leading-relaxed md:leading-[60px] font-normal"
                         style={{ fontFamily: 'var(--font-arya), serif', color: '#D30000' }}
                     >
                         अगर आप भी<br />
