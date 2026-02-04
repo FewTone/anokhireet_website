@@ -12,7 +12,14 @@ export default function AboutPage() {
             {/* Vector Image Overlay */}
             <div className="absolute top-0 left-0 w-full pointer-events-none flex justify-center pt-0">
                 <div className="relative h-[100vmin] w-[100vmin]">
-                    <img src="/images/Vector.png" alt="" className="absolute inset-0 h-full w-full object-contain opacity-80 mix-blend-overlay" />
+                    <div
+                        className="absolute inset-0 h-full w-full opacity-80"
+                        style={{
+                            backgroundColor: '#660101',
+                            mask: 'url(/images/Vector.png) center/contain no-repeat',
+                            WebkitMask: 'url(/images/Vector.png) center/contain no-repeat'
+                        }}
+                    />
 
                     {/* Title Text */}
                     <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -20,7 +27,7 @@ export default function AboutPage() {
                     </div>
 
                     {/* Envelope */}
-                    <div className="absolute bottom-[10%] right-[5%] w-[45%] z-20">
+                    <div className="absolute top-[57.7%] left-[67.7%] w-[47%] z-20">
                         <img src="/images/Group 38.png" alt="" className="w-full object-contain" />
                     </div>
                 </div>
