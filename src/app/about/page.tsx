@@ -26,7 +26,7 @@ export default function AboutPage() {
         <div
             className={`h-[5769px] w-full relative overflow-hidden ${arya.variable} font-sans`}
             style={{
-                background: `radial-gradient(circle 1000px at 50% 50vmin, #890304 0%, transparent 70%), 
+                background: `radial-gradient(circle 1000px at 50% 50vmin, #890304 0%, transparent 60%), 
                              linear-gradient(180deg, #2E0000 0%, #1A0000 100%)`
             }}
         >
