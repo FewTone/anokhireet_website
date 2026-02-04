@@ -70,17 +70,19 @@ export default function AboutPage() {
                     <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
                         <p>Every Indian woman has a wardrobe full of stories.</p>
                         <p>
-                            Bridal lehengas worn once, festive sarees saved for "special occasions",
+                            Bridal lehengas worn once,<br />
+                            festive sarees saved for "special occasions",<br />
                             traditional outfits that carry memories — <span style={hindiStyle}>यादें</span> — not just fabric.
                         </p>
                         <p>But over time, we noticed a quiet truth.</p>
                         <p>
-                            These beautiful clothes remain unused. Not because they are forgotten,
+                            These beautiful clothes remain unused.<br />
+                            Not because they are forgotten,<br />
                             but because today's world rarely allows repeating the same outfit again and again.
                         </p>
                         <p>
-                            And yet, many women quietly wish that these clothes could do more —
-                            that they could help another woman feel confident, beautiful, and make her own
+                            And yet, many women quietly wish that these clothes could do more —<br />
+                            that they could help another woman feel confident, beautiful, and make her own<br />
                             <span style={hindiStyle}> ख़ास मौका</span> even more memorable.
                         </p>
                     </div>
