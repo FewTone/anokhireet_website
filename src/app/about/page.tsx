@@ -97,8 +97,8 @@ export default function AboutPage() {
                 </section>
 
                 {/* The Thought Section */}
-                <section className="mb-24 flex justify-end">
-                    <div className="max-w-[867px] w-full">
+                <section className="mb-24 pt-32 flex justify-end">
+                    <div className="max-w-[867px] w-full pl-[60px]">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
@@ -149,7 +149,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* THE BUSINESS PERSPECTIVE Section */}
-                <section className="mb-24">
+                <section className="mb-16">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -191,7 +191,7 @@ export default function AboutPage() {
                 </section>
                 {/* THE SOLUTION Section */}
                 <section className="mb-24 flex justify-end">
-                    <div className="max-w-[867px] w-full">
+                    <div className="max-w-[900px] w-full">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
