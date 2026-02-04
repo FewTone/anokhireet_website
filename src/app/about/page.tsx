@@ -305,7 +305,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* OUR BELIEF Section */}
-                <section className="mb-40">
+                <section className="mb-10">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
@@ -334,7 +334,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* Final Closing Section */}
-                <section className="flex items-center gap-[39px] pb-[40px] pt-40">
+                <section className="flex items-center gap-[39px] pb-[40px] pt-20">
                     <div className="w-[420px] flex-shrink-0">
                         <img src="/images/Group 38.png" alt="Envelope" className="w-full object-contain" />
                     </div>
