@@ -55,7 +55,7 @@ export default function AboutPage() {
             </div>
 
             {/* Content Sections */}
-            <div className="relative z-30 pt-[110vmin] max-w-4xl mx-auto px-6 text-[#FFDCB5]">
+            <div className="relative z-30 pt-[110vmin] max-w-[1440px] mx-auto px-[100px] text-[#FFDCB5]">
                 {/* The Origin Section */}
                 <section className="mb-24">
                     <div className="flex items-start gap-[11px] mb-8">
@@ -293,7 +293,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* OUR BELIEF Section */}
-                <section className="mb-24">
+                <section className="mb-40">
                     <div className="flex items-start gap-[11px] mb-8">
                         <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
                         <div className="flex flex-col pt-[8px]">
@@ -316,6 +316,21 @@ export default function AboutPage() {
                             that their choices can create impact,<br />
                             and that their journey deserves to be seen — not hidden away.
                         </p>
+                    </div>
+                </section>
+
+                {/* Final Closing Section */}
+                <section className="flex items-center gap-[39px] pb-[40px] pt-40">
+                    <div className="w-[420px] flex-shrink-0">
+                        <img src="/images/Group 38.png" alt="Envelope" className="w-full object-contain" />
+                    </div>
+                    <div
+                        className="text-[40px] leading-[60px] font-normal"
+                        style={{ fontFamily: 'var(--font-arya), serif', color: '#D30000' }}
+                    >
+                        अगर आप भी<br />
+                        किसी और की कहानी का हिस्सा बनना चाहती हे<br />
+                        तो आप पहेले से ही <span style={hindiStyle}>अनोखी रीत</span> का हिस्सा हे
                     </div>
                 </section>
             </div>
