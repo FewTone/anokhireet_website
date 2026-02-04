@@ -6,13 +6,19 @@ const arya = localFont({
     variable: '--font-arya',
 });
 
-const hindiStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-arya), serif',
+const gradientStyle: React.CSSProperties = {
     backgroundImage: 'linear-gradient(90deg, #F8B97A 0%, #E0B073 25%, #B98A3F 38%, #EBB97A 56%, #BB897A 80%, #80533A 100%)',
     WebkitBackgroundClip: 'text',
     backgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
-    display: 'inline-block'
+    display: 'inline',
+    fontWeight: 600
+};
+
+const hindiStyle: React.CSSProperties = {
+    ...gradientStyle,
+    fontFamily: 'var(--font-arya), serif',
+    fontWeight: 400
 };
 
 export default function AboutPage() {
@@ -82,7 +88,7 @@ export default function AboutPage() {
                         </p>
                         <p>
                             And yet, many women quietly wish that these clothes could do more —<br />
-                            that they could help another woman feel confident, beautiful, and make her own<br />
+                            that they could help another woman feel confident, beautiful, and make her own
                             <span style={hindiStyle}> ख़ास मौका</span> even more memorable.
                         </p>
                     </div>
@@ -172,7 +178,7 @@ export default function AboutPage() {
                             Women are ready.
                         </p>
                         <p>
-                            What was missing was a <span style={hindiStyle}>structured and respectful</span> digital platform.
+                            What was missing was a <span style={gradientStyle}>structured, respectful, and premium</span> digital platform.
                         </p>
                         <p>That's where the idea evolved — from emotion to execution.</p>
                     </div>
@@ -196,7 +202,7 @@ export default function AboutPage() {
 
                     <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
                         <p>
-                            <span style={hindiStyle}>Anokhi Reet was created</span> as a space where tradition meets intention.
+                            <span style={gradientStyle}>Anokhi Reet was created as a space where tradition meets intention.</span>
                         </p>
                         <div className="flex flex-col">
                             <p>A place where:</p>
@@ -272,7 +278,7 @@ export default function AboutPage() {
 
                     <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
                         <p>
-                            <span style={hindiStyle}>Anokhi Reet</span> begins its journey in Gujarat,<br /> with a vision to reach women across India.
+                            <span style={gradientStyle}>Anokhi Reet</span> begins its journey in Gujarat,<br /> with a vision to reach women across India.
                         </p>
                         <p>Our goal is not to become just another marketplace.</p>
                         <div className="flex flex-col">
