@@ -90,11 +90,11 @@ export default function AboutPage() {
 
                 {/* The Thought Section */}
                 <section className="mb-24">
-                    <div className="flex flex-col items-center justify-center text-center">
-                        <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain mb-6" />
-                        <div className="flex flex-col items-center pt-[8px]">
+                    <div className="flex items-start gap-[11px] mb-8">
+                        <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                        <div className="flex flex-col pt-[8px]">
                             <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">The Thought</span>
-                            <div className="mt-[4px] mb-6">
+                            <div className="mt-[4px]">
                                 <h2
                                     className="text-[40px] leading-[72px]"
                                     style={hindiStyle}
@@ -102,10 +102,77 @@ export default function AboutPage() {
                                     जब एक सवाल उठा
                                 </h2>
                             </div>
-                            <p className="text-[20px] leading-[32px] opacity-80 italic">
-                                <span style={hindiStyle}>समझा आया</span> The gap we couldn't ignore
-                            </p>
                         </div>
+                    </div>
+
+                    <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <p>
+                            <span style={hindiStyle}>समझा आया</span> The gap we couldn't ignore
+                        </p>
+                        <p>The more we looked, the clearer it became.</p>
+                        <p>
+                            Across India, in almost every home, traditional wear sits idle —<br />
+                            expensive, exquisite, and rarely worn.
+                        </p>
+                        <p>
+                            Women want to rent them out.<br />
+                            They want to earn from them.<br />
+                            But there is no simple, trusted way to do it.
+                        </p>
+                        <p>
+                            No platform that truly celebrates the owner.<br />
+                            No space that feels safe, premium, and respectful.
+                        </p>
+                        <p>
+                            On the other side, women who want to look their best at every occasion are left with only<br />
+                            two choices repeat outfits or spend lakhs buying new ones.
+                        </p>
+                        <p>
+                            We saw women with beautiful clothes and no opportunity.<br />
+                            We saw women with dreams and no platform.
+                        </p>
+                        <p>
+                            We saw a gap —<br />
+                            and we knew we had to fill it.
+                        </p>
+                    </div>
+                </section>
+
+                {/* THE BUSINESS PERSPECTIVE Section */}
+                <section className="mb-24">
+                    <div className="flex items-start gap-[11px] mb-8">
+                        <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                        <div className="flex flex-col pt-[8px]">
+                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">THE BUSINESS PERSPECTIVE</span>
+                            <div className="mt-[4px]">
+                                <h2
+                                    className="text-[40px] leading-[72px]"
+                                    style={hindiStyle}
+                                >
+                                    जब दिल और दिमाग मिले
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <p>India's wedding and traditional clothing market is massive.</p>
+                        <p>Every year:</p>
+                        <ul className="list-disc pl-8 space-y-2">
+                            <li>Billions are spent on weddings</li>
+                            <li>Traditional outfits are purchased for single occasions</li>
+                            <li>Most of this market still runs offline and unorganised</li>
+                        </ul>
+                        <p>We saw a clear gap.</p>
+                        <p>
+                            Demand exists.<br />
+                            Clothes exist.<br />
+                            Women are ready.
+                        </p>
+                        <p>
+                            What was missing was a <span style={hindiStyle}>structured, respectful, and premium</span> digital platform.
+                        </p>
+                        <p>That's where the idea evolved — from emotion to execution.</p>
                     </div>
                 </section>
             </div>
