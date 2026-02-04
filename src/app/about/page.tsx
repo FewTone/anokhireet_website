@@ -159,7 +159,7 @@ export default function AboutPage() {
                         <p>India's wedding and traditional clothing market is massive.</p>
                         <div className="flex flex-col">
                             <p>Every year:</p>
-                            <ul className="list-disc pl-8 space-y-2 mt-1">
+                            <ul className="list-disc pl-8">
                                 <li>Billions are spent on weddings</li>
                                 <li>Traditional outfits are purchased for single occasions</li>
                                 <li>Most of this market still runs offline and unorganised</li>
@@ -235,7 +235,7 @@ export default function AboutPage() {
                         <p>This is not just about renting clothes.</p>
                         <div className="flex flex-col">
                             <p>It's about:</p>
-                            <ul className="list-disc pl-8 space-y-2 mt-1">
+                            <ul className="list-disc pl-8">
                                 <li>Creating income from your own belongings</li>
                                 <li>Starting small, from home</li>
                                 <li>Turning unused wardrobes into opportunities</li>
@@ -270,12 +270,12 @@ export default function AboutPage() {
 
                     <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
                         <p>
-                            <span style={hindiStyle}>Anokhi Reet</span> begins its journey in Gujarat,<br/> with a vision to reach women across India.
+                            <span style={hindiStyle}>Anokhi Reet</span> begins its journey in Gujarat,<br /> with a vision to reach women across India.
                         </p>
                         <p>Our goal is not to become just another marketplace.</p>
                         <div className="flex flex-col">
                             <p>We want Anokhi Reet to be:</p>
-                            <ul className="list-disc pl-8 space-y-2 mt-1">
+                            <ul className="list-disc pl-8">
                                 <li>A trusted discovery platform</li>
                                 <li>A celebration of Indian traditions</li>
                                 <li>A space where <span style={hindiStyle}>परंपरा</span> meets progress</li>
