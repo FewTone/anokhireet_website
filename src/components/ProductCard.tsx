@@ -258,8 +258,8 @@ export default function ProductCard({ product, hideDetails = false, disableHover
 
                 {!hideDetails && (
                     <div className="px-2 pb-2">
-                        <div className="mb-2">
-                            <h4 className="text-base md:text-lg font-semibold tracking-tight text-neutral-900">
+                        <div className="mb-1">
+                            <h4 className="text-sm md:text-base font-semibold tracking-tight text-neutral-900">
                                 #{product.productId || product.id}
                             </h4>
                         </div>
