@@ -335,11 +335,11 @@ export default function AboutPage() {
                         <img src="/images/Group 38.png" alt="Envelope" className="w-full object-contain" />
                     </div>
                     <div
-                        className="text-[20px] md:text-[40px] leading-relaxed md:leading-[60px] font-normal"
+                        className="text-[20px] md:text-[40px] leading-relaxed md:leading-[60px] font-normal w-full md:w-auto px-4 md:px-0"
                         style={{ fontFamily: 'var(--font-arya), serif', color: '#D30000' }}
                     >
-                        अगर आप भी<br />
-                        किसी और की कहानी का हिस्सा बनना चाहती हे<br />
+                        अगर आप भी<br className="hidden md:block" />
+                        किसी और की कहानी का हिस्सा बनना चाहती हे<br className="hidden md:block" />
                         तो आप पहेले से ही <span style={hindiStyle}>अनोखी रीत</span> का हिस्सा हे
                     </div>
                 </section>
