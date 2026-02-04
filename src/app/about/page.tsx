@@ -157,12 +157,14 @@ export default function AboutPage() {
 
                     <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
                         <p>India's wedding and traditional clothing market is massive.</p>
-                        <p>Every year:</p>
-                        <ul className="list-disc pl-8 space-y-2">
-                            <li>Billions are spent on weddings</li>
-                            <li>Traditional outfits are purchased for single occasions</li>
-                            <li>Most of this market still runs offline and unorganised</li>
-                        </ul>
+                        <div className="flex flex-col">
+                            <p>Every year:</p>
+                            <ul className="list-disc pl-8 space-y-2 mt-1">
+                                <li>Billions are spent on weddings</li>
+                                <li>Traditional outfits are purchased for single occasions</li>
+                                <li>Most of this market still runs offline and unorganised</li>
+                            </ul>
+                        </div>
                         <p>We saw a clear gap.</p>
                         <p>
                             Demand exists.<br />
@@ -170,9 +172,142 @@ export default function AboutPage() {
                             Women are ready.
                         </p>
                         <p>
-                            What was missing was a <span style={hindiStyle}>structured, respectful, and premium</span> digital platform.
+                            What was missing was a <span style={hindiStyle}>structured and respectful</span> digital platform.
                         </p>
                         <p>That's where the idea evolved — from emotion to execution.</p>
+                    </div>
+                </section>
+                {/* THE SOLUTION Section */}
+                <section className="mb-24">
+                    <div className="flex items-start gap-[11px] mb-8">
+                        <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                        <div className="flex flex-col pt-[8px]">
+                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">THE SOLUTION</span>
+                            <div className="mt-[4px]">
+                                <h2
+                                    className="text-[40px] leading-[72px]"
+                                    style={hindiStyle}
+                                >
+                                    जब सोच ने आकर रूप लिया
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <p>
+                            <span style={hindiStyle}>Anokhi Reet was created as a space where tradition meets intention.</span>
+                        </p>
+                        <p>A place where:</p>
+                        <ul className="list-disc pl-8 space-y-2">
+                            <li>Women can list their traditional outfits with pride</li>
+                            <li>Renters can discover meaningful pieces, not mass-produced fashion</li>
+                            <li>Every interaction feels personal, respectful, and real</li>
+                        </ul>
+                        <p>
+                            Anokhi Reet doesn't just connect people.<br />
+                            It creates a shared understanding —<br />
+                            that what already exists in our homes can create value, confidence, and opportunity for someone else.
+                        </p>
+                        <p>
+                            This feels richer, calmer, and premium.
+                        </p>
+                    </div>
+                </section>
+                {/* WOMEN EMPOWERMENT Section */}
+                <section className="mb-24">
+                    <div className="flex items-start gap-[11px] mb-8">
+                        <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                        <div className="flex flex-col pt-[8px]">
+                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">WOMEN EMPOWERMENT</span>
+                            <div className="mt-[4px]">
+                                <h2
+                                    className="text-[40px] leading-[72px]"
+                                    style={hindiStyle}
+                                >
+                                    सिर्फ कपड़ों से कहि ज़्यादा
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <p>This is not just about renting clothes.</p>
+                        <div className="flex flex-col">
+                            <p>It's about:</p>
+                            <ul className="list-disc pl-8 space-y-2 mt-1">
+                                <li>Creating income from your own belongings</li>
+                                <li>Starting small, from home</li>
+                                <li>Turning unused wardrobes into opportunities</li>
+                            </ul>
+                        </div>
+                        <p>
+                            For some, Anokhi Reet becomes side income.<br />
+                            For others, it becomes a full-time journey.
+                        </p>
+                        <p>
+                            Every listing carries a story.<br />
+                            Every story belongs to a woman who chose to take a step forward - <span style={hindiStyle}>अपने दम पर</span>
+                        </p>
+                    </div>
+                </section>
+                {/* OUR JOURNEY FORWARD Section */}
+                <section className="mb-24">
+                    <div className="flex items-start gap-[11px] mb-8">
+                        <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                        <div className="flex flex-col pt-[8px]">
+                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">OUR JOURNEY FORWARD</span>
+                            <div className="mt-[4px]">
+                                <h2
+                                    className="text-[40px] leading-[72px]"
+                                    style={hindiStyle}
+                                >
+                                    आगे का सफर
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <p>
+                            <span style={hindiStyle}>Anokhi Reet</span> begins its journey in Gujarat,<br/> with a vision to reach women across India.
+                        </p>
+                        <p>Our goal is not to become just another marketplace.</p>
+                        <div className="flex flex-col">
+                            <p>We want Anokhi Reet to be:</p>
+                            <ul className="list-disc pl-8 space-y-2 mt-1">
+                                <li>A trusted discovery platform</li>
+                                <li>A celebration of Indian traditions</li>
+                                <li>A space where <span style={hindiStyle}>परंपरा</span> meets progress</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                {/* OUR BELIEF Section */}
+                <section className="mb-24">
+                    <div className="flex items-start gap-[11px] mb-8">
+                        <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                        <div className="flex flex-col pt-[8px]">
+                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">OUR BELIEF</span>
+                            <div className="mt-[4px]">
+                                <h2
+                                    className="text-[40px] leading-[72px]"
+                                    style={hindiStyle}
+                                >
+                                    दिल से जुड़ी एक अनोखी रीत
+                                </h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <p>This is not just the story of a platform.</p>
+                        <p>
+                            It is the story of women who believe that their clothes carry meaning,<br />
+                            that their choices can create impact,<br />
+                            and that their journey deserves to be seen — not hidden away.
+                        </p>
                     </div>
                 </section>
             </div>
