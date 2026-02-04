@@ -34,9 +34,9 @@ export default function AboutPage() {
             <div className="absolute top-0 left-0 w-full pointer-events-none flex justify-center pt-0">
                 <div className="relative h-[100vmin] w-[100vmin]">
                     <div
-                        className="absolute inset-0 h-full w-full opacity-80"
+                        className="absolute inset-0 h-full w-full opacity-50"
                         style={{
-                            backgroundColor: '#660101',
+                            backgroundColor: '#750000',
                             mask: 'url(/images/Vector.png) center/contain no-repeat',
                             WebkitMask: 'url(/images/Vector.png) center/contain no-repeat'
                         }}
