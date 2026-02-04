@@ -1,5 +1,6 @@
 import React from 'react';
 import localFont from 'next/font/local';
+import BackButton from './BackButton';
 
 const arya = localFont({
     src: '../../../public/fonts/Arya-Regular.ttf',
@@ -26,6 +27,7 @@ export default function AboutPage() {
         <div
             className={`md:h-[5769px] h-auto w-full relative overflow-hidden bg-about-hero ${arya.variable} font-sans`}
         >
+            <BackButton />
             {/* Vector Image Overlay */}
             <div className="absolute top-0 left-0 w-full pointer-events-none flex justify-center pt-0">
                 <div className="relative h-[85vmin] w-[85vmin] md:h-[100vmin] md:w-[100vmin]">
