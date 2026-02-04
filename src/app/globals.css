@@ -181,3 +181,15 @@ input[type="search"]::-webkit-search-results-decoration {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #d1d5db;
 }
+
+.bg-about-hero {
+  background: radial-gradient(circle 1000px at 50% 50vmin, #890304 0%, transparent 60%),
+    linear-gradient(180deg, #2E0000 0%, #1A0000 100%);
+}
+
+@media (max-width: 768px) {
+  .bg-about-hero {
+    background: radial-gradient(circle 180vmin at 50% 42.5vmin, #890304 0%, transparent 75%),
+      linear-gradient(180deg, #2E0000 0%, #1A0000 100%);
+  }
+}

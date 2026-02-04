@@ -24,19 +24,15 @@ const hindiStyle: React.CSSProperties = {
 export default function AboutPage() {
     return (
         <div
-            className={`h-[5769px] w-full relative overflow-hidden ${arya.variable} font-sans`}
-            style={{
-                background: `radial-gradient(circle 1000px at 50% 50vmin, #890304 0%, transparent 60%), 
-                             linear-gradient(180deg, #2E0000 0%, #1A0000 100%)`
-            }}
+            className={`md:h-[5769px] h-auto w-full relative overflow-hidden bg-about-hero ${arya.variable} font-sans`}
         >
             {/* Vector Image Overlay */}
             <div className="absolute top-0 left-0 w-full pointer-events-none flex justify-center pt-0">
-                <div className="relative h-[100vmin] w-[100vmin]">
+                <div className="relative h-[85vmin] w-[85vmin] md:h-[100vmin] md:w-[100vmin]">
                     <div
-                        className="absolute inset-0 h-full w-full opacity-50"
+                        className="absolute inset-0 h-full w-full opacity-60 md:opacity-50"
                         style={{
-                            backgroundColor: '#750000',
+                            backgroundColor: '#950000',
                             mask: 'url(/images/Vector.png) center/contain no-repeat',
                             WebkitMask: 'url(/images/Vector.png) center/contain no-repeat'
                         }}
@@ -44,28 +40,28 @@ export default function AboutPage() {
 
                     {/* Title Text */}
                     <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <img src="/images/Group 29.png" alt="" className="w-[85%] object-contain" />
+                        <img src="/images/Group 29.png" alt="" className="w-[75%] md:w-[85%] object-contain" />
                     </div>
 
                     {/* Envelope */}
-                    <div className="absolute top-[57.7%] left-[67.7%] w-[47%] z-20">
+                    <div className="absolute top-[65%] md:top-[57.7%] md:left-[67.7%] left-[60%] md:w-[47%] w-[60%] z-20">
                         <img src="/images/Group 38.png" alt="" className="w-full object-contain" />
                     </div>
                 </div>
             </div>
 
             {/* Content Sections */}
-            <div className="relative z-30 pt-[110vmin] max-w-[1440px] mx-auto px-[100px] text-[#FFDCB5]">
+            <div className="relative z-30 pt-[140vmin] md:pt-[110vmin] max-w-[1440px] mx-auto px-6 md:px-[100px] text-[#FFDCB5]">
                 {/* The Origin Section */}
-                <section className="mb-[120px]">
+                <section className="mb-20 md:mb-[120px]">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
-                            <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                            <img src="/images/seal.png" alt="Seal" className="w-20 h-20 md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
                                 <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">THE ORIGIN</span>
                                 <div className="mt-[4px]">
                                     <h2
-                                        className="text-[40px] leading-[72px]"
+                                        className="text-3xl md:text-[40px] leading-tight md:leading-[72px]"
                                         style={hindiStyle}
                                     >
                                         कहानी दिल से सुरु हुई
@@ -74,7 +70,7 @@ export default function AboutPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <div className="space-y-[18px] text-lg md:text-[20px] leading-relaxed md:leading-[32px] font-normal opacity-90">
                             <p>Every Indian woman has a wardrobe full of stories.</p>
                             <p>
                                 Bridal lehengas worn once,<br />
@@ -97,15 +93,15 @@ export default function AboutPage() {
                 </section>
 
                 {/* The Thought Section */}
-                <section className="mb-[120px] flex justify-end">
-                    <div className="max-w-[867px] w-full pl-[60px]">
+                <section className="mb-20 md:mb-[120px] flex md:justify-end">
+                    <div className="max-w-[867px] w-full md:pl-[60px] pl-0">
                         <div className="flex items-start gap-[11px] mb-8">
-                            <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                            <img src="/images/seal.png" alt="Seal" className="w-20 h-20 md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
                                 <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">THE THOUGHT</span>
                                 <div className="mt-[4px]">
                                     <h2
-                                        className="text-[40px] leading-[72px]"
+                                        className="text-3xl md:text-[40px] leading-tight md:leading-[72px]"
                                         style={hindiStyle}
                                     >
                                         जब एक सवाल उठा
@@ -114,7 +110,7 @@ export default function AboutPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <div className="space-y-[18px] text-lg md:text-[20px] leading-relaxed md:leading-[32px] font-normal opacity-90">
                             <p>
                                 <span style={hindiStyle}>समझा आया</span> The gap we couldn't ignore
                             </p>
@@ -149,15 +145,15 @@ export default function AboutPage() {
                 </section>
 
                 {/* THE BUSINESS PERSPECTIVE Section */}
-                <section className="mb-[120px]">
+                <section className="mb-20 md:mb-[120px]">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
-                            <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                            <img src="/images/seal.png" alt="Seal" className="w-20 h-20 md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
                                 <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">THE BUSINESS PERSPECTIVE</span>
                                 <div className="mt-[4px]">
                                     <h2
-                                        className="text-[40px] leading-[72px]"
+                                        className="text-3xl md:text-[40px] leading-tight md:leading-[72px]"
                                         style={hindiStyle}
                                     >
                                         जब दिल और दिमाग मिले
@@ -166,7 +162,7 @@ export default function AboutPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <div className="space-y-[18px] text-lg md:text-[20px] leading-relaxed md:leading-[32px] font-normal opacity-90">
                             <p>India's wedding and traditional clothing market is massive.</p>
                             <div className="flex flex-col">
                                 <p>Every year:</p>
@@ -190,15 +186,15 @@ export default function AboutPage() {
                     </div>
                 </section>
                 {/* THE SOLUTION Section */}
-                <section className="mb-[120px] flex justify-end">
+                <section className="mb-20 md:mb-[120px] flex md:justify-end">
                     <div className="max-w-[900px] w-full">
                         <div className="flex items-start gap-[11px] mb-8">
-                            <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                            <img src="/images/seal.png" alt="Seal" className="w-20 h-20 md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
                                 <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">THE SOLUTION</span>
                                 <div className="mt-[4px]">
                                     <h2
-                                        className="text-[40px] leading-[72px]"
+                                        className="text-3xl md:text-[40px] leading-tight md:leading-[72px]"
                                         style={hindiStyle}
                                     >
                                         जब सोच ने आकर रूप लिया
@@ -207,7 +203,7 @@ export default function AboutPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <div className="space-y-[18px] text-lg md:text-[20px] leading-relaxed md:leading-[32px] font-normal opacity-90">
                             <p>
                                 <span style={gradientStyle}>Anokhi Reet was created as a space where tradition meets intention.</span>
                             </p>
@@ -231,15 +227,15 @@ export default function AboutPage() {
                     </div>
                 </section>
                 {/* WOMEN EMPOWERMENT Section */}
-                <section className="mb-[120px]">
+                <section className="mb-20 md:mb-[120px]">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
-                            <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                            <img src="/images/seal.png" alt="Seal" className="w-20 h-20 md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
                                 <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">WOMEN EMPOWERMENT</span>
                                 <div className="mt-[4px]">
                                     <h2
-                                        className="text-[40px] leading-[72px]"
+                                        className="text-3xl md:text-[40px] leading-tight md:leading-[72px]"
                                         style={hindiStyle}
                                     >
                                         सिर्फ कपड़ों से कहि ज़्यादा
@@ -248,7 +244,7 @@ export default function AboutPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <div className="space-y-[18px] text-lg md:text-[20px] leading-relaxed md:leading-[32px] font-normal opacity-90">
                             <p>This is not just about renting clothes.</p>
                             <div className="flex flex-col">
                                 <p>It's about:</p>
@@ -270,15 +266,15 @@ export default function AboutPage() {
                     </div>
                 </section>
                 {/* OUR JOURNEY FORWARD Section */}
-                <section className="mb-[120px] flex justify-end">
+                <section className="mb-20 md:mb-[120px] flex md:justify-end">
                     <div className="max-w-[867px] w-full">
                         <div className="flex items-start gap-[11px] mb-8">
-                            <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                            <img src="/images/seal.png" alt="Seal" className="w-20 h-20 md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
                                 <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">OUR JOURNEY FORWARD</span>
                                 <div className="mt-[4px]">
                                     <h2
-                                        className="text-[40px] leading-[72px]"
+                                        className="text-3xl md:text-[40px] leading-tight md:leading-[72px]"
                                         style={hindiStyle}
                                     >
                                         आगे का सफर
@@ -287,7 +283,7 @@ export default function AboutPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <div className="space-y-[18px] text-lg md:text-[20px] leading-relaxed md:leading-[32px] font-normal opacity-90">
                             <p>
                                 <span style={gradientStyle}>Anokhi Reet</span> begins its journey in Gujarat,<br /> with a vision to reach women across India.
                             </p>
@@ -305,10 +301,10 @@ export default function AboutPage() {
                 </section>
 
                 {/* OUR BELIEF Section */}
-                <section className="mb-[120px]">
+                <section className="mb-20 md:mb-[120px]">
                     <div className="max-w-[867px]">
                         <div className="flex items-start gap-[11px] mb-8">
-                            <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
+                            <img src="/images/seal.png" alt="Seal" className="w-20 h-20 md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col pt-[8px]">
                                 <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">OUR BELIEF</span>
                                 <div className="mt-[4px]">
@@ -322,7 +318,7 @@ export default function AboutPage() {
                             </div>
                         </div>
 
-                        <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
+                        <div className="space-y-[18px] text-lg md:text-[20px] leading-relaxed md:leading-[32px] font-normal opacity-90">
                             <p>This is not just the story of a platform.</p>
                             <p>
                                 It is the story of women who believe that their clothes carry meaning,<br />
@@ -334,12 +330,12 @@ export default function AboutPage() {
                 </section>
 
                 {/* Final Closing Section */}
-                <section className="flex items-center gap-[39px] pb-[40px] pt-0">
-                    <div className="w-[420px] flex-shrink-0">
+                <section className="flex flex-col md:flex-row items-center gap-10 md:gap-[39px] pb-[60px] md:pb-[40px] pt-0 text-center md:text-left">
+                    <div className="w-full max-w-[320px] md:w-[420px] flex-shrink-0">
                         <img src="/images/Group 38.png" alt="Envelope" className="w-full object-contain" />
                     </div>
                     <div
-                        className="text-[40px] leading-[60px] font-normal"
+                        className="text-3xl md:text-[40px] leading-snug md:leading-[60px] font-normal"
                         style={{ fontFamily: 'var(--font-arya), serif', color: '#D30000' }}
                     >
                         अगर आप भी<br />
