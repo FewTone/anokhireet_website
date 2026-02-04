@@ -55,7 +55,7 @@ export default function AboutPage() {
                     <div className="flex items-start gap-[11px] mb-8">
                         <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
                         <div className="flex flex-col pt-[8px]">
-                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">The Origin</span>
+                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">THE ORIGIN</span>
                             <div className="mt-[4px]">
                                 <h2
                                     className="text-[40px] leading-[72px]"
@@ -93,7 +93,7 @@ export default function AboutPage() {
                     <div className="flex items-start gap-[11px] mb-8">
                         <img src="/images/seal.png" alt="Seal" className="w-[100px] h-[100px] object-contain flex-shrink-0" />
                         <div className="flex flex-col pt-[8px]">
-                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">The Thought</span>
+                            <span className="text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] h-[24px] leading-none">THE THOUGHT</span>
                             <div className="mt-[4px]">
                                 <h2
                                     className="text-[40px] leading-[72px]"
@@ -168,7 +168,7 @@ export default function AboutPage() {
                         <p>We saw a clear gap.</p>
                         <p>
                             Demand exists.<br />
-                            Clothes exist.<br />
+                            Supply exists.<br />
                             Women are ready.
                         </p>
                         <p>
@@ -196,14 +196,16 @@ export default function AboutPage() {
 
                     <div className="space-y-[18px] text-[20px] leading-[32px] font-normal opacity-90">
                         <p>
-                            <span style={hindiStyle}>Anokhi Reet was created as a space where tradition meets intention.</span>
+                            <span style={hindiStyle}>Anokhi Reet was created</span> as a space where tradition meets intention.
                         </p>
-                        <p>A place where:</p>
-                        <ul className="list-disc pl-8 space-y-2">
-                            <li>Women can list their traditional outfits with pride</li>
-                            <li>Renters can discover meaningful pieces, not mass-produced fashion</li>
-                            <li>Every interaction feels personal, respectful, and real</li>
-                        </ul>
+                        <div className="flex flex-col">
+                            <p>A place where:</p>
+                            <ul className="list-disc pl-8">
+                                <li>Women can list their traditional outfits with pride</li>
+                                <li>Renters can discover meaningful pieces, not mass-produced fashion</li>
+                                <li>Every interaction feels personal, respectful, and real</li>
+                            </ul>
+                        </div>
                         <p>
                             Anokhi Reet doesn't just connect people.<br />
                             It creates a shared understanding —<br />
