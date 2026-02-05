@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 
 interface ProductAccordionsProps {
-    product: any; // Using any for flexibility to match page.tsx usage, or align with actual Product type
+    product: any;
+    bookedDates?: { start_date: string; end_date: string; status?: string }[];
 }
 
-export default function ProductAccordions({ product }: ProductAccordionsProps) {
+export default function ProductAccordions({ product, bookedDates = [] }: ProductAccordionsProps) {
     const [expandedSections, setExpandedSections] = useState({
         availability: false,
         details: false,
@@ -47,16 +48,38 @@ export default function ProductAccordions({ product }: ProductAccordionsProps) {
                         : 'grid-rows-[0fr] opacity-0'
                         }`}
                 >
-                    <div className="overflow-hidden">
-                        {product.cities && product.cities.length > 0 ? (
-                            <div className="flex flex-wrap gap-2 text-sm text-gray-600">
-                                {product.cities.map((city: any, i: number) => (
-                                    <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        {city.name || city}
-                                    </span>
-                                ))}
+                    <div className="overflow-hidden space-y-4">
+                        {product.cities && product.cities.length > 0 && (
+                            <div>
+                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Location</span>
+                                <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+                                    {product.cities.map((city: any, i: number) => (
+                                        <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            {city.name || city}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
-                        ) : (
+                        )}
+
+                        {bookedDates && bookedDates.length > 0 && (
+                            <div>
+                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block">Booked Dates</span>
+                                <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+                                    {bookedDates.map((booking, i) => {
+                                        const start = new Date(booking.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                                        const end = new Date(booking.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+                                        return (
+                                            <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                {start} - {end}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        {(!product.cities || product.cities.length === 0) && (!bookedDates || bookedDates.length === 0) && (
                             <p className="text-sm text-gray-500 italic">Availability information not specified</p>
                         )}
                     </div>

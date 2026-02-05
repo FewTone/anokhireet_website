@@ -983,7 +983,7 @@ export default function ProductClient() {
                                     )}
                                     {/* Product Information Accordion */}
                                     <div className="space-y-0 border-t border-gray-200 pt-2">
-                                        <ProductAccordions product={product} />
+                                        <ProductAccordions product={product} bookedDates={dbBookedDates} />
                                     </div>
 
                                     {/* Bottom bar space removed per user request to move buttons up */}
