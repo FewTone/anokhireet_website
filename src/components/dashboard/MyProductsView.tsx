@@ -816,7 +816,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                    window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -838,7 +838,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                    window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -860,7 +860,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                    window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -893,7 +893,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                    window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -916,7 +916,7 @@ export default function MyProductsView() {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                    window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                     setActiveActionMenuId(null);
                                                                 }}
                                                                 className="w-full text-left px-3 py-2 text-xs font-medium uppercase tracking-wider transition-colors text-gray-900 hover:bg-gray-50"
@@ -949,7 +949,7 @@ export default function MyProductsView() {
                                                 setActiveActionMenuId(null);
                                                 return;
                                             }
-                                            window.open(`/user/edit-product/${product.id}`, '_blank');
+                                            window.open(`/user/edit-product?id=${product.id}`, '_blank');
                                         }}
                                         className="relative w-20 h-24 bg-gray-100 flex-shrink-0 cursor-pointer border border-gray-100"
                                     >
@@ -967,7 +967,7 @@ export default function MyProductsView() {
                                                 setActiveActionMenuId(null);
                                                 return;
                                             }
-                                            window.open(`/user/edit-product/${product.id}`, '_blank');
+                                            window.open(`/user/edit-product?id=${product.id}`, '_blank');
                                         }} className="cursor-pointer">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <p className="text-sm text-gray-500 font-mono">ID: {product.custom_id || product.product_id || <span className="text-gray-400 italic">Pending</span>}</p>
@@ -1022,7 +1022,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"
@@ -1045,7 +1045,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"
@@ -1067,7 +1067,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"
@@ -1090,7 +1090,7 @@ export default function MyProductsView() {
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                window.open(`/user/edit-product/${product.id}?edit=true`, '_blank');
+                                                                window.open(`/user/edit-product?id=${product.id}&edit=true`, '_blank');
                                                                 setActiveActionMenuId(null);
                                                             }}
                                                             className="w-full text-left px-4 py-2.5 text-xs font-medium uppercase tracking-wider text-gray-900 hover:bg-gray-50"

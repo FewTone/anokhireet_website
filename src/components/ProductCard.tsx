@@ -263,13 +263,13 @@ export default function ProductCard({ product, hideDetails = false, disableHover
                                 #{product.productId || product.id}
                             </h4>
                         </div>
-                        <div className="flex items-baseline justify-between w-full">
-                            <p className="text-sm md:text-xs whitespace-nowrap">
+                        <div className="flex items-baseline justify-between w-full flex-wrap gap-y-1">
+                            <p className="text-sm md:text-xs">
                                 <span className="uppercase tracking-wider mr-1 text-neutral-500">RENT</span>
                                 <span className="text-neutral-900 font-medium">{formatPrice(product.price, false)}</span>
                             </p>
                             {product.original_price && (
-                                <p className="text-sm md:text-xs whitespace-nowrap text-right">
+                                <p className="text-sm md:text-xs text-right">
                                     <span className="uppercase tracking-wider mr-1 text-neutral-500">MRP</span>
                                     <span className="text-neutral-500 font-medium">{formatPrice(String(product.original_price), useCompactPrice)}</span>
                                 </p>
