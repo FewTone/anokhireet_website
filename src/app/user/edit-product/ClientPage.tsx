@@ -55,10 +55,24 @@ export default function EditProductClient() {
     const [bookingToCancel, setBookingToCancel] = useState<any>(null);
 
     useEffect(() => {
+        if (loading) return;
+
         if (searchParams?.get("edit") === "true") {
             setIsEditing(true);
         }
-    }, [searchParams]);
+
+        // Handle deep-linking from Chat "ACCEPT" button
+        const startParam = searchParams?.get("start");
+        const endParam = searchParams?.get("end");
+        if (startParam && endParam) {
+            const startDate = new Date(startParam);
+            const endDate = new Date(endParam);
+            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                setBookedDates([startDate, endDate]);
+                setShowInquiryModal(true);
+            }
+        }
+    }, [searchParams, loading]);
 
     // Form States
     const [name, setName] = useState("");
@@ -109,7 +123,7 @@ export default function EditProductClient() {
             const { data, error } = await supabase
                 .from('inquiries')
                 .select('id, start_date, end_date, status')
-                .eq('product_id', productId)
+                .eq('product_id', product?.db_id || productId)
                 .eq('status', 'confirmed');
 
             if (!error && data) {
@@ -1104,6 +1118,7 @@ export default function EditProductClient() {
                                         selectsRange
                                         inline
                                         minDate={new Date()}
+                                        excludeDates={getAllBookedDates()}
                                         monthsShown={1}
                                         dateFormat="dd/MM/yyyy"
                                         className="w-full"
@@ -1131,18 +1146,80 @@ export default function EditProductClient() {
                                                     return;
                                                 }
 
-                                                const { error } = await supabase
-                                                    .from('inquiries')
-                                                    .insert([{
-                                                        product_id: productId,
-                                                        owner_user_id: product.owner_user_id,
-                                                        renter_user_id: product.owner_user_id, // Owner booking for themselves
-                                                        start_date: `${bookedDates[0].getFullYear()}-${String(bookedDates[0].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[0].getDate()).padStart(2, '0')}`,
-                                                        end_date: `${bookedDates[1].getFullYear()}-${String(bookedDates[1].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[1].getDate()).padStart(2, '0')}`,
-                                                        status: 'confirmed'
-                                                    }]);
+                                                const inquiryIdParam = searchParams?.get("inquiryId");
 
-                                                if (error) throw error;
+                                                if (inquiryIdParam) {
+                                                    // Accept the existing inquiry
+                                                    const { data: updateData, error, count } = await supabase
+                                                        .from('inquiries')
+                                                        .update({
+                                                            status: 'confirmed',
+                                                            // Also ensure dates are synced if they were tweaked in the modal
+                                                            start_date: `${bookedDates[0].getFullYear()}-${String(bookedDates[0].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[0].getDate()).padStart(2, '0')}`,
+                                                            end_date: `${bookedDates[1].getFullYear()}-${String(bookedDates[1].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[1].getDate()).padStart(2, '0')}`
+                                                        })
+                                                        .eq('id', inquiryIdParam)
+                                                        .select();
+
+                                                    if (error) throw error;
+
+                                                    // If no rows were updated (e.g. invalid ID or already deleted), fallback to inserting new
+                                                    if (!updateData || updateData.length === 0) {
+                                                        const { error: insertError } = await supabase
+                                                            .from('inquiries')
+                                                            .insert([{
+                                                                product_id: product?.db_id || productId,
+                                                                owner_user_id: product.owner_user_id,
+                                                                renter_user_id: product.owner_user_id, // Default to owner if we can't find renter easily, but usually this case is for older manual tests
+                                                                start_date: `${bookedDates[0].getFullYear()}-${String(bookedDates[0].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[0].getDate()).padStart(2, '0')}`,
+                                                                end_date: `${bookedDates[1].getFullYear()}-${String(bookedDates[1].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[1].getDate()).padStart(2, '0')}`,
+                                                                status: 'confirmed'
+                                                            }]);
+                                                        if (insertError) throw insertError;
+                                                    }
+
+                                                    // NEW: Send "Booking Confirmed" message back to chat for visual feedback
+                                                    const messageIdParam = searchParams?.get("messageId");
+                                                    if (messageIdParam) {
+                                                        try {
+                                                            // 1. Find the chat_id from the original message
+                                                            const { data: msgData } = await supabase
+                                                                .from('messages')
+                                                                .select('chat_id')
+                                                                .eq('id', messageIdParam)
+                                                                .single();
+
+                                                            if (msgData) {
+                                                                const formattedDates = `${bookedDates[0].toLocaleDateString('en-GB')} - ${bookedDates[1].toLocaleDateString('en-GB')}`;
+                                                                await supabase
+                                                                    .from('messages')
+                                                                    .insert([{
+                                                                        chat_id: msgData.chat_id,
+                                                                        sender_user_id: user.id,
+                                                                        message: `Booking Confirmed for ${formattedDates}`,
+                                                                        reply_to_message_id: messageIdParam
+                                                                    }]);
+                                                            }
+                                                        } catch (msgErr) {
+                                                            console.error("Failed to send confirmation message:", msgErr);
+                                                            // Non-blocking error
+                                                        }
+                                                    }
+                                                } else {
+                                                    // Create new self-booking/manual booking
+                                                    const { error } = await supabase
+                                                        .from('inquiries')
+                                                        .insert([{
+                                                            product_id: product?.db_id || productId,
+                                                            owner_user_id: product.owner_user_id,
+                                                            renter_user_id: product.owner_user_id, // Owner booking for themselves
+                                                            start_date: `${bookedDates[0].getFullYear()}-${String(bookedDates[0].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[0].getDate()).padStart(2, '0')}`,
+                                                            end_date: `${bookedDates[1].getFullYear()}-${String(bookedDates[1].getMonth() + 1).padStart(2, '0')}-${String(bookedDates[1].getDate()).padStart(2, '0')}`,
+                                                            status: 'confirmed'
+                                                        }]);
+
+                                                    if (error) throw error;
+                                                }
 
                                                 fetchDBBookings();
                                                 console.log('Booking confirmed in DB:', bookedDates);

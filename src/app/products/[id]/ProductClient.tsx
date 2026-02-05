@@ -746,45 +746,54 @@ export default function ProductClient() {
             let inquiryId = null;
 
             // 1. Check if any inquiry exists between this owner and renter to find an existing chat
-            const { data: allUserInquiries } = await supabase
+            const { data: allUserInquiries, error: fetchInquiriesError } = await supabase
                 .from("inquiries")
-                .select("id, product_id")
+                .select("id, product_id, status")
                 .eq("owner_user_id", product.owner_user_id)
                 .eq("renter_user_id", currentUser.id);
+
+            if (fetchInquiriesError) {
+                console.error("Error fetching user inquiries:", fetchInquiriesError);
+            }
 
             if (allUserInquiries && allUserInquiries.length > 0) {
                 // Find if any of these inquiries already have a chat
                 const inquiryIds = allUserInquiries.map(i => i.id);
-                const { data: existingChat } = await supabase
+                const { data: existingChat, error: existingChatError } = await supabase
                     .from("chats")
                     .select("id, inquiry_id")
                     .in("inquiry_id", inquiryIds)
                     .limit(1)
                     .maybeSingle();
 
+                if (existingChatError) {
+                    console.error("Error checking existing chat:", existingChatError);
+                }
+
                 if (existingChat) {
                     chatId = existingChat.id;
+                }
 
-                    // Check if there's an inquiry for THIS SPECIFIC product to update or create new
-                    const specificInquiry = allUserInquiries.find(i => i.product_id === product.db_id);
-                    if (specificInquiry) {
-                        inquiryId = specificInquiry.id;
-                        // Update existing inquiry with new dates
-                        await supabase
-                            .from("inquiries")
-                            .update({
-                                start_date: inquiryForm.start_date,
-                                end_date: inquiryForm.end_date,
-                                status: 'pending'
-                            })
-                            .eq("id", inquiryId);
-                    }
+                // Check if there's a PENDING inquiry for THIS SPECIFIC product
+                const specificInquiry = allUserInquiries.find(i => i.product_id === product.db_id && i.status === 'pending');
+                if (specificInquiry) {
+                    inquiryId = specificInquiry.id;
+                    // Update existing inquiry with new dates
+                    const { error: updateError } = await supabase
+                        .from("inquiries")
+                        .update({
+                            start_date: inquiryForm.start_date,
+                            end_date: inquiryForm.end_date,
+                            status: 'pending'
+                        })
+                        .eq("id", inquiryId);
+
+                    if (updateError) throw updateError;
                 }
             }
 
-            // 3. If no chatId found OR it's a new product for an existing chat
+            // 3. If NO inquiry for THIS product exists, create one
             if (!inquiryId) {
-                // Create new inquiry record
                 const { data: inquiryData, error: inquiryError } = await supabase
                     .from("inquiries")
                     .insert([{
@@ -800,20 +809,21 @@ export default function ProductClient() {
 
                 if (inquiryError) throw inquiryError;
                 inquiryId = inquiryData.id;
+            }
 
-                // Only create a NEW chat if we don't already have one for this user pair
-                if (!chatId) {
-                    const { data: chatData, error: chatError } = await supabase
-                        .from("chats")
-                        .insert([{
-                            inquiry_id: inquiryData.id
-                        }])
-                        .select()
-                        .single();
+            // 4. If NO chat exists for this user pair, create one
+            // We use the inquiryId we just found or created as the "seed" for the chat
+            if (!chatId) {
+                const { data: chatData, error: chatError } = await supabase
+                    .from("chats")
+                    .insert([{
+                        inquiry_id: inquiryId
+                    }])
+                    .select()
+                    .single();
 
-                    if (chatError) throw chatError;
-                    chatId = chatData.id;
-                }
+                if (chatError) throw chatError;
+                chatId = chatData.id;
             }
 
             // Create initial message in chat automatically
@@ -844,7 +854,9 @@ export default function ProductClient() {
                 inquiryId: inquiryId,
                 dates: {
                     start: startDateFormatted,
-                    end: endDateFormatted
+                    end: endDateFormatted,
+                    rawStart: inquiryForm.start_date,
+                    rawEnd: inquiryForm.end_date
                 }
             };
 
