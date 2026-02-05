@@ -981,7 +981,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                             )}
                         </div>
                         <button
-                            onClick={() => router.push(`/admin/manage-products/${userId}`)}
+                            onClick={() => router.push(`/admin/manage-products?userId=${userId}`)}
                             className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium rounded-none hover:bg-gray-100 transition-colors"
                         >
                             Cancel
@@ -1265,7 +1265,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                             <div className="flex gap-4 pt-4 border-t border-gray-200">
                                 <button
                                     type="button"
-                                    onClick={() => router.push(`/admin/manage-products/${userId}`)}
+                                    onClick={() => router.push(`/admin/manage-products?userId=${userId}`)}
                                     className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
                                 >
                                     Cancel

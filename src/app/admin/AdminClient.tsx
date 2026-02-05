@@ -296,7 +296,7 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
 
     const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; name: string } | null>(null);
     const [deleteConfirmProduct, setDeleteConfirmProduct] = useState<{ id: string; name: string } | null>(null);
-    const [approveConfirmProduct, setApproveConfirmProduct] = useState<{ id: string; name: string; status?: string } | null>(null);
+    const [approveConfirmProduct, setApproveConfirmProduct] = useState<{ id: string; name: string; status?: string; user_id: string; product_id?: string } | null>(null);
     const [rejectConfirmProduct, setRejectConfirmProduct] = useState<UserProduct | null>(null);
     const [rejectReason, setRejectReason] = useState("");
     const [popup, setPopup] = useState<{
@@ -3254,7 +3254,13 @@ To get these values:
     };
 
     const handleApproveProduct = (product: UserProduct) => {
-        setApproveConfirmProduct({ id: product.id, name: product.name, status: product.status });
+        setApproveConfirmProduct({
+            id: product.id,
+            name: product.name,
+            status: product.status,
+            user_id: product.user_id,
+            product_id: product.product_id
+        });
     };
 
     const confirmApproveProduct = async () => {
@@ -3265,9 +3271,63 @@ To get these values:
             const isDeactivation = status === 'pending_deactivation';
             const isReactivation = status === 'pending_reactivation';
 
-            const updateData = isDeactivation
+            let updateData: any = isDeactivation
                 ? { status: 'approved', is_active: false }
                 : { status: 'approved', is_active: true };
+
+            // Check if we need to generate a custom Product ID
+            // Only for new approvals (not deactivations) where ID is missing or temp (PROD-)
+            if (!isDeactivation && (!approveConfirmProduct.product_id || !approveConfirmProduct.product_id.startsWith('AR-'))) {
+                try {
+                    // 1. Get User's Custom ID Suffix
+                    const { data: userData } = await supabase
+                        .from("users")
+                        .select("custom_id")
+                        .eq("id", approveConfirmProduct.user_id)
+                        .single();
+
+                    if (userData?.custom_id) {
+                        const userSuffix = userData.custom_id.slice(-3); // Last 3 chars
+
+                        // 2. Get existing products to find max sequence
+                        const { data: userProducts } = await supabase
+                            .from("products")
+                            .select("product_id")
+                            .eq("owner_user_id", approveConfirmProduct.user_id);
+
+                        let maxSequence = 0;
+                        if (userProducts && userProducts.length > 0) {
+                            userProducts.forEach(p => {
+                                if (p.product_id && p.product_id.includes(userSuffix)) {
+                                    // Expected format: AR-XXX01
+                                    const parts = p.product_id.split('-');
+                                    if (parts.length >= 2) {
+                                        const suffixPart = parts[parts.length - 1]; // e.g. XXX01
+                                        if (suffixPart.startsWith(userSuffix)) {
+                                            const numPart = suffixPart.slice(userSuffix.length);
+                                            const num = parseInt(numPart, 10);
+                                            if (!isNaN(num) && num > maxSequence) {
+                                                maxSequence = num;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        // 3. Generate new ID
+                        const nextSequence = maxSequence + 1;
+                        const countStr = nextSequence.toString().padStart(2, '0');
+                        const newProductId = `AR-${userSuffix}${countStr}`;
+
+                        updateData.product_id = newProductId;
+                        console.log(`Generated new Custom ID for draft approval: ${newProductId}`);
+                    }
+                } catch (idError) {
+                    console.error("Error generating custom ID during approval:", idError);
+                    // Continue with approval even if ID generation fails, better to approve than block
+                }
+            }
 
             const { error } = await supabase
                 .from("products")
@@ -5560,7 +5620,7 @@ To get these values:
                                                                     </button>
                                                                     <button
                                                                         onClick={() => {
-                                                                            router.push(`/admin/manage-products/${user.id}`);
+                                                                            router.push(`/admin/manage-products?userId=${user.id}`);
                                                                         }}
                                                                         className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
                                                                     >
@@ -5633,7 +5693,7 @@ To get these values:
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => {
-                                                                                    router.push(`/admin/manage-products/${user.id}`);
+                                                                                    router.push(`/admin/manage-products?userId=${user.id}`);
                                                                                     setActiveActionId(null);
                                                                                 }}
                                                                                 className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
@@ -6046,7 +6106,7 @@ To get these values:
                                                 setConvertedWebPSize(0);
                                                 setConvertedWebPBlob(null);
                                                 setIsConvertingImage(false);
-                                                router.push(`/admin/manage-products/${selectedUserId}/add`);
+                                                router.push(`/admin/manage-products/add?userId=${selectedUserId}`);
                                             }}
                                             className="px-5 py-2.5 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                                         >
@@ -6115,7 +6175,7 @@ To get these values:
                                                     // If we came from manage products page (either editing or adding), redirect back
                                                     if (userIdToUse && (wasEditing || addProduct)) {
                                                         // Clear URL params and redirect
-                                                        router.push(`/admin/manage-products/${userIdToUse}`);
+                                                        router.push(`/admin/manage-products?userId=${userIdToUse}`);
                                                     }
                                                 }}
                                                 className="text-gray-400 hover:text-gray-600"
@@ -6471,7 +6531,7 @@ To get these values:
                                                         // If we came from manage products page (either editing or adding), redirect back
                                                         if (userIdToUse && (wasEditing || addProduct)) {
                                                             // Clear URL params and redirect
-                                                            router.push(`/admin/manage-products/${userIdToUse}`);
+                                                            router.push(`/admin/manage-products?userId=${userIdToUse}`);
                                                         }
                                                     }}
                                                     className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"

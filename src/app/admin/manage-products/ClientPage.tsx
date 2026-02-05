@@ -717,7 +717,7 @@ export default function ManageProductsClient() {
                                                         <div className="flex flex-col gap-2">
                                                             <div className="flex gap-2">
                                                                 <button
-                                                                    onClick={() => router.push(`/admin/manage-products/${userId}/add?edit=${product.id}`)}
+                                                                    onClick={() => router.push(`/admin/manage-products/add?userId=${userId}&edit=${product.id}`)}
                                                                     className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm"
                                                                     title="Edit product"
                                                                 >

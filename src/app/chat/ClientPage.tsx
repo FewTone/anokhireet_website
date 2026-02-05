@@ -275,6 +275,8 @@ export default function ChatClient() {
     };
 
     const handleConfirmBooking = async () => {
+        if (!currentUser) return;
+        if (!selectedChat) return;
         if (!bookingData || !bookingData.dates[0] || !bookingData.dates[1]) return;
 
         try {
@@ -293,8 +295,8 @@ export default function ChatClient() {
                 .from('inquiries')
                 .update({
                     status: 'confirmed',
-                    start_date: dates[0].toISOString(),
-                    end_date: dates[1].toISOString()
+                    start_date: dates[0]!.toISOString(),
+                    end_date: dates[1]!.toISOString()
                 })
                 .eq('id', inquiryId)
                 .select();
@@ -303,27 +305,27 @@ export default function ChatClient() {
 
             // Fallback insert
             if (!updateData || updateData.length === 0) {
-                const ownerId = selectedChat?.inquiry?.owner_user_id || currentUser?.id;
+                const ownerId = selectedChat?.inquiry?.owner_user_id || currentUser.id;
                 const renterId = selectedChat?.inquiry?.renter_user_id || selectedChat?.other_user?.id;
 
                 await supabase.from('inquiries').insert([{
                     product_id: dbId,
                     owner_user_id: ownerId,
                     renter_user_id: renterId,
-                    start_date: dates[0].toISOString(),
-                    end_date: dates[1].toISOString(),
+                    start_date: dates[0]!.toISOString(),
+                    end_date: dates[1]!.toISOString(),
                     status: 'confirmed'
                 }]);
             }
 
             // 2. Send Confirmation Message
             if (messageId && selectedChat) {
-                const formattedDates = `${dates[0].toLocaleDateString('en-GB')} - ${dates[1].toLocaleDateString('en-GB')}`;
+                const formattedDates = `${dates[0]!.toLocaleDateString('en-GB')} - ${dates[1]!.toLocaleDateString('en-GB')}`;
                 await supabase
                     .from('messages')
                     .insert([{
                         chat_id: selectedChat.id,
-                        sender_user_id: currentUser?.id,
+                        sender_user_id: currentUser.id,
                         message: `Booking Confirmed for ${formattedDates}`,
                         reply_to_message_id: messageId
                     }]);
@@ -405,7 +407,7 @@ export default function ChatClient() {
             if (inquiry.product_id) {
                 const { data: productData } = await supabase
                     .from("products")
-                    .select("id, title, name, price, product_media")
+                    .select("id, title, name, price, product_media, product_id")
                     .eq("id", inquiry.product_id)
                     .single();
 
@@ -1372,6 +1374,16 @@ export default function ChatClient() {
                 }
             }
 
+            // Determine the ID to display
+            let displayId = cardData.product.productId;
+
+            // Try to get fresh Custom ID from the selected chat if the product matches (UUID check)
+            if (selectedChat?.inquiry?.product?.id === (cardData.product.id || cardData.product.db_id)) {
+                if (selectedChat.inquiry.product.product_id) {
+                    displayId = selectedChat.inquiry.product.product_id;
+                }
+            }
+
             return (
                 <div className="mb-1 w-full">
                     {replyContext}
@@ -1389,7 +1401,7 @@ export default function ChatClient() {
                             )}
                             <div className="flex-1 min-w-0 flex flex-col justify-center">
                                 <h4 className="font-semibold text-sm truncate text-gray-900 leading-tight">{cardData.product.name}</h4>
-                                <p className="text-[10px] text-gray-400 mt-0.5">ID: {cardData.product.productId}</p>
+                                <p className="text-[10px] text-gray-400 mt-0.5">ID: {displayId}</p>
                                 {cardData.product.price && <p className="text-xs font-medium mt-1 text-gray-900">Price: {cardData.product.price}</p>}
                                 {cardData.dates && (
                                     <p className="text-[10px] text-gray-500 mt-1 font-medium">
@@ -1404,7 +1416,7 @@ export default function ChatClient() {
                                 Auto-Rejected (Date Passed)
                             </div>
                         ) : isRejected ? (
-                            <div className="w-full max-w-[300px] px-3 py-2 text-[11px] font-bold text-red-400 bg-red-50 border border-red-100 text-center uppercase tracking-widest">
+                            <div className="w-full max-w-[300px] px-3 py-2 text-[11px] font-bold text-red-400 bg-red-50 text-center uppercase tracking-widest">
                                 Inquiry Rejected
                             </div>
                         ) : isAccepted ? (

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import ManageProductsClient from "./ClientPage";
 
-export const dynamic = "force-static";
+
 
 export default function ManageProductsPage() {
     return (
