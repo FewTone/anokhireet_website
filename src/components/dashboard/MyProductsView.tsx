@@ -667,7 +667,7 @@ export default function MyProductsView() {
                     <p className="text-gray-500 mb-6 text-sm">Start by adding your first product.</p>
                     <button
                         onClick={handleAddProduct}
-                        className="bg-black text-white px-6 py-2.5 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                        className="hidden md:inline-block bg-black text-white px-6 py-2.5 text-sm font-semibold uppercase tracking-wider hover:bg-gray-800 transition-colors"
                     >
                         Add Product
                     </button>
