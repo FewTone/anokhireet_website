@@ -1204,7 +1204,7 @@ export default function ChatClient() {
                                 </div>
                                 <input
                                     type="text"
-                                    className="bg-[#f0f2f5] text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block w-full pl-10 p-2 outline-none"
+                                    className="bg-[#f0f2f5] text-gray-900 text-sm rounded-none focus:ring-green-500 focus:border-green-500 block w-full pl-10 p-2 outline-none"
                                     placeholder="Search or start new chat"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -1439,7 +1439,7 @@ export default function ChatClient() {
 
                                 {/* Input Area */}
                                 <div className="bg-[#f0f2f5] px-4 py-2 flex items-center gap-2 relative z-20 flex-shrink-0">
-                                    <label className={`cursor-pointer p-2 text-[#54656f] hover:bg-gray-200 rounded-full transition-colors ${sending ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                    <label className={`cursor-pointer p-2 text-black hover:bg-gray-200 rounded-full transition-colors ${sending ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -1447,7 +1447,9 @@ export default function ChatClient() {
                                             onChange={handleImageUpload}
                                             disabled={sending}
                                         />
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
+                                        </svg>
                                     </label>
 
                                     <input
@@ -1456,11 +1458,14 @@ export default function ChatClient() {
                                         onChange={(e) => setMessageInput(e.target.value)}
                                         onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                                         placeholder="Type a message"
-                                        className="flex-1 bg-white px-4 py-2.5 rounded-lg text-[15px] outline-none border-none placeholder-gray-500 shadow-sm"
+                                        className="flex-1 bg-white px-6 py-2.5 rounded-none text-[15px] outline-none border-none placeholder-gray-500"
                                     />
 
-                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all ${messageInput.trim() ? "text-gray-600 hover:bg-gray-200" : "text-[#54656f] opacity-50 cursor-not-allowed"}`}>
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all flex items-center justify-center ${messageInput.trim() ? "text-black hover:bg-gray-200" : "text-black cursor-not-allowed"}`}>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                        </svg>
                                     </button>
                                 </div>
                             </>
