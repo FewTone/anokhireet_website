@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -112,10 +112,16 @@ export default function ChatClient() {
 
     const selectedChatIdRef = useRef<string | null>(null);
 
-    // Update ref when selectedChat changes
     useEffect(() => {
         selectedChatIdRef.current = selectedChat?.id || null;
     }, [selectedChat]);
+
+    // Better scrolling with useLayoutEffect to avoid flickers
+    useLayoutEffect(() => {
+        if (selectedChat && messages.length > 0) {
+            scrollToBottom();
+        }
+    }, [messages, selectedChat]);
 
     // Auto-select chat from URL parameter - Single Source of Truth
     useEffect(() => {
@@ -233,6 +239,9 @@ export default function ChatClient() {
             subscribeToMessages(selectedChat.id);
             setReplyingTo(null);
             setMessageInput("");
+
+            // Instant scroll to bottom on mount
+            scrollToBottom();
 
             const handleFocus = () => {
                 markAsRead(selectedChat.id);
@@ -536,7 +545,6 @@ export default function ChatClient() {
         if (!isInitial && !hasMoreMessages) return;
 
         // Don't set global loading if pagination
-        if (isInitial) setLoading(true);
 
         try {
             const from = pageNum * MESSAGES_PER_PAGE;
@@ -590,7 +598,7 @@ export default function ChatClient() {
                 setPage(pageNum);
 
                 if (isInitial) {
-                    setTimeout(scrollToBottom, 100);
+                    // Scroll is now handled by useLayoutEffect
                     markAsRead(chatId);
                 }
             } else {
@@ -601,7 +609,6 @@ export default function ChatClient() {
             console.error("Error loading messages:", error);
             if (isInitial) setMessages([]);
         } finally {
-            if (isInitial) setLoading(false);
         }
     };
 
@@ -968,7 +975,7 @@ export default function ChatClient() {
 
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
     };
 
     const formatTime = (dateString: string) => {
@@ -1353,7 +1360,7 @@ export default function ChatClient() {
                                     </div>
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto px-4 py-2 relative z-10 scrollbar-thin scrollbar-thumb-gray-300">
+                                <div className="flex-1 overflow-y-auto px-4 py-2 relative z-10 scrollbar-thin scrollbar-thumb-gray-300" key={selectedChat.id}>
                                     <div className="space-y-1 pb-2">
                                         {messages.map((message, index) => {
                                             const isSent = message.sender_user_id === currentUser.id;
