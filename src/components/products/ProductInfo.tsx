@@ -66,7 +66,7 @@ export default function ProductInfo({
                 </div>
             ) : (
                 <>
-                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-[1001] grid grid-cols-2 gap-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none md:static md:bottom-auto md:left-auto md:right-auto md:p-0 md:bg-transparent md:border-none md:z-auto md:mt-4 md:gap-3">
+                    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-[1001] grid grid-cols-2 gap-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:shadow-none md:static md:bottom-auto md:left-auto md:right-auto md:p-0 md:bg-transparent md:border-none md:z-auto md:mt-4">
                         <button
                             onClick={onMakeInquiry}
                             className="bg-white text-black border-r border-gray-200 font-semibold py-4 px-4 md:py-4 md:px-6 hover:bg-gray-50 transition-all text-center text-sm md:text-base rounded-none md:border md:border-black"
