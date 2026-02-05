@@ -1452,13 +1452,23 @@ export default function ChatClient() {
                                         </svg>
                                     </label>
 
-                                    <input
-                                        type="text"
+                                    <textarea
                                         value={messageInput}
-                                        onChange={(e) => setMessageInput(e.target.value)}
-                                        onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                                        onChange={(e) => {
+                                            setMessageInput(e.target.value);
+                                            // Auto-resize logic (simple)
+                                            e.target.style.height = 'inherit';
+                                            e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && !e.shiftKey) {
+                                                e.preventDefault();
+                                                sendMessage();
+                                            }
+                                        }}
                                         placeholder="Type a message"
-                                        className="flex-1 bg-white px-6 py-2.5 rounded-none text-[15px] outline-none border-none placeholder-gray-500"
+                                        rows={1}
+                                        className="flex-1 bg-white px-6 py-2.5 rounded-none text-[15px] outline-none border-none placeholder-gray-500 max-h-[120px] resize-none overflow-y-auto"
                                     />
 
                                     <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all flex items-center justify-center ${messageInput.trim() ? "text-black hover:bg-gray-200" : "text-black cursor-not-allowed"}`}>
