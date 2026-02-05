@@ -1379,9 +1379,10 @@ export default function ChatClient() {
             let displayId = cardData.product.productId;
 
             // Try to get fresh Custom ID from the selected chat if the product matches (UUID check)
-            if (selectedChat?.inquiry?.product?.id === (cardData.product.id || cardData.product.db_id)) {
-                if (selectedChat.inquiry.product.product_id) {
-                    displayId = selectedChat.inquiry.product.product_id;
+            const chatProduct = selectedChat?.inquiry?.product;
+            if (chatProduct?.id === (cardData.product.id || cardData.product.db_id)) {
+                if (chatProduct?.product_id) {
+                    displayId = chatProduct.product_id;
                 }
             }
 
