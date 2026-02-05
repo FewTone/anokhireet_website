@@ -115,10 +115,15 @@ export default function ChatClient() {
     }, [currentUser]);
 
     const selectedChatIdRef = useRef<string | null>(null);
+    const chatsRef = useRef<Chat[]>([]);
 
     useEffect(() => {
         selectedChatIdRef.current = selectedChat?.id || null;
     }, [selectedChat]);
+
+    useEffect(() => {
+        chatsRef.current = chats;
+    }, [chats]);
 
     // Better scrolling with useLayoutEffect to avoid flickers
     useLayoutEffect(() => {
@@ -1017,6 +1022,15 @@ export default function ChatClient() {
                 },
                 async (payload: any) => {
                     const newMessage = payload.new as Message;
+
+                    // Check if chat exists in our list
+                    const chatExists = chatsRef.current.some(c => c.id === newMessage.chat_id);
+
+                    if (!chatExists) {
+                        // New chat! Fetch it immediately
+                        await loadSpecificChat(newMessage.chat_id);
+                        return; // loadSpecificChat will add it to the list
+                    }
 
                     // Update chat list for ALL incoming messages involving me
                     setChats(prev => prev.map(chat => {
