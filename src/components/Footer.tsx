@@ -21,7 +21,7 @@ export default function Footer() {
                             <span className="sr-only">Facebook</span>
                             <div className="relative h-5 w-5">
                                 <Image
-                                    src="/footer/fi_1051309.png"
+                                    src="/footer/fi_1051309.svg"
                                     alt="Facebook"
                                     fill
                                     className="object-contain"
@@ -32,7 +32,7 @@ export default function Footer() {
                             <span className="sr-only">Instagram</span>
                             <div className="relative h-5 w-5">
                                 <Image
-                                    src="/footer/fi_1384031.png"
+                                    src="/footer/fi_1384031.svg"
                                     alt="Instagram"
                                     fill
                                     className="object-contain"
@@ -43,7 +43,7 @@ export default function Footer() {
                             <span className="sr-only">YouTube</span>
                             <div className="relative h-5 w-5">
                                 <Image
-                                    src="/footer/fi_1384028.png"
+                                    src="/footer/fi_1384028.svg"
                                     alt="YouTube"
                                     fill
                                     className="object-contain"
@@ -54,7 +54,7 @@ export default function Footer() {
                             <span className="sr-only">WhatsApp</span>
                             <div className="relative h-5 w-5">
                                 <Image
-                                    src="/footer/fi_733641.png"
+                                    src="/footer/fi_733641.svg"
                                     alt="WhatsApp"
                                     fill
                                     className="object-contain"
