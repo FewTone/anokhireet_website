@@ -1,56 +1,43 @@
 import Link from "next/link";
-import Image from "next/image";
+
 
 export default function Footer() {
     return (
-        <footer className="bg-[#f8eee6] border-t border-[#e6d0c0] py-12 pb-28 md:pb-12 mt-auto">
+        <footer className="bg-black border-t border-gray-800 py-12 pb-28 md:pb-12 mt-auto">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col items-center justify-center space-y-8">
 
                     {/* Navigation Links */}
-                    <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-sm text-gray-800 hover:text-black transition-colors font-medium">
-                        <Link href="/about" className="hover:text-gray-600">About Us</Link>
-                        <Link href="/privacy" className="hover:text-gray-600">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-gray-600">Terms & Conditions</Link>
-                        <Link href="/contact" className="hover:text-gray-600">Contact Us</Link>
+                    <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-sm text-white transition-colors font-medium">
+                        <Link href="/about" className="hover:text-gray-300">About Us</Link>
+                        <Link href="/privacy" className="hover:text-gray-300">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-gray-300">Terms & Conditions</Link>
+                        <Link href="/contact" className="hover:text-gray-300">Contact Us</Link>
                     </nav>
 
                     {/* Social Links */}
                     <div className="flex items-center space-x-6">
-                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors">
+                        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                             <span className="sr-only">Facebook</span>
-                            <div className="relative h-5 w-5">
-                                <Image
-                                    src="/footer/fi_1051309.svg"
-                                    alt="Facebook"
-                                    fill
-                                    className="object-contain"
-                                />
-                            </div>
+                            <svg className="h-5 w-5" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M85.3516 0H14.6484C6.57196 0 0 6.57196 0 14.6484V85.3516C0 93.428 6.57196 100 14.6484 100H44.1406V64.6484H32.4219V47.0703H44.1406V35.1562C44.1406 25.4631 52.0256 17.5781 61.7188 17.5781H79.4922V35.1562H61.7188V47.0703H79.4922L76.5625 64.6484H61.7188V100H85.3516C93.428 100 100 93.428 100 85.3516V14.6484C100 6.57196 93.428 0 85.3516 0Z" fill="#FFFFFF" />
+                            </svg>
                         </a>
-                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors">
+                        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                             <span className="sr-only">Instagram</span>
-                            <div className="relative h-5 w-5">
-                                <Image
-                                    src="/footer/fi_1384031.svg"
-                                    alt="Instagram"
-                                    fill
-                                    className="object-contain"
-                                />
-                            </div>
+                            <svg className="h-5 w-5" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M99.9023 29.4003C99.668 24.0869 98.8088 20.434 97.5779 17.2687C96.3081 13.9088 94.3546 10.9007 91.7952 8.40008C89.2946 5.86052 86.2667 3.88717 82.9457 2.63723C79.7621 1.40637 76.1283 0.547134 70.8149 0.312866C65.4618 0.0587578 63.7624 0 50.1856 0C36.6087 0 34.9093 0.0587578 29.5761 0.293026C24.2627 0.527294 20.6098 1.38729 17.4452 2.61739C14.0846 3.88717 11.0765 5.84068 8.57586 8.40008C6.0363 10.9007 4.06372 13.9287 2.81302 17.2496C1.58215 20.434 0.722916 24.067 0.488647 29.3804C0.234539 34.7335 0.175781 36.4329 0.175781 50.0098C0.175781 63.5866 0.234539 65.286 0.468807 70.6193C0.703075 75.9326 1.56308 79.5856 2.79394 82.7508C4.06372 86.1107 6.0363 89.1188 8.57586 91.6195C11.0765 94.159 14.1044 96.1324 17.4254 97.3823C20.6098 98.6132 24.2428 99.4724 29.557 99.7067C34.8894 99.9417 36.5896 99.9997 50.1665 99.9997C63.7433 99.9997 65.4427 99.9417 70.776 99.7067C76.0894 99.4724 79.7423 98.6132 82.9068 97.3823C89.6273 94.784 94.9407 89.4706 97.539 82.7508C98.7691 79.5665 99.6291 75.9326 99.8634 70.6193C100.098 65.286 100.156 63.5866 100.156 50.0098C100.156 36.4329 100.137 34.7335 99.9023 29.4003ZM90.8971 70.2286C90.6819 75.1123 89.8616 77.7496 89.1778 79.5077C87.4975 83.8642 84.04 87.3217 79.6835 89.0021C77.9253 89.6858 75.269 90.5061 70.4043 90.7205C65.1299 90.9556 63.548 91.0136 50.2054 91.0136C36.8628 91.0136 35.2611 90.9556 30.0057 90.7205C25.1219 90.5061 22.4847 89.6858 20.7265 89.0021C18.5586 88.2008 16.5852 86.931 14.9835 85.2706C13.323 83.649 12.0533 81.6955 11.252 79.5276C10.5683 77.7694 9.74796 75.1123 9.53354 70.2484C9.2985 64.9739 9.24051 63.3913 9.24051 50.0487C9.24051 36.7061 9.2985 35.1044 9.53354 29.8497C9.74796 24.966 10.5683 22.3287 11.252 20.5706C12.0533 18.4019 13.323 16.4293 15.0034 14.8268C16.6242 13.1663 18.5777 11.8966 20.7464 11.0961C22.5045 10.4123 25.1616 9.59202 30.0255 9.37683C35.3 9.14256 36.8826 9.08381 50.2245 9.08381C63.5869 9.08381 65.1688 9.14256 70.4242 9.37683C75.308 9.59202 77.9452 10.4123 79.7033 11.0961C81.8713 11.8966 83.8446 13.1663 85.4463 14.8268C87.1068 16.4484 88.3766 18.4019 89.1778 20.5706C89.8616 22.3287 90.6819 24.985 90.8971 29.8497C91.1314 35.1242 91.1901 36.7061 91.1901 50.0487C91.1901 63.3913 91.1314 64.9541 90.8971 70.2286Z" fill="#FFFFFF" />
+                                <path d="M50.1857 24.3203C36.0037 24.3203 24.4971 35.8262 24.4971 50.0089C24.4971 64.1917 36.0037 75.6975 50.1857 75.6975C64.3684 75.6975 75.8743 64.1917 75.8743 50.0089C75.8743 35.8262 64.3684 24.3203 50.1857 24.3203ZM50.1857 66.6725C40.9851 66.6725 33.5221 59.2102 33.5221 50.0089C33.5221 40.8076 40.9851 33.3454 50.1857 33.3454C59.387 33.3454 66.8492 40.8076 66.8492 50.0089C66.8492 59.2102 59.387 66.6725 50.1857 66.6725Z" fill="#FFFFFF" />
+                                <path d="M82.8876 23.3018C82.8876 26.6136 80.2023 29.2989 76.8897 29.2989C73.5779 29.2989 70.8926 26.6136 70.8926 23.3018C70.8926 19.9892 73.5779 17.3047 76.8897 17.3047C80.2023 17.3047 82.8876 19.9892 82.8876 23.3018Z" fill="#FFFFFF" />
+                            </svg>
                         </a>
-                        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors">
+                        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                             <span className="sr-only">YouTube</span>
-                            <div className="relative h-5 w-5">
-                                <Image
-                                    src="/footer/fi_1384028.svg"
-                                    alt="YouTube"
-                                    fill
-                                    className="object-contain"
-                                />
-                            </div>
+                            <svg className="h-5 w-5" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M94.8944 26.5679C93.8141 22.5516 90.6475 19.3856 86.6318 18.3042C79.2955 16.2969 49.95 16.2969 49.95 16.2969C49.95 16.2969 20.6057 16.2969 13.2694 18.2281C9.33094 19.3084 6.08711 22.5522 5.00679 26.5679C3.07617 33.9036 3.07617 49.1168 3.07617 49.1168C3.07617 49.1168 3.07617 64.4067 5.00679 71.6657C6.08826 75.6814 9.25369 78.8474 13.27 79.9289C20.6829 81.9368 49.9512 81.9368 49.9512 81.9368C49.9512 81.9368 79.2955 81.9368 86.6318 80.0056C90.6481 78.9247 93.8141 75.7587 94.8956 71.7429C96.8256 64.4067 96.8256 49.1941 96.8256 49.1941C96.8256 49.1941 96.9028 33.9036 94.8944 26.5679ZM40.6071 63.1713V35.0623L65.0093 49.1168L40.6071 63.1713Z" fill="#FFFFFF" />
+                            </svg>
                         </a>
-                        <a href="https://wa.me/918200647176" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-900 transition-colors">
+                        <a href="https://wa.me/918200647176" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                             <span className="sr-only">WhatsApp</span>
                             <svg
                                 className="h-5 w-5"
@@ -62,7 +49,7 @@ export default function Footer() {
                                 <g clipPath="url(#clip0_whatsapp)">
                                     <path
                                         d="M50.0125 0H49.9875C22.4188 0 0 22.425 0 50C0 60.9375 3.525 71.075 9.51875 79.3063L3.2875 97.8813L22.5063 91.7375C30.4125 96.975 39.8437 100 50.0125 100C77.5812 100 100 77.5687 100 50C100 22.4313 77.5812 0 50.0125 0ZM79.1062 70.6062C77.9 74.0125 73.1125 76.8375 69.2937 77.6625C66.6812 78.2187 63.2687 78.6625 51.7812 73.9C37.0875 67.8125 27.625 52.8812 26.8875 51.9125C26.1813 50.9437 20.95 44.0063 20.95 36.8313C20.95 29.6563 24.5938 26.1625 26.0625 24.6625C27.2688 23.4313 29.2625 22.8687 31.175 22.8687C31.7937 22.8687 32.35 22.9 32.85 22.925C34.3188 22.9875 35.0562 23.075 36.025 25.3938C37.2312 28.3 40.1687 35.475 40.5187 36.2125C40.875 36.95 41.2313 37.95 40.7313 38.9188C40.2625 39.9188 39.85 40.3625 39.1125 41.2125C38.375 42.0625 37.675 42.7125 36.9375 43.625C36.2625 44.4188 35.5 45.2688 36.35 46.7375C37.2 48.175 40.1375 52.9687 44.4625 56.8187C50.0437 61.7875 54.5687 63.375 56.1875 64.05C57.3937 64.55 58.8312 64.4313 59.7125 63.4938C60.8312 62.2875 62.2125 60.2875 63.6187 58.3188C64.6187 56.9063 65.8813 56.7312 67.2063 57.2312C68.5563 57.7 75.7 61.2312 77.1688 61.9625C78.6375 62.7 79.6062 63.05 79.9625 63.6688C80.3125 64.2875 80.3125 67.1937 79.1062 70.6062Z"
-                                        fill="#3C3937"
+                                        fill="#FFFFFF"
                                     />
                                 </g>
                                 <defs>
