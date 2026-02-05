@@ -918,8 +918,11 @@ export default function ChatClient() {
         }
     };
 
-    const sendMessage = async () => {
-        if (!selectedChat || !currentUser || !messageInput.trim()) {
+    const sendMessage = async (overrideMessage?: string, overrideReplyToId?: string) => {
+        const finalMessage = (overrideMessage || messageInput).trim();
+        const finalReplyId = overrideReplyToId || replyingTo?.id || null;
+
+        if (!selectedChat || !currentUser || !finalMessage) {
             if (!currentUser) alert("Please log in to send messages");
             return;
         }
@@ -931,8 +934,8 @@ export default function ChatClient() {
                 .insert([{
                     chat_id: selectedChat.id,
                     sender_user_id: currentUser.id,
-                    message: messageInput.trim(),
-                    reply_to_message_id: replyingTo?.id || null,
+                    message: finalMessage,
+                    reply_to_message_id: finalReplyId,
                     is_read: false,
                     is_delivered: false
                 }])
@@ -940,11 +943,17 @@ export default function ChatClient() {
                 .single();
 
             if (error) throw error;
-            setMessageInput("");
-            if (textareaRef.current) {
-                textareaRef.current.style.height = 'inherit';
+
+            if (!overrideMessage) {
+                setMessageInput("");
+                if (textareaRef.current) {
+                    textareaRef.current.style.height = 'inherit';
+                }
             }
-            setReplyingTo(null);
+
+            if (!overrideReplyToId) {
+                setReplyingTo(null);
+            }
 
 
             if (data) {
@@ -953,11 +962,15 @@ export default function ChatClient() {
                     sender: { name: currentUser.name || "Me" }
                 };
 
-                // Enrich reply message sender from state
-                if (replyingTo) {
+                // Enrich reply message sender
+                const replyContext = overrideReplyToId
+                    ? messages.find(m => m.id === overrideReplyToId)
+                    : replyingTo;
+
+                if (replyContext) {
                     newMessage.reply_message = {
                         ...data.reply_message,
-                        sender: replyingTo.sender || { name: "User" }
+                        sender: replyContext.sender || { name: "User" }
                     };
                 }
 
@@ -1054,7 +1067,17 @@ export default function ChatClient() {
                     {repliedMessage.sender_user_id === currentUser?.id ? "You" : repliedMessage.sender?.name || "User"}
                 </div>
                 <div className="truncate text-black/60">
-                    {repliedMessage.media_url ? "📷 Photo" : repliedMessage.message}
+                    {repliedMessage.media_url ? "📷 Photo" : (() => {
+                        try {
+                            if (repliedMessage.message.trim().startsWith('{')) {
+                                const parsed = JSON.parse(repliedMessage.message);
+                                if (parsed.type === 'inquiry_card') {
+                                    return `Inquiry: ${parsed.product.name}`;
+                                }
+                            }
+                        } catch (e) { /* ignore */ }
+                        return repliedMessage.message;
+                    })()}
                 </div>
             </div>
         ) : null;
@@ -1095,26 +1118,88 @@ export default function ChatClient() {
         } catch (e) { /* ignore */ }
 
         if (isInquiryCard && cardData) {
+            const isOwner = currentUser?.id === selectedChat?.inquiry?.owner_user_id;
+
+            // Check if rejected - look for "Inquiry Rejected" that REPLIES to this specific message
+            const isRejected = messages.some(m =>
+                m.message === "Inquiry Rejected" &&
+                m.reply_to_message_id === msg.id
+            );
+
+            // Check if date has passed
+            const startDateStr = cardData.dates?.start;
+            let isExpired = false;
+            if (startDateStr) {
+                const startDate = new Date(startDateStr);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                if (startDate < today) {
+                    isExpired = true;
+                }
+            }
+
             return (
                 <div className="mb-1 w-full">
                     {replyContext}
-                    <a
-                        href={`/products/${cardData.product.id || cardData.product.productId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-gray-50 rounded p-2 mb-2 flex gap-3 border border-gray-200 overflow-hidden w-full max-w-[300px] hover:bg-gray-100 transition-colors cursor-pointer text-inherit no-underline block"
-                    >
-                        {cardData.product.image && (
-                            <div className="w-16 h-20 relative flex-shrink-0 bg-gray-200 rounded overflow-hidden">
-                                <img src={cardData.product.image} alt={cardData.product.name} className="w-full h-full object-cover" />
+                    <div className="flex flex-col gap-2">
+                        <a
+                            href={`/products/${cardData.product.id || cardData.product.productId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-gray-50 rounded p-2 flex gap-3 border border-gray-200 overflow-hidden w-full max-w-[300px] hover:bg-gray-100 transition-colors cursor-pointer text-inherit no-underline block"
+                        >
+                            {cardData.product.image && (
+                                <div className="w-16 h-20 relative flex-shrink-0 bg-gray-200 rounded overflow-hidden">
+                                    <img src={cardData.product.image} alt={cardData.product.name} className="w-full h-full object-cover" />
+                                </div>
+                            )}
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <h4 className="font-semibold text-sm truncate text-gray-900 leading-tight">{cardData.product.name}</h4>
+                                <p className="text-[10px] text-gray-400 mt-0.5">ID: {cardData.product.productId}</p>
+                                {cardData.product.price && <p className="text-xs font-medium mt-1 text-gray-900">Price: {cardData.product.price}</p>}
+                                {cardData.dates && (
+                                    <p className="text-[10px] text-gray-500 mt-1 font-medium">
+                                        {cardData.dates.start} - {cardData.dates.end}
+                                    </p>
+                                )}
                             </div>
+                        </a>
+
+                        {isExpired ? (
+                            <div className="w-full max-w-[300px] px-3 py-2 text-[11px] font-bold text-gray-400 bg-gray-50 border border-gray-100 text-center uppercase tracking-widest">
+                                Auto-Rejected (Date Passed)
+                            </div>
+                        ) : isRejected ? (
+                            <div className="w-full max-w-[300px] px-3 py-2 text-[11px] font-bold text-red-400 bg-red-50 border border-red-100 text-center uppercase tracking-widest">
+                                Inquiry Rejected
+                            </div>
+                        ) : (
+                            isOwner && (
+                                <div className="flex gap-2 w-full max-w-[300px]">
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            sendMessage("Inquiry Rejected", msg.id);
+                                        }}
+                                        className="flex-1 px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-none transition-colors border border-red-200 uppercase tracking-wider"
+                                    >
+                                        Reject
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            router.push(`/user/edit-product?id=${cardData.product.id || cardData.product.productId}`);
+                                        }}
+                                        className="flex-1 px-3 py-1.5 text-xs font-semibold text-white bg-black hover:bg-gray-800 rounded-none transition-colors uppercase tracking-wider"
+                                    >
+                                        ACCEPT
+                                    </button>
+                                </div>
+                            )
                         )}
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <h4 className="font-semibold text-sm truncate text-gray-900 leading-tight">{cardData.product.name}</h4>
-                            <p className="text-[10px] text-gray-400 mt-0.5">ID: {cardData.product.productId}</p>
-                            {cardData.product.price && <p className="text-xs font-medium mt-1 text-gray-900">Price: {cardData.product.price}</p>}
-                        </div>
-                    </a>
+                    </div>
                 </div>
             );
         }
@@ -1484,7 +1569,7 @@ export default function ChatClient() {
                                         className="flex-1 bg-white px-6 py-2.5 rounded-none text-[15px] outline-none border-none placeholder-gray-500 max-h-[120px] resize-none overflow-y-auto"
                                     />
 
-                                    <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all flex items-center justify-center ${messageInput.trim() ? "text-black hover:bg-gray-200" : "text-black cursor-not-allowed"}`}>
+                                    <button onClick={() => sendMessage()} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all flex items-center justify-center ${messageInput.trim() ? "text-black hover:bg-gray-200" : "text-black cursor-not-allowed"}`}>
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                                             <line x1="5" y1="12" x2="19" y2="12"></line>
                                             <polyline points="12 5 19 12 12 19"></polyline>

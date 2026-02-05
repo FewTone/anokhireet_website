@@ -110,7 +110,7 @@ export default function EditProductClient() {
                 .from('inquiries')
                 .select('id, start_date, end_date, status')
                 .eq('product_id', productId)
-                .neq('status', 'rejected');
+                .eq('status', 'confirmed');
 
             if (!error && data) {
                 setDbBookings(data);

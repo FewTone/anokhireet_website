@@ -251,7 +251,7 @@ export default function ProductClient() {
                     .from('inquiries')
                     .select('start_date, end_date, status')
                     .eq('product_id', product.db_id)
-                    .neq('status', 'rejected');
+                    .eq('status', 'confirmed');
 
                 if (error) {
                     console.error("Error fetching booked dates:", error);
@@ -745,49 +745,46 @@ export default function ProductClient() {
             let chatId = null;
             let inquiryId = null;
 
-            // 1. Check if an inquiry already exists for this product and user pair
-            const { data: existingInquiries } = await supabase
+            // 1. Check if any inquiry exists between this owner and renter to find an existing chat
+            const { data: allUserInquiries } = await supabase
                 .from("inquiries")
-                .select("id, status")
-                .eq("product_id", product.db_id)
+                .select("id, product_id")
                 .eq("owner_user_id", product.owner_user_id)
-                .eq("renter_user_id", currentUser.id)
-                .order("created_at", { ascending: false })
-                .limit(1);
+                .eq("renter_user_id", currentUser.id);
 
-            if (existingInquiries && existingInquiries.length > 0) {
-                const existingInquiry = existingInquiries[0];
-
-                // 2. Check if a chat exists for this inquiry
+            if (allUserInquiries && allUserInquiries.length > 0) {
+                // Find if any of these inquiries already have a chat
+                const inquiryIds = allUserInquiries.map(i => i.id);
                 const { data: existingChat } = await supabase
                     .from("chats")
-                    .select("id")
-                    .eq("inquiry_id", existingInquiry.id)
-                    .single();
+                    .select("id, inquiry_id")
+                    .in("inquiry_id", inquiryIds)
+                    .limit(1)
+                    .maybeSingle();
 
                 if (existingChat) {
                     chatId = existingChat.id;
-                    inquiryId = existingInquiry.id;
 
-                    console.log("Found existing chat, reusing:", chatId);
-
-                    // Update existing inquiry with new dates and set to pending
-                    const { error: updateError } = await supabase
-                        .from("inquiries")
-                        .update({
-                            start_date: inquiryForm.start_date,
-                            end_date: inquiryForm.end_date,
-                            status: 'pending'
-                        })
-                        .eq("id", inquiryId);
-
-                    if (updateError) console.error("Error updating existing inquiry:", updateError);
+                    // Check if there's an inquiry for THIS SPECIFIC product to update or create new
+                    const specificInquiry = allUserInquiries.find(i => i.product_id === product.db_id);
+                    if (specificInquiry) {
+                        inquiryId = specificInquiry.id;
+                        // Update existing inquiry with new dates
+                        await supabase
+                            .from("inquiries")
+                            .update({
+                                start_date: inquiryForm.start_date,
+                                end_date: inquiryForm.end_date,
+                                status: 'pending'
+                            })
+                            .eq("id", inquiryId);
+                    }
                 }
             }
 
-            // 3. If no existing chat found, create new inquiry and chat
-            if (!chatId) {
-                // Create inquiry
+            // 3. If no chatId found OR it's a new product for an existing chat
+            if (!inquiryId) {
+                // Create new inquiry record
                 const { data: inquiryData, error: inquiryError } = await supabase
                     .from("inquiries")
                     .insert([{
@@ -804,17 +801,19 @@ export default function ProductClient() {
                 if (inquiryError) throw inquiryError;
                 inquiryId = inquiryData.id;
 
-                // Create chat for this inquiry
-                const { data: chatData, error: chatError } = await supabase
-                    .from("chats")
-                    .insert([{
-                        inquiry_id: inquiryData.id
-                    }])
-                    .select()
-                    .single();
+                // Only create a NEW chat if we don't already have one for this user pair
+                if (!chatId) {
+                    const { data: chatData, error: chatError } = await supabase
+                        .from("chats")
+                        .insert([{
+                            inquiry_id: inquiryData.id
+                        }])
+                        .select()
+                        .single();
 
-                if (chatError) throw chatError;
-                chatId = chatData.id;
+                    if (chatError) throw chatError;
+                    chatId = chatData.id;
+                }
             }
 
             // Create initial message in chat automatically
@@ -829,6 +828,9 @@ export default function ProductClient() {
                 year: 'numeric'
             });
 
+            // The text message
+            const textMessage = `Hi! I'm interested in renting "${product.name}" from ${startDateFormatted} to ${endDateFormatted}. Please let me know if it's available.`;
+
             // Create a rich message object for the card
             const cardMessage = {
                 type: "inquiry_card",
@@ -839,35 +841,34 @@ export default function ProductClient() {
                     image: product.image,
                     price: product.price
                 },
+                inquiryId: inquiryId,
                 dates: {
                     start: startDateFormatted,
                     end: endDateFormatted
                 }
             };
 
-            // The text message
-            const textMessage = `Hi! I'm interested in renting "${product.name}" from ${startDateFormatted} to ${endDateFormatted}. Please let me know if it's available.`;
-
-            // Insert both messages
-            const { error: messageError } = await supabase
+            // Insert both messages separately (Card first, then Text)
+            // Sequential inserts ensure distinct timestamps for correct ordering in chat
+            const { error: cardError } = await supabase
                 .from("messages")
-                .insert([
-                    {
-                        chat_id: chatId,
-                        sender_user_id: currentUser.id,
-                        message: JSON.stringify(cardMessage)
-                    },
-                    {
-                        chat_id: chatId,
-                        sender_user_id: currentUser.id,
-                        message: textMessage
-                    }
-                ]);
+                .insert([{
+                    chat_id: chatId,
+                    sender_user_id: currentUser.id,
+                    message: JSON.stringify(cardMessage)
+                }]);
 
-            if (messageError) {
-                console.error("Error creating initial message:", messageError);
-                // Don't fail the inquiry if message creation fails
-            }
+            if (cardError) throw cardError;
+
+            const { error: textError } = await supabase
+                .from("messages")
+                .insert([{
+                    chat_id: chatId,
+                    sender_user_id: currentUser.id,
+                    message: textMessage
+                }]);
+
+            if (textError) throw textError;
 
             setShowInquiryModal(false);
             setInquiryForm({ start_date: "", end_date: "" });
