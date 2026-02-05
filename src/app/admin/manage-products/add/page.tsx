@@ -3,7 +3,7 @@ import AddProductClient from "./ClientPage";
 
 
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 
 export default function AddProductPage() {
     return (

@@ -41,7 +41,9 @@ export default function RootLayout({
             <body suppressHydrationWarning className={`${inter.variable} ${playfairDisplay.variable} ${inter.className} antialiased w-full mx-auto bg-gray-100 md:bg-white overflow-x-hidden`}>
                 <ErrorBoundary>
                     <WebsiteGuard>
-                        <ScrollRestoration />
+                        <Suspense fallback={null}>
+                            <ScrollRestoration />
+                        </Suspense>
                         {children}
                         <Suspense fallback={null}>
                             <LoginModal />

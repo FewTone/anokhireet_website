@@ -17,7 +17,8 @@ import Sidebar from "@/components/dashboard/Sidebar";
 
 type View = "my-products" | "wishlist" | "profile" | "settings" | "menu";
 
-export default function UserPage() {
+// Rename the actual client logic component
+function UserClient() {
     const [userName, setUserName] = useState("");
     const [userPhone, setUserPhone] = useState("");
     const [userEmail, setUserEmail] = useState("");
@@ -245,7 +246,7 @@ export default function UserPage() {
     };
 
     return (
-        <>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading dashboard...</div>}>
             <Navbar />
             <main className="min-h-[calc(100vh-70px)] bg-white">
                 <div className="w-full md:max-w-[95%] mx-auto">
@@ -276,6 +277,17 @@ export default function UserPage() {
             </main>
             <Footer />
             <BottomNav />
-        </>
+        </Suspense>
+    );
+}
+
+// Export the wrapper as default
+import { Suspense } from "react";
+
+export default function UserPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading dashboard...</div>}>
+            <UserClient />
+        </Suspense>
     );
 }

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import ChatClient from "./ClientPage";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 
 export default function ChatPage() {
     return (
