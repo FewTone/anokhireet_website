@@ -91,6 +91,7 @@ export default function ChatClient() {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const chatChannelRef = useRef<any>(null);
 
@@ -933,6 +934,9 @@ export default function ChatClient() {
 
             if (error) throw error;
             setMessageInput("");
+            if (textareaRef.current) {
+                textareaRef.current.style.height = 'inherit';
+            }
             setReplyingTo(null);
 
 
@@ -1453,6 +1457,7 @@ export default function ChatClient() {
                                     </label>
 
                                     <textarea
+                                        ref={textareaRef}
                                         value={messageInput}
                                         onChange={(e) => {
                                             setMessageInput(e.target.value);
@@ -1473,8 +1478,8 @@ export default function ChatClient() {
 
                                     <button onClick={sendMessage} disabled={!messageInput.trim() || sending} className={`p-2.5 rounded-full transition-all flex items-center justify-center ${messageInput.trim() ? "text-black hover:bg-gray-200" : "text-black cursor-not-allowed"}`}>
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                            <polyline points="12 5 19 12 12 19"></polyline>
                                         </svg>
                                     </button>
                                 </div>
