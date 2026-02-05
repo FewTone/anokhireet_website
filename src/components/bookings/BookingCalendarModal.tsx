@@ -10,6 +10,12 @@ interface BookingCalendarModalProps {
     existingBookedDates: Date[];
     onConfirm: () => void;
     readOnly?: boolean;
+    productDetails?: {
+        title: string;
+        image: string;
+        price: number;
+        customId?: string;
+    };
 }
 
 export const BookingCalendarModal: React.FC<BookingCalendarModalProps> = ({
@@ -19,7 +25,8 @@ export const BookingCalendarModal: React.FC<BookingCalendarModalProps> = ({
     onChange,
     existingBookedDates,
     onConfirm,
-    readOnly = false
+    readOnly = false,
+    productDetails
 }) => {
     if (!isOpen) return null;
 
@@ -32,7 +39,7 @@ export const BookingCalendarModal: React.FC<BookingCalendarModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-[1002] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-white rounded-none shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 p-8 border border-gray-100 relative">
+            <div className="bg-white rounded-none shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in duration-200 p-8 border border-gray-100 relative">
                 {/* Header with Close Button */}
                 <button
                     onClick={onClose}
@@ -44,7 +51,29 @@ export const BookingCalendarModal: React.FC<BookingCalendarModalProps> = ({
                     </svg>
                 </button>
 
-                <h2 className="text-lg font-semibold uppercase tracking-wide mb-6 text-center">Book Rental Period</h2>
+                <h2 className="text-lg font-semibold uppercase tracking-wide mb-4 text-center">Book Rental Period</h2>
+
+                {/* Product Summary */}
+                {productDetails && (
+                    <div className="flex gap-4 mb-6 py-4 border-y border-gray-200">
+                        {productDetails.image && (
+                            <div className="relative w-24 h-32 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
+                                <img
+                                    src={productDetails.image}
+                                    alt={productDetails.title}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        )}
+                        <div className="flex flex-col justify-center min-w-0 flex-1">
+                            <h3 className="text-lg font-bold text-gray-900 leading-tight mb-1 truncate">{productDetails.title}</h3>
+                            {productDetails.customId && (
+                                <p className="text-sm text-gray-500 mb-2">ID: {productDetails.customId}</p>
+                            )}
+                            <p className="text-lg font-bold text-gray-900">Price: {productDetails.price}</p>
+                        </div>
+                    </div>
+                )}
 
                 <div className="space-y-4">
                     <style>{`

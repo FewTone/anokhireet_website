@@ -26,6 +26,7 @@ interface Chat {
             name?: string;
             price?: number;
             image?: string;
+            product_id?: string;
         };
         owner_user_id: string;
         renter_user_id: string;
@@ -126,14 +127,22 @@ export default function ChatClient() {
         }
     }, [messages, selectedChat]);
 
-    const [showBookingModal, setShowBookingModal] = useState(false);
-    const [bookingData, setBookingData] = useState<{
+    interface BookingData {
         productId: string;
         inquiryId: string;
         messageId: string;
         dates: [Date | null, Date | null];
         existingBookedDates: Date[];
-    } | null>(null);
+        productDetails?: {
+            title: string;
+            image: string;
+            price: number;
+            customId?: string;
+        };
+    }
+
+    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [bookingData, setBookingData] = useState<BookingData | null>(null);
 
     // Fetch booked dates for a product to populate exclusion list
     const fetchBookedDates = async (productId: string) => {
@@ -177,19 +186,82 @@ export default function ChatClient() {
         return [];
     };
 
-    const handleOpenBookingModal = async (productId: string, inquiryId: string, messageId: string, startStr: string, endStr: string) => {
+    const handleOpenBookingModal = async (productId: string, inquiryId: string, messageId: string, startStr: string, endStr: string, initialProductDetails?: any) => {
         const start = startStr ? new Date(startStr) : null;
         const end = endStr ? new Date(endStr) : null;
 
         try {
             const booked = await fetchBookedDates(productId);
 
+            // 1. Use initial details passed from the card (Highest Priority)
+            let productDetails = initialProductDetails ? {
+                title: initialProductDetails.name || initialProductDetails.title || "Product",
+                image: initialProductDetails.image || "",
+                price: Number(initialProductDetails.price) || 0,
+                customId: initialProductDetails.productId || initialProductDetails.customId
+            } : undefined;
+
+            if (!productDetails) {
+
+                // Extract product details from the currently selected chat if available
+                // Fetch product details explicitly
+                let dbId = productId;
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId);
+
+                // If productId is not UUID (it's custom ID), get the real UUID first
+                if (!isUUID) {
+                    const { data: prodData } = await supabase
+                        .from('products')
+                        .select('id')
+                        .eq('product_id', productId)
+                        .maybeSingle();
+                    if (prodData) dbId = prodData.id;
+                }
+
+                let productDetails = undefined;
+
+                // Only try fetching if we have a valid UUID dbId, otherwise skip to fallback
+                if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dbId)) {
+                    // Fetch full product details
+                    const { data: productData } = await supabase
+                        .from('products')
+                        .select('title, name, price, product_media, product_id')
+                        .eq('id', dbId)
+                        .maybeSingle();
+
+                    if (productData) {
+                        let image = "";
+                        if (productData.product_media && Array.isArray(productData.product_media) && productData.product_media.length > 0) {
+                            image = productData.product_media[0].url;
+                        }
+
+                        productDetails = {
+                            title: productData.title || productData.name || "Product",
+                            image: image,
+                            price: productData.price || 0,
+                            customId: productData.product_id
+                        };
+                    }
+                }
+
+                // Fallback to selectedChat data if explicit fetch failed or returned nothing
+                if (!productDetails && selectedChat?.inquiry?.product) {
+                    productDetails = {
+                        title: selectedChat.inquiry.product.title || selectedChat.inquiry.product.name || "Product",
+                        image: selectedChat.inquiry.product.image || "",
+                        price: selectedChat.inquiry.product.price || 0,
+                        customId: selectedChat.inquiry.product.product_id || (isUUID ? undefined : productId)
+                    };
+                }
+            }
+
             setBookingData({
                 productId,
                 inquiryId,
                 messageId,
                 dates: [start, end],
-                existingBookedDates: booked
+                existingBookedDates: booked,
+                productDetails
             });
             setShowBookingModal(true);
         } catch (e) {
@@ -574,7 +646,7 @@ export default function ChatClient() {
                     if (inquiry.product_id) {
                         const { data: productData } = await supabase
                             .from("products")
-                            .select("id, title, name, price, product_media")
+                            .select("id, title, name, price, product_media, product_id")
                             .eq("id", inquiry.product_id)
                             .single();
 
@@ -1344,7 +1416,7 @@ export default function ChatClient() {
                                             const inquiryId = cardData.inquiryId || "";
                                             const productId = cardData.product.id || cardData.product.productId;
 
-                                            handleOpenBookingModal(productId, inquiryId, msg.id, start, end);
+                                            handleOpenBookingModal(productId, inquiryId, msg.id, start, end, cardData.product);
                                         }}
                                         className="flex-1 px-3 py-1.5 text-xs font-semibold text-white bg-black hover:bg-gray-800 rounded-none transition-colors uppercase tracking-wider text-center"
                                     >
@@ -1799,6 +1871,7 @@ export default function ChatClient() {
                     existingBookedDates={bookingData.existingBookedDates}
                     onConfirm={handleConfirmBooking}
                     readOnly={!!bookingData.inquiryId}
+                    productDetails={bookingData.productDetails}
                 />
             )}
         </div >
