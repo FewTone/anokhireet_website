@@ -22,6 +22,7 @@ interface Chat {
     created_at: string;
     inquiry?: {
         product?: {
+            id?: string;
             title?: string;
             name?: string;
             price?: number;
