@@ -322,6 +322,10 @@ export default function ChatClient() {
                         message: `Booking Confirmed for ${formattedDates}`,
                         reply_to_message_id: messageId
                     }]);
+
+                // 3. Refresh State
+                await loadMessages(selectedChat.id, 0, true);
+                loadChats();
             }
 
             setShowBookingModal(false);
