@@ -12,6 +12,9 @@ import dynamic from 'next/dynamic';
 import ReportModal from "@/components/ReportModal";
 import SuccessModal from "@/components/SuccessModal";
 import LoginModal from "@/components/LoginModal";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { BookingCalendarModal } from "@/components/bookings/BookingCalendarModal";
 
 interface Chat {
     id: string;
@@ -122,6 +125,141 @@ export default function ChatClient() {
             scrollToBottom();
         }
     }, [messages, selectedChat]);
+
+    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [bookingData, setBookingData] = useState<{
+        productId: string;
+        inquiryId: string;
+        messageId: string;
+        dates: [Date | null, Date | null];
+        existingBookedDates: Date[];
+    } | null>(null);
+
+    // Fetch booked dates for a product to populate exclusion list
+    const fetchBookedDates = async (productId: string) => {
+        try {
+            // First get the db_id if we only have a slug/string ID
+            let dbId = productId;
+            // Check if it's a UUID
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId);
+
+            if (!isUUID) {
+                const { data: prodData } = await supabase
+                    .from('products')
+                    .select('id')
+                    .eq('product_id', productId) // assuming productId column holds the slug/string ID
+                    .single();
+                if (prodData) dbId = prodData.id;
+            }
+
+            const { data, error } = await supabase
+                .from('inquiries')
+                .select('start_date, end_date, status')
+                .eq('product_id', dbId)
+                .eq('status', 'confirmed');
+
+            if (data) {
+                const dates: Date[] = [];
+                data.forEach((booking: any) => {
+                    const start = new Date(booking.start_date);
+                    const end = new Date(booking.end_date);
+                    let current = new Date(start);
+                    while (current <= end) {
+                        dates.push(new Date(current));
+                        current.setDate(current.getDate() + 1);
+                    }
+                });
+                return dates;
+            }
+        } catch (e) {
+            console.error("Error fetching booked dates", e);
+        }
+        return [];
+    };
+
+    const handleOpenBookingModal = async (productId: string, inquiryId: string, messageId: string, startStr: string, endStr: string) => {
+        const start = startStr ? new Date(startStr) : null;
+        const end = endStr ? new Date(endStr) : null;
+
+        try {
+            const booked = await fetchBookedDates(productId);
+
+            setBookingData({
+                productId,
+                inquiryId,
+                messageId,
+                dates: [start, end],
+                existingBookedDates: booked
+            });
+            setShowBookingModal(true);
+        } catch (e) {
+            console.error("Error opening booking modal", e);
+        }
+    };
+
+    const handleConfirmBooking = async () => {
+        if (!bookingData || !bookingData.dates[0] || !bookingData.dates[1]) return;
+
+        try {
+            const { dates, inquiryId, messageId, productId } = bookingData;
+
+            // Resolve DB ID again to be safe
+            let dbId = productId;
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId);
+            if (!isUUID) {
+                const { data: prodData } = await supabase.from('products').select('id').eq('product_id', productId).single();
+                if (prodData) dbId = prodData.id;
+            }
+
+            // 1. Update Inquiry
+            const { data: updateData, error } = await supabase
+                .from('inquiries')
+                .update({
+                    status: 'confirmed',
+                    start_date: dates[0].toISOString(),
+                    end_date: dates[1].toISOString()
+                })
+                .eq('id', inquiryId)
+                .select();
+
+            if (error) throw error;
+
+            // Fallback insert
+            if (!updateData || updateData.length === 0) {
+                const ownerId = selectedChat?.inquiry?.owner_user_id || currentUser?.id;
+                const renterId = selectedChat?.inquiry?.renter_user_id || selectedChat?.other_user?.id;
+
+                await supabase.from('inquiries').insert([{
+                    product_id: dbId,
+                    owner_user_id: ownerId,
+                    renter_user_id: renterId,
+                    start_date: dates[0].toISOString(),
+                    end_date: dates[1].toISOString(),
+                    status: 'confirmed'
+                }]);
+            }
+
+            // 2. Send Confirmation Message
+            if (messageId && selectedChat) {
+                const formattedDates = `${dates[0].toLocaleDateString('en-GB')} - ${dates[1].toLocaleDateString('en-GB')}`;
+                await supabase
+                    .from('messages')
+                    .insert([{
+                        chat_id: selectedChat.id,
+                        sender_user_id: currentUser?.id,
+                        message: `Booking Confirmed for ${formattedDates}`,
+                        reply_to_message_id: messageId
+                    }]);
+            }
+
+            setShowBookingModal(false);
+            setBookingData(null);
+
+        } catch (e) {
+            console.error("Error confirming booking", e);
+            alert("Failed to confirm booking. Please try again.");
+        }
+    };
 
     // Auto-select chat from URL parameter - Single Source of Truth
     useEffect(() => {
@@ -1200,12 +1338,13 @@ export default function ChatClient() {
                                         onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
+                                            e.stopPropagation();
                                             const start = cardData.dates.rawStart || "";
                                             const end = cardData.dates.rawEnd || "";
                                             const inquiryId = cardData.inquiryId || "";
                                             const productId = cardData.product.id || cardData.product.productId;
 
-                                            window.open(`/user/edit-product?id=${productId}&start=${start}&end=${end}&inquiryId=${inquiryId}&messageId=${msg.id}`, '_blank');
+                                            handleOpenBookingModal(productId, inquiryId, msg.id, start, end);
                                         }}
                                         className="flex-1 px-3 py-1.5 text-xs font-semibold text-white bg-black hover:bg-gray-800 rounded-none transition-colors uppercase tracking-wider text-center"
                                     >
@@ -1331,7 +1470,7 @@ export default function ChatClient() {
                             ) : (
                                 filteredChats.map((chat) => {
                                     const isSelected = selectedChat?.id === chat.id;
-                                    const productName = chat.inquiry?.product?.title || chat.inquiry?.product?.name || "Product";
+                                    const productName = chat.inquiry?.product?.name || chat.inquiry?.product?.title || "Product";
 
                                     // Smart Unread Logic:
                                     // 1. If chat is selected, 0.
@@ -1645,6 +1784,23 @@ export default function ChatClient() {
                 title="Report Submitted"
                 message="Thank you for your report. Our team will review this shortly."
             />
+
+            {/* Booking Modal */}
+            {showBookingModal && bookingData && (
+                <BookingCalendarModal
+                    isOpen={showBookingModal}
+                    onClose={() => setShowBookingModal(false)}
+                    dateRange={bookingData.dates}
+                    onChange={(update: [Date | null, Date | null]) => {
+                        // Disable changing dates if accepting an explicit inquiry request
+                        if (bookingData.inquiryId) return;
+                        setBookingData(prev => prev ? { ...prev, dates: update } : null);
+                    }}
+                    existingBookedDates={bookingData.existingBookedDates}
+                    onConfirm={handleConfirmBooking}
+                    readOnly={!!bookingData.inquiryId}
+                />
+            )}
         </div >
     );
 }

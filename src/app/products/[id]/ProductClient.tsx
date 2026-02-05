@@ -217,7 +217,7 @@ export default function ProductClient() {
                 const formattedProducts: Product[] = data.map((p: any) => ({
                     id: p.id,
                     productId: p.product_id,
-                    name: p.title || p.name,
+                    name: p.name || p.title,
                     price: p.price,
                     image: p.image || (p.images && p.images[0]) || "",
                     category: p.category,
@@ -514,7 +514,7 @@ export default function ProductClient() {
                 productData = {
                     id: typeof p.id === 'string' ? p.id : 0,
                     productId: p.product_id,
-                    name: p.title || p.name,
+                    name: p.name || p.title,
                     price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
                     image: productImages.length > 0 ? productImages[0] : p.image || "",
                     category: p.category || p.category_id,
@@ -562,7 +562,7 @@ export default function ProductClient() {
                     productData = {
                         id: typeof p.id === 'string' ? p.id : 0,
                         productId: p.custom_id || p.product_id, // prioritize custom_id
-                        name: p.title || p.name,
+                        name: p.name || p.title,
                         price: p.price || (p.price_per_day !== null && p.price_per_day !== undefined ? String(p.price_per_day) : ""),
                         image: productImages.length > 0 ? productImages[0] : p.image || "",
                         category: p.category || p.category_id,
