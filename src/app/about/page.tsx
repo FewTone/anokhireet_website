@@ -60,7 +60,7 @@ export default function AboutPage() {
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col md:pt-[8px] pt-0">
-                                <span className="text-[17px] md:text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] leading-tight">THE ORIGIN</span>
+                                <span className="text-[17px] md:text-[20px] font-normal text-[#E2BB90] leading-tight">The Origin</span>
                                 <div className="mt-[4px]">
                                     <h2
                                         className="text-[28px] md:text-[40px] leading-tight md:leading-[72px]"
@@ -100,7 +100,7 @@ export default function AboutPage() {
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col md:pt-[8px] pt-0">
-                                <span className="text-[17px] md:text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] leading-tight">THE THOUGHT</span>
+                                <span className="text-[17px] md:text-[20px] font-normal text-[#E2BB90] leading-tight">The Thought</span>
                                 <div className="mt-[4px]">
                                     <h2
                                         className="text-[28px] md:text-[40px] leading-tight md:leading-[72px]"
@@ -152,7 +152,7 @@ export default function AboutPage() {
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col md:pt-[8px] pt-0">
-                                <span className="text-[17px] md:text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] leading-tight">THE BUSINESS PERSPECTIVE</span>
+                                <span className="text-[17px] md:text-[20px] font-normal text-[#E2BB90] leading-tight">The Business Perspective</span>
                                 <div className="mt-[4px]">
                                     <h2
                                         className="text-[28px] md:text-[40px] leading-tight md:leading-[72px]"
@@ -193,7 +193,7 @@ export default function AboutPage() {
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col md:pt-[8px] pt-0">
-                                <span className="text-[17px] md:text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] leading-tight">THE SOLUTION</span>
+                                <span className="text-[17px] md:text-[20px] font-normal text-[#E2BB90] leading-tight">The Solution</span>
                                 <div className="mt-[4px]">
                                     <h2
                                         className="text-[28px] md:text-[40px] leading-tight md:leading-[72px]"
@@ -234,7 +234,7 @@ export default function AboutPage() {
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col md:pt-[8px] pt-0">
-                                <span className="text-[17px] md:text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] leading-tight">WOMEN EMPOWERMENT</span>
+                                <span className="text-[17px] md:text-[20px] font-normal text-[#E2BB90] leading-tight">Women Empowerment</span>
                                 <div className="mt-[4px]">
                                     <h2
                                         className="text-[28px] md:text-[40px] leading-tight md:leading-[72px]"
@@ -273,7 +273,7 @@ export default function AboutPage() {
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col md:pt-[8px] pt-0">
-                                <span className="text-[17px] md:text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] leading-tight">OUR JOURNEY FORWARD</span>
+                                <span className="text-[17px] md:text-[20px] font-normal text-[#E2BB90] leading-tight">Our Journey Forward</span>
                                 <div className="mt-[4px]">
                                     <h2
                                         className="text-[28px] md:text-[40px] leading-tight md:leading-[72px]"
@@ -308,7 +308,7 @@ export default function AboutPage() {
                         <div className="flex items-start gap-[11px] mb-8">
                             <img src="/images/seal.png" alt="Seal" className="w-[85px] h-[85px] md:w-[100px] md:h-[100px] object-contain flex-shrink-0" />
                             <div className="flex flex-col md:pt-[8px] pt-0">
-                                <span className="text-[17px] md:text-[20px] font-normal tracking-[0.2em] uppercase text-[#E2BB90] leading-tight">OUR BELIEF</span>
+                                <span className="text-[17px] md:text-[20px] font-normal text-[#E2BB90] leading-tight">Our Belief</span>
                                 <div className="mt-[4px]">
                                     <h2
                                         className="text-[28px] md:text-[40px] leading-tight md:leading-[72px]"
