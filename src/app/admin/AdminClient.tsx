@@ -211,6 +211,12 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
     const [draggedHeroId, setDraggedHeroId] = useState<string | null>(null);
     const [dragOverHeroId, setDragOverHeroId] = useState<string | null>(null);
 
+    // Poster management states
+    const [posterImageUrl, setPosterImageUrl] = useState<string>("");
+    const [posterImageFile, setPosterImageFile] = useState<File | null>(null);
+    const [posterImagePreview, setPosterImagePreview] = useState<string>("");
+    const [isUploadingPoster, setIsUploadingPoster] = useState(false);
+
     // Contact Requests state
     const [contactRequests, setContactRequests] = useState<any[]>([]);
 
@@ -246,7 +252,7 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
     }>({});
     const [openFilterColumn, setOpenFilterColumn] = useState<string | null>(null);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured" | "contact" | "reports" | "requests">("dashboard");
+    const [activeTab, setActiveTab] = useState<"dashboard" | "products" | "users" | "hero" | "featured" | "poster" | "contact" | "reports" | "requests">("dashboard");
     const [reports, setReports] = useState<any[]>([]);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -295,7 +301,7 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
 
     // Generic Delete Modal State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: 'city' | 'product_type' | 'occasion' | 'color' | 'material' } | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; type: 'city' | 'product_type' | 'occasion' | 'color' | 'material' | 'poster' } | null>(null);
 
     const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: string; name: string } | null>(null);
     const [deleteConfirmProduct, setDeleteConfirmProduct] = useState<{ id: string; name: string } | null>(null);
@@ -370,6 +376,7 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
                 loadAllFacets(),
                 loadHeroSlides(),
                 loadContactRequests(),
+                loadPosterSetting(),
                 loadReports()
             ]).catch((error) => {
                 console.error("Error loading admin data:", error);
@@ -381,8 +388,8 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
     useEffect(() => {
         if (isAuthenticated) {
             const savedTab = localStorage.getItem("adminActiveTab");
-            if (savedTab && (savedTab === "dashboard" || savedTab === "products" || savedTab === "users" || savedTab === "facets" || savedTab === "hero")) {
-                setActiveTab(savedTab as "dashboard" | "products" | "users" | "hero");
+            if (savedTab && (savedTab === "dashboard" || savedTab === "products" || savedTab === "users" || savedTab === "facets" || savedTab === "hero" || savedTab === "poster")) {
+                setActiveTab(savedTab as "dashboard" | "products" | "users" | "hero" | "poster");
                 router.replace(`/admin?tab=${savedTab}`);
             }
         }
@@ -452,8 +459,8 @@ function AdminContent({ searchParams }: { searchParams: ReadonlyURLSearchParams 
         }
 
         const tabParam = searchParams.get("tab");
-        if (tabParam === "users" || tabParam === "products" || tabParam === "dashboard" || tabParam === "facets" || tabParam === "hero" || tabParam === "featured") {
-            setActiveTab(tabParam as "dashboard" | "products" | "users" | "hero");
+        if (tabParam === "users" || tabParam === "products" || tabParam === "dashboard" || tabParam === "facets" || tabParam === "hero" || tabParam === "featured" || tabParam === "poster") {
+            setActiveTab(tabParam as "dashboard" | "products" | "users" | "hero" | "poster");
             localStorage.setItem("adminActiveTab", tabParam);
         }
     }, [searchParams, isAuthenticated]);
@@ -1551,6 +1558,29 @@ To get these values:
                 showPopup(error.message || "Failed to delete material", "error", "Error");
                 console.error("Error deleting material:", error);
             }
+        } else if (type === 'poster') {
+            try {
+                const { error } = await supabase
+                    .from("website_settings")
+                    .upsert({
+                        key: "shop_size_poster",
+                        value: { image_url: "" },
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: "key"
+                    });
+
+                if (error) throw error;
+
+                setPosterImageUrl("");
+                setPosterImageFile(null);
+                setPosterImagePreview("");
+                showPopup("Poster removed successfully!", "success");
+
+            } catch (error: any) {
+                showPopup(error.message || "Failed to remove poster", "error", "Error");
+                console.error("Error removing poster:", error);
+            }
         }
     };
 
@@ -2232,6 +2262,172 @@ To get these values:
         } finally {
             setIsTogglingWebsite(false);
         }
+    };
+
+    const loadPosterSetting = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("website_settings")
+                .select("value")
+                .eq("key", "shop_size_poster")
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error("Error loading poster setting:", error);
+                return;
+            }
+
+            if (data && data.value) {
+                // value is stored as { image_url: "..." }
+                const value = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+                setPosterImageUrl(value.image_url || "");
+            }
+        } catch (error) {
+            console.error("Error loading poster setting:", error);
+        }
+    };
+
+    const handlePosterImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            showPopup("Please select an image file", "error", "Invalid File");
+            e.target.value = "";
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) { // Increased limit for raw images before crop
+            showPopup("Image size must be less than 10MB", "error", "File Too Large");
+            e.target.value = "";
+            return;
+        }
+
+        // Auto-crop image to 1400x400
+        const img = new window.Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const TARGET_WIDTH = 1400;
+            const TARGET_HEIGHT = 400;
+            canvas.width = TARGET_WIDTH;
+            canvas.height = TARGET_HEIGHT;
+            const ctx = canvas.getContext('2d');
+
+            if (!ctx) {
+                showPopup("Failed to process image", "error");
+                return;
+            }
+
+            // Calculate scaling to cover the target dimensions (like object-fit: cover)
+            const inputRatio = img.naturalWidth / img.naturalHeight;
+            const targetRatio = TARGET_WIDTH / TARGET_HEIGHT;
+
+            let sourceWidth, sourceHeight, sourceX, sourceY;
+
+            if (inputRatio > targetRatio) {
+                // Image is wider than target: trim width
+                sourceHeight = img.naturalHeight;
+                sourceWidth = sourceHeight * targetRatio;
+                sourceX = (img.naturalWidth - sourceWidth) / 2;
+                sourceY = 0;
+            } else {
+                // Image is taller than target: trim height
+                sourceWidth = img.naturalWidth;
+                sourceHeight = sourceWidth / targetRatio;
+                sourceX = 0;
+                sourceY = (img.naturalHeight - sourceHeight) / 2;
+            }
+
+            // Draw cropped image to canvas
+            ctx.drawImage(
+                img,
+                sourceX, sourceY, sourceWidth, sourceHeight, // Source crop
+                0, 0, TARGET_WIDTH, TARGET_HEIGHT // Destination full canvas
+            );
+
+            // Convert canvas to blob/file
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const croppedFile = new File([blob], "poster_cropped.jpg", { type: "image/jpeg" });
+
+                    setPosterImageFile(croppedFile);
+                    // Preview the cropped version
+                    setPosterImagePreview(canvas.toDataURL("image/jpeg", 0.9));
+                    showPopup("Image auto-cropped to 1400x400", "success", "Image Processed");
+                } else {
+                    showPopup("Failed to crop image", "error");
+                }
+            }, "image/jpeg", 0.9);
+        };
+
+        img.onerror = () => {
+            showPopup("Failed to load image for processing.", "error");
+        };
+
+        // Create object URL to load image
+        const objectUrl = URL.createObjectURL(file);
+        img.src = objectUrl;
+    };
+
+    const savePosterSetting = async () => {
+        try {
+            let imageUrl = posterImageUrl;
+
+            if (posterImageFile) {
+                setIsUploadingPoster(true);
+                try {
+                    // Reuse hero upload logic or generic image upload
+                    const fileExt = posterImageFile.name.split(".").pop();
+                    const fileName = `poster/${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+
+                    const { error: uploadError } = await supabase.storage
+                        .from("product-images")
+                        .upload(fileName, posterImageFile, {
+                            cacheControl: "3600",
+                            upsert: false,
+                        });
+
+                    if (uploadError) throw uploadError;
+
+                    const { data } = supabase.storage
+                        .from("product-images")
+                        .getPublicUrl(fileName);
+
+                    imageUrl = data.publicUrl;
+                } catch (uploadError: any) {
+                    setIsUploadingPoster(false);
+                    showPopup(uploadError.message || "Failed to upload image", "error", "Upload Error");
+                    return;
+                }
+                setIsUploadingPoster(false);
+            }
+
+            const { error } = await supabase
+                .from("website_settings")
+                .upsert({
+                    key: "shop_size_poster",
+                    value: { image_url: imageUrl },
+                    updated_at: new Date().toISOString()
+                }, {
+                    onConflict: "key"
+                });
+
+            if (error) throw error;
+
+            setPosterImageUrl(imageUrl);
+            setPosterImageFile(null);
+            setPosterImagePreview("");
+            showPopup("Poster updated successfully!", "success");
+
+        } catch (error: any) {
+            showPopup(error.message || "Failed to save poster", "error", "Error");
+            console.error("Error saving poster:", error);
+        }
+    };
+
+    const handleRemovePoster = async () => {
+        setDeleteTarget({ id: 'poster', name: 'Shop Your Size Poster', type: 'poster' });
+        setIsDeleteModalOpen(true);
     };
 
 
@@ -3702,6 +3898,29 @@ To get these values:
                                         <line x1="9" y1="21" x2="9" y2="9"></line>
                                     </svg>
                                     <span>Hero Section</span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        const currentScrollY = window.scrollY;
+                                        setActiveTab("poster");
+                                        localStorage.setItem("adminActiveTab", "poster");
+                                        router.replace("/admin?tab=poster");
+                                        requestAnimationFrame(() => {
+                                            window.scrollTo(0, currentScrollY);
+                                        });
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 font-normal transition-all duration-200 rounded-none mb-1 ${activeTab === "poster"
+                                        ? "bg-black text-white shadow-md"
+                                        : "text-gray-700 hover:text-black hover:bg-gray-50"
+                                        }`}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                    </svg>
+                                    <span>Poster</span>
                                 </button>
 
                                 <button
@@ -8023,6 +8242,127 @@ To get these values:
                                                     );
                                                 })
                                             )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {activeTab === "poster" && (
+                            <div className="space-y-6">
+                                <div className="bg-white rounded-none border border-gray-200 p-6">
+                                    <h2 className="text-2xl font-semibold uppercase tracking-wide text-gray-900 mb-6">Poster Management</h2>
+
+                                    <div className="max-w-4xl">
+                                        <div className="mb-6">
+                                            <h3 className="text-lg font-medium text-gray-900 mb-2">Shop Your Size Poster</h3>
+                                            <p className="text-sm text-gray-500 mb-4">
+                                                Update the "SHOP YOUR SIZE" poster displayed on the homepage.
+                                                Recommended size: 1400x400 pixels.
+                                            </p>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Upload New Image</label>
+                                                    <label
+                                                        htmlFor="poster-upload"
+                                                        className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-none hover:border-black transition-colors cursor-pointer"
+                                                    >
+                                                        <div className="space-y-1 text-center">
+                                                            <svg
+                                                                className="mx-auto h-12 w-12 text-gray-400"
+                                                                stroke="currentColor"
+                                                                fill="none"
+                                                                viewBox="0 0 48 48"
+                                                                aria-hidden="true"
+                                                            >
+                                                                <path
+                                                                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                                                    strokeWidth={2}
+                                                                    strokeLinecap="round"
+                                                                    strokeLinejoin="round"
+                                                                />
+                                                            </svg>
+                                                            <div className="flex text-sm text-gray-600 justify-center">
+                                                                <span
+                                                                    className="relative font-medium text-black underline hover:no-underline focus-within:outline-none"
+                                                                >
+                                                                    <span>Upload a file</span>
+                                                                    <input
+                                                                        id="poster-upload"
+                                                                        name="poster-upload"
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        className="sr-only"
+                                                                        onChange={handlePosterImageChange}
+                                                                    />
+                                                                </span>
+                                                                <p className="pl-1">or drag and drop</p>
+                                                            </div>
+                                                            <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                                                        </div>
+                                                    </label>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">Current Poster</label>
+                                                    <div className="border border-gray-200 rounded-none overflow-hidden bg-gray-50 flex items-center justify-center min-h-[200px]">
+                                                        {posterImagePreview || posterImageUrl ? (
+                                                            <div className="relative w-full h-full">
+                                                                <img
+                                                                    src={posterImagePreview || posterImageUrl}
+                                                                    alt="Shop Your Size Poster"
+                                                                    className="w-full h-auto object-contain max-h-[300px]"
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-center p-4">
+                                                                <p className="text-sm text-gray-500">No poster image set.</p>
+                                                                <p className="text-xs text-gray-400 mt-1">Default functionality may be active.</p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-8 flex justify-end">
+                                                <button
+                                                    onClick={savePosterSetting}
+                                                    disabled={isUploadingPoster || (!posterImageFile && !posterImageUrl)}
+                                                    className={`px-6 py-3 bg-black text-white font-semibold rounded-none hover:opacity-90 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2 ${isUploadingPoster ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                                >
+                                                    {isUploadingPoster ? (
+                                                        <>
+                                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                            </svg>
+                                                            Saving...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                                                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                                                <polyline points="7 3 7 8 15 8"></polyline>
+                                                            </svg>
+                                                            Save Poster
+                                                        </>
+                                                    )}
+                                                </button>
+
+                                                {(posterImageUrl || posterImagePreview) && (
+                                                    <button
+                                                        onClick={handleRemovePoster}
+                                                        className="px-6 py-3 bg-red-600 text-white font-semibold rounded-none hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                                                    >
+                                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path>
+                                                        </svg>
+                                                        Remove Poster
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

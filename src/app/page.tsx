@@ -33,6 +33,7 @@ export default function Home() {
     const [activeTab, setActiveTab] = useState("ALL");
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [posterUrl, setPosterUrl] = useState<string>("");
     const [featuredCategories, setFeaturedCategories] = useState<Array<{ img: string; link_url?: string; name?: string }>>([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [favoritedIds, setFavoritedIds] = useState<Set<string> | null>(null);
@@ -48,6 +49,7 @@ export default function Home() {
         }, 15000); // 15 second timeout
 
         loadProducts(true); // Initial load
+        loadPoster(); // Load poster image
         loadCategories().catch((error) => {
             console.error("Error loading categories:", error);
             setCategoriesLoading(false);
@@ -156,6 +158,25 @@ export default function Home() {
             document.removeEventListener('visibilitychange', handleFocus);
         };
     }, []);
+
+    const loadPoster = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("website_settings")
+                .select("value")
+                .eq("key", "shop_size_poster")
+                .single();
+
+            if (data && data.value) {
+                const value = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+                if (value.image_url) {
+                    setPosterUrl(value.image_url);
+                }
+            }
+        } catch (error) {
+            console.error("Error loading poster:", error);
+        }
+    };
 
     const loadCategories = async () => {
         try {
@@ -418,21 +439,23 @@ export default function Home() {
                     </div>
                 )}
 
-                {/* Section 3: Shop Your Size */}
-                <div className="mt-2 md:mt-8 text-center">
-                    <h2 className="text-[16px] leading-[24px] font-semibold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>SHOP YOUR SIZE</h2>
-                    <div className="w-full">
-                        <Image
-                            src="https://cdn.shopify.com/s/files/1/0420/7073/7058/files/refresh_18_nov_PLP02.jpg?v=1763468105"
-                            alt="Shop Size Banner"
-                            sizes="100vw"
-                            width={1400}
-                            height={400}
-                            className="w-full h-auto"
-                            priority
-                        />
+                {/* Section 3: Shop Your Size - Only show if posterUrl exists */}
+                {posterUrl ? (
+                    <div className="mt-2 md:mt-8 text-center">
+                        <h2 className="text-[16px] leading-[24px] font-semibold mb-3 md:mb-4 text-center uppercase tracking-normal" style={{ fontFamily: 'Inter, sans-serif' }}>SHOP YOUR SIZE</h2>
+                        <div className="w-full">
+                            <Image
+                                src={posterUrl}
+                                alt="Shop Size Banner"
+                                sizes="100vw"
+                                width={1400}
+                                height={400}
+                                className="w-full h-auto object-cover"
+                                priority
+                            />
+                        </div>
                     </div>
-                </div>
+                ) : null}
 
                 {/* Section 4: New and Popular */}
                 <div className="pb-0 md:pb-12">
