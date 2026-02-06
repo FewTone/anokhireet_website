@@ -135,7 +135,10 @@ export default function MyProductsView() {
 
             if (userError || !userData) {
                 console.error("❌ User not found in users table:", userError);
-                setLoading(false);
+                // If user has auth session but no public.users record (e.g. cancelled onboarding),
+                // redirect them to profile page (or user settings) to complete setup.
+                // Assuming /user is the profile/settings page.
+                window.location.href = '/user';
                 return;
             }
 
