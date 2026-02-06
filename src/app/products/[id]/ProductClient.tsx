@@ -319,7 +319,7 @@ export default function ProductClient() {
     const handleShare = async () => {
         const shareData = {
             title: product?.name || 'Anokhi Reet Product',
-            text: `Check out this product: ${product?.name}`,
+            text: `Check out this product (${product?.productId || product?.id}): ${product?.name}`,
             url: window.location.href,
         };
 

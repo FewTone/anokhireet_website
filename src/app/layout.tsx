@@ -20,12 +20,27 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-    title: "Anokhi Reet",
-    description: "Buy Fashion for Men online in India",
+    title: "Anokhi Reet | Unique Handcrafted Men's Fashion",
+    description: "Discover timeless elegance and contemporary Indian styles at Anokhi Reet. Premium men's fashion handcrafted for the modern gentleman.",
     icons: {
         icon: "/favicon.svg",
         shortcut: "/favicon.svg",
         apple: "/favicon.svg",
+    },
+    openGraph: {
+        title: "Anokhi Reet | Unique Handcrafted Men's Fashion",
+        description: "Discover timeless elegance and contemporary Indian styles at Anokhi Reet. Premium men's fashion handcrafted for the modern gentleman.",
+        url: "https://anokhireet.in",
+        siteName: "Anokhi Reet",
+        images: [
+            {
+                url: "/favicon.svg",
+                width: 800,
+                height: 600,
+            },
+        ],
+        locale: "en_IN",
+        type: "website",
     },
 };
 

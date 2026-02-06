@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { Suspense } from "react";
 import ProductClient from "./ProductClient";
 import { supabase } from "@/lib/supabase";
@@ -37,6 +38,37 @@ export async function generateStaticParams() {
     } catch (err) {
         console.error("Exception generating static params for products:", err);
         return [];
+    }
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const id = (await params).id;
+
+    try {
+        const { data: product } = await supabase
+            .from("products")
+            .select("title, name")
+            .or(`product_id.eq.${id},custom_id.eq.${id},id.eq.${id}`)
+            .single();
+
+        const productName = product?.title || product?.name || "Product";
+        const title = `${productName} | Anokhi Reet`;
+        const description = "Discover timeless elegance and contemporary Indian styles at Anokhi Reet. Premium men's fashion handcrafted for the modern gentleman.";
+
+        return {
+            title,
+            description,
+            openGraph: {
+                title,
+                description,
+                type: "article",
+            },
+        };
+    } catch (e) {
+        return {
+            title: "Product | Anokhi Reet",
+            description: "Discover timeless elegance and contemporary Indian styles at Anokhi Reet. Premium men's fashion handcrafted for the modern gentleman.",
+        };
     }
 }
 
