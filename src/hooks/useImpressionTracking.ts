@@ -20,6 +20,7 @@ export function useImpressionTracking(productId: string | number) {
 
                     try {
                         // 1. Get identifiers
+                        // console.log('👁️ Tracking impression for product:', productId);
                         const { data: { user } } = await supabase.auth.getUser();
                         let authUserId = null;
 
@@ -29,10 +30,10 @@ export function useImpressionTracking(productId: string | number) {
                                 .select('id')
                                 .eq('auth_user_id', user.id)
                                 .maybeSingle();
-                            authUserId = userData?.id;
+                            authUserId = userData?.id || null;
                         }
 
-                        let anonId = localStorage.getItem('anokhi_viewer_id');
+                        let anonId = typeof window !== 'undefined' ? localStorage.getItem('anokhi_viewer_id') : null;
 
                         // Ensure we have a valid UUID for guest tracking
                         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -42,15 +43,17 @@ export function useImpressionTracking(productId: string | number) {
                                 const v = c === 'x' ? r : (r & 0x3 | 0x8);
                                 return v.toString(16);
                             });
-                            localStorage.setItem('anokhi_viewer_id', anonId);
+                            if (typeof window !== 'undefined') localStorage.setItem('anokhi_viewer_id', anonId);
                         }
 
                         // 2. Track via RPC (DB handles 30-min throttling)
-                        await supabase.rpc('track_product_impression', {
+                        // Use 'record_impression' to avoid ad-blockers blocking "track_*" requests
+                        await supabase.rpc('record_impression', {
                             p_product_id: productId,
                             p_user_id: authUserId,
                             p_anonymous_id: anonId
                         });
+                        // console.log('✅ Impression recorded');
 
                     } catch (error) {
                         console.error('Error tracking impression:', error);
@@ -60,7 +63,7 @@ export function useImpressionTracking(productId: string | number) {
                 }
             },
             {
-                threshold: 0.5, // 50% visible
+                threshold: 0.1, // 10% visible - captures "glance" views better
             }
         );
 
