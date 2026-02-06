@@ -1444,6 +1444,17 @@ To get these values:
             return;
         }
 
+        // Duplicate check
+        const isDuplicate = cities.some(c =>
+            c.name.toLowerCase() === facetFormData.name.trim().toLowerCase() &&
+            (!editingFacet || c.id !== editingFacet.id)
+        );
+
+        if (isDuplicate) {
+            showPopup("A city with this name already exists", "warning", "Duplicate Entry");
+            return;
+        }
+
         try {
             if (editingFacet) {
                 const { error } = await supabase
@@ -1451,7 +1462,7 @@ To get these values:
                     .update({
                         name: facetFormData.name.trim(),
                         state: facetFormData.state.trim(),
-                        // country: Removed as requested
+                        country: facetFormData.country || "India",
                         updated_at: new Date().toISOString()
                     })
                     .eq("id", editingFacet.id);
@@ -1464,7 +1475,7 @@ To get these values:
                     .insert([{
                         name: facetFormData.name.trim(),
                         state: facetFormData.state.trim(),
-                        // country: Removed as requested
+                        country: facetFormData.country || "India",
                         display_order: cities.length
                     }]);
 
@@ -1476,7 +1487,8 @@ To get these values:
             setFacetFormData({ name: "", hex: "", state: "", country: "", image_url: "" });
             loadCities();
         } catch (error: any) {
-            showPopup(error.message || "Failed to save city", "error", "Error");
+            const errorMsg = error.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+            showPopup(errorMsg || "Failed to save city", "error", "Error");
             console.error("Error saving city:", error);
         }
     };
