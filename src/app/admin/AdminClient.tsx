@@ -86,6 +86,19 @@ const COLOR_MAP: Record<string, string> = {
     "Dark Green": "#006400"
 };
 
+const MATERIAL_MAP: Record<string, { image_url?: string }> = {
+    "Cotton": { image_url: "https://placehold.co/400x400?text=Cotton" },
+    "Silk": { image_url: "https://placehold.co/400x400?text=Silk" },
+    "Linen": { image_url: "https://placehold.co/400x400?text=Linen" },
+    "Wool": { image_url: "https://placehold.co/400x400?text=Wool" },
+    "Velvet": { image_url: "https://placehold.co/400x400?text=Velvet" },
+    "Satin": { image_url: "https://placehold.co/400x400?text=Satin" },
+    "Chiffon": { image_url: "https://placehold.co/400x400?text=Chiffon" },
+    "Georgette": { image_url: "https://placehold.co/400x400?text=Georgette" },
+    "Rayon": { image_url: "https://placehold.co/400x400?text=Rayon" },
+    "Polyester": { image_url: "https://placehold.co/400x400?text=Polyester" }
+};
+
 // Facet Management Section Component
 interface FacetManagementSectionProps {
     title: string;
@@ -1430,6 +1443,7 @@ To get these values:
                     .from("materials")
                     .update({
                         name: facetFormData.name.trim(),
+                        image_url: facetFormData.image_url || null,
                         updated_at: new Date().toISOString()
                     })
                     .eq("id", editingFacet.id);
@@ -1441,6 +1455,7 @@ To get these values:
                     .from("materials")
                     .insert([{
                         name: facetFormData.name.trim(),
+                        image_url: facetFormData.image_url || null,
                         display_order: materials.length
                     }]);
 
@@ -5495,11 +5510,14 @@ To get these values:
                                                     hex: "",
                                                     state: "",
                                                     country: "",
-                                                    image_url: ""
+                                                    image_url: item.image_url || ""
                                                 });
+                                                setFacetImageFile(null);
+                                                setFacetImagePreview(item.image_url || "");
                                                 setIsFacetModalOpen(true);
                                             }}
                                             onDelete={handleDeleteMaterial}
+                                            showHex={false}
                                         />
                                     )}
 
@@ -6761,6 +6779,7 @@ To get these values:
                                                 <input
                                                     type="text"
                                                     required
+                                                    autoFocus
                                                     value={facetFormData.name}
                                                     onChange={(e) => {
                                                         const newName = capitalizeFirstLetter(e.target.value);
@@ -6769,6 +6788,14 @@ To get these values:
                                                         // Auto-populate hex if active tab is colors and name matches
                                                         if (activeFacetTab === "colors" && COLOR_MAP[newName]) {
                                                             updates.hex = COLOR_MAP[newName];
+                                                        }
+
+                                                        // Auto-populate image if active tab is materials and name matches
+                                                        if (activeFacetTab === "materials" && MATERIAL_MAP[newName]) {
+                                                            if (MATERIAL_MAP[newName].image_url) {
+                                                                updates.image_url = MATERIAL_MAP[newName].image_url;
+                                                                setFacetImagePreview(MATERIAL_MAP[newName].image_url!);
+                                                            }
                                                         }
 
                                                         setFacetFormData(updates);
@@ -6872,7 +6899,7 @@ To get these values:
                                                 </>
                                             )}
 
-                                            {(activeFacetTab === "product_types" || activeFacetTab === "occasions") && (
+                                            {(activeFacetTab === "product_types" || activeFacetTab === "occasions" || activeFacetTab === "materials") && (
                                                 <div>
                                                     <label className="block text-sm font-medium text-gray-700 mb-1">
                                                         Image (optional)
