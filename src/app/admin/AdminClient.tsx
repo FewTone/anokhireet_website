@@ -45,6 +45,47 @@ interface UserProduct {
     admin_note?: string;
 }
 
+const COLOR_MAP: Record<string, string> = {
+    "Red": "#FF0000",
+    "Green": "#008000",
+    "Blue": "#0000FF",
+    "Yellow": "#FFFF00",
+    "Black": "#000000",
+    "White": "#FFFFFF",
+    "Pink": "#FFC0CB",
+    "Orange": "#FFA500",
+    "Purple": "#800080",
+    "Brown": "#A52A2A",
+    "Gray": "#808080",
+    "Grey": "#808080",
+    "Silver": "#C0C0C0",
+    "Gold": "#FFD700",
+    "Cyan": "#00FFFF",
+    "Magenta": "#FF00FF",
+    "Lime": "#00FF00",
+    "Maroon": "#800000",
+    "Navy": "#000080",
+    "Olive": "#808000",
+    "Teal": "#008080",
+    "Aqua": "#00FFFF",
+    "Indigo": "#4B0082",
+    "Violet": "#EE82EE",
+    "Coral": "#FF7F50",
+    "Beige": "#F5F5DC",
+    "Ivory": "#FFFFF0",
+    "Khaki": "#F0E68C",
+    "Lavender": "#E6E6FA",
+    "Crimson": "#DC143C",
+    "Turquoise": "#40E0D0",
+    "Peach": "#FFDAB9",
+    "Sky Blue": "#87CEEB",
+    "Navy Blue": "#000080",
+    "Light Blue": "#ADD8E6",
+    "Dark Blue": "#00008B",
+    "Light Green": "#90EE90",
+    "Dark Green": "#006400"
+};
+
 // Facet Management Section Component
 interface FacetManagementSectionProps {
     title: string;
@@ -6721,7 +6762,17 @@ To get these values:
                                                     type="text"
                                                     required
                                                     value={facetFormData.name}
-                                                    onChange={(e) => setFacetFormData({ ...facetFormData, name: capitalizeFirstLetter(e.target.value) })}
+                                                    onChange={(e) => {
+                                                        const newName = capitalizeFirstLetter(e.target.value);
+                                                        const updates: any = { ...facetFormData, name: newName };
+
+                                                        // Auto-populate hex if active tab is colors and name matches
+                                                        if (activeFacetTab === "colors" && COLOR_MAP[newName]) {
+                                                            updates.hex = COLOR_MAP[newName];
+                                                        }
+
+                                                        setFacetFormData(updates);
+                                                    }}
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black"
                                                     placeholder={activeFacetTab === "product_types" ? "e.g., Choly, Western, Sari" : activeFacetTab === "occasions" ? "e.g., Navratri, Marriage" : activeFacetTab === "colors" ? "e.g., Red, Blue, Green" : activeFacetTab === "materials" ? "e.g., Cotton, Silk, Linen" : "e.g., Rajkot, Surat, Ahmedabad"}
                                                 />
