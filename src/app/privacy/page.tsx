@@ -235,7 +235,8 @@ export default function PrivacyPolicy() {
                                 </h2>
                                 <div className="space-y-2 text-sm md:text-base text-gray-700">
                                     <p><span className="font-bold text-black uppercase text-xs tracking-wider mr-2">Brand:</span> Anokhi Reet</p>
-                                    <p><span className="font-bold text-black uppercase text-xs tracking-wider mr-2">Email:</span> support@anokhireet.com</p>
+                                    <p><span className="font-bold text-black uppercase text-xs tracking-wider mr-2">Email:</span> hello@fewtone.com</p>
+                                    <p><span className="font-bold text-black uppercase text-xs tracking-wider mr-2">Phone:</span> +91 82006 47176</p>
                                 </div>
                             </section>
 

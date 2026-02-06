@@ -61,9 +61,10 @@ export default function Footer() {
                         </a>
                     </div>
 
-                    {/* Copyright */}
-                    <div className="text-center text-xs text-gray-600">
+                    {/* Copyright & Credits */}
+                    <div className="w-full pt-8 mt-8 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between text-xs text-gray-500">
                         <p>&copy; {new Date().getFullYear()} Anokhi Reet. All rights reserved.</p>
+                        <p className="mt-2 md:mt-0">Cooked by <a href="https://www.fewtone.com/" target="_blank" rel="noopener noreferrer" className="hover:text-black transition-colors underline decoration-gray-300 underline-offset-2">@Fewtone</a></p>
                     </div>
                 </div>
             </div>
