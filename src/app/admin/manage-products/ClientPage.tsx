@@ -268,6 +268,39 @@ export default function ManageProductsClient() {
         setDeleteConfirmation({ isOpen: false, productId: null, productName: "" });
 
         try {
+            // First cleanup reports and chats related to this product
+            const { data: inquiries } = await supabase
+                .from("inquiries")
+                .select("id")
+                .eq("product_id", id);
+
+            if (inquiries && inquiries.length > 0) {
+                const inquiryIds = inquiries.map(i => i.id);
+
+                const { data: chats } = await supabase
+                    .from("chats")
+                    .select("id")
+                    .in("inquiry_id", inquiryIds);
+
+                if (chats && chats.length > 0) {
+                    const chatIds = chats.map(c => c.id);
+                    await supabase
+                        .from("reports")
+                        .delete()
+                        .in("chat_id", chatIds);
+
+                    await supabase
+                        .from("chats")
+                        .delete()
+                        .in("inquiry_id", inquiryIds);
+                }
+
+                await supabase
+                    .from("inquiries")
+                    .delete()
+                    .in("id", inquiryIds);
+            }
+
             const { error } = await supabase
                 .from("products")
                 .delete()
