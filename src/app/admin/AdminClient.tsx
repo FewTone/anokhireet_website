@@ -7,6 +7,7 @@ import Popup from "@/components/Popup";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
+import { COLOR_MAP, MATERIAL_MAP } from "@/data/colors";
 
 interface Product {
     id: number;
@@ -45,59 +46,6 @@ interface UserProduct {
     admin_note?: string;
 }
 
-const COLOR_MAP: Record<string, string> = {
-    "Red": "#FF0000",
-    "Green": "#008000",
-    "Blue": "#0000FF",
-    "Yellow": "#FFFF00",
-    "Black": "#000000",
-    "White": "#FFFFFF",
-    "Pink": "#FFC0CB",
-    "Orange": "#FFA500",
-    "Purple": "#800080",
-    "Brown": "#A52A2A",
-    "Gray": "#808080",
-    "Grey": "#808080",
-    "Silver": "#C0C0C0",
-    "Gold": "#FFD700",
-    "Cyan": "#00FFFF",
-    "Magenta": "#FF00FF",
-    "Lime": "#00FF00",
-    "Maroon": "#800000",
-    "Navy": "#000080",
-    "Olive": "#808000",
-    "Teal": "#008080",
-    "Aqua": "#00FFFF",
-    "Indigo": "#4B0082",
-    "Violet": "#EE82EE",
-    "Coral": "#FF7F50",
-    "Beige": "#F5F5DC",
-    "Ivory": "#FFFFF0",
-    "Khaki": "#F0E68C",
-    "Lavender": "#E6E6FA",
-    "Crimson": "#DC143C",
-    "Turquoise": "#40E0D0",
-    "Peach": "#FFDAB9",
-    "Sky Blue": "#87CEEB",
-    "Navy Blue": "#000080",
-    "Light Blue": "#ADD8E6",
-    "Dark Blue": "#00008B",
-    "Light Green": "#90EE90",
-    "Dark Green": "#006400"
-};
-
-const MATERIAL_MAP: Record<string, { image_url?: string }> = {
-    "Cotton": { image_url: "https://placehold.co/400x400?text=Cotton" },
-    "Silk": { image_url: "https://placehold.co/400x400?text=Silk" },
-    "Linen": { image_url: "https://placehold.co/400x400?text=Linen" },
-    "Wool": { image_url: "https://placehold.co/400x400?text=Wool" },
-    "Velvet": { image_url: "https://placehold.co/400x400?text=Velvet" },
-    "Satin": { image_url: "https://placehold.co/400x400?text=Satin" },
-    "Chiffon": { image_url: "https://placehold.co/400x400?text=Chiffon" },
-    "Georgette": { image_url: "https://placehold.co/400x400?text=Georgette" },
-    "Rayon": { image_url: "https://placehold.co/400x400?text=Rayon" },
-    "Polyester": { image_url: "https://placehold.co/400x400?text=Polyester" }
-};
 
 // Facet Management Section Component
 interface FacetManagementSectionProps {
@@ -6782,19 +6730,28 @@ To get these values:
                                                     autoFocus
                                                     value={facetFormData.name}
                                                     onChange={(e) => {
-                                                        const newName = capitalizeFirstLetter(e.target.value);
+                                                        const rawValue = e.target.value;
+                                                        const newName = capitalizeFirstLetter(rawValue);
                                                         const updates: any = { ...facetFormData, name: newName };
 
+                                                        // Helper to find key case-insensitively
+                                                        const findKey = (map: Record<string, any>, val: string) =>
+                                                            Object.keys(map).find(k => k.toLowerCase() === val.toLowerCase());
+
                                                         // Auto-populate hex if active tab is colors and name matches
-                                                        if (activeFacetTab === "colors" && COLOR_MAP[newName]) {
-                                                            updates.hex = COLOR_MAP[newName];
+                                                        if (activeFacetTab === "colors") {
+                                                            const matchedColorKey = findKey(COLOR_MAP, rawValue);
+                                                            if (matchedColorKey) {
+                                                                updates.hex = COLOR_MAP[matchedColorKey];
+                                                            }
                                                         }
 
                                                         // Auto-populate image if active tab is materials and name matches
-                                                        if (activeFacetTab === "materials" && MATERIAL_MAP[newName]) {
-                                                            if (MATERIAL_MAP[newName].image_url) {
-                                                                updates.image_url = MATERIAL_MAP[newName].image_url;
-                                                                setFacetImagePreview(MATERIAL_MAP[newName].image_url!);
+                                                        if (activeFacetTab === "materials") {
+                                                            const matchedMaterialKey = findKey(MATERIAL_MAP, rawValue);
+                                                            if (matchedMaterialKey && MATERIAL_MAP[matchedMaterialKey].image_url) {
+                                                                updates.image_url = MATERIAL_MAP[matchedMaterialKey].image_url;
+                                                                setFacetImagePreview(MATERIAL_MAP[matchedMaterialKey].image_url!);
                                                             }
                                                         }
 
