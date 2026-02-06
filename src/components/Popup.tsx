@@ -34,18 +34,18 @@ export default function Popup({
     }, [isOpen, autoClose, autoCloseDelay, type, onClose]);
 
     useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && isOpen) {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (isOpen && (e.key === "Escape" || e.key === "Enter")) {
                 onClose();
             }
         };
 
         if (isOpen) {
-            document.addEventListener("keydown", handleEscape);
+            document.addEventListener("keydown", handleKeyDown);
         }
 
         return () => {
-            document.removeEventListener("keydown", handleEscape);
+            document.removeEventListener("keydown", handleKeyDown);
         };
     }, [isOpen, onClose]);
 

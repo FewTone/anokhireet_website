@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { capitalizeFirstLetter, INDIAN_STATES } from "@/lib/utils";
 import { useRouter, useSearchParams, ReadonlyURLSearchParams } from "next/navigation";
 import Popup from "@/components/Popup";
+import ConfirmationModal from "@/components/ConfirmationModal";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 
@@ -4209,46 +4210,34 @@ To get these values:
                                         : null;
 
                                     if (facets) {
-                                        // Check product types
-                                        const productType = productTypes.find(pt => pt.id === filterCategory);
-                                        if (productType && facets.productTypes.includes(productType.name)) {
-                                            return true;
-                                        }
+                                        // Standardize target check to handle both string and number IDs and case-insensitive names
+                                        const matchesFacet = (facetList: any[], productFacets: string[]) => {
+                                            const targetFacet = facetList.find(f => String(f.id) === String(filterCategory));
+                                            if (!targetFacet) return false;
 
-                                        // Check occasions
-                                        const occasion = occasions.find(oc => oc.id === filterCategory);
-                                        if (occasion && facets.occasions.includes(occasion.name)) {
-                                            return true;
-                                        }
+                                            const targetNameLower = targetFacet.name.toLowerCase();
+                                            return productFacets.some(name => name.toLowerCase() === targetNameLower);
+                                        };
 
-                                        // Check colors
-                                        const color = colors.find(c => c.id === filterCategory);
-                                        if (color && facets.colors.includes(color.name)) {
-                                            return true;
-                                        }
-
-                                        // Check materials
-                                        const material = materials.find(m => m.id === filterCategory);
-                                        if (material && facets.materials.includes(material.name)) {
-                                            return true;
-                                        }
-
-                                        // Check cities
-                                        const city = cities.find(c => c.id === filterCategory);
-                                        if (city && facets.cities.includes(city.name)) {
-                                            return true;
-                                        }
+                                        if (matchesFacet(productTypes, facets.productTypes)) return true;
+                                        if (matchesFacet(occasions, facets.occasions)) return true;
+                                        if (matchesFacet(colors, facets.colors)) return true;
+                                        if (matchesFacet(materials, facets.materials)) return true;
+                                        if (matchesFacet(cities, facets.cities)) return true;
                                     }
 
                                     // Fallback: check category_ids array (from product_categories) or legacy category field
                                     if ((p as any).category_ids && Array.isArray((p as any).category_ids)) {
-                                        return (p as any).category_ids.includes(filterCategory);
+                                        return (p as any).category_ids.some((id: any) => String(id) === String(filterCategory));
                                     }
+
                                     // Fallback: check category string (legacy or display)
                                     if (p.category && typeof p.category === 'string') {
-                                        const selectedCategory = categories.find(c => c.id === filterCategory);
+                                        const selectedCategory = [...categories, ...productTypes, ...occasions, ...colors, ...materials, ...cities]
+                                            .find(c => String(c.id) === String(filterCategory));
+
                                         if (selectedCategory) {
-                                            return p.category.includes(selectedCategory.name) ||
+                                            return p.category.toLowerCase().includes(selectedCategory.name.toLowerCase()) ||
                                                 p.category === filterCategory;
                                         }
                                     }
@@ -4260,12 +4249,12 @@ To get these values:
                             if (searchQuery.trim()) {
                                 const query = searchQuery.toLowerCase();
                                 filteredUserProducts = filteredUserProducts.filter(p => {
-                                    const facets = (p.category && typeof p.category === 'object' && !Array.isArray(p.category))
+                                    const facetsArr = (p.category && typeof p.category === 'object' && !Array.isArray(p.category))
                                         ? p.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
                                         : null;
 
-                                    const facetText = facets
-                                        ? `${facets.productTypes.join(" ")} ${facets.occasions.join(" ")} ${facets.colors.join(" ")} ${facets.materials.join(" ")} ${facets.cities.join(" ")}`.toLowerCase()
+                                    const facetText = facetsArr
+                                        ? `${facetsArr.productTypes.join(" ")} ${facetsArr.occasions.join(" ")} ${facetsArr.colors.join(" ")} ${facetsArr.materials.join(" ")} ${facetsArr.cities.join(" ")}`.toLowerCase()
                                         : "";
 
                                     return p.name.toLowerCase().includes(query) ||
@@ -4280,9 +4269,6 @@ To get these values:
                             if (columnFilters.name) {
                                 const query = columnFilters.name.toLowerCase();
                                 filteredUserProducts = filteredUserProducts.filter(p => p.name.toLowerCase().includes(query));
-                            }
-                            if (columnFilters.type && columnFilters.type === 'public') {
-                                filteredUserProducts = [];
                             }
                             if (columnFilters.user) {
                                 filteredUserProducts = filteredUserProducts.filter(p => {
@@ -6686,33 +6672,15 @@ To get these values:
                         />
 
                         {/* Facet Add/Edit Modal */}
-                        {isDeleteModalOpen && deleteTarget && (
-                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-none max-w-sm w-full shadow-xl">
-                                    <div className="p-6">
-                                        <h3 className="text-xl font-semibold mb-2">Confirm Delete</h3>
-                                        <p className="text-gray-600 mb-6">
-                                            Are you sure you want to delete <span className="font-semibold">"{deleteTarget.name}"</span>?
-                                            This action cannot be undone.
-                                        </p>
-                                        <div className="flex gap-4">
-                                            <button
-                                                onClick={() => setIsDeleteModalOpen(false)}
-                                                className="flex-1 py-3 border border-gray-300 font-medium hover:bg-gray-50 transition-colors uppercase tracking-wider text-sm"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={handleConfirmDelete}
-                                                className="flex-1 py-3 bg-red-600 text-white font-medium hover:bg-red-700 transition-colors uppercase tracking-wider text-sm shadow-md"
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <ConfirmationModal
+                            isOpen={!!(isDeleteModalOpen && deleteTarget)}
+                            onClose={() => setIsDeleteModalOpen(false)}
+                            onConfirm={handleConfirmDelete}
+                            title="Confirm Delete"
+                            message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+                            type="danger"
+                            confirmText="Delete"
+                        />
 
                         {isFacetModalOpen && (
                             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -7043,162 +7011,72 @@ To get these values:
                         )}
 
                         {/* Delete User Confirmation Modal */}
-                        {deleteConfirmUser && (
-                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full">
-                                    <div className="p-6">
-                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-none">
-                                            <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-                                            Delete User?
-                                        </h3>
-                                        <p className="text-sm text-gray-600 text-center mb-6">
-                                            Are you sure you want to delete <strong>{deleteConfirmUser.name}</strong>?
-                                        </p>
-                                        <div className="bg-red-50 border border-red-200 rounded-none p-4 mb-6">
-                                            <p className="text-sm text-red-800 font-medium mb-2">This will:</p>
-                                            <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
-                                                <li>Delete the user account</li>
-                                                <li>Delete all products belonging to this user</li>
-                                                <li>Remove products from the home page immediately</li>
-                                            </ul>
-                                            <p className="text-sm text-red-800 font-medium mt-3">This action cannot be undone.</p>
-                                        </div>
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={() => setDeleteConfirmUser(null)}
-                                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={confirmDeleteUser}
-                                                className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors"
-                                            >
-                                                Delete User
-                                            </button>
-                                        </div>
+                        <ConfirmationModal
+                            isOpen={!!deleteConfirmUser}
+                            onClose={() => setDeleteConfirmUser(null)}
+                            onConfirm={confirmDeleteUser}
+                            title="Delete User?"
+                            message={
+                                <>
+                                    <p className="mb-4">Are you sure you want to delete <strong>{deleteConfirmUser?.name}</strong>?</p>
+                                    <div className="bg-red-50 border border-red-200 rounded-none p-4 text-left">
+                                        <p className="text-sm text-red-800 font-medium mb-2">This will:</p>
+                                        <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                                            <li>Delete the user account</li>
+                                            <li>Delete all products belonging to this user</li>
+                                            <li>Remove products from the home page immediately</li>
+                                        </ul>
+                                        <p className="text-sm text-red-800 font-medium mt-3">This action cannot be undone.</p>
                                     </div>
-                                </div>
-                            </div>
-                        )}
+                                </>
+                            }
+                            type="danger"
+                            confirmText="Delete User"
+                        />
 
-                        {deleteConfirmProduct && (
-                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full">
-                                    <div className="p-6">
-                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-none">
-                                            <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-                                            Delete Product?
-                                        </h3>
-                                        <p className="text-sm text-gray-600 text-center mb-6">
-                                            Are you sure you want to delete <strong>{deleteConfirmProduct.name}</strong>?
-                                        </p>
-                                        <div className="bg-red-50 border border-red-200 rounded-none p-4 mb-6">
-                                            <p className="text-sm text-red-800 font-medium mb-1 text-center">This will remove the product from the website permanently.</p>
-                                            <p className="text-xs text-red-600 text-center uppercase tracking-wider font-semibold mt-2">This action cannot be undone.</p>
-                                        </div>
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={() => setDeleteConfirmProduct(null)}
-                                                className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={confirmDeleteUserProduct}
-                                                className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-colors shadow-sm hover:shadow-md"
-                                            >
-                                                Delete Product
-                                            </button>
-                                        </div>
+                        <ConfirmationModal
+                            isOpen={!!deleteConfirmProduct}
+                            onClose={() => setDeleteConfirmProduct(null)}
+                            onConfirm={confirmDeleteUserProduct}
+                            title="Delete Product?"
+                            message={
+                                <>
+                                    <p className="mb-4">Are you sure you want to delete <strong>{deleteConfirmProduct?.name}</strong>?</p>
+                                    <div className="bg-red-50 border border-red-200 rounded-none p-4 text-left">
+                                        <p className="text-sm text-red-800 font-medium mb-1 text-center">This will remove the product from the website permanently.</p>
+                                        <p className="text-xs text-red-600 text-center uppercase tracking-wider font-semibold mt-2">This action cannot be undone.</p>
                                     </div>
-                                </div>
-                            </div>
-                        )}
-                        {/* Approval Confirmation Modal */}
-                        {approveConfirmProduct && (
-                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full shadow-2xl">
-                                    <div className="p-6">
-                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-green-100 rounded-full border border-green-200">
-                                            <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                            Approve Product?
-                                        </h3>
-                                        <p className="text-sm text-gray-600 text-center mb-6">
-                                            Are you sure you want to approve <strong>{approveConfirmProduct.name}</strong>?
-                                        </p>
-                                        <div className="bg-green-50 border border-green-200 rounded-none p-4 mb-6">
-                                            <p className="text-sm text-green-800 font-medium mb-1 text-center">This will make the product live on the website.</p>
-                                        </div>
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={() => setApproveConfirmProduct(null)}
-                                                className="flex-1 px-4 py-3 bg-gray-100 text-gray-800 font-bold rounded-none hover:bg-gray-200 transition-colors uppercase tracking-wider text-sm border border-gray-300"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={confirmApproveProduct}
-                                                className={`flex-1 px-4 py-3 text-white font-bold rounded-none hover:opacity-90 transition-colors uppercase tracking-wider text-sm shadow-lg active:scale-[0.98] ${approveConfirmProduct.status === 'pending_deactivation'
-                                                    ? 'bg-orange-600'
-                                                    : 'bg-emerald-600'
-                                                    }`}
-                                            >
-                                                {approveConfirmProduct.status === 'pending_deactivation' ? 'Confirm Deactivate' : 'Confirm Approve'}
-                                            </button>
-                                        </div>
+                                </>
+                            }
+                            type="danger"
+                            confirmText="Delete Product"
+                        />
+                        <ConfirmationModal
+                            isOpen={!!approveConfirmProduct}
+                            onClose={() => setApproveConfirmProduct(null)}
+                            onConfirm={confirmApproveProduct}
+                            title="Approve Product?"
+                            message={
+                                <>
+                                    <p className="mb-4">Are you sure you want to approve <strong>{approveConfirmProduct?.name}</strong>?</p>
+                                    <div className="bg-green-50 border border-green-200 rounded-none p-4 text-left">
+                                        <p className="text-sm text-green-800 font-medium mb-1 text-center">This will make the product live on the website.</p>
                                     </div>
-                                </div>
-                            </div>
-                        )}
+                                </>
+                            }
+                            type="info"
+                            confirmText={approveConfirmProduct?.status === 'pending_deactivation' ? 'Confirm Deactivate' : 'Confirm Approve'}
+                        />
 
-                        {/* Reject Confirmation Modal */}
-                        {rejectConfirmProduct && (
-                            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                                <div className="bg-white rounded-none border border-gray-200 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
-                                    <div className="p-6">
-                                        <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-50 rounded-none border border-red-100">
-                                            <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </div>
-                                        <h3 className="text-lg font-bold text-gray-900 text-center mb-1 uppercase tracking-wider">
-                                            Reject Request?
-                                        </h3>
-                                        <p className="text-sm text-gray-500 text-center mb-8">
-                                            Are you sure you want to reject <br /><strong className="text-gray-900">{rejectConfirmProduct.name}</strong>?
-                                        </p>
-
-                                        <div className="flex gap-3">
-                                            <button
-                                                onClick={() => setRejectConfirmProduct(null)}
-                                                className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                onClick={confirmRejectProduct}
-                                                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-none hover:bg-red-700 transition-colors shadow-sm uppercase tracking-wider text-xs border border-transparent"
-                                            >
-                                                Confirm Reject
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        <ConfirmationModal
+                            isOpen={!!rejectConfirmProduct}
+                            onClose={() => setRejectConfirmProduct(null)}
+                            onConfirm={confirmRejectProduct}
+                            title="Reject Request?"
+                            message={`Are you sure you want to reject "${rejectConfirmProduct?.name}"?`}
+                            type="danger"
+                            confirmText="Confirm Reject"
+                        />
 
 
                         {/* Hero Slide Add/Edit Modal */}

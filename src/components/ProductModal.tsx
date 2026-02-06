@@ -32,20 +32,24 @@ export default function ProductModal({ isOpen, onClose, product }: ProductModalP
     }, [isOpen]);
 
     useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === "Escape" && isOpen) {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isOpen) return;
+
+            if (e.key === "Escape") {
                 onClose();
+            } else if (e.key === "Enter") {
+                handleMakeInquiry();
             }
         };
 
         if (isOpen) {
-            document.addEventListener("keydown", handleEscape);
+            document.addEventListener("keydown", handleKeyDown);
         }
 
         return () => {
-            document.removeEventListener("keydown", handleEscape);
+            document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, product]); // product added here to ensure handleMakeInquiry has latest data
 
     if (!isOpen || !product) return null;
 

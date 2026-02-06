@@ -5,6 +5,7 @@ import ProductCardSkeleton from "@/components/ProductCardSkeleton";
 import { supabase } from "@/lib/supabase";
 import { generateCustomProductId } from "@/lib/utils";
 import Popup from "@/components/Popup";
+import ConfirmationModal from "@/components/ConfirmationModal";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface UserProduct {
@@ -1173,165 +1174,65 @@ export default function MyProductsView() {
                 title={popup.title}
             />
 
-            {/* Draft Delete Confirmation Modal */}
-            {
-                deleteConfirmProduct && (
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[4000] p-4">
-                        <div className="bg-white rounded-none border border-gray-100 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
-                            <div className="p-6">
-                                <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-50 rounded-none border border-blue-100">
-                                    <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                    Delete Product
-                                </h3>
-                                <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-                                    Are you sure you want to delete <strong className="text-gray-900">{deleteConfirmProduct.name}</strong>?
-                                </p>
-                                <div className="flex gap-3 mb-4">
-                                    <button
-                                        onClick={() => setDeleteConfirmProduct(null)}
-                                        className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={confirmDeleteDraft}
-                                        className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
-                                    >
-                                        Confirm Delete
-                                    </button>
-                                </div>
-                                <p className="text-xs text-gray-500 text-center">
-                                    This action is permanent and cannot be undone.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            <ConfirmationModal
+                isOpen={!!deleteConfirmProduct}
+                onClose={() => setDeleteConfirmProduct(null)}
+                onConfirm={confirmDeleteDraft}
+                title="Delete Product"
+                message={
+                    <>
+                        <p>Are you sure you want to delete <strong className="text-gray-900">{deleteConfirmProduct?.name}</strong>?</p>
+                        <p className="text-xs text-gray-500 mt-4 font-normal">This action is permanent and cannot be undone.</p>
+                    </>
+                }
+                type="danger"
+                confirmText="Confirm Delete"
+            />
 
-            {/* Submission Confirmation Modal */}
-            {
-                submitConfirmProduct && (
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[4000] p-4">
-                        <div className="bg-white rounded-none border border-gray-100 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
-                            <div className="p-6">
-                                <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-50 rounded-none border border-blue-100">
-                                    <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                    Ready to Submit
-                                </h3>
-                                <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-                                    <strong className="text-gray-900">{submitConfirmProduct.name}</strong> for review?
-                                </p>
-                                <div className="flex gap-3 mb-4">
-                                    <button
-                                        onClick={() => setSubmitConfirmProduct(null)}
-                                        className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={confirmSubmitDraft}
-                                        className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
-                                    >
-                                        Submit for Review
-                                    </button>
-                                </div>
-                                <p className="text-xs text-gray-500 text-center">
-                                    You won't be able to edit it until it's approved.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            <ConfirmationModal
+                isOpen={!!submitConfirmProduct}
+                onClose={() => setSubmitConfirmProduct(null)}
+                onConfirm={confirmSubmitDraft}
+                title="Ready to Submit"
+                message={
+                    <>
+                        <p><strong className="text-gray-900">{submitConfirmProduct?.name}</strong> for review?</p>
+                        <p className="text-xs text-gray-500 mt-4 font-normal">You won't be able to edit it until it's approved.</p>
+                    </>
+                }
+                type="info"
+                confirmText="Submit for Review"
+            />
 
-            {/* Deactivation Confirmation Modal */}
-            {
-                deactivateConfirmProduct && (
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[4000] p-4">
-                        <div className="bg-white rounded-none border border-gray-100 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
-                            <div className="p-6">
-                                <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-50 rounded-none border border-blue-100">
-                                    <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                    Deactivate Product
-                                </h3>
-                                <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-                                    Deactivate <strong className="text-gray-900">{deactivateConfirmProduct.name}</strong>?
-                                </p>
-                                <div className="flex gap-3 mb-4">
-                                    <button
-                                        onClick={() => setDeactivateConfirmProduct(null)}
-                                        className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={confirmDeactivation}
-                                        className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
-                                    >
-                                        Deactivate
-                                    </button>
-                                </div>
-                                <p className="text-xs text-gray-500 text-center">
-                                    This will hide the product from the marketplace.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            <ConfirmationModal
+                isOpen={!!deactivateConfirmProduct}
+                onClose={() => setDeactivateConfirmProduct(null)}
+                onConfirm={confirmDeactivation}
+                title="Deactivate Product"
+                message={
+                    <>
+                        <p>Deactivate <strong className="text-gray-900">{deactivateConfirmProduct?.name}</strong>?</p>
+                        <p className="text-xs text-gray-500 mt-4 font-normal">This will hide the product from the marketplace.</p>
+                    </>
+                }
+                type="warning"
+                confirmText="Deactivate"
+            />
 
-            {/* Reactivation Confirmation Modal */}
-            {
-                reactivateConfirmProduct && (
-                    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[4000] p-4">
-                        <div className="bg-white rounded-none border border-gray-100 max-w-md w-full shadow-2xl animate-in fade-in zoom-in duration-200">
-                            <div className="p-6">
-                                <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-blue-50 rounded-none border border-blue-100">
-                                    <svg className="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-bold text-gray-900 text-center mb-2 uppercase tracking-wide">
-                                    Reactivate Product
-                                </h3>
-                                <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-                                    Make <strong className="text-gray-900">{reactivateConfirmProduct.name}</strong> live again?
-                                </p>
-                                <div className="flex gap-3 mb-4">
-                                    <button
-                                        onClick={() => setReactivateConfirmProduct(null)}
-                                        className="flex-1 px-4 py-3 bg-white text-gray-900 font-bold rounded-none hover:bg-gray-50 transition-colors uppercase tracking-wider text-xs border border-gray-200"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={confirmReactivation}
-                                        className="flex-1 px-4 py-3 bg-black text-white font-bold rounded-none hover:bg-gray-800 transition-colors shadow-none hover:shadow-lg uppercase tracking-wider text-xs"
-                                    >
-                                        Make Live
-                                    </button>
-                                </div>
-                                <p className="text-xs text-gray-500 text-center">
-                                    A request will be sent to the admin for approval.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+            <ConfirmationModal
+                isOpen={!!reactivateConfirmProduct}
+                onClose={() => setReactivateConfirmProduct(null)}
+                onConfirm={confirmReactivation}
+                title="Reactivate Product"
+                message={
+                    <>
+                        <p>Make <strong className="text-gray-900">{reactivateConfirmProduct?.name}</strong> live again?</p>
+                        <p className="text-xs text-gray-500 mt-4 font-normal">A request will be sent to the admin for approval.</p>
+                    </>
+                }
+                type="info"
+                confirmText="Make Live"
+            />
             {/* Mobile Add Product Button - Fixed Bottom */}
             <div className="md:hidden fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] left-0 right-0 z-[50] bg-white border-t border-gray-100 p-3 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.05)]">
                 <button
