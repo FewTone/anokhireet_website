@@ -958,8 +958,8 @@ To get these values:
                 .from("reports")
                 .select(`
                     *,
-                    reporter:users!fk_reports_reporter(name),
-                    reported:users!fk_reports_reported(name)
+                    reporter:users!fk_reports_reporter(name, custom_id),
+                    reported:users!fk_reports_reported(name, custom_id)
                 `)
                 .order("created_at", { ascending: false });
 
@@ -8121,11 +8121,11 @@ To get these values:
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm font-medium text-gray-900">{report.reporter?.name || "Unknown"}</div>
-                                                            <div className="text-xs text-gray-500 font-mono">{report.reporter_user_id?.substring(0, 8)}...</div>
+                                                            <div className="text-xs text-gray-500 font-mono">{report.reporter?.custom_id || report.reporter_user_id?.substring(0, 8)}</div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <div className="text-sm font-medium text-gray-900">{report.reported?.name || "Unknown"}</div>
-                                                            <div className="text-xs text-gray-500 font-mono">{report.reported_user_id?.substring(0, 8)}...</div>
+                                                            <div className="text-xs text-gray-500 font-mono">{report.reported?.custom_id || report.reported_user_id?.substring(0, 8)}</div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             <span className="px-2 py-1 bg-red-50 text-red-700 text-[11px] font-medium border border-red-100 uppercase tracking-wide">
