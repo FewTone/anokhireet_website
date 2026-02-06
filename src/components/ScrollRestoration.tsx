@@ -15,24 +15,39 @@ export default function ScrollRestoration() {
     const currentKey = pathname + searchParams.toString();
 
     useEffect(() => {
+        // Disable browser's automatic scroll restoration to prevent conflicts
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
         const scrollContainer = document.getElementById('app-shell-scroll');
-        if (!scrollContainer) return;
+
+        // Target is either the specific container or the window
+        const target = scrollContainer || window;
+        const getScrollTop = () => scrollContainer ? scrollContainer.scrollTop : window.scrollY;
+        const setScrollTop = (top: number) => {
+            if (scrollContainer) {
+                scrollContainer.scrollTop = top;
+            } else {
+                window.scrollTo({ top, behavior: 'instant' });
+            }
+        };
 
         // Function to save scroll position
         const handleSaveScroll = () => {
-            if (isTracking.current && scrollContainer.scrollTop > 0) {
-                globalScrollPositions[currentKey] = scrollContainer.scrollTop;
+            const currentPos = getScrollTop();
+            if (isTracking.current && currentPos > 0) {
+                globalScrollPositions[currentKey] = currentPos;
                 // Also save to sessionStorage as a backup
                 try {
-                    sessionStorage.setItem(`scroll_${currentKey}`, scrollContainer.scrollTop.toString());
+                    sessionStorage.setItem(`scroll_${currentKey}`, currentPos.toString());
                 } catch (e) { }
             }
         };
 
-        scrollContainer.addEventListener('scroll', handleSaveScroll);
+        target.addEventListener('scroll', handleSaveScroll, { passive: true });
 
         // RESTORATION LOGIC
-        // Priority: Global JS object > Session Storage
         let savedPos = globalScrollPositions[currentKey];
         if (savedPos === undefined) {
             try {
@@ -42,42 +57,39 @@ export default function ScrollRestoration() {
         }
 
         if (savedPos !== undefined && savedPos > 0) {
-            // We are starting a restoration - stop tracking scroll events to avoid overwriting with 0
             isTracking.current = false;
-
             let restorationComplete = false;
             let attempts = 0;
-            const maxAttempts = 30; // 3 seconds at 100ms
+            const maxAttempts = 50; // 5 seconds at 100ms
 
             const tryRestore = () => {
                 if (restorationComplete) return;
 
                 // Attempt to scroll
-                scrollContainer.scrollTop = savedPos;
+                setScrollTop(savedPos!);
 
                 // Check if we reached it
-                // We add a small tolerance for scroll precision
-                if (Math.abs(scrollContainer.scrollTop - savedPos) < 2) {
+                if (Math.abs(getScrollTop() - savedPos!) < 5) {
                     restorationComplete = true;
                     observer.disconnect();
                     clearInterval(interval);
-                    // Page has settled - resume tracking
                     isTracking.current = true;
                 }
             };
 
-            // Use MutationObserver to react to dynamic content loading (e.g., product lists)
+            // Use MutationObserver to react to dynamic content loading
+            // Observe body as fallback if container is missing
+            const observeTarget = scrollContainer || document.body;
             const observer = new MutationObserver(() => {
                 tryRestore();
             });
 
-            observer.observe(scrollContainer, {
+            observer.observe(observeTarget, {
                 childList: true,
-                subtree: true,
-                characterData: true
+                subtree: true
             });
 
-            // Fallback interval for things that don't trigger observer (like images loading without layout change)
+            // Fallback interval
             const interval = setInterval(() => {
                 attempts++;
                 tryRestore();
@@ -85,7 +97,7 @@ export default function ScrollRestoration() {
                     restorationComplete = true;
                     observer.disconnect();
                     clearInterval(interval);
-                    isTracking.current = true; // Fallback to tracking even if we didn't reach it
+                    isTracking.current = true;
                 }
             }, 100);
 
@@ -93,18 +105,18 @@ export default function ScrollRestoration() {
             tryRestore();
 
             return () => {
-                scrollContainer.removeEventListener('scroll', handleSaveScroll);
+                target.removeEventListener('scroll', handleSaveScroll);
                 observer.disconnect();
                 clearInterval(interval);
             };
         } else {
-            // New page or top of page
-            scrollContainer.scrollTop = 0;
+            // New page or top of page - ensure it starts at 0
+            setScrollTop(0);
             isTracking.current = true;
         }
 
         return () => {
-            scrollContainer.removeEventListener('scroll', handleSaveScroll);
+            target.removeEventListener('scroll', handleSaveScroll);
         };
     }, [currentKey]);
 
