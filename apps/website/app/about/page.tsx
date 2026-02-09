@@ -3,7 +3,7 @@ import localFont from 'next/font/local';
 import BackButton from './BackButton';
 
 const arya = localFont({
-    src: '../../../public/fonts/Arya-Regular.ttf',
+    src: '../../public/fonts/Arya-Regular.ttf',
     variable: '--font-arya',
 });
 

@@ -1,34 +1,21 @@
 {
-  "name": "snitch-web",
-  "version": "0.1.0",
+  "name": "anokhireet-monorepo",
+  "version": "1.0.0",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "next dev -H 0.0.0.0",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.89.0",
-    "@types/react-datepicker": "^6.2.0",
-    "clsx": "^2.1.1",
-    "emoji-picker-react": "^4.16.1",
-    "firebase": "^12.7.0",
-    "framer-motion": "^12.28.1",
-    "next": "16.1.1",
-    "react": "19.2.3",
-    "react-datepicker": "^9.1.0",
-    "react-dom": "19.2.3",
-    "tailwind-merge": "^3.4.0"
+    "dev": "npm run dev -w apps/website",
+    "build": "npm run build -w apps/website",
+    "start": "npm run start -w apps/website",
+    "dev:website": "npm run dev -w apps/website",
+    "dev:admin": "npm run dev -w apps/admin",
+    "build:website": "npm run build -w apps/website",
+    "build:admin": "npm run build -w apps/admin"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.1",
-    "tailwindcss": "^4",
     "typescript": "^5"
   }
 }
