@@ -209,7 +209,7 @@ function UserClient() {
                             userId={userId}
                             userState={userState}
                             userCustomId={userCustomId}
-                            onUpdate={loadUserData}
+                            userCustomId={userCustomId}
                         />
                     </ContentWrapper>
                 );
