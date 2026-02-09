@@ -11,7 +11,7 @@ DECLARE
     'categories', 'cities', 'colors', 'materials', 'occasions', 
     'product_types', 'hero_slides', 'poster_settings', 'website_settings',
     'product_cities', 'product_colors', 'product_materials', 
-    'product_occasions', 'product_product_types'
+    'product_occasions', 'product_product_types', 'product_views'
   ];
 BEGIN
   -- 1. PUBLIC READ-ONLY TABLES
