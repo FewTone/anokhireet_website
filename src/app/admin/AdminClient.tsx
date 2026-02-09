@@ -4466,6 +4466,104 @@ To get these values:
                                     </div>
                                 </div>
 
+                                {/* Revenue & Engagement Stats */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                    {/* Total Revenue */}
+                                    <div className="bg-white p-6 rounded-none border border-gray-200 hover:shadow-lg transition-all duration-200">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Total Revenue</h3>
+                                            <div className="p-3 bg-emerald-100 rounded-none">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-emerald-600">
+                                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <p className="text-4xl font-semibold text-gray-900">
+                                            {(() => {
+                                                const revenue = userProducts.reduce((sum, p) => {
+                                                    let amount = 0;
+                                                    const status = p.listing_status || '';
+                                                    if (status.includes('₹')) {
+                                                        const match = status.match(/₹(\d+)/);
+                                                        if (match) amount = parseInt(match[1]);
+                                                    } else if (status === 'Paid') {
+                                                        amount = 99;
+                                                    }
+                                                    return sum + amount;
+                                                }, 0);
+                                                return `₹${revenue.toLocaleString()}`;
+                                            })()}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            {(() => {
+                                                const paidUserIds = new Set(
+                                                    userProducts
+                                                        .filter(p => {
+                                                            const status = p.listing_status || '';
+                                                            return status === 'Paid' || status.includes('₹');
+                                                        })
+                                                        .map(p => p.user_id)
+                                                );
+                                                return `From ${paidUserIds.size} paid users`;
+                                            })()}
+                                        </p>
+                                    </div>
+
+                                    {/* Seller Penetration */}
+                                    <div className="bg-white p-6 rounded-none border border-gray-200 hover:shadow-lg transition-all duration-200">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Seller Penetration</h3>
+                                            <div className="p-3 bg-orange-100 rounded-none">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-orange-600">
+                                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                    <circle cx="9" cy="7" r="4"></circle>
+                                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <p className="text-4xl font-semibold text-gray-900">
+                                            {totalUsers > 0 ? Math.round((sellerUsersCount / totalUsers) * 100) : 0}%
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            {sellerUsersCount} out of {totalUsers} users are sellers
+                                        </p>
+                                    </div>
+
+                                    {/* Avg. Revenue / Seller */}
+                                    <div className="bg-white p-6 rounded-none border border-gray-200 hover:shadow-lg transition-all duration-200">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Avg. Revenue / Seller</h3>
+                                            <div className="p-3 bg-teal-100 rounded-none">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-teal-600">
+                                                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                        <p className="text-4xl font-semibold text-gray-900">
+                                            {(() => {
+                                                const totalRevenue = userProducts.reduce((sum, p) => {
+                                                    let amount = 0;
+                                                    const status = p.listing_status || '';
+                                                    if (status.includes('₹')) {
+                                                        const match = status.match(/₹(\d+)/);
+                                                        if (match) amount = parseInt(match[1]);
+                                                    } else if (status === 'Paid') {
+                                                        amount = 99;
+                                                    }
+                                                    return sum + amount;
+                                                }, 0);
+                                                const avg = sellerUsersCount > 0 ? totalRevenue / sellerUsersCount : 0;
+                                                return `₹${Math.round(avg).toLocaleString()}`;
+                                            })()}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            Per active seller (user with {'>'} 0 products)
+                                        </p>
+                                    </div>
+
+                                </div>
+
                                 {/* Recent Activity */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Recent Products */}
