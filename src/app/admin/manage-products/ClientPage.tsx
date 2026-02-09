@@ -458,7 +458,7 @@ export default function ManageProductsClient() {
                                                     .filter(p => p > 0);
                                                 if (prices.length === 0) return '₹0';
                                                 const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
-                                                return `₹${Math.round(avg).toLocaleString()}`;
+                                                return `₹${avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                                             })()}
                                         </p>
                                     </div>
@@ -515,7 +515,7 @@ export default function ManageProductsClient() {
                                                     }
                                                     return sum + amount;
                                                 }, 0);
-                                                return `₹${totalLoaded.toLocaleString()}`;
+                                                return `₹${totalLoaded.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                                             })()}
                                         </p>
                                     </div>
@@ -545,7 +545,7 @@ export default function ManageProductsClient() {
 
                                                 if (paidAmounts.length === 0) return '₹0';
                                                 const avg = paidAmounts.reduce((a, b) => a + b, 0) / paidAmounts.length;
-                                                return `₹${Math.round(avg).toLocaleString()}`;
+                                                return `₹${avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                                             })()}
                                         </p>
                                     </div>

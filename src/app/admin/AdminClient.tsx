@@ -4491,7 +4491,7 @@ To get these values:
                                                     }
                                                     return sum + amount;
                                                 }, 0);
-                                                return `₹${revenue.toLocaleString()}`;
+                                                return `₹${revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                                             })()}
                                         </p>
                                         <p className="text-xs text-gray-500 mt-2">
@@ -4523,7 +4523,7 @@ To get these values:
                                             </div>
                                         </div>
                                         <p className="text-4xl font-semibold text-gray-900">
-                                            {totalUsers > 0 ? Math.round((sellerUsersCount / totalUsers) * 100) : 0}%
+                                            {totalUsers > 0 ? ((sellerUsersCount / totalUsers) * 100).toFixed(2) : '0.00'}%
                                         </p>
                                         <p className="text-xs text-gray-500 mt-2">
                                             {sellerUsersCount} out of {totalUsers} users are sellers
@@ -4554,7 +4554,7 @@ To get these values:
                                                     return sum + amount;
                                                 }, 0);
                                                 const avg = sellerUsersCount > 0 ? totalRevenue / sellerUsersCount : 0;
-                                                return `₹${Math.round(avg).toLocaleString()}`;
+                                                return `₹${avg.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
                                             })()}
                                         </p>
                                         <p className="text-xs text-gray-500 mt-2">
