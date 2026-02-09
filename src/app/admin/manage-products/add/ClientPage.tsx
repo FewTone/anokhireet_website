@@ -6,6 +6,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import Popup from "@/components/Popup";
 import { convertToWebPOptimized } from "@/lib/imageUtils";
+import { generateCustomUserId, getUserInitials, generateRandomString, INDIAN_STATES } from "@/lib/utils";
 
 interface User {
     id: string;
@@ -757,27 +758,58 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
 
                 // Need user's custom ID. We loaded user earlier but might not have custom_id.
                 // Let's ensure we fetch it.
-                const { data: userDataForId } = await supabase.from("users").select("custom_id").eq("id", userId).single();
+                const { data: userDataForId } = await supabase.from("users").select("id, name, custom_id").eq("id", userId).single();
 
                 let productId = "";
-                if (userDataForId?.custom_id) {
-                    const userSuffix = userDataForId.custom_id.slice(-3);
+                let effectiveCustomId = userDataForId?.custom_id;
 
-                    // Find the highest sequence number currently in use for this user suffix
+                // Auto-healing: If user doesn't have a custom ID, try to generate one
+                if (!effectiveCustomId && userDataForId) {
+                    try {
+                        console.log("User missing custom_id, attempting to generate one...");
+                        // 1. Fetch user's city/state
+                        const { data: cityData } = await supabase
+                            .from("user_cities")
+                            .select("city_id, cities(*)")
+                            .eq("user_id", userId)
+                            .limit(1)
+                            .maybeSingle();
+
+                        const cityName = (cityData?.cities as any)?.name;
+                        const stateName = (cityData?.cities as any)?.state;
+
+                        if (stateName) {
+                            const stateObj = INDIAN_STATES.find(s => s.name === stateName);
+                            const stateCode = stateObj ? stateObj.code : (stateName.slice(0, 2).toUpperCase());
+
+                            const newCustomId = generateCustomUserId(userDataForId.name, stateCode);
+
+                            // 2. Save to user record
+                            const { error: updateError } = await supabase
+                                .from("users")
+                                .update({ custom_id: newCustomId })
+                                .eq("id", userId);
+
+                            if (!updateError) {
+                                effectiveCustomId = newCustomId;
+                                console.log(`Auto-healed user ${userId} with new custom_id: ${newCustomId}`);
+                            }
+                        }
+                    } catch (healError) {
+                        console.error("Failed to auto-heal user custom_id:", healError);
+                    }
+                }
+
+                if (effectiveCustomId) {
+                    const userSuffix = effectiveCustomId.slice(-3);
+                    // ... rest of sequence logic (already robust)
                     let maxSequence = 0;
                     if (userProducts && userProducts.length > 0) {
                         userProducts.forEach(p => {
                             if (p.product_id && p.product_id.includes(userSuffix)) {
-                                // Expected format: AR-XXX01
-                                // Extract the last digits
                                 const parts = p.product_id.split('-');
                                 if (parts.length >= 2) {
-                                    const suffixPart = parts[parts.length - 1]; // e.g. XXX01
-                                    // The suffix part contains the user last 3 chars (XXX) + sequence (01)
-                                    // User suffix is known "userSuffix".
-                                    // Let's try to slice it out.
-                                    // Actually, generated ID is `AR-${userSuffix}${countStr}`
-                                    // So suffixPart starts with userSuffix.
+                                    const suffixPart = parts[parts.length - 1];
                                     if (suffixPart.startsWith(userSuffix)) {
                                         const numPart = suffixPart.slice(userSuffix.length);
                                         const num = parseInt(numPart, 10);
@@ -794,7 +826,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     const countStr = nextSequence.toString().padStart(2, '0');
                     productId = `AR-${userSuffix}${countStr}`;
                 } else {
-                    // Fallback if no custom ID
+                    // Fallback if no custom ID and couldn't heal
                     const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
                     productId = `PROD-${randomPart}`;
                 }

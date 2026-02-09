@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
-import { capitalizeFirstLetter, INDIAN_STATES } from "@/lib/utils";
+import { capitalizeFirstLetter, INDIAN_STATES, generateCustomUserId } from "@/lib/utils";
 import { useRouter, useSearchParams, ReadonlyURLSearchParams } from "next/navigation";
 import Popup from "@/components/Popup";
 import ConfirmationModal from "@/components/ConfirmationModal";
@@ -2557,12 +2557,23 @@ To get these values:
 
             if (existingUser) {
                 // Existing user logic - Update name if needed
-                const userData = {
+                const updateDataObj: any = {
                     name: fullName,
                     phone: userPhone || existingUser.phone,
                 };
 
-                const { data: updateData, error: updateError } = await supabase.from("users").update(userData).eq("id", existingUser.id).select().single();
+                // Generate custom_id if missing
+                if (!existingUser.custom_id) {
+                    const selectedCityId = userFormData.cities[0];
+                    const selectedCity = cities.find(c => c.id === selectedCityId);
+                    if (selectedCity && selectedCity.state) {
+                        const stateObj = INDIAN_STATES.find(s => s.name === selectedCity.state);
+                        const stateCode = stateObj ? stateObj.code : (selectedCity.state.slice(0, 2).toUpperCase());
+                        updateDataObj.custom_id = generateCustomUserId(fullName, stateCode);
+                    }
+                }
+
+                const { data: updateData, error: updateError } = await supabase.from("users").update(updateDataObj).eq("id", existingUser.id).select().single();
                 if (updateError) throw updateError;
 
                 // Update cities
@@ -2580,10 +2591,22 @@ To get these values:
             } else {
                 // Create completely new user
                 const userId = crypto.randomUUID();
+
+                // Generate custom_id
+                let customId = "";
+                const selectedCityId = userFormData.cities[0];
+                const selectedCity = cities.find(c => c.id === selectedCityId);
+                if (selectedCity && selectedCity.state) {
+                    const stateObj = INDIAN_STATES.find(s => s.name === selectedCity.state);
+                    const stateCode = stateObj ? stateObj.code : (selectedCity.state.slice(0, 2).toUpperCase());
+                    customId = generateCustomUserId(fullName, stateCode);
+                }
+
                 const userData = {
                     id: userId,
                     name: fullName,
                     phone: userPhone,
+                    custom_id: customId || null,
                 };
 
                 const { error: userError } = await supabase.from("users").insert([userData]);
@@ -2612,6 +2635,7 @@ To get these values:
             console.error("Error creating/updating user:", error);
         }
     };
+
 
     const handleDeleteUser = async (userId: string, userName: string) => {
         // Show confirmation popup
@@ -3172,6 +3196,54 @@ To get these values:
                     throw new Error("User ID is required. Please select a user first.");
                 }
 
+                // Generate Custom Product ID: AR-UserSuffix-Count
+                let customProductId = "";
+                try {
+                    // 1. Get user's custom ID
+                    const { data: userData } = await supabase
+                        .from("users")
+                        .select("custom_id")
+                        .eq("id", selectedUserId)
+                        .single();
+
+                    if (userData?.custom_id) {
+                        const userSuffix = userData.custom_id.slice(-3); // Last 3 chars
+
+                        // 2. Get existing products to find max sequence
+                        const { data: userProducts } = await supabase
+                            .from("products")
+                            .select("product_id")
+                            .eq("owner_user_id", selectedUserId);
+
+                        let maxSequence = 0;
+                        if (userProducts && userProducts.length > 0) {
+                            userProducts.forEach(p => {
+                                if (p.product_id && p.product_id.includes(userSuffix)) {
+                                    // Expected format: AR-XXX01
+                                    const parts = p.product_id.split('-');
+                                    if (parts.length >= 2) {
+                                        const suffixPart = parts[parts.length - 1]; // e.g. XXX01
+                                        if (suffixPart.startsWith(userSuffix)) {
+                                            const numStr = suffixPart.slice(userSuffix.length);
+                                            const num = parseInt(numStr, 10);
+                                            if (!isNaN(num) && num > maxSequence) {
+                                                maxSequence = num;
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        // 3. Generate new ID
+                        const nextSequence = maxSequence + 1;
+                        const countStr = nextSequence.toString().padStart(2, '0');
+                        customProductId = `AR-${userSuffix}${countStr}`;
+                    }
+                } catch (idError) {
+                    console.error("Error generating custom ID for product:", idError);
+                }
+
                 const insertData: any = {
                     owner_user_id: selectedUserId,
                     title: productData.name,
@@ -3179,6 +3251,7 @@ To get these values:
                     price: productData.price,
                     price_per_day: productData.price ? parseFloat(productData.price) || null : null,
                     image: productData.image,
+                    product_id: customProductId || `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                 };
 
                 if (productData.category) {
@@ -3542,14 +3615,49 @@ To get these values:
             if (!isDeactivation && (!approveConfirmProduct.product_id || !approveConfirmProduct.product_id.startsWith('AR-'))) {
                 try {
                     // 1. Get User's Custom ID Suffix
-                    const { data: userData } = await supabase
+                    let { data: userData } = await supabase
                         .from("users")
-                        .select("custom_id")
+                        .select("id, name, custom_id")
                         .eq("id", approveConfirmProduct.user_id)
                         .single();
 
-                    if (userData?.custom_id) {
-                        const userSuffix = userData.custom_id.slice(-3); // Last 3 chars
+                    let effectiveCustomId = userData?.custom_id;
+
+                    // Auto-healing: If user doesn't have a custom ID, try to generate one
+                    if (!effectiveCustomId && userData) {
+                        try {
+                            console.log("User missing custom_id during approval, attempting to generate one...");
+                            const { data: cityData } = await supabase
+                                .from("user_cities")
+                                .select("city_id, cities(*)")
+                                .eq("user_id", approveConfirmProduct.user_id)
+                                .limit(1)
+                                .maybeSingle();
+
+                            const stateName = (cityData?.cities as any)?.state;
+
+                            if (stateName) {
+                                const stateObj = INDIAN_STATES.find(s => s.name === stateName);
+                                const stateCode = stateObj ? stateObj.code : (stateName.slice(0, 2).toUpperCase());
+                                const newCustomId = generateCustomUserId(userData.name, stateCode);
+
+                                const { error: updateError } = await supabase
+                                    .from("users")
+                                    .update({ custom_id: newCustomId })
+                                    .eq("id", approveConfirmProduct.user_id);
+
+                                if (!updateError) {
+                                    effectiveCustomId = newCustomId;
+                                    console.log(`Auto-healed user ${approveConfirmProduct.user_id} with new custom_id: ${newCustomId}`);
+                                }
+                            }
+                        } catch (healError) {
+                            console.error("Failed to auto-heal user custom_id during approval:", healError);
+                        }
+                    }
+
+                    if (effectiveCustomId) {
+                        const userSuffix = effectiveCustomId.slice(-3); // Last 3 chars
 
                         // 2. Get existing products to find max sequence
                         const { data: userProducts } = await supabase
@@ -3566,8 +3674,8 @@ To get these values:
                                     if (parts.length >= 2) {
                                         const suffixPart = parts[parts.length - 1]; // e.g. XXX01
                                         if (suffixPart.startsWith(userSuffix)) {
-                                            const numPart = suffixPart.slice(userSuffix.length);
-                                            const num = parseInt(numPart, 10);
+                                            const numStr = suffixPart.slice(userSuffix.length);
+                                            const num = parseInt(numStr, 10);
                                             if (!isNaN(num) && num > maxSequence) {
                                                 maxSequence = num;
                                             }
@@ -3587,7 +3695,6 @@ To get these values:
                     }
                 } catch (idError) {
                     console.error("Error generating custom ID during approval:", idError);
-                    // Continue with approval even if ID generation fails, better to approve than block
                 }
             }
 
@@ -5989,7 +6096,9 @@ To get these values:
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
-                                                        <span>{new Date(user.created_at).toLocaleDateString()}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span>{new Date(user.created_at).toLocaleDateString()}</span>
+                                                        </div>
                                                         {user.auth_user_id ? (
                                                             <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-medium bg-green-100 text-green-800">
                                                                 Authenticated
