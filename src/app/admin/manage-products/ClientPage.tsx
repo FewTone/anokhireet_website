@@ -413,7 +413,7 @@ export default function ManageProductsClient() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Statistics Cards */}
                     {userProducts.length > 0 && (
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                             <div className="bg-white rounded-none shadow-sm border border-gray-200 p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -493,6 +493,66 @@ export default function ManageProductsClient() {
                                     <div className="p-3 bg-orange-100 rounded-none">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-orange-600">
                                             <path d="M20 7h-4M4 7h4m0 0a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2m0 0v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white rounded-none shadow-sm border border-gray-200 p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-600">Total Paid</p>
+                                        <p className="text-2xl font-semibold text-gray-900 mt-1">
+                                            {(() => {
+                                                const totalLoaded = userProducts.reduce((sum, p) => {
+                                                    let amount = 0;
+                                                    const status = p.listing_status || '';
+                                                    if (status.includes('₹')) {
+                                                        const match = status.match(/₹(\d+)/);
+                                                        if (match) amount = parseInt(match[1]);
+                                                    } else if (status === 'Paid') {
+                                                        // Legacy or just "Paid" implies 99 based on current rule
+                                                        amount = 99;
+                                                    }
+                                                    return sum + amount;
+                                                }, 0);
+                                                return `₹${totalLoaded.toLocaleString()}`;
+                                            })()}
+                                        </p>
+                                    </div>
+                                    <div className="p-3 bg-emerald-100 rounded-none">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-emerald-600">
+                                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white rounded-none shadow-sm border border-gray-200 p-4">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-600">Avg. Paid</p>
+                                        <p className="text-2xl font-semibold text-gray-900 mt-1">
+                                            {(() => {
+                                                const paidAmounts = userProducts.map(p => {
+                                                    const status = p.listing_status || '';
+                                                    if (status.includes('₹')) {
+                                                        const match = status.match(/₹(\d+)/);
+                                                        return match ? parseInt(match[1]) : 0;
+                                                    } else if (status === 'Paid') {
+                                                        return 99;
+                                                    }
+                                                    return 0;
+                                                }).filter(amount => amount > 0);
+
+                                                if (paidAmounts.length === 0) return '₹0';
+                                                const avg = paidAmounts.reduce((a, b) => a + b, 0) / paidAmounts.length;
+                                                return `₹${Math.round(avg).toLocaleString()}`;
+                                            })()}
+                                        </p>
+                                    </div>
+                                    <div className="p-3 bg-teal-100 rounded-none">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-teal-600">
+                                            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+                                            <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
                                         </svg>
                                     </div>
                                 </div>
