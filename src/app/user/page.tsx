@@ -209,7 +209,6 @@ function UserClient() {
                             userId={userId}
                             userState={userState}
                             userCustomId={userCustomId}
-                            userCustomId={userCustomId}
                         />
                     </ContentWrapper>
                 );
