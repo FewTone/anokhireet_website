@@ -44,6 +44,10 @@ export default function ListingStatusSelect({ currentStatus, onUpdate }: Listing
     const handleSelect = (status: string) => {
         if (status === 'Offer') {
             setShowInput(true);
+        } else if (status === 'Paid') {
+            onUpdate('Paid: ₹99');
+            setIsOpen(false);
+            setShowInput(false);
         } else {
             onUpdate(status);
             setIsOpen(false);
@@ -91,7 +95,7 @@ export default function ListingStatusSelect({ currentStatus, onUpdate }: Listing
                                     className="w-full text-left px-4 py-2 text-xs text-gray-200 hover:bg-zinc-700 transition-colors flex items-center justify-between group"
                                 >
                                     <span>{option}</span>
-                                    {(currentStatus === option || (option === 'Offer' && currentStatus.includes('Offer'))) && (
+                                    {(currentStatus === option || (option === 'Offer' && currentStatus.includes('Offer')) || (option === 'Paid' && currentStatus.includes('Paid'))) && (
                                         <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
