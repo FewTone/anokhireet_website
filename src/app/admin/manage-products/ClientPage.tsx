@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import ProductTable from "@/components/admin/ProductTable";
 import { supabase } from "@/lib/supabase";
 import Popup from "@/components/Popup";
 
@@ -19,6 +20,7 @@ interface UserProduct {
     category?: string | string[];
     created_at: string;
     status?: string;
+    listing_status?: string;
     is_active?: boolean;
 }
 
@@ -140,6 +142,21 @@ export default function ManageProductsClient() {
             showPopup(`Failed to load user: ${error.message || JSON.stringify(error)}`, "error", "Error");
         }
     };
+    const handleUpdateListingStatus = async (productId: string, newStatus: string) => {
+        try {
+            const { error } = await supabase
+                .from("products")
+                .update({ listing_status: newStatus })
+                .eq("id", productId);
+
+            if (error) throw error;
+            showPopup(`Listing status updated to ${newStatus}`, "success");
+            loadUserProducts();
+        } catch (error: any) {
+            console.error("Error updating listing status:", error);
+            showPopup(error.message || "Failed to update listing status", "error", "Error");
+        }
+    };
 
 
     const loadUserProducts = async () => {
@@ -213,6 +230,7 @@ export default function ManageProductsClient() {
                         category: facets, // Store facets instead of categories
                         created_at: p.created_at,
                         status: p.status, // Add status
+                        listing_status: p.listing_status || 'Paid',
                         is_active: p.is_active // Add is_active
                     } as UserProduct & { category: typeof facets };
                 });
@@ -501,295 +519,14 @@ export default function ManageProductsClient() {
                         </div>
                     ) : (
                         <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                                        <tr>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Image
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Product Details
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Status
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Types
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Occasions
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Colors
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Materials
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Cities
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Pricing
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Images
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Uploaded
-                                            </th>
-                                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
-                                        {userProducts.map((product) => {
-                                            const images = product.images && Array.isArray(product.images) ? product.images : (product.image ? [product.image] : []);
-                                            const facets = (product.category && typeof product.category === 'object' && !Array.isArray(product.category))
-                                                ? product.category as { productTypes: string[]; occasions: string[]; colors: string[]; materials: string[]; cities: string[] }
-                                                : { productTypes: [], occasions: [], colors: [], materials: [], cities: [] };
-                                            const createdDate = product.created_at
-                                                ? new Date(product.created_at).toLocaleDateString('en-US', {
-                                                    year: 'numeric',
-                                                    month: 'short',
-                                                    day: 'numeric'
-                                                })
-                                                : 'N/A';
-                                            const createdTime = product.created_at
-                                                ? new Date(product.created_at).toLocaleTimeString('en-US', {
-                                                    hour: '2-digit',
-                                                    minute: '2-digit',
-                                                    hour12: true
-                                                })
-                                                : 'N/A';
-
-                                            // Status logic
-                                            const isDraft = product.status === 'draft' || product.is_active === false;
-                                            const isLive = product.status === 'approved' && product.is_active === true;
-                                            const isRejected = product.status === 'rejected';
-
-                                            return (
-                                                <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                                    <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="relative w-20 h-24 bg-gray-100 rounded-none overflow-hidden">
-                                                            {product.image ? (
-                                                                <Image
-                                                                    src={product.image}
-                                                                    alt={product.name}
-                                                                    fill
-                                                                    className="object-cover rounded-none"
-                                                                    unoptimized
-                                                                    onError={(e) => {
-                                                                        console.error("Image load error:", product.image);
-                                                                        e.currentTarget.style.display = 'none';
-                                                                    }}
-                                                                />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                                    No Image
-                                                                </div>
-                                                            )}
-                                                            {images.length > 1 && (
-                                                                <div className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-none">
-                                                                    {images.length}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="max-w-xs">
-                                                            <div className="text-sm font-semibold text-gray-900 mb-1">
-                                                                {product.name}
-                                                            </div>
-                                                            {product.product_id && (
-                                                                <div className="text-xs text-gray-500 font-mono">
-                                                                    ID: {product.product_id}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Status Column */}
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col gap-2">
-                                                            {isLive ? (
-                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                    <span className="w-2 h-2 mr-1.5 bg-green-400 rounded-full"></span>
-                                                                    Live
-                                                                </span>
-                                                            ) : isRejected ? (
-                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                                    Rejected
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                                    Draft
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Product Facets Columns (Types, Occasions, etc.) using same logic... */}
-                                                    {/* Types Column */}
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col gap-1">
-                                                            {facets.productTypes.length > 0 ? (
-                                                                facets.productTypes.map((pt, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-purple-100 text-purple-800">
-                                                                        {pt}
-                                                                    </span>
-                                                                ))
-                                                            ) : (
-                                                                <span className="text-xs text-gray-400 italic">-</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Occasions Column */}
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col gap-1">
-                                                            {facets.occasions.length > 0 ? (
-                                                                facets.occasions.map((oc, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-pink-100 text-pink-800">
-                                                                        {oc}
-                                                                    </span>
-                                                                ))
-                                                            ) : (
-                                                                <span className="text-xs text-gray-400 italic">-</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Colors Column */}
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col gap-1">
-                                                            {facets.colors.length > 0 ? (
-                                                                facets.colors.map((c, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-red-100 text-red-800">
-                                                                        {c}
-                                                                    </span>
-                                                                ))
-                                                            ) : (
-                                                                <span className="text-xs text-gray-400 italic">-</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Materials Column */}
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col gap-1">
-                                                            {facets.materials.length > 0 ? (
-                                                                facets.materials.map((m, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-green-100 text-green-800">
-                                                                        {m}
-                                                                    </span>
-                                                                ))
-                                                            ) : (
-                                                                <span className="text-xs text-gray-400 italic">-</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Cities Column */}
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex flex-col gap-1">
-                                                            {facets.cities.length > 0 ? (
-                                                                facets.cities.map((city, idx) => (
-                                                                    <span key={idx} className="inline-flex items-center px-2 py-0.5 rounded-none text-xs font-medium bg-blue-100 text-blue-800">
-                                                                        {city}
-                                                                    </span>
-                                                                ))
-                                                            ) : (
-                                                                <span className="text-xs text-gray-400 italic">-</span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className="space-y-1">
-                                                            <div className="text-sm font-semibold text-gray-900">
-                                                                {product.price}
-                                                            </div>
-                                                            {product.original_price && (
-                                                                <div className="text-xs text-gray-500">
-                                                                    ₹{typeof product.original_price === 'number'
-                                                                        ? product.original_price.toLocaleString()
-                                                                        : parseFloat(product.original_price).toLocaleString()}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    {/* Images Column */}
-                                                    <td className="px-6 py-4">
-                                                        <div className="flex items-center gap-2 text-xs text-gray-700">
-                                                            <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg>
-                                                            <span className="font-semibold text-gray-900">{images.length} {images.length === 1 ? 'image' : 'images'}</span>
-                                                        </div>
-                                                    </td>
-
-                                                    {/* Uploaded Column */}
-                                                    <td className="px-6 py-4">
-                                                        <div className="space-y-1.5 text-xs">
-                                                            <div className="flex items-center gap-2 text-gray-700">
-                                                                <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                                </svg>
-                                                                <span className="font-medium">{createdDate}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2 ml-6 text-gray-600">
-                                                                <svg className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
-                                                                <span>{createdTime}</span>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                        <div className="flex flex-col gap-2">
-                                                            <div className="flex gap-2">
-                                                                <button
-                                                                    onClick={() => router.push(`/admin/manage-products/add?userId=${userId}&edit=${product.id}`)}
-                                                                    className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm"
-                                                                    title="Edit product"
-                                                                >
-                                                                    Edit
-                                                                </button>
-
-                                                                {isLive ? (
-                                                                    <button
-                                                                        onClick={() => handleToggleProductStatus(product.id, 'draft')}
-                                                                        className="px-3 py-1 bg-orange-500 text-white text-xs font-medium rounded-none hover:bg-orange-600 transition-all duration-200 shadow-sm"
-                                                                        title="Move to Draft (Deactivate)"
-                                                                    >
-                                                                        Unpublish
-                                                                    </button>
-                                                                ) : (
-                                                                    <button
-                                                                        onClick={() => handleToggleProductStatus(product.id, 'approved')}
-                                                                        className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded-none hover:bg-green-700 transition-all duration-200 shadow-sm"
-                                                                        title="Make Live"
-                                                                    >
-                                                                        Publish
-                                                                    </button>
-                                                                )}
-                                                            </div>
-                                                            <button
-                                                                onClick={() => handleDeleteProduct(product.id, product.name)}
-                                                                className="px-3 py-1 bg-gray-100 text-red-600 text-xs font-medium rounded-none hover:bg-red-50 border border-gray-200 transition-all duration-200 text-center"
-                                                                title="Delete Permanently"
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <ProductTable
+                                products={userProducts}
+                                showOwner={false}
+                                onUpdateListingStatus={handleUpdateListingStatus}
+                                onEdit={(product) => router.push(`/admin/manage-products/add?userId=${userId}&edit=${product.id}`)}
+                                onDelete={(product) => handleDeleteProduct(product.id, product.name)}
+                                onToggleStatus={(product) => handleToggleProductStatus(product.id, product.status === 'approved' && product.is_active !== false ? 'draft' : 'approved')}
+                            />
                         </div>
                     )}
                 </div>

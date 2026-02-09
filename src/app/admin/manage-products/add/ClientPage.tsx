@@ -44,6 +44,7 @@ export default function AddProductClient() {
         colors: [] as string[],
         materials: [] as string[],
         cities: [] as string[],
+        listing_status: "Paid" as string,
     });
     const [availableProductTypes, setAvailableProductTypes] = useState<Array<{ id: string; name: string }>>([]);
     const [availableOccasions, setAvailableOccasions] = useState<Array<{ id: string; name: string }>>([]);
@@ -194,6 +195,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                 name: product.name || product.title || "",
                 price: product.price || "",
                 originalPrice: product.original_price ? String(product.original_price) : "",
+                listing_status: product.listing_status || "Paid",
                 productTypes,
                 occasions,
                 colors,
@@ -704,6 +706,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     image: productData.image || "",
                     images: productData.images,
                     primary_image_index: productData.primary_image_index,
+                    listing_status: productFormData.listing_status,
                 };
 
                 if (productFormData.originalPrice && productFormData.originalPrice.trim() !== "") {
@@ -843,6 +846,7 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                     images: productData.images,
                     primary_image_index: productData.primary_image_index,
                     product_id: productId,
+                    listing_status: productFormData.listing_status,
                     is_active: true,
                 };
 
@@ -1118,6 +1122,22 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
                                     placeholder="e.g., 1299"
                                 />
                                 <p className="text-xs text-gray-500 mt-1">Original purchase price of the outfit (required)</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Listing Status
+                                </label>
+                                <select
+                                    value={productFormData.listing_status}
+                                    onChange={(e) => setProductFormData({ ...productFormData, listing_status: e.target.value })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-none focus:outline-none focus:ring-2 focus:ring-black bg-white"
+                                >
+                                    <option value="Paid">Paid</option>
+                                    <option value="Free">Free</option>
+                                    <option value="Offer">Offer</option>
+                                </select>
+                                <p className="text-xs text-gray-500 mt-1">Set how this product is listed (Paid, Free, or Offer)</p>
                             </div>
 
                             <div className="bg-gray-50 border border-gray-200 rounded-none p-4">

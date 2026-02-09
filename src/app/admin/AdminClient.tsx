@@ -8,6 +8,7 @@ import ConfirmationModal from "@/components/ConfirmationModal";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import { COLOR_MAP, MATERIAL_MAP } from "@/data/colors";
+import ProductTable from "@/components/admin/ProductTable";
 
 interface Product {
     id: number;
@@ -42,6 +43,7 @@ interface UserProduct {
     category?: string;
     created_at: string;
     status?: string;
+    listing_status?: string;
     is_active?: boolean;
     admin_note?: string;
 }
@@ -882,6 +884,7 @@ To get these values:
                         category: facets, // Store facets object instead of category string
                         created_at: p.created_at,
                         status: p.status,
+                        listing_status: p.listing_status || 'Paid',
                         is_active: p.is_active,
                     } as UserProduct & { category: typeof facets };
                 });
@@ -3526,6 +3529,22 @@ To get these values:
         }
     };
 
+    const handleUpdateListingStatus = async (productId: string, newStatus: string) => {
+        try {
+            const { error } = await supabase
+                .from("products")
+                .update({ listing_status: newStatus })
+                .eq("id", productId);
+
+            if (error) throw error;
+            showPopup(`Listing status updated to ${newStatus}`, "success");
+            loadUserProducts();
+        } catch (error: any) {
+            console.error("Error updating listing status:", error);
+            showPopup(error.message || "Failed to update listing status", "error", "Error");
+        }
+    };
+
     const handleDeleteUserProduct = async (id: string, name: string = "this product") => {
         setDeleteConfirmProduct({ id, name });
     };
@@ -5134,6 +5153,9 @@ To get these values:
                                                                 Status
                                                             </th>
                                                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                                Listing Status
+                                                            </th>
+                                                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                                 Actions
                                                             </th>
                                                         </tr>
@@ -5319,6 +5341,22 @@ To get these values:
                                                                                 </span>
                                                                             )}
                                                                         </div>
+                                                                    </td>
+                                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                                        <select
+                                                                            value={product.listing_status || 'Paid'}
+                                                                            onChange={(e) => handleUpdateListingStatus(product.id, e.target.value)}
+                                                                            className={`text-xs font-medium px-2 py-1 rounded-none border focus:outline-none transition-colors duration-200 ${product.listing_status === 'Free'
+                                                                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                                                : product.listing_status === 'Offer'
+                                                                                    ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                                                                    : 'bg-gray-50 text-gray-700 border-gray-200'
+                                                                                }`}
+                                                                        >
+                                                                            <option value="Paid">Paid</option>
+                                                                            <option value="Free">Free</option>
+                                                                            <option value="Offer">Offer</option>
+                                                                        </select>
                                                                     </td>
                                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                                         {(product.status === 'pending' || product.status === 'pending_deactivation') && (
@@ -6378,89 +6416,24 @@ To get these values:
                                             </div>
                                         ) : (
                                             <div className="bg-white rounded-none shadow-sm border border-gray-200 overflow-hidden">
-                                                <div className="overflow-x-auto">
-                                                    <table className="w-full">
-                                                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
-                                                            <tr>
-                                                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                                    Image
-                                                                </th>
-                                                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                                    Name
-                                                                </th>
-                                                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                                    Price
-                                                                </th>
-                                                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                                                    Actions
-                                                                </th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody className="bg-white divide-y divide-gray-200">
-                                                            {userProducts
-                                                                .filter((p) => p.user_id === selectedUserId)
-                                                                .map((product) => (
-                                                                    <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
-                                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                                            <div className="relative w-20 h-24 bg-gray-100 rounded-none overflow-hidden">
-                                                                                {product.image ? (
-                                                                                    <Image
-                                                                                        src={product.image}
-                                                                                        alt={product.name}
-                                                                                        fill
-                                                                                        className="object-cover rounded-none"
-                                                                                        unoptimized
-                                                                                        onError={(e) => {
-                                                                                            console.error("Image load error:", product.image);
-                                                                                            e.currentTarget.style.display = 'none';
-                                                                                        }}
-                                                                                    />
-                                                                                ) : (
-                                                                                    <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 text-xs">
-                                                                                        No Image
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="px-6 py-4">
-                                                                            <div className="text-sm font-semibold text-gray-900 max-w-xs">
-                                                                                {product.name}
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap">
-                                                                            <div className="text-sm font-medium text-gray-900">
-                                                                                {product.price}
-                                                                            </div>
-                                                                        </td>
-                                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                                            <div className="flex gap-2">
-                                                                                <button
-                                                                                    onClick={() => {
-                                                                                        handleEditUserProduct(product);
-                                                                                        setIsManageProductsModalOpen(false);
-                                                                                    }}
-                                                                                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-none hover:bg-blue-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                                                                                >
-                                                                                    Edit
-                                                                                </button>
-                                                                                <button
-                                                                                    onClick={async () => {
-                                                                                        if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
-                                                                                            await handleDeleteUserProduct(product.id, product.name);
-                                                                                            await loadUserProducts();
-                                                                                        }
-                                                                                    }}
-                                                                                    className="px-4 py-2 bg-red-600 text-white font-medium rounded-none hover:bg-red-700 transition-all duration-200 shadow-sm hover:shadow-md"
-                                                                                >
-                                                                                    Delete
-                                                                                </button>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                                                <ProductTable
+                                                    products={userProducts.filter((p) => p.user_id === selectedUserId)}
+                                                    showFacets={false}
+                                                    showStatus={false}
+                                                    showOwner={false}
+                                                    showPricing={true}
+                                                    onUpdateListingStatus={handleUpdateListingStatus}
+                                                    onEdit={(product) => {
+                                                        handleEditUserProduct(product);
+                                                        setIsManageProductsModalOpen(false);
+                                                    }}
+                                                    onDelete={async (product) => {
+                                                        if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
+                                                            await handleDeleteUserProduct(product.id, product.name);
+                                                            await loadUserProducts();
+                                                        }
+                                                    }}
+                                                />
                                             </div>
                                         )}
                                     </div>
