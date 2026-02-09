@@ -3540,7 +3540,7 @@ To get these values:
             showPopup(`Listing status updated to ${newStatus}`, "success");
             loadUserProducts();
         } catch (error: any) {
-            console.error("Error updating listing status:", error);
+            console.error("Error updating listing status:", JSON.stringify(error, null, 2));
             showPopup(error.message || "Failed to update listing status", "error", "Error");
         }
     };
