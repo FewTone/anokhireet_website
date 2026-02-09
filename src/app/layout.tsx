@@ -42,6 +42,14 @@ export const metadata: Metadata = {
         locale: "en_IN",
         type: "website",
     },
+    // Security Headers (Meta Tags for Static Export)
+    other: {
+        "Content-Security-Policy": "default-src 'self'; img-src 'self' data: https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https://*.supabase.co https://*.supabase.in;",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+    },
 };
 
 import ScrollRestoration from "@/components/ScrollRestoration";

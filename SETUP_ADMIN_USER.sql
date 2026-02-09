@@ -6,7 +6,7 @@
 -- Step 1: First, create the user in Supabase Dashboard:
 -- Go to Authentication > Users > Add User
 -- Email: anokhireet@gmail.com
--- Password: Reet@1432@1402
+-- Password: [YOUR_SECURE_PASSWORD]
 -- Auto Confirm User: Yes (check this box)
 -- Click "Create User"
 
