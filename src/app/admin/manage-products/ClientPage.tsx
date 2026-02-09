@@ -450,7 +450,7 @@ export default function ManageProductsClient() {
                             <div className="bg-white rounded-none shadow-sm border border-gray-200 p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-sm font-medium text-gray-600">Avg. Price</p>
+                                        <p className="text-sm font-medium text-gray-600">Avg. Rent Price</p>
                                         <p className="text-2xl font-semibold text-gray-900 mt-1">
                                             {(() => {
                                                 const prices = userProducts
