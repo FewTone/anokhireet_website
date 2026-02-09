@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useMemo } from 'react';
+
 import Image from "next/image";
 import { capitalizeFirstLetter } from "@/lib/utils";
 
@@ -50,15 +52,177 @@ export default function ProductTable({
     onReject,
     onToggleStatus
 }: ProductTableProps) {
+    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [filters, setFilters] = useState<Record<string, string>>({});
+    const [activeFilterColumn, setActiveFilterColumn] = useState<string | null>(null);
+
+    const handleSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
+
+    const handleFilterChange = (key: string, value: string) => {
+        setFilters((prev: Record<string, string>) => ({ ...prev, [key]: value }));
+    };
+
+    const clearFilter = (key: string) => {
+        const newFilters = { ...filters };
+        delete newFilters[key];
+        setFilters(newFilters);
+        setActiveFilterColumn(null);
+    };
+
+    const sortedAndFilteredProducts = useMemo(() => {
+        let processedProducts = [...products];
+
+        // Filtering
+        if (Object.keys(filters).length > 0) {
+            processedProducts = processedProducts.filter((product: UserProduct) => {
+                return Object.entries(filters).every(([key, filterValue]) => {
+                    if (!filterValue) return true;
+                    const lowerFilter = filterValue.toLowerCase();
+
+                    if (key === 'name') {
+                        return product.name.toLowerCase().includes(lowerFilter) ||
+                            (product.product_id && product.product_id.toLowerCase().includes(lowerFilter)) ||
+                            product.id.toLowerCase().includes(lowerFilter);
+                    }
+                    if (key === 'owner' && showOwner) {
+                        const owner = users.find(u => u.id === product.user_id);
+                        return owner && (
+                            owner.name.toLowerCase().includes(lowerFilter) ||
+                            (owner.phone && owner.phone.includes(lowerFilter)) ||
+                            (owner.email && owner.email.toLowerCase().includes(lowerFilter))
+                        );
+                    }
+                    if (key === 'price') {
+                        return product.price.toString().toLowerCase().includes(lowerFilter);
+                    }
+                    return true;
+                });
+            });
+        }
+
+        // Sorting
+        if (sortConfig) {
+            processedProducts.sort((a: UserProduct, b: UserProduct) => {
+                const { key, direction } = sortConfig;
+                let aValue: any = a[key as keyof UserProduct];
+                let bValue: any = b[key as keyof UserProduct];
+
+                if (key === 'owner') {
+                    const ownerA = users.find(u => u.id === a.user_id)?.name || '';
+                    const ownerB = users.find(u => u.id === b.user_id)?.name || '';
+                    aValue = ownerA;
+                    bValue = ownerB;
+                } else if (key === 'created_at') {
+                    aValue = new Date(a.created_at).getTime();
+                    bValue = new Date(b.created_at).getTime();
+                } else if (key === 'price') {
+                    // Try to parse price as number if possible, assuming it might be a string like "100" or "Rs. 100"
+                    // But product.price is string in interface. Let's assume simple string compare or parseFloat if needed.
+                    // For now string comparison for simplicity unless it's strictly numeric string.
+                    const aNum = parseFloat(a.price.replace(/[^0-9.]/g, ''));
+                    const bNum = parseFloat(b.price.replace(/[^0-9.]/g, ''));
+                    if (!isNaN(aNum) && !isNaN(bNum)) {
+                        aValue = aNum;
+                        bValue = bNum;
+                    }
+                }
+
+                if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+                if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        return processedProducts;
+    }, [products, filters, sortConfig, users, showOwner]);
+
+    // Helper to render filter dropdown
+    const renderFilterDropdown = (columnKey: string, placeholder: string) => (
+        activeFilterColumn === columnKey && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-none shadow-lg z-50 p-3 min-w-[200px]" onClick={e => e.stopPropagation()}>
+                <input
+                    type="text"
+                    value={filters[columnKey] || ''}
+                    onChange={(e) => handleFilterChange(columnKey, e.target.value)}
+                    placeholder={placeholder}
+                    className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-none focus:outline-none focus:ring-1 focus:ring-black"
+                    autoFocus
+                />
+                <div className="flex justify-end gap-2 mt-2">
+                    <button
+                        onClick={() => clearFilter(columnKey)}
+                        className="text-xs text-gray-600 hover:text-gray-900"
+                    >
+                        Clear
+                    </button>
+                    <button
+                        onClick={() => setActiveFilterColumn(null)}
+                        className="text-xs text-blue-600 hover:text-blue-900"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        )
+    );
+
+    // Helper for Sort/Filter Header
+    const HeaderWithFilter = ({ label, sortKey, filterKey, placeholder }: { label: string, sortKey?: string, filterKey?: string, placeholder?: string }) => (
+        <div className="flex items-center gap-2 relative group">
+            {sortKey ? (
+                <button
+                    onClick={() => handleSort(sortKey)}
+                    className="flex items-center gap-1 hover:text-gray-900 transition-colors uppercase"
+                >
+                    {label}
+                    {sortConfig?.key === sortKey && (
+                        <svg className={`w-3 h-3 ${sortConfig.direction === 'asc' ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 15l7-7 7 7" />
+                        </svg>
+                    )}
+                </button>
+            ) : (
+                <span>{label}</span>
+            )}
+
+            {filterKey && placeholder && (
+                <>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveFilterColumn(activeFilterColumn === filterKey ? null : filterKey);
+                        }}
+                        className={`opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-none hover:bg-gray-200 ${filters[filterKey] ? 'opacity-100 text-blue-600' : ''}`}
+                    >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                    </button>
+                    {renderFilterDropdown(filterKey, placeholder)}
+                </>
+            )}
+        </div>
+    );
+
     return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[400px]">
             <table className="w-full">
                 <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
                     <tr>
                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Image</th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Product Details</th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <HeaderWithFilter label="Product Details" sortKey="name" filterKey="name" placeholder="Filter by name or ID..." />
+                        </th>
                         {showOwner && (
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Owner</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                <HeaderWithFilter label="Owner" sortKey="owner" filterKey="owner" placeholder="Filter by owner..." />
+                            </th>
                         )}
                         {showFacets && (
                             <>
@@ -70,19 +234,27 @@ export default function ProductTable({
                             </>
                         )}
                         {showPricing && (
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Pricing</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                <HeaderWithFilter label="Pricing" sortKey="price" filterKey="price" placeholder="Filter by price..." />
+                            </th>
                         )}
                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Images</th>
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Created</th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <HeaderWithFilter label="Created" sortKey="created_at" />
+                        </th>
                         {showStatus && (
-                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                <HeaderWithFilter label="Status" sortKey="status" />
+                            </th>
                         )}
-                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Listing Status</th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <HeaderWithFilter label="Listing Status" sortKey="listing_status" />
+                        </th>
                         <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                    {products.map((product) => {
+                    {sortedAndFilteredProducts.map((product) => {
                         const owner = showOwner ? users.find(u => u.id === product.user_id) : null;
 
                         const primaryImage = product.images && Array.isArray(product.images) && product.images.length > 0
