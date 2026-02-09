@@ -61,39 +61,52 @@ export default function ManageProductsClient() {
     });
 
 
+    const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
     useEffect(() => {
-        if (userId) {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                router.push("/?login=true");
+                return;
+            }
+
+            const { data: adminData } = await supabase
+                .from("admins")
+                .select("id")
+                .eq("auth_user_id", session.user.id)
+                .maybeSingle();
+
+            if (!adminData) {
+                router.push("/");
+                return;
+            }
+
+            setIsAdmin(true);
+        };
+
+        checkAuth();
+    }, []);
+
+    useEffect(() => {
+        if (userId && isAdmin) {
             loadUser();
             loadUserProducts();
-            testSupabaseConnection();
         }
-    }, [userId]);
+    }, [userId, isAdmin]);
 
     const testSupabaseConnection = async () => {
         try {
-            console.log("🔍 Testing Supabase connection...");
-            console.log("Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-            console.log("Supabase Key exists:", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-
             // Test basic connection
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-            console.log("Session test:", { session: !!session, sessionError });
 
             // Test products table access
             const { data: testData, error: testError, count } = await supabase
                 .from("products")
                 .select("*", { count: 'exact', head: true });
 
-            console.log("Products table test:", {
-                count,
-                error: testError,
-                canRead: !testError
-            });
-
             if (testError) {
                 console.error("❌ Cannot access products table:", testError);
-            } else {
-                console.log("✅ Supabase connection working");
             }
         } catch (error) {
             console.error("❌ Supabase connection test failed:", error);

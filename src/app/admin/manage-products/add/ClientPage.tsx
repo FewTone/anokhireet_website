@@ -71,8 +71,35 @@ export default function AddProductClient() {
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
+    const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
     useEffect(() => {
-        if (userId) {
+        const checkAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                router.push("/?login=true");
+                return;
+            }
+
+            const { data: adminData } = await supabase
+                .from("admins")
+                .select("id")
+                .eq("auth_user_id", session.user.id)
+                .maybeSingle();
+
+            if (!adminData) {
+                router.push("/");
+                return;
+            }
+
+            setIsAdmin(true);
+        };
+
+        checkAuth();
+    }, []);
+
+    useEffect(() => {
+        if (userId && isAdmin) {
             loadUser();
             loadAllFacets().then(() => {
                 if (editProductId) {
@@ -795,7 +822,6 @@ AND column_name IN ('images', 'primary_image_index', 'original_price');`;
 
                             if (!updateError) {
                                 effectiveCustomId = newCustomId;
-                                console.log(`Auto-healed user ${userId} with new custom_id: ${newCustomId}`);
                             }
                         }
                     } catch (healError) {
