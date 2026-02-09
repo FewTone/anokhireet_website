@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 
 import Image from "next/image";
 import { capitalizeFirstLetter } from "@/lib/utils";
+import ListingStatusSelect from "./ListingStatusSelect";
 
 export interface UserProduct {
     id: string;
@@ -401,20 +402,10 @@ export default function ProductTable({
                                     </td>
                                 )}
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <select
-                                        value={product.listing_status || 'Paid'}
-                                        onChange={(e) => onUpdateListingStatus(product.id, e.target.value)}
-                                        className={`text-xs font-medium px-2 py-1 rounded-none border focus:outline-none transition-colors duration-200 ${product.listing_status === 'Free'
-                                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                            : product.listing_status === 'Offer'
-                                                ? 'bg-purple-50 text-purple-700 border-purple-200'
-                                                : 'bg-gray-50 text-gray-700 border-gray-200'
-                                            }`}
-                                    >
-                                        <option value="Paid">Paid</option>
-                                        <option value="Free">Free</option>
-                                        <option value="Offer">Offer</option>
-                                    </select>
+                                    <ListingStatusSelect
+                                        currentStatus={product.listing_status || 'Paid'}
+                                        onUpdate={(newStatus) => onUpdateListingStatus(product.id, newStatus)}
+                                    />
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex flex-col gap-2">
