@@ -20,6 +20,7 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+    metadataBase: new URL("https://anokhireet.in"),
     title: "Anokhi Reet | Unique Handcrafted Men's Fashion",
     description: "Discover timeless elegance and contemporary Indian styles at Anokhi Reet. Premium men's fashion handcrafted for the modern gentleman.",
     icons: {
