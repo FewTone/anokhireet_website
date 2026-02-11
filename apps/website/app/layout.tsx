@@ -21,7 +21,7 @@ const playfairDisplay = Playfair_Display({
 
 export const metadata: Metadata = {
     metadataBase: new URL("https://anokhireet.in"),
-    title: "Anokhi Reet | Unique Handcrafted Men's Fashion",
+    title: "Anokhi Reet",
     description: "Discover timeless elegance and contemporary Indian styles at Anokhi Reet. Premium men's fashion handcrafted for the modern gentleman.",
     icons: {
         icon: "/favicon.svg",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
         apple: "/favicon.svg",
     },
     openGraph: {
-        title: "Anokhi Reet | Unique Handcrafted Men's Fashion",
+        title: "Anokhi Reet",
         description: "Discover timeless elegance and contemporary Indian styles at Anokhi Reet. Premium men's fashion handcrafted for the modern gentleman.",
         url: "https://anokhireet.in",
         siteName: "Anokhi Reet",
