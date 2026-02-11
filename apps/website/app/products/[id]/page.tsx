@@ -62,6 +62,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             openGraph: {
                 title,
                 description,
+                images: [
+                    {
+                        url: "/share-image.svg",
+                        width: 800,
+                        height: 600,
+                    },
+                ],
                 type: "article",
             },
         };

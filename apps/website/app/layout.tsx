@@ -35,7 +35,7 @@ export const metadata: Metadata = {
         siteName: "Anokhi Reet",
         images: [
             {
-                url: "/favicon.svg",
+                url: "/share-image.svg",
                 width: 800,
                 height: 600,
             },
