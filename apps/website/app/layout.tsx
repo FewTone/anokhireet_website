@@ -6,6 +6,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import LoginModal from "@/components/LoginModal";
 import { Suspense } from "react";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import ScrollRestoration from "@/components/ScrollRestoration";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -53,8 +54,6 @@ export const metadata: Metadata = {
         "Referrer-Policy": "strict-origin-when-cross-origin",
     },
 };
-
-import ScrollRestoration from "@/components/ScrollRestoration";
 
 export default function RootLayout({
     children,
