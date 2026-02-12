@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getOtpChannel } from "@/lib/devConfig";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 interface PendingUserData {
     id: string;
@@ -24,6 +25,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
     const router = useRouter();
     const searchParams = useSearchParams();
     const showLogin = isOpen ?? (searchParams.get('login') === 'true');
+    const { session: contextSession } = useAuth();
 
     const [phone, setPhone] = useState("");
     const [loading, setLoading] = useState(false); // Changed default to false
@@ -132,11 +134,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
     const checkSession = async () => {
         console.log("🔍 [Profile] checkSession started");
         try {
-            // Check Supabase Auth session only
-            const { data: { session }, error } = await supabase.auth.getSession();
-            console.log("🔍 [Profile] Supabase session:", session ? "Found" : "Not Found", error || "");
+            // Use context session if available, otherwise fallback to direct check
+            const session = contextSession;
+            console.log("🔍 [Profile] Supabase session (context):", session ? "Found" : "Not Found");
 
-            if (session?.user && !error) {
+            if (session?.user) {
                 // Check if user is admin (in admins table)
                 const { data: adminData } = await supabase
                     .from("admins")
@@ -198,7 +200,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
 
         try {
             // Check if there's an active session
-            const { data: { session } } = await supabase.auth.getSession();
+            const session = contextSession;
             if (session?.user) {
                 // Check if the active session is from an admin
                 const { data: activeUserData } = await supabase
@@ -335,7 +337,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
         console.log("[LoginDebug] Verifying OTP:", otp);
 
         try {
-            const { data: { session: existingSession } } = await supabase.auth.getSession();
+            const existingSession = contextSession;
             if (existingSession?.user) {
                 const { data: adminData } = await supabase
                     .from("admins")
@@ -465,7 +467,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
         setError("");
 
         try {
-            const { data: { session: existingSession } } = await supabase.auth.getSession();
+            const existingSession = contextSession;
             if (existingSession?.user) {
                 const { data: activeUserData } = await supabase
                     .from("users")

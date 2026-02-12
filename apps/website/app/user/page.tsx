@@ -14,6 +14,7 @@ import WishlistView from "@/components/dashboard/WishlistView";
 import ProfileView from "@/components/dashboard/ProfileView";
 import SettingsView from "@/components/dashboard/SettingsView";
 import Sidebar from "@/components/dashboard/Sidebar";
+import { useAuth } from "@/components/providers/AuthProvider";
 
 type View = "my-products" | "wishlist" | "profile" | "settings" | "menu";
 
@@ -33,6 +34,7 @@ function UserClient() {
     const [activeView, setActiveView] = useState<View>("profile");
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { session, loading: authLoading } = useAuth();
 
     // Effect for active view from URL
     useEffect(() => {
@@ -46,7 +48,7 @@ function UserClient() {
     useEffect(() => {
         let timeoutId: NodeJS.Timeout;
 
-        if (loading) {
+        if (loading || authLoading) {
             timeoutId = setTimeout(() => {
                 console.warn("⚠️ UserPage Loading timeout - redirecting to profile.");
                 setLoading(false);
@@ -57,31 +59,23 @@ function UserClient() {
         return () => {
             if (timeoutId) clearTimeout(timeoutId);
         };
-    }, [loading, router]);
+    }, [loading, authLoading, router]);
 
-    // Effect for loading data and setting up auth listeners
+    // Effect for loading data based on session
     useEffect(() => {
-        // loadUserData(); // REMOVED: Rely on onAuthStateChange to avoid race conditions
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (!authLoading) {
             if (session?.user) {
                 loadUserData();
             } else {
                 setLoading(false);
                 router.push("/profile");
             }
-        });
-
-        return () => {
-            subscription.unsubscribe();
-        };
-    }, [router, loading]);
+        }
+    }, [session, authLoading, router]);
 
     const loadUserData = async () => {
         try {
-            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-            if (!session?.user || sessionError) {
+            if (!session?.user) {
                 setLoading(false);
                 router.push("/profile");
                 return;

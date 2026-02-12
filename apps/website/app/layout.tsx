@@ -5,6 +5,7 @@ import WebsiteGuard from "@/components/WebsiteGuard";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import LoginModal from "@/components/LoginModal";
 import { Suspense } from "react";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -65,13 +66,15 @@ export default function RootLayout({
             <body suppressHydrationWarning className={`${inter.variable} ${playfairDisplay.variable} ${inter.className} antialiased w-full mx-auto bg-gray-100 md:bg-white overflow-x-hidden`}>
                 <ErrorBoundary>
                     <WebsiteGuard>
-                        <Suspense fallback={null}>
-                            <ScrollRestoration />
-                        </Suspense>
-                        {children}
-                        <Suspense fallback={null}>
-                            <LoginModal />
-                        </Suspense>
+                        <AuthProvider>
+                            <Suspense fallback={null}>
+                                <ScrollRestoration />
+                            </Suspense>
+                            {children}
+                            <Suspense fallback={null}>
+                                <LoginModal />
+                            </Suspense>
+                        </AuthProvider>
                     </WebsiteGuard>
                 </ErrorBoundary>
                 <div id="modal-root" />

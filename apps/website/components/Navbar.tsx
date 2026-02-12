@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useTotalUnreadCount } from "@/hooks/useTotalUnreadCount";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase";
 
 export default function Navbar() {
@@ -14,21 +15,14 @@ export default function Navbar() {
     const isHomePage = pathname === "/";
     const [searchQuery, setSearchQuery] = useState("");
     const unreadCount = useTotalUnreadCount();
-    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+    // const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // Replaced by useAuth
     const isProfileSection = pathname?.startsWith("/user") || pathname?.startsWith("/wishlist") || pathname?.startsWith("/my-products");
 
+    const { session } = useAuth();
+    const isLoggedIn = !!session;
+
     useEffect(() => {
-        const checkAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setIsLoggedIn(!!session);
-        };
-        checkAuth();
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setIsLoggedIn(!!session);
-        });
-
-        return () => subscription.unsubscribe();
+        // Auth state is now managed by AuthProvider
     }, []);
 
 

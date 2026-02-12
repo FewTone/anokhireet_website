@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/components/providers/AuthProvider';
 
 export function useTotalUnreadCount() {
     const [unreadCount, setUnreadCount] = useState(0);
+    const { session } = useAuth();
 
     const fetchCount = useCallback(async () => {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
             if (!session?.user) {
                 setUnreadCount(0);
                 return;
@@ -80,20 +81,12 @@ export function useTotalUnreadCount() {
             )
             .subscribe();
 
-        // Also listen for auth changes to re-fetch count
-        const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange((event) => {
-            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-                fetchCount();
-            } else if (event === 'SIGNED_OUT') {
-                setUnreadCount(0);
-            }
-        });
+        // Auth changes are now handled by AuthProvider and dependency on session
 
         return () => {
             supabase.removeChannel(channel);
-            authSubscription.unsubscribe();
         };
-    }, [fetchCount]);
+    }, [fetchCount, session]);
 
     return unreadCount;
 }
