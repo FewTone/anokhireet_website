@@ -587,7 +587,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
                 </button>
 
                 {/* Left Image Section */}
-                <div className="hidden md:flex w-[58%] relative items-center justify-center bg-white">
+                <div className="hidden md:flex w-1/2 relative items-center justify-center bg-white">
                     <div className="flex items-center justify-center w-full h-full p-10 relative">
                         <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
                             <Image
@@ -611,8 +611,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
                     </div>
                 </div>
 
+                {/* Vertical Divider */}
+                <div className="hidden md:block w-[1px] bg-gray-200 h-[300px] self-center"></div>
+
                 {/* Right Form Section */}
-                <div className="w-full md:w-[50%] py-10 px-6 md:py-16 md:px-10 text-center flex flex-col justify-center">
+                <div className="w-full md:w-1/2 py-10 px-6 md:py-16 md:px-10 text-center flex flex-col justify-center">
                     {/* Mobile Logo Section */}
                     <div className="flex md:hidden items-center justify-center w-full mb-4 relative py-4 h-[160px]">
                         <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
