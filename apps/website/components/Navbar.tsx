@@ -98,7 +98,7 @@ export default function Navbar() {
                     <div className="flex flex-1 justify-center items-center gap-2">
                         <Link href="/" className="flex items-center gap-2">
                             <Image
-                                src="/Anokhi reet Logo.svg"
+                                src="/logo-icon.svg"
                                 alt="Anokhi Reet Logo"
                                 width={40}
                                 height={40}
@@ -107,7 +107,7 @@ export default function Navbar() {
                                 suppressHydrationWarning
                             />
                             <Image
-                                src="/anokhi-reet.svg"
+                                src="/logo-text.svg"
                                 alt="Anokhi Reet"
                                 width={120}
                                 height={18}
@@ -191,7 +191,7 @@ export default function Navbar() {
                         <div className="flex justify-center items-center relative">
                             <Link href="/" className="flex items-center gap-2">
                                 <Image
-                                    src="/Anokhi reet Logo.svg"
+                                    src="/logo-icon.svg"
                                     alt="Anokhi Reet Logo"
                                     width={40}
                                     height={40}
@@ -200,7 +200,7 @@ export default function Navbar() {
                                     suppressHydrationWarning
                                 />
                                 <Image
-                                    src="/anokhi-reet.svg"
+                                    src="/logo-text.svg"
                                     alt="Anokhi Reet"
                                     width={120}
                                     height={18}
