@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { getOtpChannel } from "@/lib/devConfig";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -560,376 +561,385 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
         }
     };
 
-    if (!showLogin) return null;
-    if (!isSessionChecked) return null; // Don't show anything while checking session
-    if (!mounted) return null;
-
     return createPortal(
-        <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
-            {/* Backdrop Blur Layer */}
-            <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-md"
-                onClick={handleClose}
-            ></div>
+        <AnimatePresence>
+            {showLogin && (
+                <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4">
+                    {/* Backdrop Blur Layer */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-md"
+                        onClick={handleClose}
+                    ></motion.div>
 
-            {/* Modal Content */}
-            <div className={`relative max-w-[750px] w-full md:w-[90vw] flex bg-white shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden transition-all duration-500 ease-in-out flex-col md:flex-row z-10 rounded-none min-h-[400px] md:min-h-[450px]`}>
+                    {/* Modal Content */}
+                    <motion.div
+                        initial={{ clipPath: 'inset(0 50% 0 50%)', opacity: 1 }}
+                        animate={{ clipPath: 'inset(0 0% 0 0%)', opacity: 1 }}
+                        exit={{ clipPath: 'inset(0 50% 0 50%)', opacity: 0 }}
+                        transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                        className={`relative max-w-[750px] w-full md:w-[90vw] flex bg-white shadow-[0.5rem_0.5rem_0.8rem_rgba(87,87,87,0.5)] overflow-hidden flex-col md:flex-row z-10 rounded-none min-h-[400px] md:min-h-[450px]`}
+                    >
 
-                {/* Close Button */}
-                <button
-                    onClick={handleClose}
-                    className="absolute top-4 right-4 z-20 p-2 hover:bg-gray-100 rounded-none"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
+                        {/* Close Button */}
+                        <button
+                            onClick={handleClose}
+                            className="absolute top-4 right-4 z-20 p-2 hover:bg-gray-100 rounded-none"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
 
-                {/* Left Image Section */}
-                <div className="hidden md:flex w-1/2 relative items-center justify-center bg-white">
-                    <div className="flex items-center justify-center w-full h-full p-10 relative">
-                        <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
-                            <Image
-                                src="/ring.svg"
-                                alt="Ring"
-                                width={260}
-                                height={260}
-                                className="object-contain brightness-0"
-                            />
-                        </div>
-                        {/* Inner Logo */}
-                        <div className="relative z-10">
-                            <Image
-                                src="/rIta.svg"
-                                alt="Logo"
-                                width={110}
-                                height={110}
-                                className="object-contain brightness-0"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Vertical Divider */}
-                <div className="hidden md:block w-[1px] bg-gray-200 h-[300px] self-center"></div>
-
-                {/* Right Form Section */}
-                <div className="w-full md:w-1/2 py-10 px-6 md:py-16 md:px-10 text-center flex flex-col justify-center">
-                    {/* Mobile Logo Section */}
-                    <div className="flex md:hidden items-center justify-center w-full mb-4 relative py-4 h-[160px]">
-                        <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
-                            <Image
-                                src="/ring.svg"
-                                alt="Ring"
-                                width={160}
-                                height={160}
-                                className="object-contain brightness-0"
-                            />
-                        </div>
-                        <div className="relative z-10">
-                            <Image
-                                src="/rIta.svg"
-                                alt="Logo"
-                                width={65}
-                                height={65}
-                                className="object-contain brightness-0"
-                            />
-                        </div>
-                    </div>
-
-                    <h2 className="text-[1.2rem] font-black mt-2 md:mt-0 text-[#333] uppercase">
-                        {otpSent ? "VERIFY OTP" : isNewUser ? "CREATE ACCOUNT" : "LOGIN"}
-                    </h2>
-                    <p className="mt-1.5 text-[#4d5563] text-[0.8rem]">
-                        {otpSent
-                            ? "Enter the OTP sent to your phone"
-                            : isNewUser
-                                ? "Enter your details to create an account"
-                                : "Choose your preferred login method"}
-                    </p>
-
-                    {otpSent ? (
-                        <>
-                            <div className="mt-6 space-y-4">
-                                <div>
-                                    <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1.5 font-medium ml-1">
-                                        Phone Number
-                                    </label>
-                                    <div className="border border-gray-300 p-3 text-[0.85rem] flex items-center bg-[#f9fafb] rounded-none">
-                                        <span className="text-[#374151]">+91</span>
-                                        <span className="ml-2 text-[#374151] font-medium tracking-wide">{phone}</span>
-                                    </div>
+                        {/* Left Image Section */}
+                        <div className="hidden md:flex w-1/2 relative items-center justify-center bg-white">
+                            <div className="flex items-center justify-center w-full h-full p-10 relative">
+                                <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
+                                    <Image
+                                        src="/ring.svg"
+                                        alt="Ring"
+                                        width={260}
+                                        height={260}
+                                        className="object-contain brightness-0"
+                                    />
                                 </div>
+                                {/* Inner Logo */}
+                                <div className="relative z-10">
+                                    <Image
+                                        src="/rIta.svg"
+                                        alt="Logo"
+                                        width={110}
+                                        height={110}
+                                        className="object-contain brightness-0"
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
-                                <div>
-                                    <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1 font-medium ml-1">
-                                        OTP Code <span className="text-red-500">*</span>
-                                    </label>
-                                    <div className="relative border border-gray-300 bg-[#f9fafb] focus-within:border-black transition-colors h-[48px] flex items-center justify-center rounded-none">
-                                        {/* Display Layer */}
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <div className="flex gap-10 text-[0.9rem] text-[#374151] font-medium tracking-normal">
-                                                {[0, 1, 2, 3].map((i) => (
-                                                    <span key={i} className="w-4 text-center">
-                                                        {otp[i] || "-"}
-                                                    </span>
-                                                ))}
+                        {/* Vertical Divider */}
+                        <div className="hidden md:block w-[1px] bg-gray-200 h-[300px] self-center"></div>
+
+                        {/* Right Form Section */}
+                        <div className="w-full md:w-1/2 py-10 px-6 md:py-16 md:px-10 text-center flex flex-col justify-center">
+                            {/* Mobile Logo Section */}
+                            <div className="flex md:hidden items-center justify-center w-full mb-4 relative py-4 h-[160px]">
+                                <div className="absolute animate-spin" style={{ animationDuration: '20s' }}>
+                                    <Image
+                                        src="/ring.svg"
+                                        alt="Ring"
+                                        width={160}
+                                        height={160}
+                                        className="object-contain brightness-0"
+                                    />
+                                </div>
+                                <div className="relative z-10">
+                                    <Image
+                                        src="/rIta.svg"
+                                        alt="Logo"
+                                        width={65}
+                                        height={65}
+                                        className="object-contain brightness-0"
+                                    />
+                                </div>
+                            </div>
+
+                            <h2 className="text-[1.2rem] font-black mt-2 md:mt-0 text-[#333] uppercase">
+                                {otpSent ? "VERIFY OTP" : isNewUser ? "CREATE ACCOUNT" : "LOGIN"}
+                            </h2>
+                            <p className="mt-1.5 text-[#4d5563] text-[0.8rem]">
+                                {otpSent
+                                    ? "Enter the OTP sent to your phone"
+                                    : isNewUser
+                                        ? "Enter your details to create an account"
+                                        : "Choose your preferred login method"}
+                            </p>
+
+                            {otpSent ? (
+                                <>
+                                    <div className="mt-6 space-y-4">
+                                        <div>
+                                            <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1.5 font-medium ml-1">
+                                                Phone Number
+                                            </label>
+                                            <div className="border border-gray-300 p-3 text-[0.85rem] flex items-center bg-[#f9fafb] rounded-none">
+                                                <span className="text-[#374151]">+91</span>
+                                                <span className="ml-2 text-[#374151] font-medium tracking-wide">{phone}</span>
                                             </div>
                                         </div>
-                                        {/* Hidden Input Layer */}
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            maxLength={4}
-                                            value={otp}
-                                            onChange={(e) => {
-                                                const value = e.target.value.replace(/\D/g, "").slice(0, 4);
-                                                setOtp(value);
-                                                setError("");
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' && otp.length === 4) {
-                                                    handleVerifyOtp();
-                                                }
-                                            }}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-text text-center text-xl"
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <div className="flex justify-between items-center mt-2.5 px-1">
 
-                                        <div className="flex items-center gap-2">
-                                            {otpSent && !canResend ? (
-                                                <span className="text-[0.7rem] text-[#6b7280] font-medium">
-                                                    Resend in {timer}s
-                                                </span>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleLogin()}
-                                                    disabled={loading}
-                                                    className="text-[0.7rem] text-black font-semibold hover:underline disabled:opacity-50"
-                                                >
-                                                    RESEND OTP
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {error && (
-                                <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-none">
-                                    <p className="text-red-600 text-[0.75rem] text-center">{error}</p>
-                                </div>
-                            )}
-
-                            <div className="flex gap-4 mt-6">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setOtpSent(false);
-                                        setIsNewUser(false);
-                                        setOtp("");
-                                        setError("");
-                                        setPendingUserData(null);
-                                    }}
-                                    className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors uppercase text-[0.8rem] tracking-wider"
-                                >
-                                    Back
-                                </button>
-                                <button
-                                    onClick={handleVerifyOtp}
-                                    disabled={verifyingOtp || !otp || otp.length !== 4}
-                                    className="flex-1 px-4 py-2.5 text-white bg-black border-none cursor-pointer font-bold tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none uppercase text-[0.8rem]"
-                                >
-                                    {verifyingOtp ? "VERIFYING..." : "VERIFY OTP"}
-                                </button>
-                            </div>
-                        </>
-                    ) : !isNewUser ? (
-                        <>
-                            <div className="border border-[#4d5563] mt-4 p-3 text-[0.8rem] flex items-center rounded-none">
-                                <span>+91</span>
-                                <input
-                                    type="tel"
-                                    pattern="[0-9]*"
-                                    maxLength={10}
-                                    inputMode="numeric"
-                                    value={phone}
-                                    onChange={(e) => {
-                                        let val = e.target.value.replace(/\D/g, "");
-                                        // If user pastes 918888888888, remove the 91
-                                        if (val.length > 10 && val.startsWith("91")) val = val.substring(2);
-                                        // Slice to 10 digits
-                                        if (val.length > 10) val = val.slice(0, 10);
-                                        setPhone(val);
-                                        setError("");
-                                    }}
-                                    className="w-full outline-none border-none ml-2 bg-transparent"
-                                    placeholder="Enter phone number"
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter' && phone.length >= 10) {
-                                            handleLogin();
-                                        }
-                                    }}
-                                />
-                            </div>
-
-                            {error && (
-                                <p className="mt-2 text-red-500 text-xs text-left">{error}</p>
-                            )}
-
-                            <button
-                                onClick={handleLogin}
-                                disabled={loading || !phone || phone.length < 4}
-                                className="mt-4 w-full p-3 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
-                            >
-                                {loading ? "SENDING..." : "LOGIN"}
-                            </button>
-                        </>
-                    ) : (
-                        <div className="mt-4 text-left">
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                    <input
-                                        type="text"
-                                        value={firstName}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setFirstName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
-                                        }}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter' && firstName && lastName) {
-                                                handleCreateNewUser();
-                                            }
-                                        }}
-                                        className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
-                                        placeholder="First Name"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Surname</label>
-                                    <input
-                                        type="text"
-                                        value={lastName}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setLastName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
-                                        }}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter' && firstName && lastName) {
-                                                handleCreateNewUser();
-                                            }
-                                        }}
-                                        className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
-                                        placeholder="Surname"
-                                    />
-                                </div>
-
-                                {/* City Selection */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-
-                                    {selectedCities.length > 0 && selectedCities[0] ? (
-                                        <div className="w-full p-2 border border-gray-300 bg-gray-50 flex justify-between items-center rounded-none">
-                                            <span className="text-sm text-gray-800 font-medium">
-                                                {cities.find(c => c.id === selectedCities[0])?.name}
-                                            </span>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedCities([]);
-                                                    setCitySearch("");
-                                                    setHighlightedIndex(-1);
-                                                }}
-                                                className="text-gray-500 hover:text-black p-1"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="relative mb-2">
-                                            <input
-                                                type="text"
-                                                value={citySearch}
-                                                onChange={(e) => {
-                                                    setCitySearch(e.target.value);
-                                                    setHighlightedIndex(-1);
-                                                }}
-                                                onKeyDown={(e) => {
-                                                    if (!citySearch) return;
-
-                                                    if (e.key === "ArrowDown") {
-                                                        e.preventDefault();
-                                                        setHighlightedIndex(prev =>
-                                                            prev < filteredCities.length - 1 ? prev + 1 : prev
-                                                        );
-                                                    } else if (e.key === "ArrowUp") {
-                                                        e.preventDefault();
-                                                        setHighlightedIndex(prev => prev > 0 ? prev - 1 : prev);
-                                                    } else if (e.key === "Enter") {
-                                                        e.preventDefault();
-                                                        if (highlightedIndex >= 0 && highlightedIndex < filteredCities.length) {
-                                                            const city = filteredCities[highlightedIndex];
-                                                            setSelectedCities([city.id]);
-                                                            setCitySearch("");
-                                                            setHighlightedIndex(-1);
+                                        <div>
+                                            <label className="block text-[0.75rem] text-[#4d5563] text-left mb-1 font-medium ml-1">
+                                                OTP Code <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="relative border border-gray-300 bg-[#f9fafb] focus-within:border-black transition-colors h-[48px] flex items-center justify-center rounded-none">
+                                                {/* Display Layer */}
+                                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                                    <div className="flex gap-10 text-[0.9rem] text-[#374151] font-medium tracking-normal">
+                                                        {[0, 1, 2, 3].map((i) => (
+                                                            <span key={i} className="w-4 text-center">
+                                                                {otp[i] || "-"}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                                {/* Hidden Input Layer */}
+                                                <input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    maxLength={4}
+                                                    value={otp}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value.replace(/\D/g, "").slice(0, 4);
+                                                        setOtp(value);
+                                                        setError("");
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter' && otp.length === 4) {
+                                                            handleVerifyOtp();
                                                         }
-                                                    }
-                                                }}
-                                                className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black text-sm"
-                                                placeholder="Search city..."
-                                            />
+                                                    }}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-text text-center text-xl"
+                                                    autoFocus
+                                                />
+                                            </div>
+                                            <div className="flex justify-between items-center mt-2.5 px-1">
 
-                                            {citySearch && (
-                                                <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto shadow-lg rounded-none">
-                                                    {filteredCities.map((city, index) => (
-                                                        <div
-                                                            key={city.id}
-                                                            onClick={() => {
-                                                                setSelectedCities([city.id]);
-                                                                setCitySearch("");
-                                                                setHighlightedIndex(-1);
-                                                            }}
-                                                            className={`p-2 text-sm cursor-pointer ${index === highlightedIndex ? "bg-gray-100" : "hover:bg-gray-100"
-                                                                }`}
+                                                <div className="flex items-center gap-2">
+                                                    {otpSent && !canResend ? (
+                                                        <span className="text-[0.7rem] text-[#6b7280] font-medium">
+                                                            Resend in {timer}s
+                                                        </span>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleLogin()}
+                                                            disabled={loading}
+                                                            className="text-[0.7rem] text-black font-semibold hover:underline disabled:opacity-50"
                                                         >
-                                                            {city.name}
-                                                        </div>
-                                                    ))}
-                                                    {filteredCities.length === 0 && (
-                                                        <div className="p-2 text-sm text-gray-500">No matching cities found.</div>
+                                                            RESEND OTP
+                                                        </button>
                                                     )}
                                                 </div>
-                                            )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {error && (
+                                        <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-none">
+                                            <p className="text-red-600 text-[0.75rem] text-center">{error}</p>
                                         </div>
                                     )}
 
+                                    <div className="flex gap-4 mt-6">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setOtpSent(false);
+                                                setIsNewUser(false);
+                                                setOtp("");
+                                                setError("");
+                                                setPendingUserData(null);
+                                            }}
+                                            className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-800 font-medium rounded-none hover:bg-gray-300 transition-colors uppercase text-[0.8rem] tracking-wider"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={handleVerifyOtp}
+                                            disabled={verifyingOtp || !otp || otp.length !== 4}
+                                            className="flex-1 px-4 py-2.5 text-white bg-black border-none cursor-pointer font-bold tracking-wider hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none uppercase text-[0.8rem]"
+                                        >
+                                            {verifyingOtp ? "VERIFYING..." : "VERIFY OTP"}
+                                        </button>
+                                    </div>
+                                </>
+                            ) : !isNewUser ? (
+                                <>
+                                    <div className="border border-[#4d5563] mt-4 p-3 text-[0.8rem] flex items-center rounded-none">
+                                        <span>+91</span>
+                                        <input
+                                            type="tel"
+                                            pattern="[0-9]*"
+                                            maxLength={10}
+                                            inputMode="numeric"
+                                            value={phone}
+                                            onChange={(e) => {
+                                                let val = e.target.value.replace(/\D/g, "");
+                                                // If user pastes 918888888888, remove the 91
+                                                if (val.length > 10 && val.startsWith("91")) val = val.substring(2);
+                                                // Slice to 10 digits
+                                                if (val.length > 10) val = val.slice(0, 10);
+                                                setPhone(val);
+                                                setError("");
+                                            }}
+                                            className="w-full outline-none border-none ml-2 bg-transparent"
+                                            placeholder="Enter phone number"
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' && phone.length >= 10) {
+                                                    handleLogin();
+                                                }
+                                            }}
+                                        />
+                                    </div>
 
+                                    {error && (
+                                        <p className="mt-2 text-red-500 text-xs text-left">{error}</p>
+                                    )}
+
+                                    <button
+                                        onClick={handleLogin}
+                                        disabled={loading || !phone || phone.length < 4}
+                                        className="mt-4 w-full p-3 text-white bg-black border-none cursor-pointer font-bold tracking-wide hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed rounded-none"
+                                    >
+                                        {loading ? "SENDING..." : "LOGIN"}
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="mt-4 text-left">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                                            <input
+                                                type="text"
+                                                value={firstName}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setFirstName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+                                                }}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter' && firstName && lastName) {
+                                                        handleCreateNewUser();
+                                                    }
+                                                }}
+                                                className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
+                                                placeholder="First Name"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Surname</label>
+                                            <input
+                                                type="text"
+                                                value={lastName}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setLastName(val ? val.charAt(0).toUpperCase() + val.slice(1) : val);
+                                                }}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter' && firstName && lastName) {
+                                                        handleCreateNewUser();
+                                                    }
+                                                }}
+                                                className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black"
+                                                placeholder="Surname"
+                                            />
+                                        </div>
+
+                                        {/* City Selection */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+
+                                            {selectedCities.length > 0 && selectedCities[0] ? (
+                                                <div className="w-full p-2 border border-gray-300 bg-gray-50 flex justify-between items-center rounded-none">
+                                                    <span className="text-sm text-gray-800 font-medium">
+                                                        {cities.find(c => c.id === selectedCities[0])?.name}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedCities([]);
+                                                            setCitySearch("");
+                                                            setHighlightedIndex(-1);
+                                                        }}
+                                                        className="text-gray-500 hover:text-black p-1"
+                                                    >
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="relative mb-2">
+                                                    <input
+                                                        type="text"
+                                                        value={citySearch}
+                                                        onChange={(e) => {
+                                                            setCitySearch(e.target.value);
+                                                            setHighlightedIndex(-1);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (!citySearch) return;
+
+                                                            if (e.key === "ArrowDown") {
+                                                                e.preventDefault();
+                                                                setHighlightedIndex(prev =>
+                                                                    prev < filteredCities.length - 1 ? prev + 1 : prev
+                                                                );
+                                                            } else if (e.key === "ArrowUp") {
+                                                                e.preventDefault();
+                                                                setHighlightedIndex(prev => prev > 0 ? prev - 1 : prev);
+                                                            } else if (e.key === "Enter") {
+                                                                e.preventDefault();
+                                                                if (highlightedIndex >= 0 && highlightedIndex < filteredCities.length) {
+                                                                    const city = filteredCities[highlightedIndex];
+                                                                    setSelectedCities([city.id]);
+                                                                    setCitySearch("");
+                                                                    setHighlightedIndex(-1);
+                                                                }
+                                                            }
+                                                        }}
+                                                        className="w-full p-2 border border-gray-300 rounded-none focus:outline-none focus:border-black text-sm"
+                                                        placeholder="Search city..."
+                                                    />
+
+                                                    {citySearch && (
+                                                        <div className="absolute z-10 w-full bg-white border border-gray-200 mt-1 max-h-40 overflow-y-auto shadow-lg rounded-none">
+                                                            {filteredCities.map((city, index) => (
+                                                                <div
+                                                                    key={city.id}
+                                                                    onClick={() => {
+                                                                        setSelectedCities([city.id]);
+                                                                        setCitySearch("");
+                                                                        setHighlightedIndex(-1);
+                                                                    }}
+                                                                    className={`p-2 text-sm cursor-pointer ${index === highlightedIndex ? "bg-gray-100" : "hover:bg-gray-100"
+                                                                        }`}
+                                                                >
+                                                                    {city.name}
+                                                                </div>
+                                                            ))}
+                                                            {filteredCities.length === 0 && (
+                                                                <div className="p-2 text-sm text-gray-500">No matching cities found.</div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+
+                                        </div>
+
+                                        {error && (
+                                            <p className="text-red-500 text-xs">{error}</p>
+                                        )}
+
+                                        <button
+                                            onClick={handleCreateNewUser}
+                                            disabled={loading || !firstName || !lastName}
+                                            className="w-full p-3 bg-black text-white font-bold tracking-wide hover:opacity-90 disabled:opacity-50 rounded-none"
+                                        >
+                                            {loading ? "CREATING..." : "CREATE ACCOUNT"}
+                                        </button>
+                                    </div>
                                 </div>
-
-                                {error && (
-                                    <p className="text-red-500 text-xs">{error}</p>
-                                )}
-
-                                <button
-                                    onClick={handleCreateNewUser}
-                                    disabled={loading || !firstName || !lastName}
-                                    className="w-full p-3 bg-black text-white font-bold tracking-wide hover:opacity-90 disabled:opacity-50 rounded-none"
-                                >
-                                    {loading ? "CREATING..." : "CREATE ACCOUNT"}
-                                </button>
-                            </div>
+                            )}
                         </div>
-                    )}
+                    </motion.div>
                 </div>
-            </div>
-        </div>,
+            )}
+        </AnimatePresence>,
         document.getElementById('modal-root') || document.body
     );
 }
