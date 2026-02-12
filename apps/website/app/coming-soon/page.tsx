@@ -31,7 +31,7 @@ export default function ComingSoonPage() {
             <div className="hidden md:block absolute top-0 left-0 h-full w-56 pointer-events-none opacity-100">
                 <div className={`relative w-full h-full ${imagesLoaded ? 'block' : 'hidden'}`}>
                     <Image
-                        src="/Left Decoration.png"
+                        src="/left-decoration.png"
                         alt="Left Decoration"
                         fill
                         className="object-fill object-left"
@@ -46,7 +46,7 @@ export default function ComingSoonPage() {
             <div className="hidden md:block absolute top-0 right-0 h-full w-56 pointer-events-none opacity-100">
                 <div className={`relative w-full h-full ${imagesLoaded ? 'block' : 'hidden'}`}>
                     <Image
-                        src="/right side decoration .png"
+                        src="/right-decoration.png"
                         alt="Right Decoration"
                         fill
                         className="object-fill object-right"
@@ -71,7 +71,7 @@ export default function ComingSoonPage() {
                     <div className="absolute inset-0 w-full h-full opacity-60 animate-rotate">
                         <div className={`relative w-full h-full ${imagesLoaded ? 'block' : 'hidden'}`}>
                             <Image
-                                src="/mandala pattern .png"
+                                src="/mandala-pattern.png"
                                 alt="Mandala Pattern"
                                 fill
                                 className="object-contain"
@@ -88,7 +88,7 @@ export default function ComingSoonPage() {
                         <div className="relative w-40 h-40 md:w-64 md:h-64 pointer-events-none">
                             <div className={`relative w-full h-full ${imagesLoaded ? 'block' : 'hidden'}`}>
                                 <Image
-                                    src="/Anokhi reet Logo.svg"
+                                    src="/logo-icon.svg"
                                     alt="Anokhi Reet Logo"
                                     fill
                                     className="object-contain drop-shadow-[0_25px_50px_rgba(0,0,0,0.5)]"
